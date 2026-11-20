@@ -1,0 +1,219 @@
+{
+  "schema": "schgen.subsystem/1",
+  "name": "power_som",
+  "title": "Power: +VIN -> +5V_SOM always-on buck",
+  "interface": ["+VIN_SYS", "GND", "+5V_SOM"],
+  "parts": [
+    {"ref": "U4", "part": "LM61460AANRJRR"},
+    {
+      "ref": "C14",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {
+      "ref": "C25",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {
+      "ref": "C15",
+      "symbol": "Device:C",
+      "value": "10u",
+      "footprint": "Capacitor_SMD:C_1206_3216Metric",
+      "fields": {"LCSC": "C13585"}
+    },
+    {
+      "ref": "C16",
+      "symbol": "Device:C",
+      "value": "10u",
+      "footprint": "Capacitor_SMD:C_1206_3216Metric",
+      "fields": {"LCSC": "C13585"}
+    },
+    {
+      "ref": "C22",
+      "symbol": "Device:C",
+      "value": "1u",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C15849"}
+    },
+    {
+      "ref": "R17",
+      "symbol": "Device:R",
+      "value": "10R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C22859"}
+    },
+    {
+      "ref": "C23",
+      "symbol": "Device:C",
+      "value": "1u",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C15849"}
+    },
+    {
+      "ref": "R18",
+      "symbol": "Device:R",
+      "value": "22k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C31850"}
+    },
+    {
+      "ref": "C17",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {
+      "ref": "L3",
+      "symbol": "Device:L",
+      "value": "10uH",
+      "footprint": "SWPA8040S100MT:SWPA8040S100MT",
+      "fields": {"LCSC": "C37429"}
+    },
+    {
+      "ref": "C18",
+      "symbol": "Device:C",
+      "value": "22u",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "fields": {"LCSC": "C45783"}
+    },
+    {
+      "ref": "C19",
+      "symbol": "Device:C",
+      "value": "22u",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "fields": {"LCSC": "C45783"}
+    },
+    {
+      "ref": "R14",
+      "symbol": "Device:R",
+      "value": "47.5k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C23061"}
+    },
+    {
+      "ref": "R15",
+      "symbol": "Device:R",
+      "value": "13k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C22797"}
+    },
+    {
+      "ref": "C21",
+      "symbol": "Device:C",
+      "value": "22p",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C1653"}
+    },
+    {
+      "ref": "R19",
+      "symbol": "Device:R",
+      "value": "1k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C21190"}
+    },
+    {
+      "ref": "D4",
+      "symbol": "Device:LED",
+      "value": "red",
+      "footprint": "LED_SMD:LED_0603_1608Metric",
+      "fields": {"LCSC": "C2286"}
+    },
+    {
+      "ref": "R16",
+      "symbol": "Device:R",
+      "value": "1k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C21190"}
+    },
+    {
+      "ref": "TP1",
+      "symbol": "Connector:TestPoint",
+      "value": "+5V_SOM",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {"BOM": "exclude"}
+    }
+  ],
+  "nets": [
+    {
+      "name": "+VIN_SYS",
+      "pins": ["U4.7", "U4.8", "U4.12", "C14.1", "C25.1", "C15.1", "C16.1"]
+    },
+    {
+      "name": "GND",
+      "pins": ["U4.9", "U4.11", "U4.3", "C14.2", "C25.2", "C15.2", "C16.2", "C22.2", "C23.2", "R18.2", "C18.2", "C19.2", "R15.2", "R16.2"]
+    },
+    {
+      "name": "U4_VCC",
+      "pins": ["U4.2", "C22.1"]
+    },
+    {
+      "name": "+5V_SOM",
+      "pins": ["R17.1", "L3.2", "C18.1", "C19.1", "R14.1", "C21.1", "D4.2", "TP1.1"]
+    },
+    {
+      "name": "BIAS_5V_SOM",
+      "pins": ["U4.1", "R17.2", "C23.1"]
+    },
+    {
+      "name": "RT_5V_SOM",
+      "pins": ["U4.6", "R18.1"]
+    },
+    {
+      "name": "BOOT_5V_SOM",
+      "pins": ["U4.14", "U4.13", "C17.1"]
+    },
+    {
+      "name": "SW_5V_SOM",
+      "pins": ["U4.10", "C17.2", "L3.1"]
+    },
+    {
+      "name": "FB_5V_SOM",
+      "pins": ["U4.4", "R14.2", "R15.1", "R19.2"]
+    },
+    {
+      "name": "CFF_5V_SOM",
+      "pins": ["C21.2", "R19.1"]
+    },
+    {
+      "name": "PG_5V_SOM",
+      "pins": ["D4.1", "R16.1"]
+    }
+  ],
+  "unconnected": ["U4.5"],
+  "ports": [],
+  "hints": [],
+  "draws": [
+    {"rail": "+5V_SOM", "amps": 0.004, "note": "PG LED (KT-0603R + 1k, ~3 mA) + FB divider 60 uA (SoM module load declared on som_j1)"}
+  ],
+  "waivers": [],
+  "purpose": [
+    {"part": "C14", "role": "bypass", "pin": "U4.8"},
+    {"part": "C15", "role": "reservoir", "pin": "U4.8"},
+    {"part": "C16", "role": "reservoir", "pin": "U4.12"},
+    {"part": "C17", "role": "switching", "pin": "U4.14"},
+    {"part": "C18", "role": "reservoir", "pin": "L3.2"},
+    {"part": "C19", "role": "reservoir", "pin": "L3.2"},
+    {"part": "C21", "role": "feedback", "pin": "R19.1"},
+    {"part": "C22", "role": "bypass", "pin": "U4.2"},
+    {"part": "C23", "role": "bypass", "pin": "U4.1"},
+    {"part": "C25", "role": "bypass", "pin": "U4.12"},
+    {"part": "L3", "role": "switching", "pin": "U4.10"},
+    {"part": "R14", "role": "feedback", "pin": "U4.4"},
+    {"part": "R15", "role": "feedback", "pin": "U4.4"},
+    {"part": "R16", "role": "indicate", "pin": "D4.1"},
+    {"part": "R17", "role": "filter", "pin": "U4.1"},
+    {"part": "R18", "role": "feedback", "pin": "U4.6"},
+    {"part": "R19", "role": "feedback", "pin": "U4.4"}
+  ],
+  "free": [
+    {"part": "TP1", "reason": "probe point; it follows its net"},
+    {"part": "D4", "reason": "power-good LED across the +5V_SOM rail; no pin drives it"}
+  ]
+}
+

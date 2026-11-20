@@ -1,0 +1,179 @@
+{
+  "schema": "schgen.subsystem/1",
+  "name": "som_decoupling",
+  "title": "SoM power-entry decoupling under the DF40 mezzanine",
+  "interface": ["+5V_SOM", "GND", "+3V3", "+3V3_SC"],
+  "parts": [
+    {
+      "ref": "C1",
+      "symbol": "Device:C",
+      "value": "22u",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "fields": {"LCSC": "C45783"}
+    },
+    {
+      "ref": "C2",
+      "symbol": "Device:C",
+      "value": "22u",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "fields": {"LCSC": "C45783"}
+    },
+    {
+      "ref": "C3",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {
+      "ref": "C4",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {
+      "ref": "C5",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {
+      "ref": "C6",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {
+      "ref": "C7",
+      "symbol": "Device:C",
+      "value": "22u",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "fields": {"LCSC": "C45783"}
+    },
+    {
+      "ref": "C8",
+      "symbol": "Device:C",
+      "value": "22u",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "fields": {"LCSC": "C45783"}
+    },
+    {
+      "ref": "C9",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {
+      "ref": "C10",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {
+      "ref": "C11",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {
+      "ref": "C12",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {
+      "ref": "C13",
+      "symbol": "Device:C",
+      "value": "22u",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "fields": {"LCSC": "C45783"}
+    },
+    {
+      "ref": "C14",
+      "symbol": "Device:C",
+      "value": "22u",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "fields": {"LCSC": "C45783"}
+    },
+    {
+      "ref": "C15",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {
+      "ref": "C16",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {
+      "ref": "C17",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {
+      "ref": "C18",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    }
+  ],
+  "nets": [
+    {
+      "name": "+5V_SOM",
+      "pins": ["C1.1", "C2.1", "C3.1", "C4.1", "C5.1", "C6.1"]
+    },
+    {
+      "name": "GND",
+      "pins": ["C1.2", "C2.2", "C3.2", "C4.2", "C5.2", "C6.2", "C7.2", "C8.2", "C9.2", "C10.2", "C11.2", "C12.2", "C13.2", "C14.2", "C15.2", "C16.2", "C17.2", "C18.2"]
+    },
+    {
+      "name": "+3V3",
+      "pins": ["C7.1", "C8.1", "C9.1", "C10.1", "C11.1", "C12.1"]
+    },
+    {
+      "name": "+3V3_SC",
+      "pins": ["C13.1", "C14.1", "C15.1", "C16.1", "C17.1", "C18.1"]
+    }
+  ],
+  "unconnected": [],
+  "ports": [],
+  "hints": [],
+  "draws": [],
+  "waivers": [],
+  "purpose": [
+    {"part": "C1", "role": "reservoir", "module_net": "+5V_SOM"},
+    {"part": "C2", "role": "reservoir", "module_net": "+5V_SOM"},
+    {"part": "C3", "role": "bypass", "module_net": "+5V_SOM"},
+    {"part": "C4", "role": "bypass", "module_net": "+5V_SOM"},
+    {"part": "C5", "role": "bypass", "module_net": "+5V_SOM"},
+    {"part": "C6", "role": "bypass", "module_net": "+5V_SOM"},
+    {"part": "C7", "role": "reservoir", "module_net": "+3V3"},
+    {"part": "C8", "role": "reservoir", "module_net": "+3V3"},
+    {"part": "C9", "role": "bypass", "module_net": "+3V3"},
+    {"part": "C10", "role": "bypass", "module_net": "+3V3"},
+    {"part": "C11", "role": "bypass", "module_net": "+3V3"},
+    {"part": "C12", "role": "bypass", "module_net": "+3V3"},
+    {"part": "C13", "role": "reservoir", "module_net": "+3V3_SC"},
+    {"part": "C14", "role": "reservoir", "module_net": "+3V3_SC"},
+    {"part": "C15", "role": "bypass", "module_net": "+3V3_SC"},
+    {"part": "C16", "role": "bypass", "module_net": "+3V3_SC"},
+    {"part": "C17", "role": "bypass", "module_net": "+3V3_SC"},
+    {"part": "C18", "role": "bypass", "module_net": "+3V3_SC"}
+  ],
+  "free": []
+}
+

@@ -121,7 +121,14 @@ ComponentBasisResult audit_component_basis(const std::vector<ComponentBasisInput
 std::vector<ComponentBasisInput> author_component_basis_inputs(const std::filesystem::path& root) {
     const auto context = make_authoring_context(root);
     std::vector<ComponentBasisInput> out;
-    for(const auto& d : subsystem_library(context)) out.push_back({"library", d.name, author_subsystem(d.name, SubsystemMeta{}, context)});
+    const auto used_as_filed = [](const std::string& name) {
+        const auto& all = project_subsystem_definitions();
+        return std::any_of(all.begin(), all.end(), [&](const ProjectSubsystemDefinition& p) {
+            return p.name == name && p.adapter && p.meta.kind == JsonKind::Object && p.meta.object_value.empty();
+        });
+    };
+    for(const auto& d : subsystem_library(context))
+        if(!used_as_filed(d.name)) out.push_back({"library", d.name, author_subsystem(d.name, SubsystemMeta{}, context)});
     for(const auto& d : project_subsystem_definitions()) {
         ProjectAuthoringInput input; input.context = context; input.project_root = root / d.project;
         out.push_back({d.project, d.name, author_project_subsystem(d.project, d.name, input)});

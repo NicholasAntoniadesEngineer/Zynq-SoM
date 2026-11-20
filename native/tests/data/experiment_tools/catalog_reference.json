@@ -1,7 +1,7 @@
 {
   "carrier": {
     "source": "native/tests/data/authoring/gate_carrier.json",
-    "source_sha256": "8690dccb5809506c3e7b9ebe5948635e90bf57fc5867c662da2f47907fe3a57a",
+    "source_sha256": "d77040ae74f277c00ad91b77a2d012357d98fbee39c6fcbce603175f9265acc7",
     "sheets": [
       {
         "name": "board_aux",
@@ -192,7 +192,7 @@
   },
   "devkit_mini": {
     "source": "native/tests/data/authoring/gate_devkit_mini.json",
-    "source_sha256": "56c12f2515b40d63e3a67adac60734b8c679bbcebbc9c9a7ee5aa8b33976ed75",
+    "source_sha256": "3469370ee0da4c507aac2d32d2bc87fea953d4aa3744e149aff47b8a8b808a57",
     "sheets": [
       {
         "name": "debug_boot",

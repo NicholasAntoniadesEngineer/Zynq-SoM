@@ -1,0 +1,57 @@
+{
+  "schema": "schgen.subsystem/1",
+  "name": "board_qwiic",
+  "title": "QWIIC / STEMMA-QT expansion connector + USBLC6 ESD array",
+  "interface": ["GND", "+3V3_AUX", "AUX_I2C_SDA", "AUX_I2C_SCL", "+3V3"],
+  "parts": [
+    {"ref": "J1", "part": "ZX-SH1.0-4PWT"},
+    {"ref": "U1", "part": "USBLC6-2SC6"}
+  ],
+  "nets": [
+    {
+      "name": "GND",
+      "pins": ["J1.1", "J1.5", "J1.6", "U1.2"]
+    },
+    {
+      "name": "+3V3_AUX",
+      "pins": ["J1.2"]
+    },
+    {
+      "name": "QWIIC_SDA",
+      "pins": ["J1.3", "U1.1"]
+    },
+    {
+      "name": "QWIIC_SCL",
+      "pins": ["J1.4", "U1.3"]
+    },
+    {
+      "name": "AUX_I2C_SDA",
+      "class": "port",
+      "pins": ["U1.6"]
+    },
+    {
+      "name": "AUX_I2C_SCL",
+      "class": "port",
+      "pins": ["U1.4"]
+    },
+    {
+      "name": "+3V3",
+      "pins": ["U1.5"]
+    }
+  ],
+  "unconnected": [],
+  "ports": [
+    {"net": "AUX_I2C_SDA", "kind": "i2c", "role": "sda", "bus": "AUX_I2C", "speed_hz": 400000, "expect": "board_aux / board_services (the isolated AUX I2C bus)"},
+    {"net": "AUX_I2C_SCL", "kind": "i2c", "role": "scl", "bus": "AUX_I2C", "speed_hz": 400000, "expect": "board_aux / board_services (the isolated AUX I2C bus)"}
+  ],
+  "hints": [],
+  "draws": [
+    {"rail": "+3V3_AUX", "amps": 0.2, "note": "QWIIC external module budget (200 mA)"}
+  ],
+  "waivers": [],
+  "purpose": [
+    {"part": "U1", "role": "protect", "pin": "J1.3"}
+  ],
+  "free": []
+}
+

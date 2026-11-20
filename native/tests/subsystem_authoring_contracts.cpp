@@ -86,10 +86,14 @@ int main(int argc,char** argv) {
         context.pins=[&](const auto& lib)->std::optional<std::set<std::string>>{try{return symbols.pin_numbers(lib);}catch(const SymbolError&){return std::nullopt;}};
         context.library=root/subsystem_library_folder;
         const auto library=subsystem_library(context);
-        require(library.size()==17,"library coverage");
-        std::size_t cases=0;
+        constexpr std::size_t library_count=34,oracle_count=17;
+        require(library.size()==library_count,"library coverage");
+        std::size_t cases=0,oracles=0;
         for(const auto& def:library) {
-            const auto fixture=parse_json_file((root/"native/tests/data/authoring"/(def.name+".json")).string());
+            const auto oracle=root/"native/tests/data/authoring"/(def.name+".json");
+            if(!std::filesystem::is_regular_file(oracle))continue;
+            ++oracles;
+            const auto fixture=parse_json_file(oracle.string());
             const auto& iface=at(fixture,"interface").array_value;require(iface.size()==def.interface.size(),def.name+": interface size");
             for(std::size_t i=0;i<iface.size();++i)require(iface[i].string_value==def.interface[i],def.name+": interface declaration");
             for(const auto& row:at(fixture,"cases").array_value) {
@@ -101,6 +105,7 @@ int main(int argc,char** argv) {
                 ++cases;
             }
         }
+        require(oracles==oracle_count,"oracle coverage");
         helpers();
         // Runtime part catalog edits affect builders: no compiled default IR.
         auto changed=context;changed.part=[](const auto& mpn){auto p=lookup_part_catalog(mpn);p.lcsc="CUSTOM_RUNTIME_LCSC";return p;};

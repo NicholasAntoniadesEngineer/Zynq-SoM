@@ -224,11 +224,11 @@ void live(const fs::path& repo, const fs::path& work, const JsonNode& reference,
     // Two additional independent full-pipeline hard failures after an eligible edit:
     // missing local package collateral, then invalid required fallback evidence.
     // Search effort is observational, so a zero retry ceiling is not a failure.
-    const auto collateral = project / "subsystems/power_som/README.md";
-    fs::rename(collateral, project / "retained-power-som-README.txt");
+    const auto collateral = project / "subsystems/som_j1/README.md";
+    fs::rename(collateral, project / "retained-som-j1-README.txt");
     for (const auto* failure : {"carrier_structure", "fallbacks"}) {
         if (std::string(failure) == "fallbacks") {
-            fs::rename(project / "retained-power-som-README.txt", collateral);
+            fs::rename(project / "retained-som-j1-README.txt", collateral);
             write(project / "reports/fallback_baseline.json", "INVALID REQUIRED BASELINE\n");
         }
         const auto unchanged = snapshot(project);
