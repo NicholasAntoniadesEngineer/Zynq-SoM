@@ -14,6 +14,11 @@ namespace {
 
 [[noreturn]] void fail(const std::string& what) { run_config_failure(what); }
 
+std::optional<std::string>& studied() {
+    static std::optional<std::string> name;
+    return name;
+}
+
 const JsonNode& member(const JsonNode& node, const std::string& key, JsonKind kind) {
     const JsonNode* found = object_field(node, key);
     if (!found || found->kind != kind) fail("field '" + key + "' is missing or has the wrong type");
@@ -56,7 +61,7 @@ std::vector<std::string> RunConfig::board_arguments(const std::string& board) co
 RunConfig parse_run_config(const JsonNode& document) {
     if (document.kind != JsonKind::Object) fail("the file must hold one object");
     reject_unknown_keys(document, {"schema", "boards", "output", "squeeze", "arrange", "renders", "labels", "timing", "plane_net",
-                                   "audit_projections", "stackup", "overmold_parts"}, run_config_file);
+                                   "audit_projections", "stackup", "overmold_parts", "study"}, run_config_file);
     if (member(document, "schema", JsonKind::String).string_value != "schgen.run/1") fail("unknown schema");
     RunConfig config;
     config.boards = names(member(document, "boards", JsonKind::Array), "boards");
@@ -79,6 +84,12 @@ RunConfig parse_run_config(const JsonNode& document) {
         if (parts.kind != JsonKind::Array) fail("overmold parts of '" + board + "' must be a list");
         config.overmold_parts[board] = names(parts, "overmold_parts");
     }
+    if (const JsonNode* study = object_field(document, "study")) {
+        if (study->kind != JsonKind::Object) fail("'study' must be an object");
+        reject_unknown_keys(*study, {"stackups"}, std::string(run_config_file) + " 'study'");
+        config.study_stackups = names(member(*study, "stackups", JsonKind::Array), "study.stackups");
+        if (config.study_stackups.empty()) fail("'study.stackups' names no stack-up");
+    }
     for (const std::string& board : config.boards) config.stackup_of(board);
     return config;
 }
@@ -90,6 +101,8 @@ RunConfig load_run_config(const std::filesystem::path& file) {
 
 RunConfig apply_run_config(const std::filesystem::path& config_file, const std::string& board) {
     RunConfig config = load_run_config(config_file);
+    config.stackup_of(board);
+    if (studied()) config.stackup[board] = *studied();
     const std::string& name = config.stackup_of(board);
     const StackupCatalogue catalogue = load_stackups(stackup_catalogue_file());
     const auto listed = std::find_if(catalogue.entries.begin(), catalogue.entries.end(),
@@ -101,10 +114,42 @@ RunConfig apply_run_config(const std::filesystem::path& config_file, const std::
     return config;
 }
 
+void study_stackup(std::optional<std::string> name) { studied() = std::move(name); }
+
+RunArguments parse_run_arguments(const std::vector<std::string>& arguments, const std::set<std::string>& valued) {
+    RunArguments out;
+    out.file = run_config_file;
+    for (std::size_t index = 0; index < arguments.size(); ++index) {
+        const std::string& argument = arguments[index];
+        if (argument == "--config") {
+            if (++index == arguments.size()) fail("--config needs a file");
+            out.file = arguments[index];
+        } else if (valued.count(argument)) {
+            if (++index == arguments.size()) fail(argument + " needs a value");
+            if (!out.options.emplace(argument, arguments[index]).second) fail(argument + " is given twice");
+        } else if (argument.rfind("--", 0) == 0) {
+            fail("unknown option " + argument + "; settings belong in the file");
+        } else {
+            out.boards.push_back(argument);
+        }
+    }
+    return out;
+}
+
+std::vector<std::string> chosen_boards(const RunConfig& config, const std::vector<std::string>& chosen) {
+    const std::set<std::string> known(config.boards.begin(), config.boards.end());
+    for (const std::string& board : chosen)
+        if (!known.count(board)) fail("board '" + board + "' is not listed under 'boards'");
+    return chosen.empty() ? config.boards : chosen;
+}
+
 std::string run_usage() {
     return "usage: schgen [run] [BOARD ...] [--config FILE]\n"
            "  Builds every board named in schgen.json, or only the boards named here.\n"
            "  Every setting lives in schgen.json; see README.md for the table.\n"
+           "usage: schgen study layers [BOARD ...] [--config FILE] [--stackups NAME,NAME,...]\n"
+           "  Builds the same boards once per stack-up into <output>/study/ and writes one comparison per board.\n"
+           "  The stack-ups come from --stackups, or from 'study.stackups' in schgen.json.\n"
            "  schgen tools    lists the individual commands used for diagnosis.\n";
 }
 

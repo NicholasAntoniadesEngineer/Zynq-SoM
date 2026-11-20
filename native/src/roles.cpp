@@ -71,4 +71,8 @@ UnderRegion under_region(bool owner_is_module_connector) {
     return owner_is_module_connector ? UnderRegion::module_body : UnderRegion::owner_courtyard;
 }
 
+bool corridor_guest(const RoleRule& role, bool owner_is_module_connector) {
+    return role.terminates_line && owner_is_module_connector;
+}
+
 }

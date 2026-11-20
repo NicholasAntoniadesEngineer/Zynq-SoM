@@ -197,7 +197,8 @@ StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model
          << " mm before, " << to_mm(held_after) << " mm after\n";
     text << "OWNER ATTRACTION: " << result.attract.wanted << " parts wanted a seat at the pin they serve, "
          << result.attract.seated << " seated (" << result.attract.to_rear << " to the rear, "
-         << result.attract.moved_aside << " blockers moved aside, " << result.attract.far_seated
+         << result.attract.moved_aside << " blockers moved aside, " << result.attract.together
+         << " seated together with the parts they are tied to, " << result.attract.far_seated
          << " took the nearest room beyond the first search); preferences met "
          << result.attract.met_before << " to " << result.attract.met_after << " of "
          << binding.problem.constraints.soft_gaps.size() << "\n"

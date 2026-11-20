@@ -488,7 +488,8 @@ std::optional<Breach> Kernel::self_breach(std::size_t part, const Shape& shape, 
     for (std::size_t reserve = 0; reserve < reserve_boxes_.size(); ++reserve) {
         const Reserve& field = problem_.reserves[reserve];
         const bool faced = pose.face == Face::top ? field.top : field.bottom;
-        if ((!faced && shape.holes.empty()) || owns(reserve, part)) continue;
+        const bool guest = std::find(field.guests.begin(), field.guests.end(), part) != field.guests.end();
+        if ((!faced && shape.holes.empty()) || owns(reserve, part) || (guest && shape.holes.empty())) continue;
         if (overlaps(shape.bound, reserve_boxes_[reserve])) return Breach::reserved;
     }
     if (!item.fixed && problem_.rules.plane_margin > 0) {

@@ -36,14 +36,14 @@
         "R2",
         "R3"
       ],
-      "max_mm": 40.0,
+      "max_mm": 70.0,
       "min_from": [
         {
           "part": "J1",
           "min_mm": 8.0
         }
       ],
-      "basis": "XAPP894 Fig 4/Fig 6 'Place close to FPGA' — every D-PHY term at the RECEIVER end, >=8mm clear of the FFC; either face, so a term may sit on the rear under the module at the pin it serves|judgment:8.0 FFC clearance (40mm max is a loose zone-span host bound)"
+      "basis": "XAPP894 Fig 4/Fig 6 'Place close to FPGA' — every D-PHY term at the RECEIVER end, >=8mm clear of the FFC; either face, so a term may sit on the rear under the module at the pin it serves|judgment:8.0 FFC clearance (70mm max is a loose bound spanning the FFC-side clamp to the module-side terminations, not a design target)"
     },
     {
       "type": "proximity",

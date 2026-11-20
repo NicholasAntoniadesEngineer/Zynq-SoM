@@ -497,8 +497,21 @@
      }
     ]
    ],
-   "pair_basis": "",
-   "pairs": []
+   "pair_basis": "field solve on JLCPCB's published calculation parameters with its published 7.1 mil pressed outer 7628 thickness, checked against its calculator on JLC04161H-7628; confirm against the fabricator's calculator before release",
+   "pairs": [
+    {
+     "impedance": 90,
+     "width_mm": 0.2688,
+     "gap_mm": 0.2032,
+     "source": "field solve on JLCPCB parameters, 7628 outer prepreg"
+    },
+    {
+     "impedance": 100,
+     "width_mm": 0.2118,
+     "gap_mm": 0.2032,
+     "source": "field solve on JLCPCB parameters, 7628 outer prepreg"
+    }
+   ]
   },
   {
    "name": "JLC08161H-2116",
@@ -577,8 +590,21 @@
      }
     ]
    ],
-   "pair_basis": "",
-   "pairs": []
+   "pair_basis": "field solve on JLCPCB's published calculation parameters; the 4.5 mil pressed outer 2116 thickness is inferred from the 1 mil outer reduction JLCPCB publishes for 7628 and 3313, not published itself; confirm against the fabricator's calculator before release",
+   "pairs": [
+    {
+     "impedance": 90,
+     "width_mm": 0.1872,
+     "gap_mm": 0.2032,
+     "source": "field solve on JLCPCB parameters, 2116 outer prepreg, pressed thickness inferred"
+    },
+    {
+     "impedance": 100,
+     "width_mm": 0.1486,
+     "gap_mm": 0.2032,
+     "source": "field solve on JLCPCB parameters, 2116 outer prepreg, pressed thickness inferred"
+    }
+   ]
   },
   {
    "name": "JLC10161H-2116",
@@ -661,8 +687,21 @@
      }
     ]
    ],
-   "pair_basis": "",
-   "pairs": []
+   "pair_basis": "field solve on JLCPCB's published calculation parameters; the 4.5 mil pressed outer 2116 thickness is inferred from the 1 mil outer reduction JLCPCB publishes for 7628 and 3313, not published itself; confirm against the fabricator's calculator before release",
+   "pairs": [
+    {
+     "impedance": 90,
+     "width_mm": 0.1838,
+     "gap_mm": 0.2032,
+     "source": "field solve on JLCPCB parameters, 2116 outer prepreg, pressed thickness inferred"
+    },
+    {
+     "impedance": 100,
+     "width_mm": 0.1458,
+     "gap_mm": 0.2032,
+     "source": "field solve on JLCPCB parameters, 2116 outer prepreg, pressed thickness inferred"
+    }
+   ]
   }
  ]
 }

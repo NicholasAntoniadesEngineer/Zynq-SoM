@@ -25,7 +25,7 @@ inline constexpr std::array sink_registry{sink_reach, ring_limit, aside_reach, e
 }
 
 struct AttractReport {
-    std::size_t wanted = 0, seated = 0, to_rear = 0, met_before = 0, met_after = 0, moved_aside = 0, far_seated = 0;
+    std::size_t wanted = 0, seated = 0, to_rear = 0, met_before = 0, met_after = 0, moved_aside = 0, far_seated = 0, together = 0;
     Nm routed_before = 0, routed_after = 0;
 };
 

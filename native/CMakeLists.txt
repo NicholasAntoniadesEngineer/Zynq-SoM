@@ -16,7 +16,7 @@ endif()
 # Compile one engine shared by the standalone CLI and native contracts.
 include(cmake/AuthoringPurity.cmake)
 add_library(schgen_core STATIC
-    src/occupancy.cpp src/occupancy_precision.cpp src/seat.cpp src/sexpr.cpp src/route.cpp src/emit.cpp src/stackup.cpp src/run_config.cpp
+    src/occupancy.cpp src/occupancy_precision.cpp src/seat.cpp src/sexpr.cpp src/route.cpp src/emit.cpp src/stackup.cpp src/run_config.cpp src/study.cpp
     src/legalize.cpp src/quantize.cpp src/precision_ops.cpp src/turn.cpp src/pack.cpp
     src/legalize_precision.cpp src/stage_precision.cpp
     src/placement_precision.cpp src/output_precision.cpp src/pack_precision.cpp
@@ -186,7 +186,7 @@ set_source_files_properties(src/turn.cpp src/pack_anchor.cpp src/symbols.cpp
                             src/pcb_checks_return_path.cpp src/pcb_checks_ampacity.cpp src/pcb_checks_escape.cpp src/pcb_checks_stitch.cpp src/placement_integrity.cpp PROPERTIES
     COMPILE_OPTIONS "-ffp-contract=off")
 
-add_executable(schgen src/main.cpp src/project_cli.cpp src/run_cli.cpp)
+add_executable(schgen src/main.cpp src/project_cli.cpp src/run_cli.cpp src/study_cli.cpp)
 target_link_libraries(schgen PRIVATE schgen_core)
 target_compile_options(schgen PRIVATE -Wall -Wextra -Wpedantic -Werror)
 set_target_properties(schgen PROPERTIES
@@ -1164,6 +1164,18 @@ if(BUILD_TESTING)
     target_compile_options(schgen_constraints_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
     add_test(NAME native_constraints_contracts COMMAND schgen_constraints_contracts
         "${CMAKE_CURRENT_SOURCE_DIR}/.." "${CMAKE_CURRENT_SOURCE_DIR}/tests/data/constraints")
+    add_executable(schgen_study_contracts tests/study_contracts.cpp)
+    target_link_libraries(schgen_study_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_study_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME native_study_contracts COMMAND schgen_study_contracts)
+    add_test(NAME native_study_cli_needs_stackups COMMAND schgen study layers
+        --config "${CMAKE_CURRENT_SOURCE_DIR}/tests/data/study/no_study.json")
+    set_tests_properties(native_study_cli_needs_stackups PROPERTIES
+        PASS_REGULAR_EXPRESSION "study layers: no stack-ups to compare")
+    add_test(NAME native_study_cli_unknown_stackup COMMAND schgen study layers
+        --config "${CMAKE_CURRENT_SOURCE_DIR}/tests/data/study/no_study.json" --stackups JLC06161H-3313,absent)
+    set_tests_properties(native_study_cli_unknown_stackup PROPERTIES
+        PASS_REGULAR_EXPRESSION "stack-up absent: is not in the catalogue")
     add_executable(schgen_mirror_contracts tests/mirror_contracts.cpp)
     target_link_libraries(schgen_mirror_contracts PRIVATE schgen_core)
     target_compile_options(schgen_mirror_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)

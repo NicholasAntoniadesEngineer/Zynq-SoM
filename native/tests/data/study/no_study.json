@@ -1,0 +1,18 @@
+{
+  "schema": "schgen.run/1",
+  "boards": ["devkit_mini"],
+  "output": "out",
+  "squeeze": true,
+  "arrange": true,
+  "renders": false,
+  "labels": false,
+  "timing": false,
+  "plane_net": "GND",
+  "audit_projections": 2,
+  "stackup": {
+    "devkit_mini": "JLC06161H-3313"
+  },
+  "overmold_parts": {
+    "devkit_mini": []
+  }
+}

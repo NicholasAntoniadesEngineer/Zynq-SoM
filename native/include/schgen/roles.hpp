@@ -70,5 +70,6 @@ FaceDemand face_demand(const RoleRule& role, bool owner_is_regulator, bool owner
 enum class UnderRegion : std::uint8_t { owner_courtyard, module_body };
 
 UnderRegion under_region(bool owner_is_module_connector);
+bool corridor_guest(const RoleRule& role, bool owner_is_module_connector);
 
 }
