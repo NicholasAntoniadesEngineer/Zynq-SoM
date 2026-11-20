@@ -1,13 +1,19 @@
 #include "schgen/run_config.hpp"
 
+#include "schgen/catalog.hpp"
+#include "schgen/project_catalog.hpp"
 #include "schgen/project_cli.hpp"
 
+#include <filesystem>
 #include <iostream>
 #include <stdexcept>
 
 namespace schgen {
 
 int run_board(const RunConfig& config, const std::string& board) {
+    const ProjectCatalogPaths catalogue = project_catalog_paths(std::filesystem::current_path(), board);
+    if (!compile_part_catalog(catalogue.parts_dir.string(), catalogue.part_catalog.string()))
+        throw std::runtime_error("the part catalogue could not be compiled from " + catalogue.parts_dir.string());
     std::vector<std::string> arguments = config.board_arguments(board);
     std::vector<char*> raw;
     for (std::string& argument : arguments) raw.push_back(argument.data());
