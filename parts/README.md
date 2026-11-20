@@ -143,8 +143,8 @@ hand-kept file in this folder. It holds what the generator cannot know:
 The board's I2C inventory reads these two sections: a bus is the pair of nets
 on a device's data and clock pins (or a typed `i2c` port pair), named by the
 `bus` of its typed ports, else by its data net; buses joined by a bridge that
-shares addresses form one address space. An integrated circuit on a bus net
-with neither row and no `protect` purpose fails the build.
+shares addresses form one address space. A part of class `integrated_circuit`
+on a bus net with neither row fails the build.
 
 Each of these sections must be present; an empty one is `{}`. A key naming a
 part must be the name of a folder in this folder; the keys of `zeners` (values)

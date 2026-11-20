@@ -1,6 +1,7 @@
 #include "board_pipeline_internal.hpp"
 #include "schgen/board_files.hpp"
 #include "schgen/gallery.hpp"
+#include "schgen/i2c_inventory.hpp"
 #include "schgen/native_render.hpp"
 #include "schgen/model3d.hpp"
 
@@ -45,6 +46,10 @@ void document_stages(Context& c){
     c.attempt("gallery",[&]{auto paths=c.paths;paths.project_root=c.out;if(c.out!=c.paths.project_root){paths.root_readme=false;paths.repository_root=c.out.parent_path();}
         const auto input=load_gallery_input(paths,c.circuits);const auto changed=write_gallery(input);c.gate("gallery",true,gallery_summary(input,changed));});
     c.attempt("si",[&]{if(!c.pcb_published)throw ProjectError("PCB emission must precede SI extension");const auto r=run_si_constraints(c.circuits,c.paths.project_root/"research/si_spec.json",c.manufacturing/board_file_name(c.paths.file_stem,BoardFileKind::DesignRules),c.manufacturing/"SI_CONSTRAINTS.md");c.gate("si",r.verdict.ok,r.verdict.summary());});
+    c.attempt("i2c_bus_map",[&]{const PartFacts& facts=default_part_facts();const auto inventory=build_i2c_inventory(c.circuits,facts);
+        publish_text(c.reports/"i2c_bus_map.txt",inventory.text());
+        auto errors=verify_i2c_inventory(inventory,c.circuits,facts);for(const auto& collision:i2c_address_collisions(inventory))errors.push_back(collision);
+        c.gate("i2c_bus_map",errors.empty(),std::to_string(inventory.devices.size())+" devices on "+std::to_string(inventory.buses.size())+" buses; "+std::to_string(inventory.bridges.size())+" bridged lines; "+std::to_string(inventory.pullups.size())+" pull-ups"+(errors.empty()?"":"; "+join(errors,"; ")));});
     manifest_stage(c);
     golden_stage(c);
     c.attempt("contract_coverage_lint",[&]{
