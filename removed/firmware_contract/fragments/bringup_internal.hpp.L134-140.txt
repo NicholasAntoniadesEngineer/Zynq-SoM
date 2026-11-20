@@ -1,0 +1,7 @@
+inline std::vector<std::string> consumers(const FirmwareDocsInput& in,const std::string& rail) {
+    const std::vector<std::string> excluded{"bringup_modules","bringup_rails","bringup_en","bringup_en_modules","power","power_mon"};
+    std::vector<std::string> out;
+    for(const auto& [name,c]:sheets(in)) if(!contains(excluded,name))
+        if(std::any_of(c->nets.begin(),c->nets.end(),[&](const auto& n){return n.name==rail;})) out.push_back(name);
+    return out;
+}

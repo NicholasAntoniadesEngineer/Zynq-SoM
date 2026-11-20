@@ -2,6 +2,7 @@
 #include "schgen/board_pipeline.hpp"
 #include "schgen/pcb_verification.hpp"
 #include "schgen/firmware_docs.hpp"
+#include "schgen/spice.hpp"
 #include "schgen/design_rules.hpp"
 #include "schgen/execution_timing.hpp"
 #include "schgen/project_outputs.hpp"
@@ -36,7 +37,6 @@ struct Context {
     std::optional<PowerCheckResult> power;
     std::optional<TestpointCoverage> testpoints;
     std::optional<SpiceResult> spice;
-    std::optional<FirmwareDocsInput> firmware;
     std::optional<ManufacturingXdc> xdc;
     std::optional<ManufacturingManifestInput> manifest_input;
     NativeLedger ledger;
@@ -73,6 +73,7 @@ void schematic_stage(Context&);
 void electrical_stages(Context&);
 void pcb_stages(Context&);
 void document_stages(Context&);
+void manifest_stage(Context&);
 void golden_stage(Context&);
 void audit_stages(Context&);
 void publish_final_reports(Context&);

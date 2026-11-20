@@ -6,6 +6,13 @@
 namespace schgen {
 using namespace manufacturing_detail;
 namespace {
+const char* const expander_sheet="bringup_rails";
+const char* const monitor_sheet="power_mon";
+const char* const usb_sheet="usb_pd";
+const char* const services_sheet="board_services";
+const char* const fusb302_part="FUSB302";
+const int fusb302_fixed_address=0x22;
+const int rtc_fixed_address=0x52;
 std::string field_value(const CircuitPartIr& p,const std::string& key){for(const auto& f:p.fields)if(f.key==key)return f.value;return "";}
 JsonNode rails(const ManufacturingManifestInput& in,const PowerPolicy& policy){
     std::map<std::string,std::string> fed;std::map<std::string,double> limits,loads;std::map<std::string,std::vector<PowerDraw>> draws;
@@ -28,8 +35,8 @@ JsonNode i2c(const std::vector<ProjectCircuit>& sheets){
     for(const auto& [name,ptr]:cs){const auto& c=*ptr;
         if(std::any_of(c.parts.begin(),c.parts.end(),[](const auto& p){return has(p.value,"TCA9535");})){const auto e=bringup_expander(c);rows.emplace_back(e.addr,"TCA9535",name,e.ref,"STM32_I2C2");}
         for(const auto& m:ina3221_monitors(c))rows.emplace_back(m.addr,"INA3221",name,m.ref,"STM32_I2C2");
-        for(const auto& p:c.parts)if(has(p.value,"FUSB302"))rows.emplace_back(0x22,"FUSB302B",name,p.ref,"STM32_I2C2");
-        if(name=="board_services"){rows.emplace_back(bringup_id_eeprom_addr(c),"24AA025E48",name,"U1","AUX_I2C");rows.emplace_back(0x52,"RV-3028",name,"U2","AUX_I2C");}
+        for(const auto& p:c.parts)if(has(p.value,fusb302_part))rows.emplace_back(fusb302_fixed_address,"FUSB302B",name,p.ref,"STM32_I2C2");
+        if(name==services_sheet){rows.emplace_back(bringup_id_eeprom_addr(c),"24AA025E48",name,"U1","AUX_I2C");rows.emplace_back(rtc_fixed_address,"RV-3028",name,"U2","AUX_I2C");}
     }std::sort(rows.begin(),rows.end());std::vector<JsonNode> out;
     for(const auto& [addr,dev,sheet,ref,bus]:rows)out.push_back(obj({{"device",j(dev)},{"addr",j(addr)},{"addr_hex",j("0x"+hex(addr))},{"bus",j(bus)},{"sheet",j(sheet)},{"ref",j(ref)}}));
     return arr(std::move(out));
@@ -43,12 +50,26 @@ JsonNode bom(const ManufacturingManifestInput& in){
     return obj({{"lines",j(groups.size())},{"parts",j(count)},{"missing",arr(std::move(ms))},{"cost",in.preflight.cost?j(decimal_round(*in.preflight.cost,4)):JsonNode{}},{"extended",in.preflight.extended?j(static_cast<double>(*in.preflight.extended)):JsonNode{}}});
 }
 }
+void check_i2c_address_collisions(const std::vector<ProjectCircuit>& sheets){
+    const auto sheet_at=[&](const std::string& name){return std::find_if(sheets.begin(),sheets.end(),[&](const auto& sc){return sc.name==name;});};
+    const auto rails=sheet_at(expander_sheet),pmon=sheet_at(monitor_sheet),usbpd=sheet_at(usb_sheet),services=sheet_at(services_sheet);
+    std::vector<std::pair<std::string,int>> addresses;
+    if(rails!=sheets.end()){const auto expander=bringup_expander(rails->circuit);addresses.emplace_back(std::string(expander_sheet)+":"+expander.ref,expander.addr);}
+    const auto monitors=pmon!=sheets.end()?ina3221_monitors(pmon->circuit):std::vector<BringupMonitor>{};
+    if(usbpd!=sheets.end()&&!std::any_of(usbpd->circuit.parts.begin(),usbpd->circuit.parts.end(),[](const auto& p){return has(p.value,fusb302_part);}))throw FirmwareDocsError(std::string(usb_sheet)+" netlist no longer carries a "+fusb302_part+" — I2C address map stale");
+    if(usbpd!=sheets.end())addresses.emplace_back(usb_sheet,fusb302_fixed_address);
+    for(const auto& m:monitors)addresses.emplace_back(std::string(monitor_sheet)+":"+m.ref,m.addr);
+    if(services!=sheets.end()){addresses.emplace_back(std::string(services_sheet)+":memory",bringup_id_eeprom_addr(services->circuit));addresses.emplace_back(std::string(services_sheet)+":clock",rtc_fixed_address);}
+    std::set<int> unique;std::vector<std::string> collision;
+    for(const auto& [device,address]:addresses){unique.insert(address);collision.push_back(device+"=0x"+hex(address,0,false));}
+    if(unique.size()!=addresses.size())throw FirmwareDocsError("I2C address collision: "+join(collision,", "));
+}
 std::vector<ProjectArtifact> manufacturing_artifacts(const std::filesystem::path& root,const std::filesystem::path& out,const std::string& file_stem){
     namespace fs=std::filesystem;
     std::map<std::string,fs::path> selected;const auto exclude=fs::weakly_canonical(out);
     const auto add=[&](const fs::path& p){if(fs::is_regular_file(p)&&fs::weakly_canonical(p)!=exclude)selected[p.lexically_relative(root).generic_string()]=p;};
-    for(const auto& rel:std::vector<std::string>{board_file_name(file_stem,BoardFileKind::Schematic),board_file_name(file_stem,BoardFileKind::Project),board_file_name(file_stem,BoardFileKind::Pcb),"manufacturing/SI_CONSTRAINTS.md","docs/BRINGUP.md","docs/FLOORPLAN.md","docs/DESIGN_SPEC.md","docs/COMPLIANCE.md"})add(root/rel);
-    for(const auto& [dir,ext]:ProjectStrings{{"schematic",".kicad_sch"},{"fpga",".xdc"},{"firmware",".h"},{"manufacturing",".csv"},{"manufacturing",".txt"},{"manufacturing",".kicad_dru"},{"reports",".txt"},{"docs",".svg"}}){
+    for(const auto& rel:std::vector<std::string>{board_file_name(file_stem,BoardFileKind::Schematic),board_file_name(file_stem,BoardFileKind::Project),board_file_name(file_stem,BoardFileKind::Pcb),"manufacturing/SI_CONSTRAINTS.md","docs/FLOORPLAN.md","docs/DESIGN_SPEC.md","docs/COMPLIANCE.md"})add(root/rel);
+    for(const auto& [dir,ext]:ProjectStrings{{"schematic",".kicad_sch"},{"fpga",".xdc"},{"manufacturing",".csv"},{"manufacturing",".txt"},{"manufacturing",".kicad_dru"},{"reports",".txt"},{"docs",".svg"}}){
         const auto p=root/dir;if(!fs::exists(p))continue;
         for(const auto& entry:fs::directory_iterator(p))if(ends(entry.path().filename().string(),ext))add(entry.path());
     }

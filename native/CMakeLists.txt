@@ -37,8 +37,7 @@ add_library(schgen_core STATIC
     src/power_checks.cpp src/thermal_checks.cpp src/part_checks.cpp
     src/bom_values.cpp src/footprint_pads.cpp src/pin_completeness.cpp src/symbol_law.cpp
     src/spice.cpp src/spice_process.cpp src/process.cpp
-    src/bringup_facts.cpp src/firmware_docs.cpp src/firmware_docs_manual.cpp src/firmware_provenance.cpp
-    src/firmware_docs_testplan.cpp src/firmware_docs_scfw.cpp src/firmware_docs_power_sequence.cpp
+    src/bringup_facts.cpp src/firmware_docs_power_sequence.cpp
     src/pcb_checks_model.cpp src/pcb_checks_connectors.cpp src/pcb_checks_placement.cpp
     src/pcb_checks_return_path.cpp src/pcb_checks_ampacity.cpp src/pcb_checks_escape.cpp src/pcb_checks_stitch.cpp)
 target_compile_definitions(schgen_core PRIVATE SCHGEN_STACKUP_CATALOG="${CMAKE_CURRENT_SOURCE_DIR}/stackups.json")
@@ -739,7 +738,6 @@ if(BUILD_TESTING)
     target_link_libraries(schgen_pcb_checks_contracts PRIVATE schgen_core)
     target_compile_options(schgen_pcb_checks_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
     add_test(NAME native_pcb_checks_contracts COMMAND schgen_pcb_checks_contracts "${CMAKE_CURRENT_SOURCE_DIR}/..")
-    add_executable(schgen_firmware_docs_contracts tests/firmware_docs_contracts.cpp)
     add_executable(schgen_process_contracts tests/process_contracts.cpp)
     # Frozen pre-pipe implementation is a local, independent parity oracle;
     # never fetch repository history or compile the candidate twice as baseline.
@@ -1153,15 +1151,17 @@ if(BUILD_TESTING)
         -o "${CMAKE_CURRENT_BINARY_DIR}/single-sheet-live")
     set_tests_properties(native_board_pipeline_live_contracts native_single_sheet_live
         PROPERTIES LABELS "live-kicad")
-    add_executable(schgen_firmware_provenance_contracts tests/firmware_provenance_contracts.cpp)
-    target_link_libraries(schgen_firmware_provenance_contracts PRIVATE schgen_core)
-    target_compile_options(schgen_firmware_provenance_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
-    add_test(NAME native_firmware_provenance_contracts COMMAND schgen_firmware_provenance_contracts
+    add_executable(schgen_power_sequence_contracts tests/power_sequence_contracts.cpp)
+    target_link_libraries(schgen_power_sequence_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_power_sequence_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME native_power_sequence_contracts COMMAND schgen_power_sequence_contracts
         "${CMAKE_CURRENT_SOURCE_DIR}/..")
-    target_link_libraries(schgen_firmware_docs_contracts PRIVATE schgen_core)
-    target_compile_options(schgen_firmware_docs_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
-    add_test(NAME native_firmware_docs_contracts COMMAND schgen_firmware_docs_contracts
-        "${CMAKE_CURRENT_SOURCE_DIR}/.." "${CMAKE_CURRENT_BINARY_DIR}/firmware-docs-contract-output")
+    add_executable(schgen_i2c_collision_contracts tests/i2c_collision_contracts.cpp)
+    target_include_directories(schgen_i2c_collision_contracts PRIVATE src)
+    target_link_libraries(schgen_i2c_collision_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_i2c_collision_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME native_i2c_collision_contracts COMMAND schgen_i2c_collision_contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/..")
     foreach(family verification spice)
         add_executable(schgen_${family}_contracts tests/${family}_contracts.cpp)
         target_link_libraries(schgen_${family}_contracts PRIVATE schgen_core)
@@ -1390,7 +1390,7 @@ if(BUILD_TESTING)
             design-rules testpoints board-schematic pcb-stage pcb-drc subsystem-new render3d board-step
             model3d-check assembly ratsnest gallery diagram si-constraints fab-profile manifest preflight
             constraints powertree thermal part-rules bom-values footprint-pads pin-completeness symbol-law
-            spice firmware manual scfw testplan power-sequence subsystem-check carrier-check check floorplan compose)
+            spice power-sequence subsystem-check carrier-check check floorplan compose)
         add_test(NAME native_${command}_help COMMAND schgen ${command} --help --repo /nonexistent/schgen-help-must-not-read)
     endforeach()
     add_test(NAME native_part_import_help COMMAND schgen part-import --help

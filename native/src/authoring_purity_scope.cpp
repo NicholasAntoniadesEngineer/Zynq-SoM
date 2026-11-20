@@ -63,9 +63,6 @@ AuthoringPurityScope native_authoring_purity_scope() {
     for (const auto* identity : {
         "native/src/circuit.cpp::schgen::load_circuit_json | schgen::CircuitSheetIr (const std::filesystem::path &)",
         "native/src/circuit.cpp::schgen::lookup_circuit_catalog | schgen::CircuitSheetIr (const std::string &)",
-        "native/src/bringup_internal.hpp::schgen::bringup_detail::sheet | const schgen::CircuitSheetIr *(const schgen::FirmwareDocsInput &, const std::string &)",
-        "native/src/bringup_internal.hpp::schgen::bringup_detail::required | const schgen::CircuitSheetIr &(const schgen::FirmwareDocsInput &, const std::string &)",
-        "native/src/bringup_internal.hpp::schgen::bringup_detail::sheets | std::map<std::string, const schgen::CircuitSheetIr *> (const schgen::FirmwareDocsInput &)",
         "native/src/copper_debt.cpp::schgen::sheet | const schgen::CircuitSheetIr &(const schgen::CopperDebtSources &, const std::string &, const std::string &)",
         "native/src/schematic_place_pages.cpp::schgen::schematic_place::split_auxiliary | std::pair<schgen::CircuitSheetIr, std::vector<std::string>> (const schgen::CircuitSheetIr &)",
         "native/src/schematic_place_pages.cpp::schgen::schematic_place::subset_page | schgen::CircuitSheetIr (const schgen::CircuitSheetIr &, const std::set<std::string> &, int)",

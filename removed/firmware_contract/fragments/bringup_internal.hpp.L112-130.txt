@@ -1,0 +1,19 @@
+inline const CircuitSheetIr* sheet(const FirmwareDocsInput& in,const std::string& name) {
+    for(const auto& s:in.sheets) if(s.name==name) return &s.circuit;
+    return nullptr;
+}
+inline const CircuitSheetIr& required(const FirmwareDocsInput& in,const std::string& name) {
+    const auto* s=sheet(in,name); if(!s) throw FirmwareDocsError("missing required subsystem: "+name); return *s;
+}
+inline std::map<std::string,const CircuitSheetIr*> sheets(const FirmwareDocsInput& in) {
+    std::map<std::string,const CircuitSheetIr*> out; for(const auto& s:in.sheets)out[s.name]=&s.circuit;return out;
+}
+inline std::map<std::string,EnCell> cells(const CircuitSheetIr* c) {
+    std::map<std::string,EnCell> out; if(c)for(const auto& e:en_cells(*c))out[e.enable]=e;return out;
+}
+inline std::optional<double> fb_vref(const std::string& value) {
+    for(const auto& [part,v]:std::vector<std::pair<std::string,double>>{{"TPS54302",.596},{"LMR33630",1},{"LM61460",1}})
+        if(has(value,part)) return v;
+    return std::nullopt;
+}
+inline const ProjectStrings rail_override_gpio{{"STM32_RAIL_EN_5V0","STM32_GPIO1"},{"STM32_RAIL_EN_3V3","STM32_GPIO2"},{"STM32_RAIL_EN_1V8","STM32_GPIO3"}};

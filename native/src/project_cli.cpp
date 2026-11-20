@@ -87,7 +87,7 @@ struct Options {
     std::set<std::string> help_options;
     long long quantity = 1, minimum_stock = 50;
 };
-const std::set<std::string> commands{"selftest", "project-check", "circuit-check", "som-interface", "xdc", "bom", "link", "design-rules", "testpoints", "board-schematic", "pcb-stage", "pcb-drc", "subsystem-new", "render3d", "board-step", "model3d-check", "assembly", "ratsnest", "gallery", "diagram", "si-constraints", "fab-profile", "manifest", "preflight", "constraints", "powertree", "thermal", "part-rules", "bom-values", "footprint-pads", "pin-completeness", "symbol-law", "spice", "firmware", "manual", "scfw", "testplan", "power-sequence"};
+const std::set<std::string> commands{"selftest", "project-check", "circuit-check", "som-interface", "xdc", "bom", "link", "design-rules", "testpoints", "board-schematic", "pcb-stage", "pcb-drc", "subsystem-new", "render3d", "board-step", "model3d-check", "assembly", "ratsnest", "gallery", "diagram", "si-constraints", "fab-profile", "manifest", "preflight", "constraints", "powertree", "thermal", "part-rules", "bom-values", "footprint-pads", "pin-completeness", "symbol-law", "spice", "power-sequence"};
 bool experiment_command(const std::string& name){
     return name=="chir-rung"||name=="w11-sweep"||name=="w12-bound"||name=="w12-stageprobe"||name=="dump-circuits";
 }
@@ -350,9 +350,9 @@ Options parse(int argc, char** argv) {
         if (out.command == "thermal") allowed.insert("--pcb");
     } else if (out.command == "spice") {
         allowed.insert("--no-ngspice");
-    } else if (out.command == "firmware" || out.command == "manual" || out.command == "scfw" || out.command == "manifest") {
+    } else if (out.command == "manifest") {
         allowed.insert("--kicad-cli");
-    } else if (out.command == "testplan" || out.command == "power-sequence" || out.command == "si-constraints" || out.command == "fab-profile") {
+    } else if (out.command == "power-sequence" || out.command == "si-constraints" || out.command == "fab-profile") {
         // Pure document stages use the selected circuits.
     } else if (out.command == "bom-values" || out.command == "footprint-pads" ||
                out.command == "pin-completeness" || out.command == "symbol-law") {
@@ -755,41 +755,10 @@ std::optional<int> run_project_command(int argc, char** argv) {
         std::cout << result.verdict.summary() << '\n';
         return result.verdict.ok ? 0 : 1;
     }
-    if(options.command=="firmware" || options.command=="manual" || options.command=="scfw" ||
-       options.command=="testplan" || options.command=="power-sequence") {
-        FirmwareDocsInput in;in.sheets=circuits;in.firmware_sources=firmware_sources(paths);
-        std::vector<std::string> missing;
-        if(options.command=="manual")missing=manual_missing_requirements(in);
-        if(options.command=="scfw")missing=scfw_missing_requirements(in);
-        if(!missing.empty()) {
-            std::cout<<options.command<<": SKIP — project missing";
-            for(const auto& name:missing)std::cout<<' '<<name;
-            std::cout<<'\n';return 1;
-        }
-        if(options.command=="firmware" || options.command=="manual" || options.command=="scfw")
-            in.stm32=stm32_pin_map(extract_som_zynq(paths.som_schematic,"U9",{"J1","J2","J3"},{options.kicad_cli}),
-                                  load_som_interface(paths.som_interface_file));
-        if(options.command=="scfw") {
-            const auto artifacts=render_scfw(in);
-            const auto directory=options.output.empty()?paths.project_root/"firmware/sc":options.output;
-            for(const auto& artifact:artifacts)publish_text(directory/artifact.path,artifact.text);
-            std::cout<<"SCFW SCAFFOLD: "<<directory.string()<<" ("<<artifacts.size()<<" files)\n";return 0;
-        }
-        std::string text;fs::path default_path;
-        if(options.command=="firmware") {text=render_firmware_contract(in);default_path="firmware/zynq_carrier_contract.h";}
-        else if(options.command=="manual") {text=render_bringup_manual(in);default_path="docs/BRINGUP.md";}
-        else if(options.command=="power-sequence") {
-            const auto power=analyze_power(circuits);
-            text=render_power_sequence_svg(build_power_sequence(circuits,power),power.ok());default_path="docs/power_sequence.svg";
-        } else {
-            ProjectStrings probes;
-            for(const auto& [net,locations]:check_testpoint_coverage(sheets).have) {
-                std::string value;for(const auto& location:locations){if(!value.empty())value+=", ";value+=location;}
-                probes.emplace_back(net,value);
-            }
-            text=render_test_plan(in,extract_spice_checks(circuits),probes);default_path="docs/TEST_PLAN.md";
-        }
-        const auto output=options.output.empty()?paths.project_root/default_path:options.output;
+    if(options.command=="power-sequence") {
+        const auto power=analyze_power(circuits);
+        const auto text=render_power_sequence_svg(build_power_sequence(circuits,power),power.ok());
+        const auto output=options.output.empty()?paths.project_root/"docs/power_sequence.svg":options.output;
         publish_text(output,text);std::cout<<options.command<<": "<<output.string()<<'\n';return 0;
     }
     if (options.command == "bom-values" || options.command == "footprint-pads" ||

@@ -1,0 +1,5 @@
+std::vector<RegulatorStage> regulator_chain(const CircuitSheetIr& power,
+    const std::string& root = "+VIN", const CircuitSheetIr* monitor = nullptr);
+std::vector<ModuleGate> module_gates(const CircuitSheetIr&);
+std::optional<int> bringup_shunt_mohm(const CircuitSheetIr&,
+    const std::string& in_p, const std::string& in_n);

@@ -1,0 +1,8 @@
+// Probe values are already-formatted coverage locations (net -> comma joined
+// locations). Analysis owners provide checks/probes; this layer only joins them.
+std::string render_test_plan(const FirmwareDocsInput&, const SpiceResult&,
+    const ProjectStrings& probes);
+// Ordered scan rows: address, reference, description, optional AUX-domain flag.
+// Missing/invalid optional device sections retain the renderer's skip behavior.
+using TestplanI2cDevice = std::tuple<int, std::string, std::string, bool>;
+std::vector<TestplanI2cDevice> testplan_i2c_devices(const std::vector<ProjectCircuit>&);

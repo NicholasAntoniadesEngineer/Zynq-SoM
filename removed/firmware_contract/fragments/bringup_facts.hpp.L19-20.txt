@@ -1,0 +1,2 @@
+struct DipPosition { std::string switch_ref; int position = 0; std::string net; };
+struct EnCell { std::string sheet, gate, dip_net, override_net, enable; };

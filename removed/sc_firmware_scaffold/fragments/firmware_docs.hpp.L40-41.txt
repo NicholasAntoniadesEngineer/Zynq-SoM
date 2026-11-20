@@ -1,0 +1,2 @@
+struct FirmwareDocArtifact { std::string path, text; };
+std::vector<FirmwareDocArtifact> render_scfw(const FirmwareDocsInput&);

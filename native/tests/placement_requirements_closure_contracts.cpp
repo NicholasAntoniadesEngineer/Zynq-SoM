@@ -8,7 +8,7 @@ int main() {
     using namespace schgen;
     try {
         BoardPipelineResult result;result.sheets=1;
-        for(const auto* name:{"inputs","authoring_purity","subsystem_structure","carrier_structure","sheet_gates","cc","symbol_law","link","board_schematic","constraints","diagram","bom_footprints","power_tree","rail_ampacity","testpoints","design_rules","part_rules","bom_values","footprint_pads","spice","pcb","pcb_drc","pcb_geometry","assembly","thermal","copper_debt","fab_profile","xdc","firmware","manual","testplan","gallery","scfw","power_sequence","floorplan","quantize_census","fallbacks","stage_movement","pipeline_doc","model3d","si","manifest","ledger","placement_requirements"})
+        for(const auto* name:{"inputs","authoring_purity","subsystem_structure","carrier_structure","sheet_gates","cc","symbol_law","link","board_schematic","constraints","diagram","bom_footprints","power_tree","rail_ampacity","testpoints","design_rules","part_rules","bom_values","footprint_pads","spice","pcb","pcb_drc","pcb_geometry","assembly","thermal","copper_debt","fab_profile","xdc","gallery","power_sequence","floorplan","quantize_census","fallbacks","stage_movement","pipeline_doc","model3d","si","manifest","ledger","placement_requirements"})
             result.gates.push_back({name,true,BoardGateStatus::passed,"aggregation fixture"});
         if(!result.ok()||!result.complete())throw std::runtime_error("baseline must contain all required gates");
         auto omitted=result;
