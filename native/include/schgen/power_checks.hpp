@@ -11,23 +11,18 @@ public:
     using std::runtime_error::runtime_error;
 };
 
-struct PowerRegSpec {
-    std::string kind;
-    std::optional<double> limit_a;
-    double eff = 1.0;
-    std::string in_pin, out_pin, iset_pin;
-    double ilim_num = 6800.0;
-    std::string note;
-};
 struct PowerSource { double volts = 0.0, amps = 0.0; std::string note; };
 struct PowerPolicy {
     // First matching regex/prefix wins, exactly as the authoring policy.
     std::vector<std::pair<std::string, double>> voltage_patterns;
-    std::vector<std::pair<std::string, PowerRegSpec>> regulators;
+    RegulatorFacts regulators;
+    ZenerFacts zeners;
+    ReferencePinFacts reference_pins;
     std::vector<std::pair<std::string, PowerSource>> sources;
     ProjectStrings known_deferred;
 };
 const PowerPolicy& default_power_policy();
+std::string catalogue_part_number(const CircuitPartIr& part);
 std::optional<double> parse_si_value(const std::string& text);
 std::optional<double> rail_volts(const std::string& name,
     const PowerPolicy& policy = default_power_policy());

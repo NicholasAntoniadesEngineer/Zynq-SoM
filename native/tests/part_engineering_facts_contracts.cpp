@@ -28,14 +28,15 @@ const std::string copper_row =
 const std::string ep_row = "{\"min_pads\": 4, \"radius_mm\": 1.5}";
 const std::string isolation_row = "{\"margin_mm\": 0.6}";
 const std::string regulator_row =
-    "{\"kind\": \"buck\", \"limit_a\": 6.0, \"eff\": 0.9, \"in_pin\": \"8\", \"out_pin\": \"10\", \"ilim_num\": 6800.0, "
-    "\"note\": \"fixture\", \"fb_vref\": 1.0, \"enable\": {\"en_pin\": \"7\", \"vin_pins\": [\"8\", \"12\"]}}";
+    "{\"kind\": \"buck\", \"label\": \"L1\", \"limit_a\": 6.0, \"eff\": 0.9, \"in_pin\": \"8\", \"out_pin\": \"10\", \"ilim_num\": 6800.0, "
+    "\"note\": \"fixture\", \"fb_vref\": 1.0, \"enable\": {\"direct\": {\"en_pin\": \"7\", \"vin_pins\": [\"8\", \"12\"], \"cite\": \"fixture cite\"}}}";
 const std::string switch_row =
-    "{\"kind\": \"load_switch\", \"eff\": 1.0, \"in_pin\": \"IN\", \"out_pin\": \"OUT\", \"iset_pin\": \"ISET\", "
-    "\"ilim_num\": 6800.0, \"note\": \"fixture\", \"iset_v\": 0.2, \"enable\": {\"ihys_a\": 1.55e-6, \"recommended_max_v\": 5.5, "
-    "\"threshold_v\": 1.21}}";
+    "{\"kind\": \"load_switch\", \"label\": \"L2\", \"eff\": 1.0, \"in_pin\": \"IN\", \"out_pin\": \"OUT\", \"iset_pin\": \"ISET\", "
+    "\"ilim_num\": 6800.0, \"note\": \"fixture\", \"iset_v\": 0.2, \"enable\": {\"network\": {\"ihys_a\": 1.55e-6, \"recommended_max_v\": 5.5, "
+    "\"threshold_v\": 1.21, \"cite\": \"fixture network cite\"}}}";
 const std::string zener_row = "{\"vz_min_v\": 4.845, \"vz_max_v\": 5.355, \"izt_a\": 0.02, \"zzt_ohm\": 17.0}";
-const std::string reference_row = "{\"vref1_pin\": \"2\", \"vref2_pin\": \"7\"}";
+const std::string boost_row = "{\"kind\": \"led_boost\", \"label\": \"L3\", \"iset_v\": 0.2}";
+const std::string reference_row = "{\"label\": \"L4\", \"vref1_pin\": \"2\", \"vref2_pin\": \"7\"}";
 const std::string grid_row = "{\"button_gap_mm\": 2.0}";
 const std::string override_row =
     "{\"footprint\": \"Package_DFN_QFN:fixture\", \"path\": \"${KIPRJMOD}/../parts/P1/P1.wrl\", \"rotation_z_deg\": 90}";
@@ -165,19 +166,14 @@ void small_facts(const std::filesystem::path& scratch) {
     refused_everywhere(scratch, "isolation", fixture::isolation_row);
     refuses([&] { facts_from(scratch, "isolation", rows(with(fixture::isolation_row, "0.6", "true"))); }, "margin_mm",
             "isolation: a margin that is not a number is refused");
-    const PartFacts zener = facts_from(scratch, "zeners", rows(fixture::zener_row));
-    const ZenerFact& z = part_fact_of(zener.zeners, "P1", "zeners");
-    require(z.vz_min_v == 4.845 && z.vz_max_v == 5.355 && z.izt_a == 0.02 && z.zzt_ohm == 17.0, "a zener row carries its numbers");
-    refused_everywhere(scratch, "zeners", fixture::zener_row);
-    refuses([&] { facts_from(scratch, "zeners", rows(with(fixture::zener_row, "\"zzt_ohm\": 17.0", "\"zzt_ohm\": null"))); }, "zzt_ohm",
-            "zeners: a null impedance is refused");
-    refuses([&] { facts_from(scratch, "zeners", rows(with(fixture::zener_row, "\"vz_min_v\": 4.845", "\"vz_min_v\": 6"))); }, "vz_min_v",
-            "zeners: a minimum above the maximum is refused");
     const PartFacts reference = facts_from(scratch, "reference_pins", rows(fixture::reference_row));
-    require(part_fact_of(reference.reference_pins, "P1", "reference_pins").vref1_pin == "2" &&
+    require(part_fact_of(reference.reference_pins, "P1", "reference_pins").label == "L4" &&
+                part_fact_of(reference.reference_pins, "P1", "reference_pins").vref1_pin == "2" &&
                 part_fact_of(reference.reference_pins, "P1", "reference_pins").vref2_pin == "7",
             "a reference_pins row carries its pins");
     refused_everywhere(scratch, "reference_pins", fixture::reference_row);
+    refuses([&] { facts_from(scratch, "reference_pins", rows(with(fixture::reference_row, "\"label\": \"L4\", ", ""))); }, "label",
+            "reference_pins: a row without a label is refused");
     refuses([&] { facts_from(scratch, "reference_pins", rows(with(fixture::reference_row, "\"7\"", "7"))); }, "vref2_pin",
             "reference_pins: a pin that is not text is refused");
     refuses([&] { facts_from(scratch, "reference_pins", rows(with(fixture::reference_row, "\"7\"", "\"2\""))); }, "vref2_pin",
@@ -198,6 +194,26 @@ void small_facts(const std::filesystem::path& scratch) {
             "path", "model_overrides: a row without a path is refused");
 }
 
+void zener_facts(const std::filesystem::path& scratch) {
+    const std::string key = "MMSZ5231B";
+    const auto keyed = [&](const std::string& row) { return "{\"" + key + "\": " + row + "}"; };
+    const PartFacts good = facts_from(scratch, "zeners", keyed(fixture::zener_row));
+    const ZenerFact& z = part_fact_of(good.zeners, key, "zeners");
+    require(z.vz_min_v == 4.845 && z.vz_max_v == 5.355 && z.izt_a == 0.02 && z.zzt_ohm == 17.0, "a zener row carries its numbers");
+    require(part_fact(good.zeners, "MMSZ5231B-7") == nullptr, "a zener is found by its exact value only");
+    refuses([&] { facts_from(scratch, "zeners", keyed(with(fixture::zener_row, "{\"", "{\"unknown_key\": 1, \""))); }, "unknown_key",
+            "zeners: an unknown key is refused");
+    refuses([&] { facts_from(scratch, "zeners", keyed(with(fixture::zener_row, "\"zzt_ohm\": 17.0", "\"zzt_ohm\": null"))); }, "zeners " + key,
+            "zeners: a null impedance is refused naming the section and the key");
+    refuses([&] { facts_from(scratch, "zeners", keyed(with(fixture::zener_row, "\"vz_min_v\": 4.845", "\"vz_min_v\": 6"))); }, "vz_min_v",
+            "zeners: a minimum above the maximum is refused");
+    refuses([&] { facts_from(scratch, "zeners", "{\"" + key + "\": " + fixture::zener_row + ", \"" + key + "\": " + fixture::zener_row + "}"); },
+            "duplicate key '" + key + "'", "zeners: a duplicate key is refused");
+    refuses([&] { facts_from(scratch, "zeners", keyed("3")); }, "zeners " + key, "zeners: a row that is not an object is refused");
+    refuses([&] { facts_from(scratch, "zeners", "[]"); }, "zeners", "zeners: a section that is not an object is refused");
+    refuses([&] { load_part_facts(write_facts(scratch, "zeners", "{}", true)); }, "zeners", "zeners: an absent section is refused");
+}
+
 void regulator_facts(const std::filesystem::path& scratch) {
     const PartFacts buck = facts_from(scratch, "regulators", rows(fixture::regulator_row));
     const RegulatorFact& fact = part_fact_of(buck.regulators, "P1", "regulators");
@@ -206,15 +222,29 @@ void regulator_facts(const std::filesystem::path& scratch) {
             "a regulator row carries its fields");
     require(!fact.iset_pin && !fact.iset_v, "absent optional fields stay absent");
     require(fact.enable && fact.enable->direct && fact.enable->direct->en_pin == "7" &&
-                fact.enable->direct->vin_pins == std::vector<std::string>{"8", "12"} && !fact.enable->network,
+                fact.enable->direct->vin_pins == std::vector<std::string>{"8", "12"} && fact.enable->direct->cite == "fixture cite" && !fact.enable->network,
             "a regulator row carries its direct enable");
     const PartFacts load = facts_from(scratch, "regulators", rows(fixture::switch_row));
     const RegulatorFact& other = part_fact_of(load.regulators, "P1", "regulators");
     require(other.iset_pin == "ISET" && other.iset_v == 0.2 && !other.limit_a && !other.fb_vref, "a switch row carries its ISET fields");
     require(other.enable && !other.enable->direct && other.enable->network && other.enable->network->ihys_a == 1.55e-6 &&
-                other.enable->network->recommended_max_v == 5.5 && other.enable->network->threshold_v == 1.21,
+                other.enable->network->recommended_max_v == 5.5 && other.enable->network->threshold_v == 1.21 &&
+                other.enable->network->cite == "fixture network cite",
             "a switch row carries its enable network");
+    require(fact.label == "L1", "a regulator row carries its label");
+    const PartFacts boost = facts_from(scratch, "regulators", rows(fixture::boost_row));
+    const RegulatorFact& led = part_fact_of(boost.regulators, "P1", "regulators");
+    require(led.kind == "led_boost" && led.label == "L3" && led.iset_v == 0.2 && !led.limit_a && !led.enable && led.in_pin.empty(),
+            "a led_boost row carries its label and ISET sense only");
     refused_everywhere(scratch, "regulators", fixture::regulator_row);
+    refuses([&] { facts_from(scratch, "regulators", rows(with(fixture::regulator_row, "\"buck\"", "\"boost\""))); }, "regulators P1: kind boost",
+            "regulators: a kind outside the closed set is refused naming the section, the key and the kind");
+    refuses([&] { facts_from(scratch, "regulators", rows(with(fixture::regulator_row, "\"label\": \"L1\", ", ""))); }, "label",
+            "regulators: a row without a label is refused");
+    refuses([&] { facts_from(scratch, "regulators", rows(with(fixture::boost_row, "\"iset_v\": 0.2", "\"iset_v\": 0.2, \"in_pin\": \"1\""))); }, "in_pin",
+            "regulators: a led_boost with an input pin is refused");
+    refuses([&] { facts_from(scratch, "regulators", rows(with(fixture::boost_row, ", \"iset_v\": 0.2", ""))); }, "iset_v",
+            "regulators: a led_boost without an ISET sense is refused");
     refuses([&] { facts_from(scratch, "regulators", rows(with(fixture::regulator_row, "\"limit_a\": 6.0", "\"limit_a\": null"))); }, "limit_a",
             "regulators: a null limit is refused, absence is how a missing limit is stated");
     refuses([&] { facts_from(scratch, "regulators", rows(with(fixture::regulator_row, "\"in_pin\": \"8\"", "\"in_pin\": 8"))); }, "in_pin",
@@ -233,8 +263,12 @@ void regulator_facts(const std::filesystem::path& scratch) {
             "threshold_v", "regulators: a text threshold is refused");
     refuses([&] { facts_from(scratch, "regulators", rows(with(fixture::switch_row, "\"recommended_max_v\": 5.5, ", ""))); }, "recommended_max_v",
             "regulators: an incomplete enable network is refused");
-    refuses([&] { facts_from(scratch, "regulators", rows(with(fixture::regulator_row, "\"enable\": {\"en_pin\": \"7\", \"vin_pins\": [\"8\", \"12\"]}", "\"enable\": {}"))); },
+    refuses([&] { facts_from(scratch, "regulators", rows(with(fixture::regulator_row, "\"enable\": {\"direct\": {\"en_pin\": \"7\", \"vin_pins\": [\"8\", \"12\"], \"cite\": \"fixture cite\"}}", "\"enable\": {}"))); },
             "enable", "regulators: an empty enable is refused");
+    refuses([&] { facts_from(scratch, "regulators", rows(with(fixture::regulator_row, ", \"cite\": \"fixture cite\"", ""))); }, "regulators P1 enable direct",
+            "regulators: a direct enable without a citation is refused naming the section and the key");
+    refuses([&] { facts_from(scratch, "regulators", rows(with(fixture::switch_row, ", \"cite\": \"fixture network cite\"", ""))); }, "cite",
+            "regulators: an enable network without a citation is refused");
 }
 
 void alias_facts(const std::filesystem::path& scratch) {
@@ -255,12 +289,17 @@ void alias_facts(const std::filesystem::path& scratch) {
             "footprint_aliases: an absent section is refused");
 }
 
-void repository_sections_are_empty(const std::filesystem::path& repository) {
+void repository_sections_load(const std::filesystem::path& repository) {
     const PartFacts facts = load_part_facts(repository / "parts" / "part_facts.json");
-    require(facts.thermal.empty() && facts.thermal_copper.empty() && facts.ep_vias.empty() && facts.isolation.empty() &&
-                facts.regulators.empty() && facts.zeners.empty() && facts.reference_pins.empty() && facts.control_grid.empty() &&
-                facts.model_overrides.empty() && facts.footprint_aliases.empty(),
-            "the repository file carries every engineering section, empty");
+    const RegulatorFact& buck = part_fact_of(facts.regulators, "LM61460AANRJRR", "regulators");
+    require(buck.kind == "buck" && buck.fb_vref == 1.0 && buck.enable && buck.enable->direct, "the repository file states the buck regulator");
+    require(part_fact_of(facts.regulators, "SY7201ABC", "regulators").kind == "led_boost", "the repository file states the LED boost driver");
+    require(part_fact(facts.regulators, "LMR33630") == nullptr, "a part with no folder has no regulator row");
+    require(part_fact_of(facts.zeners, "MMSZ5231B", "zeners").vz_max_v == 5.355 && part_fact_of(facts.zeners, "BZT52C5V1", "zeners").vz_min_v == 4.845,
+            "the repository file states both zeners by value");
+    require(part_fact_of(facts.reference_pins, "PCA9306DCUR", "reference_pins").vref2_pin == "7", "the repository file states the reference pins");
+    require(part_fact_of(facts.thermal, "TLV75725PDYDR", "thermal").pour->evidence == "TLV75725_DYD", "the repository file states the thermal rows");
+    require(part_fact_of(facts.thermal_copper, "LM61460AANRJRR", "thermal_copper").need.min_vias == 6, "the repository file states the thermal copper need");
 }
 
 }
@@ -274,9 +313,10 @@ int main(int argc, char** argv) {
         thermal_facts(scratch);
         copper_facts(scratch);
         small_facts(scratch);
+        zener_facts(scratch);
         regulator_facts(scratch);
         alias_facts(scratch);
-        repository_sections_are_empty(std::filesystem::absolute(argv[1]));
+        repository_sections_load(std::filesystem::absolute(argv[1]));
         std::cout << "part engineering facts contracts ok\n";
         return 0;
     } catch (const std::exception& error) {

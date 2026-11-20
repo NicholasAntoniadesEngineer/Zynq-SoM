@@ -71,7 +71,6 @@ int main(int argc,char** argv) {
         rejects(sources,[](auto& s){s.emission.thermal_copper.clear();},"missing pour emission");
         rejects(sources,[](auto& s){s.emission.thermal_via_drill=0.2;},"via geometry");
         rejects(sources,[](auto& s){s.thermal.specs.clear();},"missing thermal specs");
-        rejects(sources,[](auto& s){s.thermal.footprint_specs.clear();},"missing DYD override");
         rejects(sources,[](auto& s){s.thermal.pour_needs.clear();},"missing thermal evidence");
         rejects(sources,[](auto& s){s.geometry[0].width_mm+=0.01;},"geometry drift");
         for(const auto* scope:{"library","carrier"}) {

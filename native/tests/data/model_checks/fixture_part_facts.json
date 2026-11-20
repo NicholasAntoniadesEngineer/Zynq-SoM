@@ -1,0 +1,47 @@
+{
+  "schema": "schgen.part_facts/3",
+  "classes": {},
+  "connectors": {},
+  "stated_heights": {},
+  "thermal": {
+    "TLV75725": {
+      "rth_ja": 231.0,
+      "tj_max": 125.0,
+      "rds_on": 0.0,
+      "eff": 0.85,
+      "package": "SOT-23-5 (DBV, no pad)",
+      "cite": "TI TLV757P DS / fmc.md section 3 (DBV RthJA 231 C/W; Tj_max 125 C) — the HOT default; DYD pad variant below"
+    }
+  },
+  "thermal_copper": {},
+  "ep_vias": {},
+  "isolation": {},
+  "regulators": {
+    "LMR33630": {
+      "kind": "buck",
+      "label": "LMR33630",
+      "limit_a": 3.0,
+      "eff": 0.9,
+      "in_pin": "2",
+      "out_pin": "8",
+      "ilim_num": 6800.0,
+      "note": "TI 3 A 36V synchronous buck (VIN=2, SW=8 ->L->rail)",
+      "fb_vref": 1.0
+    },
+    "TLV75725": {
+      "kind": "ldo",
+      "label": "TLV75725",
+      "limit_a": 0.4,
+      "eff": 1.0,
+      "in_pin": "1",
+      "out_pin": "5",
+      "ilim_num": 6800.0,
+      "note": "1 A LDO held to 0.4 A continuous (PWR-3: DYD thermal-pad, RthJA ~92.5 C/W EP-to-GND, Tj ~80 C at 0.32 W/Ta=50 C — fmc.md section 3)"
+    }
+  },
+  "zeners": {},
+  "reference_pins": {},
+  "control_grid": {},
+  "model_overrides": {},
+  "footprint_aliases": {}
+}

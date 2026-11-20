@@ -4,18 +4,24 @@
 namespace schgen {
 using namespace model_checks;
 
+namespace {
+const char* const power_tree_excluded_kind="led_boost";
+const char* const part_number_field="MPN";
+}
+
+std::string catalogue_part_number(const CircuitPartIr& part) {
+    for(const auto& field:part.fields)if(field.key==part_number_field)return field.value;
+    const auto colon=part.lib_id.find(':');
+    if(colon!=std::string::npos&&part.lib_id.compare(0,colon,part.lib_id,colon+1,std::string::npos)==0)return part.lib_id.substr(colon+1);
+    return part.value;
+}
+
 const PowerPolicy& default_power_policy() {
     static const PowerPolicy policy{
         {{"^\\+VBUS_IN$", 20.0}, {"^\\+VIN_SYS$", 20.0}, {"^\\+VIN", 20.0}, {"^\\+5V_SOM$", 4.65}, {"^\\+5V_REG$", 5.0}, {"^\\+5V", 5.0}, {"^USB_VBUS$", 5.0}, {"^USB_UART_VBUS$", 5.0}, {"^HDMI_RX_5V$", 5.0}, {"^HDMI_TX_CON_5V0$", 5.0}, {"^LCD_VLED_P$", 30.0}, {"^\\+3V3_REG$", 3.3}, {"^\\+3V3", 3.3}, {"^\\+1V8_REG$", 1.8}, {"^\\+1V8", 1.8}, {"^\\+2V5", 2.5}, {"^\\+VCCO_35$", 2.5}, {"^\\+VCCO_", 3.3}, {"^VBUS$", 5.0}},
-        {
-        {"TPS54302", {"buck", 3.0, 0.9, "3", "2", "", 6800.0, "TI 3 A synchronous buck (SW->L->rail); thermal-gate test fixture"}},
-        {"LM61460", {"buck", 6.0, 0.9, "8", "10", "", 6800.0, "TI 6 A 3-36V synchronous buck (VIN1=8 ->L<-SW=10 ->rail)"}},
-        {"LMR33630", {"buck", 3.0, 0.9, "2", "8", "", 6800.0, "TI 3 A 36V synchronous buck (VIN=2, SW=8 ->L->rail)"}},
-        {"AP2112K", {"ldo", 0.6, 1.0, "1", "5", "", 6800.0, "600 mA LDO"}},
-        {"TLV75725", {"ldo", 0.4, 1.0, "1", "5", "", 6800.0, "1 A LDO held to 0.4 A continuous (PWR-3: DYD thermal-pad, RthJA ~92.5 C/W EP-to-GND, Tj ~80 C at 0.32 W/Ta=50 C — fmc.md section 3)"}},
-        {"SY6280", {"load_switch", std::nullopt, 1.0, "IN", "OUT", "ISET", 6800.0, "ILIM = 6800/RSET from netlist"}},
-        {"TPS26631", {"efuse", std::nullopt, 1.0, "IN", "OUT", "ILIM", 18000.0, "ILIM = 18/R_kohm from netlist (TPS2663 Eq 5)"}}
-    },
+        default_part_facts().regulators,
+        default_part_facts().zeners,
+        default_part_facts().reference_pins,
         {
         {"+VBUS_IN", {20.0, 3.0, "USB-C PD sink contract 20 V / 3 A at the receptacle (pd_input J1; +VIN sits behind the TPS26631 eFuse, round 5)"}},
         {"+3V3_SC", {3.3, 0.3, "SoM TPS7A20 always-on SC LDO U13 (J1.37); 300 mA class — the SoM power_architecture sheet says '3V3 (300mA)'. Envelope shared with the SoM-side SC (STM32G431 ~50 mA); carrier tally only here"}},
@@ -79,9 +85,14 @@ void detect(const std::vector<ProjectCircuit>& sheets,const PowerPolicy& policy,
     for(const auto& s:sheets) {
         ModelSheetIndex idx(s.circuit);
         for(const auto& [ref,p]:idx.parts) {
-            const PowerRegSpec* spec=nullptr;
-            for(const auto& [prefix,v]:policy.regulators)if(starts(p->value,prefix)){spec=&v;break;}
-            if(!spec)continue;
+            const auto number=catalogue_part_number(*p);
+            const RegulatorFact* spec=part_fact(policy.regulators,number);
+            if(!spec) {
+                for(const auto& [reviewed,fact]:policy.regulators)
+                    if(starts(number,fact.label)||starts(p->value,fact.label)){res.errors.push_back(s.name+":"+ref+" ("+p->value+"): unreviewed variant of "+fact.label+", part number "+number+" has no regulators row");break;}
+                continue;
+            }
+            if(spec->kind==power_tree_excluded_kind)continue;
             auto vin=idx.alias_net(*p,spec->in_pin), out=idx.alias_net(*p,spec->out_pin);
             auto who=s.name+":"+ref+" ("+p->value+"): ";
             if(!vin||!out){res.errors.push_back(who+"cannot resolve IN/OUT pins for the power tree");continue;}
@@ -97,7 +108,8 @@ void detect(const std::vector<ProjectCircuit>& sheets,const PowerPolicy& policy,
             }
             auto limit=spec->limit_a;auto note=spec->note;
             if(spec->kind=="load_switch"||spec->kind=="efuse") {
-                auto iset=idx.alias_net(*p,spec->iset_pin);std::optional<double> rset;
+                if(!spec->iset_pin)throw ModelCheckError(who+"regulator policy has no ISET pin");
+                auto iset=idx.alias_net(*p,*spec->iset_pin);std::optional<double> rset;
                 if(iset)for(const auto& pin:iset->pins)if(auto rp=idx.part(pin.ref);rp&&ends(rp->lib_id,":R"))rset=parse_si_value(rp->value);
                 if(rset&&*rset!=0) {
                     limit=py_round(spec->ilim_num / *rset,3);
