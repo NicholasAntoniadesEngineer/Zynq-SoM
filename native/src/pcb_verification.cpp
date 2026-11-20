@@ -19,8 +19,7 @@ PcbVerificationResult verify_pcb_geometry(const BoardPcbStage& stage,
         default_engine_config.cross_k, counts);
     out.mechanical = check_placement_mech(prepared);
     const auto policy = pcb_emit_policy(input.floorplan.project);
-    const std::map<std::string,std::string> faces(policy.connector_mating_faces.begin(), policy.connector_mating_faces.end());
-    out.connector_models = check_connector_models(model, faces);
+    out.connector_models = check_connector_models(model, policy.connectors);
     out.connector_spacing = check_connector_spacing(prepared);
     out.refdes = check_refdes_overlap(emitted.document, true);
     out.placement = check_pcb_placement_gates(prepared, pcb_placement_gate_policy(input),

@@ -2,6 +2,7 @@
 
 #include "schgen/circuit.hpp"
 #include "schgen/json.hpp"
+#include "schgen/part_facts.hpp"
 
 #include <array>
 #include <cstdint>
@@ -44,6 +45,7 @@ struct ProjectConfig {
     ProjectStrings module_face_anchors;
     std::vector<std::string> reg_band_prefixes;
     ProjectStrings bank_rails, header_desc, switch_desc;
+    ConnectorFacts connectors;
     JsonNode escape;  // Object, defaults to {} as in ProjectSpec.
     JsonNode raw;     // Complete project.json, including extension metadata.
 };

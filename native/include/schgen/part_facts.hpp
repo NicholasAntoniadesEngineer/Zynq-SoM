@@ -10,6 +10,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <utility>
 
 namespace schgen {
 
@@ -50,10 +51,19 @@ struct PartFact {
     PartHeight height;
 };
 
+struct ConnectorFact {
+    std::string mating_face;
+    bool edge_pinned = false, overmold = false, pad_row_face_check = false;
+    std::optional<std::string> description, numbered_label, pair_label;
+};
+
+using ConnectorFacts = std::map<std::string, ConnectorFact>;
+
 struct PartFacts {
     std::filesystem::path file;
     std::map<std::string, PartClass> classes;
     std::map<std::string, PartHeight> stated_heights;
+    ConnectorFacts connectors;
 };
 
 struct ModelRoots {
@@ -63,6 +73,11 @@ struct ModelRoots {
 std::string_view part_class_name(PartClass part_class);
 PartClass part_class_named(std::string_view name);
 bool presents_on_top(PartClass part_class);
+
+const ConnectorFact* connector_fact(const ConnectorFacts& facts, const std::string& name);
+const ConnectorFact& connector_fact_of(const ConnectorFacts& facts, const std::string& name);
+std::pair<int, int> mating_face_vector(const ConnectorFact& fact);
+ConnectorFacts load_connector_facts(const std::filesystem::path& parts_directory);
 
 PartFacts load_part_facts(const std::filesystem::path& file);
 PartClass symbol_class(const PartFacts& facts, const std::string& symbol, const std::string& part);

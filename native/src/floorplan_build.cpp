@@ -9,7 +9,6 @@
 
 namespace schgen::floorplan_detail {
 namespace {
-const std::set<std::string> edge_families{"TYPE-C-31-M-12","HDMI-019S","AFC07-S40FCA-00","SFW15R-1STE1LF","TF-01A","DS1024-2x6R2","XT60PW-M"};
 // Each helper books only its immediately following real scalar call in the
 // current plan invocation; candidate restore already preserves all accounting.
 struct BuildPrecision {
@@ -132,7 +131,7 @@ void Engine::initialize() {
         if ((starts(name,"som_j") || name=="som_decoupling") && parts.empty()) continue;
         FloorplanBlock b; b.name=name; b.n_parts=static_cast<int>(parts.size()); b.j_aff=aff[name];
         std::sort(parts.begin(),parts.end(),[](const auto* a,const auto* b){return a->ref<b->ref;});
-        for (const auto* p:parts) if (edge_families.count(p->value)) {
+        for (const auto* p:parts) if (const auto* fact=connector_fact(in.project.connectors,p->value); fact && fact->edge_pinned) {
             const auto wh=part_dims(p->footprint); b.conns.push_back({p->ref,p->value,wh.first,wh.second});
         }
         std::set<std::string> reserved;

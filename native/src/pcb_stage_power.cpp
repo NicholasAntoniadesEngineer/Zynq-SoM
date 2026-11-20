@@ -443,7 +443,7 @@ PcbStageResult Engine::hot_zone() {
     double bottom = extent(placed).y1;
     for (const auto &p : placed) {
         result.top[p.ref] = {p.x, p.y};
-        if (std::abs(p.rot) > 1e-6 && !connector(*p.mod))
+        if (std::abs(p.rot) > 1e-6 && !connector(in.connectors, *p.mod))
             result.rotations[p.ref] = normalize(p.rot);
     }
     std::vector<std::string> leftovers;

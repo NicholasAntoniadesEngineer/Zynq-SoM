@@ -58,7 +58,7 @@ PcbStageResult Engine::proximity_zone() {
     std::tie(result.w, result.h) = row_extent(placed);
     for (const auto &p : placed) {
         result.top[p.ref] = {p.x, p.y};
-        if (std::abs(p.rot) > 1e-6 && !connector(*p.mod))
+        if (std::abs(p.rot) > 1e-6 && !connector(in.connectors, *p.mod))
             result.rotations[p.ref] = normalize(p.rot);
     }
     std::vector<std::string> leftovers;
@@ -71,7 +71,7 @@ PcbStageResult Engine::proximity_zone() {
         std::vector<double> conn_low{row_top}, conn_high{row_bottom};
         if (!in.outer_dir.empty())
             for (const auto &p : placed)
-                if (connector(*p.mod)) {
+                if (connector(in.connectors, *p.mod)) {
                     auto b = body(p);
                     double n = credit(need(static_cast<int>(pads(p.mod).size())));
                     conn_low.push_back(b.y0 - n);
@@ -87,7 +87,7 @@ PcbStageResult Engine::proximity_zone() {
         if (in.outer_dir == "W") {
             std::vector<double> faces;
             for (const auto &p : placed)
-                if (connector(*p.mod))
+                if (connector(in.connectors, *p.mod))
                     faces.push_back(pinbox(pads(p), {}).x0);
             if (!faces.empty())
                 bx = *std::min_element(faces.begin(), faces.end()) + seat_slide();
@@ -128,7 +128,7 @@ PcbStageResult Engine::proximity_zone() {
         auto [vx, vy] = *ov;
         std::vector<double> faces;
         for (const auto &p : placed)
-            if (connector(*p.mod)) {
+            if (connector(in.connectors, *p.mod)) {
                 auto b = pinbox(pads(p), {});
                 faces.push_back(vx > 0   ? b.x1 + gx
                                 : vx < 0 ? b.x0 + gx

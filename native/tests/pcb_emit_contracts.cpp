@@ -1,6 +1,7 @@
 #include "schgen/run_config.hpp"
 #include "schgen/atomic_file.hpp"
 #include "schgen/pcb_emit.hpp"
+#include "connector_facts_fixture.hpp"
 #include "schgen/thermal_via_planning.hpp"
 #include "../src/pcb_emit_internal.hpp"
 #include <algorithm>
@@ -124,6 +125,7 @@ PcbFootprintPool footprints(const JsonNode &n) {
 }
 PcbEmitPolicy policy(const JsonNode &n) {
     auto p = default_pcb_emit_policy();
+    p.connectors = repository_connector_facts();
     for (const auto &[k, v] : field(n, "header_descriptions").object_value)
         p.header_descriptions.emplace_back(k, v.string_value);
     for (const auto &[k, v] : field(n, "switch_descriptions").object_value)
@@ -394,7 +396,8 @@ void thermal_world_obstacles() {
     std::cout << "Thermal world-space obstacle contracts PASS\n";
 }
 void interface_label_contracts() {
-    auto policy=pcb_emit_policy(ProjectConfig{});
+    ProjectConfig project_config;project_config.connectors=repository_connector_facts();
+    auto policy=pcb_emit_policy(project_config);
     require(policy.interface_reference_labels_only,"project boards must use interface-only reference labels");
     PcbFootprintInst part;
     part.value="100n";part.side="top";

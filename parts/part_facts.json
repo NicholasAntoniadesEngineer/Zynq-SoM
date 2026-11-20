@@ -1,5 +1,5 @@
 {
-  "schema": "schgen.part_facts/1",
+  "schema": "schgen.part_facts/2",
   "classes": {
     "74xGxx:74LVC1G08": "integrated_circuit",
     "Connector:TestPoint": "test_point",
@@ -80,6 +80,17 @@
     "USBLC6-2SC6:USBLC6-2SC6": "diode",
     "XT60PW-M:XT60PW-M": "connector",
     "ZX-SH1.0-4PWT:ZX-SH1.0-4PWT": "connector"
+  },
+  "connectors": {
+    "AFC07-S40FCA-00": {"mating_face": "+Y", "edge_pinned": true, "overmold": false, "pad_row_face_check": false, "description": "FFC 40-pin 0.5mm (LCD)"},
+    "DS1024-2x6R2": {"mating_face": "+Y", "edge_pinned": true, "overmold": false, "pad_row_face_check": false, "description": "PMOD 2x6 socket", "numbered_label": "PMOD"},
+    "HDMI-019S": {"mating_face": "+Y", "edge_pinned": true, "overmold": true, "pad_row_face_check": true, "description": "HDMI receptacle"},
+    "KH-5224-8P8C-D": {"mating_face": "+Y", "edge_pinned": false, "overmold": false, "pad_row_face_check": false},
+    "SFW15R-1STE1LF": {"mating_face": "+Y", "edge_pinned": true, "overmold": false, "pad_row_face_check": false, "description": "FFC 15-pin 1mm (camera)"},
+    "TF-01A": {"mating_face": "+Y", "edge_pinned": true, "overmold": false, "pad_row_face_check": false, "description": "microSD push-pull"},
+    "TYPE-C-31-M-12": {"mating_face": "+Y", "edge_pinned": true, "overmold": false, "pad_row_face_check": true, "description": "USB-C receptacle"},
+    "XT60PW-M": {"mating_face": "+X", "edge_pinned": true, "overmold": false, "pad_row_face_check": false, "description": "XT60 ESC power inlet (horizontal)", "pair_label": "XT60"},
+    "ZX-SH1.0-4PWT": {"mating_face": "+Y", "edge_pinned": false, "overmold": false, "pad_row_face_check": false}
   },
   "stated_heights": {
     "Fiducial:Fiducial_1mm_Mask2mm": {

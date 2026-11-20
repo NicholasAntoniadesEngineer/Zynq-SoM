@@ -85,7 +85,7 @@ int export_problem(int argc, char** argv) {
     extraction.kicad_cli = arguments.kicad_cli;
     const auto input = load_geometry_board_inputs(paths, extraction);
     const auto placed = build_pcb_model(input);
-    const auto policy = pcb_emit_policy(load_project_config(paths));
+    const auto policy = pcb_emit_policy(input.floorplan.project);
     const auto gates = pcb_placement_gate_policy(input);
     const auto binding = layout::bind_model(placed.model, policy, &gates,
         {arguments.plane_net, layout::project_edge_clearance(parse_json_file(arguments.project_file)),

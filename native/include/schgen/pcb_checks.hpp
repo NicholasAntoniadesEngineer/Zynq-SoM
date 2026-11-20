@@ -78,6 +78,7 @@ struct PcbCheckModel {
     std::optional<PcbEscapePlan> escape_plan;
     // nullopt means no metadata, "" means present metadata missing the hash.
     std::optional<std::string> escape_interface_sha256;
+    ConnectorFacts connectors;
 };
 struct PcbCheckGeometry {
     std::optional<Box4> courtyard, pad_bbox;
@@ -113,8 +114,7 @@ struct ConnectorModelResult {
 };
 // Allows unresolved models to be reported without requiring placed geometry.
 ConnectorModelResult check_connector_models(const PcbCheckModel&);
-ConnectorModelResult check_connector_models(const PcbCheckModel&,
-    const std::map<std::string,std::string>& mating_faces);
+ConnectorModelResult check_connector_models(const PcbCheckModel&, const ConnectorFacts&);
 struct ConnectorSpacingRow {
     std::string ref_a, ref_b, family, axis;
     double gap = 0, need = 0;

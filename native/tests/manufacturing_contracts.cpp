@@ -1,5 +1,6 @@
 #include "schgen/run_config.hpp"
 #include "schgen/assembly_documents.hpp"
+#include "connector_facts_fixture.hpp"
 #include "schgen/manufacturing_checks.hpp"
 #include "schgen/atomic_file.hpp"
 #include "schgen/board_policy.hpp"
@@ -26,7 +27,7 @@ std::vector<std::string> strings(const JsonNode& n){std::vector<std::string> o;f
 void exact(const std::string& got,const fs::path& file,const fs::path& output){auto want=read(file);write(output,got);if(got!=want){std::size_t i=0;while(i<std::min(got.size(),want.size())&&got[i]==want[i])++i;throw std::runtime_error(file.string()+": bytes differ at "+std::to_string(i)+" actual saved in "+output.string());}++assertions;}
 template<class F>void throws(F f,const std::string& text){bool caught=false;try{f();}catch(const std::exception& e){caught=true;require(std::string(e.what()).find(text)!=std::string::npos,"unexpected error: "+std::string(e.what()));}require(caught,"expected error containing "+text);}
 PcbFootprintPool pool(const JsonNode& n){PcbFootprintPool p;for(const auto& [k,v]:n.object_value)p[k]=pcb_check_footprint(k,v.string_value);return p;}
-PcbEmitPolicy policy(const JsonNode& n){auto p=default_pcb_emit_policy();for(const auto& [k,v]:field(n,"header_descriptions").object_value)p.header_descriptions.emplace_back(k,v.string_value);for(const auto& [k,v]:field(n,"switch_descriptions").object_value)p.switch_descriptions.emplace_back(k,v.string_value);return p;}
+PcbEmitPolicy policy(const JsonNode& n){auto p=default_pcb_emit_policy();p.connectors=repository_connector_facts();for(const auto& [k,v]:field(n,"header_descriptions").object_value)p.header_descriptions.emplace_back(k,v.string_value);for(const auto& [k,v]:field(n,"switch_descriptions").object_value)p.switch_descriptions.emplace_back(k,v.string_value);return p;}
 Stm32PinMap stm32(const JsonNode& n){Stm32PinMap out;out.value=str(n,"value");for(const auto& [k,v]:field(n,"nets").object_value)out.nets[k]={str(v,"net"),str(v,"port"),static_cast<int>(num(v,"pin")),strings(field(v,"j_pins"))};return out;}
 void groups(const PcbModel& m,const AssemblyPlan& p,const JsonNode& expected){
     for(const auto& [kind,phases]:std::vector<std::pair<std::string,bool>>{{"steps",false},{"phases",true}}){const auto& want=field(expected,kind).array_value;require((phases?p.phases.size():p.steps.size())==want.size(),kind+" count");
@@ -97,19 +98,19 @@ void project(const fs::path& root,const fs::path& scratch,const std::string& nam
     std::cout<<name<<": "<<images.size()<<" assembly PNGs exact\n";
 }
 void mutations(const fs::path& root,const fs::path& scratch){
-    const auto raw=parse_json_file((root/"native/tests/data/manufacturing/mutations.json").string());const auto fps=pool(field(raw,"footprints"));
+    const auto raw=parse_json_file((root/"native/tests/data/manufacturing/mutations.json").string());const auto fps=pool(field(raw,"footprints"));auto mutation_policy=default_pcb_emit_policy();mutation_policy.connectors=repository_connector_facts();
     for(const auto& row:field(raw,"assembly").array_value){auto name=str(row,"name");auto m=pcb_model_from_json(field(row,"model"),fps);auto p=power_result_from_json(field(row,"power"));
-        if(auto e=object_field(row,"error")){throws([&]{assembly_plan(m,p);},e->string_value);continue;}
-        const auto plan=assembly_plan(m,p);groups(m,plan,field(row,"plan"));require(render_assembly_markdown(m,plan,name)==str(row,"markdown"),name+" mutated assembly Markdown");
+        if(auto e=object_field(row,"error")){throws([&]{assembly_plan(m,p,mutation_policy);},e->string_value);continue;}
+        const auto plan=assembly_plan(m,p,mutation_policy);groups(m,plan,field(row,"plan"));require(render_assembly_markdown(m,plan,name)==str(row,"markdown"),name+" mutated assembly Markdown");
         check_images(render_assembly_images(m,plan),field(row,"images").array_value,scratch/"mutations"/name,name);
         if(name=="base"){
             const auto target=scratch/"runs";write(target/"images/stale.png","stale");write(target/"images/keep.txt","keep");
-            auto result=run_assembly_documents(m,p,name,target/"ASSEMBLY.md",target/"images");require(field(result,"ok").bool_value,"assembly run result");require(assembly_verdict(result,scratch).first,"assembly successful transport verdict");require(!fs::exists(target/"images/stale.png")&&read(target/"images/keep.txt")=="keep","dedicated image directory cleanup");require(read(target/"ASSEMBLY.md")==str(row,"markdown"),"run writes computed Markdown");
+            auto result=run_assembly_documents(m,p,name,target/"ASSEMBLY.md",target/"images",mutation_policy);require(field(result,"ok").bool_value,"assembly run result");require(assembly_verdict(result,scratch).first,"assembly successful transport verdict");require(!fs::exists(target/"images/stale.png")&&read(target/"images/keep.txt")=="keep","dedicated image directory cleanup");require(read(target/"ASSEMBLY.md")==str(row,"markdown"),"run writes computed Markdown");
             auto changed=m;changed.insts.front().x+=1;require(render_assembly_images(changed,plan).back().png!=render_assembly_images(m,plan).back().png,"fresh pose affects assembly images");
             auto invalid=plan;invalid.steps.front().insts.push_back(m.insts.size());throws([&]{render_assembly_markdown(m,invalid,name);},"out of range");
-            throws([&]{run_assembly_documents(m,p,name,target/"same",target/"same");},"distinct");
-            changed=m;changed.insts.front().mod.reset();throws([&]{run_assembly_documents(changed,p,name,target/"ASSEMBLY.md",target/"images");},"unresolved");require(read(target/"ASSEMBLY.md")==str(row,"markdown"),"failed assembly render preserves old Markdown");
-            write(target/"blocked","file");throws([&]{run_assembly_documents(m,p,name,target/"blocked/ASSEMBLY.md",target/"images");},"blocked");
+            throws([&]{run_assembly_documents(m,p,name,target/"same",target/"same",mutation_policy);},"distinct");
+            changed=m;changed.insts.front().mod.reset();throws([&]{run_assembly_documents(changed,p,name,target/"ASSEMBLY.md",target/"images",mutation_policy);},"unresolved");require(read(target/"ASSEMBLY.md")==str(row,"markdown"),"failed assembly render preserves old Markdown");
+            write(target/"blocked","file");throws([&]{run_assembly_documents(m,p,name,target/"blocked/ASSEMBLY.md",target/"images",mutation_policy);},"blocked");
         }
     }
     for(const auto& row:field(raw,"si").array_value){std::vector<ProjectCircuit> sheets;for(const auto& s:field(row,"sheets").array_value)sheets.push_back({str(s,"name"),{},decode_intermediate_circuit_ir(field(s,"circuit"))});auto si=build_si_constraints(sheets,parse_signal_specs(field(row,"spec")));const auto v=check_si_constraints(si);
