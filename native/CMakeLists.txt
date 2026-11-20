@@ -25,7 +25,7 @@ add_library(schgen_core STATIC
     src/pack_plain_precision.cpp
     src/pack_grid_precision.cpp
     src/pack_anchor.cpp src/place_search.cpp src/cc.cpp src/embed_fp.cpp
-    src/pack_edges.cpp src/pcb_scan.cpp src/module_mating.cpp src/module_symbols.cpp src/pack_refine.cpp src/place_geom.cpp
+    src/pack_edges.cpp src/pcb_scan.cpp src/module_mating.cpp src/module_symbols.cpp src/ladder_stub_rule.cpp src/pack_refine.cpp src/place_geom.cpp
     src/catalog.cpp src/part_facts.cpp src/json.cpp src/circuit.cpp src/circuit_layout.cpp src/reorder.cpp src/atomic_file.cpp
     src/ratsnest.cpp src/footprint_library.cpp src/xdc.cpp src/vivado.cpp
     src/bom.cpp src/project.cpp src/project_catalog.cpp src/project_outputs.cpp src/som_interface.cpp
@@ -1193,6 +1193,10 @@ if(BUILD_TESTING)
     target_link_libraries(schgen_part_ratings_contracts PRIVATE schgen_core)
     target_compile_options(schgen_part_ratings_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
     add_test(NAME native_part_ratings_contracts COMMAND schgen_part_ratings_contracts)
+    add_executable(schgen_ladder_stub_rule_contracts tests/ladder_stub_rule_contracts.cpp)
+    target_link_libraries(schgen_ladder_stub_rule_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_ladder_stub_rule_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME native_ladder_stub_rule_contracts COMMAND schgen_ladder_stub_rule_contracts)
     add_executable(schgen_module_mating_contracts tests/module_mating_contracts.cpp)
     target_link_libraries(schgen_module_mating_contracts PRIVATE schgen_core)
     target_compile_options(schgen_module_mating_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
