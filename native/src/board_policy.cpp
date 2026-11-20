@@ -33,7 +33,7 @@ const std::vector<Binding> floor_bindings{
 const std::vector<Binding> quantization_bindings{
     {"place_grid","kGridMm"},{"half_grid","kHalfMm"},{"quant_credit","kCreditMm"},
     {"snap_erosion","kSnapErosionMm"},{"outline_snap","kOutlineSnapMm"},
-    {"fine_snap","kFineSnapMm"},{"via_impedance_cost","kViaImpedanceMm"}};
+    {"fine_snap","kFineSnapMm"},{"page_origin","kPageOriginMm"},{"via_impedance_cost","kViaImpedanceMm"}};
 const std::vector<Binding> placement_bindings{
     {"block_clearance","floorplan::clear"},
     {"small_part_routing_factor","floorplan::small_part_routing_factor"},

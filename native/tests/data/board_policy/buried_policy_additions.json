@@ -1,5 +1,5 @@
 {
-  "provenance": "Independently authored expectations for seven preserved policies exposed from defaults and pack consumers. Original immutable fixtures are unchanged. Small tolerances retain exact numeric values; the existing four-decimal ledger text formatter displays zero.",
+  "provenance": "Independently authored expectations for seven preserved policies exposed from defaults and pack consumers, plus the page origin that the placement grid and corridor gridify snap in. Original immutable fixtures are unchanged. Small tolerances retain exact numeric values; the existing four-decimal ledger text formatter displays zero.",
   "assumption_rows": [
     {
       "kind": "ASSUME",
@@ -42,6 +42,12 @@
       "depth": 1,
       "name": "label_orbit_tau",
       "text": "  ASSUME label_orbit_tau                = 6.2832        radian     [policy] board_decision_policy.pack.label_orbit_tau — established full-turn double used by the sixteen-angle label orbit"
+    },
+    {
+      "kind": "ASSUME",
+      "depth": 1,
+      "name": "page_origin",
+      "text": "  ASSUME page_origin                    = 25            mm         [policy] quantization_policy.kPageOriginMm — page offset of the board origin; the frame the placement grid snaps in"
     }
   ]
 }

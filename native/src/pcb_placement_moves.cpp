@@ -7,6 +7,7 @@
 #include <sstream>
 
 namespace schgen::pcb_placement {
+using quantization_policy::kPageOriginMm;
 namespace {
 bool hit(Box4 b, const std::vector<Box4> &boxes) {
     return std::any_of(boxes.begin(), boxes.end(),
@@ -15,8 +16,8 @@ bool hit(Box4 b, const std::vector<Box4> &boxes) {
 using SubjectMap = std::map<std::string, std::pair<std::string, Box4>>;
 Box4 emitted_escape_corridor(const Placer &placer, const std::string &ref) {
     const auto &at = placer.pos.at(ref);
-    return pcb_escape_corridor_board(*placer.mod(ref), placer.ctx.corridor_grid(25, at.first),
-                                     placer.ctx.corridor_grid(25, at.second), placer.rot(ref),
+    return pcb_escape_corridor_board(*placer.mod(ref), placer.ctx.corridor_grid(kPageOriginMm, at.first),
+                                     placer.ctx.corridor_grid(kPageOriginMm, at.second), placer.rot(ref),
                                      &placer.ctx.quantization);
 }
 std::set<std::string> independently_locked_owned_members(const Placer &placer) {
@@ -44,7 +45,7 @@ std::set<std::string> independently_locked_owned_members(const Placer &placer) {
 }
 PcbCheckInput refit_fanout_geometry(const Placer &placer, const PcbStageRefitPoses *trial) {
     PcbCheckModel model;
-    model.origin_x = model.origin_y = 25;
+    model.origin_x = model.origin_y = kPageOriginMm;
     model.board_w = placer.width;
     model.board_h = placer.height;
     model.net_numbers = placer.net_numbers;
@@ -76,11 +77,11 @@ PcbCheckInput refit_fanout_geometry(const Placer &placer, const PcbStageRefitPos
         // Evaluate the coordinates that instantiate() will actually emit.
         // Count these real trial projections even if the move is rejected.
         if (placer.grid_placed.count(ref)) {
-            part.x = placement_emission_pose_precision4dp(25 + part.x, &placer.ctx.quantization);
-            part.y = placement_emission_pose_precision4dp(25 + part.y, &placer.ctx.quantization);
+            part.x = placement_emission_pose_precision4dp(kPageOriginMm + part.x, &placer.ctx.quantization);
+            part.y = placement_emission_pose_precision4dp(kPageOriginMm + part.y, &placer.ctx.quantization);
         } else {
-            part.x = placer.ctx.fixed_grid(25 + part.x);
-            part.y = placer.ctx.fixed_grid(25 + part.y);
+            part.x = placer.ctx.fixed_grid(kPageOriginMm + part.x);
+            part.y = placer.ctx.fixed_grid(kPageOriginMm + part.y);
         }
         model.insts.push_back(std::move(part));
     }
@@ -131,7 +132,7 @@ Box4 evict_box(const PcbCheckInput &input, std::size_t i) {
     // must not hide an internal or THT separation loss.
     unite(offset_turned_box(*part.mod->bbox,part.rotation,part.x,part.y));
     for (const auto &[name,pad] : g.pad_boxes) { (void)name; unite(pad); }
-    return {result.x0-25,result.y0-25,result.x1-25,result.y1-25};
+    return {result.x0-kPageOriginMm,result.y0-kPageOriginMm,result.x1-kPageOriginMm,result.y1-kPageOriginMm};
 }
 double evict_gap(const PcbCheckInput &input, const EvictIndex &index, const OwnedCapPlacement &row) {
     const auto a = input.geometry_at(index.at(row.owner)).pad_boxes.at(row.owner_pin);
@@ -425,7 +426,7 @@ void compact_recover_thermal(Placer& p) {
                             MovementFrame::FinalFrameNonregression,grouped);
                     if (legal && grouped) {
                         auto model=after.model();
-                        model.som_core=som_core_rect(p.plan.som_x,p.plan.som_y,p.plan.som.w,p.plan.som.h,25,25,.03);
+                        model.som_core=som_core_rect(p.plan.som_x,p.plan.som_y,p.plan.som.w,p.plan.som.h,kPageOriginMm,kPageOriginMm,.03);
                         const PcbCheckInput checked(std::move(model));
                         for (const auto& [sheet,result] : check_all_pcb_placement_contracts(checked,contracts))
                             if (!result.ok) { legal=false; reason="contract:"+sheet; break; }

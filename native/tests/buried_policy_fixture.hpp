@@ -9,14 +9,15 @@
 // before comparing the remaining unchanged output to immutable old snapshots.
 namespace buried_policy_fixture {
 struct Addition {const char *name,*unit,*basis,*cover;double value;const char* text;};
-inline const std::array<Addition,7> additions{{
+inline const std::array<Addition,8> additions{{
     {"small_part_routing_factor","ratio","area multiplier for small-part routing reserve; also reported by the plan","board_decision_policy.floorplan.small_part_routing_factor",3.5,"  ASSUME small_part_routing_factor      = 3.5           ratio      [policy] board_decision_policy.floorplan.small_part_routing_factor — area multiplier for small-part routing reserve; also reported by the plan"},
     {"point_segment_tolerance","mm","axis recognition and endpoint tolerance in point-on-segment tests","board_decision_policy.pack.point_segment_tolerance_mm",0.000001,"  ASSUME point_segment_tolerance        = 0             mm         [policy] board_decision_policy.pack.point_segment_tolerance_mm — axis recognition and endpoint tolerance in point-on-segment tests"},
     {"visual_axis_tolerance","mm","axis recognition and strict interior tolerance in visual crossing tests","board_decision_policy.pack.visual_axis_tolerance_mm",0.000001,"  ASSUME visual_axis_tolerance          = 0             mm         [policy] board_decision_policy.pack.visual_axis_tolerance_mm — axis recognition and strict interior tolerance in visual crossing tests"},
     {"collinear_overlap_tolerance","mm","axis recognition and minimum strict collinear overlap","board_decision_policy.pack.collinear_overlap_tolerance_mm",0.000001,"  ASSUME collinear_overlap_tolerance    = 0             mm         [policy] board_decision_policy.pack.collinear_overlap_tolerance_mm — axis recognition and minimum strict collinear overlap"},
     {"segment_cross_tolerance","mm^2","signed cross-product threshold for strict segment intersection","board_decision_policy.pack.segment_cross_tolerance_mm2",1e-9,"  ASSUME segment_cross_tolerance        = 0             mm^2       [policy] board_decision_policy.pack.segment_cross_tolerance_mm2 — signed cross-product threshold for strict segment intersection"},
     {"label_courtyard_gap","mm","clear-label search offset outside the footprint courtyard","board_decision_policy.pack.label_courtyard_gap_mm",0.9,"  ASSUME label_courtyard_gap            = 0.9           mm         [policy] board_decision_policy.pack.label_courtyard_gap_mm — clear-label search offset outside the footprint courtyard"},
-    {"label_orbit_tau","radian","established full-turn double used by the sixteen-angle label orbit","board_decision_policy.pack.label_orbit_tau",6.283185307179586,"  ASSUME label_orbit_tau                = 6.2832        radian     [policy] board_decision_policy.pack.label_orbit_tau — established full-turn double used by the sixteen-angle label orbit"}
+    {"label_orbit_tau","radian","established full-turn double used by the sixteen-angle label orbit","board_decision_policy.pack.label_orbit_tau",6.283185307179586,"  ASSUME label_orbit_tau                = 6.2832        radian     [policy] board_decision_policy.pack.label_orbit_tau — established full-turn double used by the sixteen-angle label orbit"},
+    {"page_origin","mm","page offset of the board origin; the frame the placement grid snaps in","quantization_policy.kPageOriginMm",25.0,"  ASSUME page_origin                    = 25            mm         [policy] quantization_policy.kPageOriginMm — page offset of the board origin; the frame the placement grid snaps in"}
 }};
 inline void demand(bool ok){if(!ok)throw std::runtime_error("buried policy additive provenance mismatch");}
 inline bool bits(double a,double b){return std::memcmp(&a,&b,sizeof a)==0;}
@@ -57,12 +58,12 @@ inline schgen::FloorplanPlan prior_plan(schgen::FloorplanPlan plan){
     }
     return plan;
 }
-// Only the seven independently entry-proved numeric ASSUME displays differ.
+// Only the eight independently entry-proved numeric ASSUME displays differ.
 // Missing/too-small receipts are errors, not an optional compatibility path.
 inline schgen::QuantizationCounts prior_display_counts(schgen::QuantizationCounts counts){
     const auto found=counts.find("floorplan_ledger_display_precision4dp");
-    demand(found!=counts.end()&&found->second>7);
-    found->second-=7;
+    demand(found!=counts.end()&&found->second>8);
+    found->second-=8;
     return counts;
 }
 inline schgen::FloorplanPlan prior_accounted_plan(schgen::FloorplanPlan plan){

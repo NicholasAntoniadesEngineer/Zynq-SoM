@@ -2,6 +2,7 @@
 #include "schgen/layout_adapter.hpp"
 
 namespace schgen::pcb_placement {
+using quantization_policy::kPageOriginMm;
 Placer::Placer(const PcbPlacementInput &in, const PcbZoneResult &zones, const FloorplanStage &stage)
     : ctx(in), geometry(zones.geometry), plan(stage.plan), width(plan.board_w),
       height(plan.board_h) {
@@ -217,10 +218,10 @@ void Placer::instantiate() {
             inst.pad_nets[pad] =
                 n == pin_net.end() ? std::pair<int, std::string>{0, ""} : n->second;
         }
-        inst.x = grid_placed.count(r) ? placement_emission_pose_precision4dp(25 + xy->second.first, &ctx.quantization)
-                                      : ctx.fixed_grid(25 + xy->second.first);
-        inst.y = grid_placed.count(r) ? placement_emission_pose_precision4dp(25 + xy->second.second, &ctx.quantization)
-                                      : ctx.fixed_grid(25 + xy->second.second);
+        inst.x = grid_placed.count(r) ? placement_emission_pose_precision4dp(kPageOriginMm + xy->second.first, &ctx.quantization)
+                                      : ctx.fixed_grid(kPageOriginMm + xy->second.first);
+        inst.y = grid_placed.count(r) ? placement_emission_pose_precision4dp(kPageOriginMm + xy->second.second, &ctx.quantization)
+                                      : ctx.fixed_grid(kPageOriginMm + xy->second.second);
         m.insts.push_back(inst);
         ++m.placed;
         if (face == "bottom")
@@ -230,11 +231,11 @@ void Placer::instantiate() {
     }
     auto fid = ctx.resolve("Fiducial:Fiducial_1mm_Mask2mm");
     if (fid) {
-        std::vector<FloorplanPoint> positions{{34, 34},
-                                              {25 + width - 9, 34},
-                                              {34, 25 + height - 9},
-                                              {25 + keepout.x0 + 3, 25 + keepout.y0 + 3},
-                                              {25 + keepout.x1 - 3, 25 + keepout.y1 - 3}};
+        std::vector<FloorplanPoint> positions{{kPageOriginMm + 9, kPageOriginMm + 9},
+                                              {kPageOriginMm + width - 9, kPageOriginMm + 9},
+                                              {kPageOriginMm + 9, kPageOriginMm + height - 9},
+                                              {kPageOriginMm + keepout.x0 + 3, kPageOriginMm + keepout.y0 + 3},
+                                              {kPageOriginMm + keepout.x1 - 3, kPageOriginMm + keepout.y1 - 3}};
         int index = 1;
         for (auto xy : positions) {
             PcbFootprintInst i;
@@ -252,8 +253,8 @@ void Placer::instantiate() {
             ++m.n_top;
         }
     }
-    m.som_keepout = offset_rect(keepout, 25, 25);
-    m.som_core = som_core_rect(plan.som_x, plan.som_y, plan.som.w, plan.som.h, 25, 25, .03);
+    m.som_keepout = offset_rect(keepout, kPageOriginMm, kPageOriginMm);
+    m.som_core = som_core_rect(plan.som_x, plan.som_y, plan.som.w, plan.som.h, kPageOriginMm, kPageOriginMm, .03);
     checkpoint("instantiate");
     checkpoint("emission_frame", true);
 }
