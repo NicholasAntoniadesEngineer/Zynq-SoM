@@ -59,8 +59,16 @@ CircuitSheetIr author_som_connector(const std::string& ref,const std::string& na
     auto numeric=[](const std::string& pin){std::size_t used=0;auto n=std::stoll(pin,&used);if(used!=pin.size())throw CircuitAuthoringError("noninteger connector pin "+pin);return n;};
     for(const auto& p:pins)(void)numeric(p.first);
     std::stable_sort(pins.begin(),pins.end(),[&](const std::pair<std::string,std::string>& a,const std::pair<std::string,std::string>& b){return numeric(a.first)<numeric(b.first);});
-    CircuitAuthor c(name,title,context);AuthoringPartSelection selection;selection.ref=ref;c.use_part(policy.part,selection);
-    for(const auto* pin:{"101","102","103","104"})c.nc({ref+"."+pin});
+    const auto mate=conn->second.footprint.value_or("");
+    if(mate.empty())throw CircuitAuthoringError("SoM connector "+ref+" names no mate footprint in the module interface");
+    CircuitAuthor c(name,title,context);AuthoringPartSelection selection;selection.ref=ref;selection.footprint=mate;c.use_part(policy.part,selection);
+    std::set<std::string> interface_pins;for(const auto& p:pins)interface_pins.insert(p.first);
+    const auto placed=std::find_if(c.view().parts.begin(),c.view().parts.end(),[&](const CircuitPartIr& p){return p.ref==ref;});
+    if(placed==c.view().parts.end())throw CircuitAuthoringError("SoM connector "+ref+" was not placed");
+    std::vector<std::string> unused;
+    for(const auto& pin:placed->pin_numbers)if(!interface_pins.count(pin))unused.push_back(pin);
+    std::stable_sort(unused.begin(),unused.end(),[&](const std::string& a,const std::string& b){return numeric(a)<numeric(b);});
+    for(const auto& pin:unused)c.nc({ref+"."+pin});
     std::set<std::string> seen;
     const auto bound=[&](const std::string& som_net){
         for(const auto* map:{&mapping.rebound_som_rails,&mapping.vcco_rail_map,&mapping.function_map,&mapping.pudc_straps}) {

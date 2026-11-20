@@ -100,7 +100,7 @@
   "zeners": {},
   "reference_pins": {},
   "control_grid": {},
-  "model_overrides": {},
+  "model_overrides": {"DF40C-100DP-0.4V_51": {"footprint": "Mylibrary:HRS_DF40C-100DP-0.4V_51_", "path": "${KIPRJMOD}/../parts/DF40C-100DP-0.4V_51/DF40C-100DP-0.4V_51.wrl", "rotation_z_deg": 0}},
   "footprint_aliases": {},
   "stated_heights": {
     "Fiducial:Fiducial_1mm_Mask2mm": {
