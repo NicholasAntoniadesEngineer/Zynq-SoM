@@ -218,7 +218,7 @@ void pcb_stages(Context& c){
         const rules::RuleContext context(input,model,board_stackup(),intent);
         const auto report=build_decoupling_report(context);publish_text(c.reports/"decoupling.txt",report.text());
         const auto errors=verify_decoupling_report(report,context,intent,c.geometry->integrity.of(rules::bypass_rule_id));
-        c.gate("decoupling_report",errors.empty(),std::to_string(report.rows.size())+" rows; "+std::to_string(std::count_if(report.rows.begin(),report.rows.end(),[](const auto& r){return !r.pass;}))+" failing"+(errors.empty()?"":"; "+join(errors,"; ")));});
+        c.gate("decoupling_report",errors.empty(),std::to_string(report.rows.size())+" rows; "+std::to_string(report.failures())+" failing"+(errors.empty()?"":"; "+join(errors,"; ")));});
     c.attempt("assembly",[&]{if(!c.pcb||!c.power)throw ProjectError("PCB/power result unavailable");
         JsonNode result;try{result=run_assembly_documents(c.pcb->placement.model,*c.power,load_project_config(c.paths).name,c.manufacturing/"ASSEMBLY.md",c.renders/"assembly",pcb_emit_policy(c.pcb->inputs.floorplan.project));}
         catch(...){c.fallbacks.record("assembly_generation_failed");throw;}

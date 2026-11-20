@@ -97,6 +97,13 @@ std::vector<std::string> verify_testpoint_map(const TestpointMap& map, const std
     for (const PcbCheckInstance& part : model.insts) probes += part_class_of(part) == PartClass::test_point;
     if (map.rows.size() != probes)
         errors.push_back("map has " + std::to_string(map.rows.size()) + " rows but the placed board has " + std::to_string(probes) + " test points");
+    for (const TestpointRow& row : map.rows) {
+        const auto placed = std::find_if(model.insts.begin(), model.insts.end(),
+                                         [&](const PcbCheckInstance& part) { return part.ref == row.ref && part.sheet == row.sheet; });
+        if (placed == model.insts.end()) continue;
+        if (row.x != placed->x - model.origin_x || row.y != placed->y - model.origin_y || row.face != placed->side)
+            errors.push_back("map row " + key_of(row.sheet, row.ref) + " is not at the placed position of that reference");
+    }
     if (map.waivers.size() != coverage.waived.size())
         errors.push_back("map lists " + std::to_string(map.waivers.size()) + " waivers but the coverage result has " + std::to_string(coverage.waived.size()));
     for (const auto& [net, waiver] : coverage.waived) {

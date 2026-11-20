@@ -58,6 +58,10 @@ void board(const std::filesystem::path &root, const std::string &project) {
     renamed.rows.front().net += "_X";
     require(rejected(renamed, sheets, index, model, coverage), project + " mutation: changed net");
 
+    auto moved = map;
+    moved.rows.front().x += 1;
+    require(rejected(moved, sheets, index, model, coverage), project + " mutation: changed position");
+
     if (!map.waivers.empty()) {
         auto lost = map;
         lost.waivers.erase(lost.waivers.begin());

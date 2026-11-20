@@ -50,6 +50,10 @@ void board(const std::filesystem::path &root, const std::string &project) {
         require(row.gap == *context.pad_gap(served->owner, served->pads, served->part),
                 project + " distance equals the rule's measurement: " + row.cap);
     }
+    for (const auto &row : report.rows)
+        require(row.judged == (row.role == "bypass"), project + " only rule-judged rows carry a verdict: " + row.cap);
+    require(report.failures() == bypass.findings.size(), project + " total fail count equals the rule's findings");
+    require(report.text().find("unjudged") != std::string::npos || reservoirs == 0, project + " unjudged rows are labelled");
     require(reservoirs + bypasses == report.rows.size(), project + " roles partition the rows");
     require(report.text() == build_decoupling_report(context).text(), project + " report is reproducible");
 

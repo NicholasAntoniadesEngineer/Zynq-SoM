@@ -11,12 +11,13 @@ namespace schgen {
 struct DecouplingRow {
     std::string sheet, owner, pin, net, cap, value, role;
     double gap = 0, reach = 0;
-    bool beside = false, under = false, pass = false;
+    bool beside = false, under = false, judged = false, pass = false;
 };
 
 struct DecouplingReport {
     std::vector<DecouplingRow> rows;
     std::size_t failures(std::string_view role) const;
+    std::size_t failures() const;
     std::string text() const;
 };
 

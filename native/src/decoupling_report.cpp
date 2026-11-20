@@ -39,7 +39,11 @@ auto row_key(const DecouplingRow& row) { return std::tie(row.sheet, row.cap, row
 }
 
 std::size_t DecouplingReport::failures(std::string_view role) const {
-    return static_cast<std::size_t>(std::count_if(rows.begin(), rows.end(), [&](const DecouplingRow& row) { return row.role == role && !row.pass; }));
+    return static_cast<std::size_t>(std::count_if(rows.begin(), rows.end(), [&](const DecouplingRow& row) { return row.judged && row.role == role && !row.pass; }));
+}
+
+std::size_t DecouplingReport::failures() const {
+    return static_cast<std::size_t>(std::count_if(rows.begin(), rows.end(), [](const DecouplingRow& row) { return row.judged && !row.pass; }));
 }
 
 DecouplingReport build_decoupling_report(const rules::RuleContext& context) {
@@ -55,16 +59,16 @@ DecouplingReport build_decoupling_report(const rules::RuleContext& context) {
         const PcbCheckInstance& cap = context.parts()[service->part];
         const PcbCheckInstance& owner = context.parts()[service->owner];
         DecouplingRow row{cap.sheet, owner.ref, join_pads(service->pads), context.net_at(service->owner, service->pads.front()),
-                          cap.ref, cap.value, service->role, 0, rules::role_rule(service->role).reach->value, false, false, false};
+                          cap.ref, cap.value, service->role, 0, rules::role_rule(service->role).reach->value, false, false, false, false};
         if (bypass_role(service->role)) {
             const rules::BypassVerdict verdict = rules::bypass_verdict(context, *service);
             row.gap = verdict.gap;
             row.beside = verdict.beside;
             row.under = verdict.under;
+            row.judged = true;
             row.pass = !verdict.finding.has_value();
         } else {
             row.gap = *context.pad_gap(service->owner, service->pads, service->part);
-            row.pass = row.gap <= row.reach;
         }
         report.rows.push_back(std::move(row));
     }
@@ -79,7 +83,7 @@ std::string DecouplingReport::text() const {
                       placement_report_row({"sheet", "owner", "pin", "net", "cap", "value", "role", "gap", "reach", "verdict"}) + "\n";
     for (const DecouplingRow& row : rows)
         out += placement_report_row({row.sheet, row.owner, row.pin, row.net, row.cap, row.value, row.role,
-                                     placement_report_number(row.gap), placement_report_number(row.reach), row.pass ? "PASS" : "FAIL"}) + "\n";
+                                     placement_report_number(row.gap), placement_report_number(row.reach), !row.judged ? "unjudged" : row.pass ? "PASS" : "FAIL"}) + "\n";
     return out;
 }
 
