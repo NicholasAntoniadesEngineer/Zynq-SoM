@@ -14,6 +14,8 @@ public:
 // supplied to netlisting. Never reload their stored circuit.json as evidence.
 struct CopperDebtSources {
     std::vector<ComponentBasisInput> circuits;
+    ComponentBasisPolicy basis;
+    std::set<std::string> basis_scopes;
     ThermalPolicy thermal;
     PcbEmitPolicy emission;
     std::vector<DifferentialGeometry> geometry;

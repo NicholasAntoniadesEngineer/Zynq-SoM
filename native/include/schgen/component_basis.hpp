@@ -20,6 +20,7 @@ struct ComponentBasisPolicy {
     std::vector<ComponentBasisDeclaration> declarations;
     std::vector<ComponentBasisUse> uses;
     std::vector<ComponentBasisSheet> sheets;
+    std::vector<std::string> board_scope_only;
 };
 struct ComponentBasisInput {
     std::string scope, sheet;
@@ -30,13 +31,13 @@ struct ComponentBasisResult {
     std::vector<std::string> raw, undeclared, unused, broken;
     bool ok() const { return raw.empty() && undeclared.empty() && unused.empty() && broken.empty(); }
 };
-const ComponentBasisPolicy& default_component_basis_policy();
+ComponentBasisPolicy load_component_basis_policy(const std::filesystem::path& repository);
+std::set<std::string> component_basis_scopes(const std::filesystem::path& repository);
 // Scopes are explicit and required; omitted/extra/duplicate sheets fail closed.
-// Default auditing includes all 17 libraries and both live project registries.
 ComponentBasisResult audit_component_basis(const std::vector<ComponentBasisInput>&,
-    const std::set<std::string>& scopes = {"library", "carrier", "devkit_mini"},
-    const ComponentBasisPolicy& = default_component_basis_policy());
-std::vector<ComponentBasisInput> author_component_basis_inputs(const std::filesystem::path& repository);
+    const std::set<std::string>& scopes, const ComponentBasisPolicy&);
+std::vector<ComponentBasisInput> author_component_basis_inputs(const std::filesystem::path& repository,
+    const ComponentBasisPolicy&);
 std::string component_basis_report(const ComponentBasisResult&);
 JsonNode component_basis_result_json(const ComponentBasisResult&);
 JsonNode component_basis_policy_json(const ComponentBasisPolicy&);

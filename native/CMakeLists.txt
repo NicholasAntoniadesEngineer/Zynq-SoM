@@ -141,8 +141,8 @@ target_sources(schgen_core PRIVATE src/model3d_gate.cpp src/model3d_assets.cpp s
 target_link_libraries(schgen_core PUBLIC schgen_poppler_cpp PNG::PNG)
 set_source_files_properties(src/model3d_gate.cpp src/model3d_assets.cpp src/native_render.cpp
     PROPERTIES COMPILE_OPTIONS "-Wall;-Wextra;-Wpedantic;-Werror;-ffp-contract=off")
-target_sources(schgen_core PRIVATE src/component_basis.cpp src/component_basis_registry.cpp src/copper_debt.cpp)
-set_source_files_properties(src/component_basis.cpp src/component_basis_registry.cpp src/copper_debt.cpp
+target_sources(schgen_core PRIVATE src/component_basis.cpp src/copper_debt.cpp)
+set_source_files_properties(src/component_basis.cpp src/copper_debt.cpp
     PROPERTIES COMPILE_OPTIONS "-Wall;-Wextra;-Wpedantic;-Werror;-ffp-contract=off")
 set_source_files_properties(src/pcb_verification.cpp PROPERTIES COMPILE_OPTIONS "-ffp-contract=off")
 target_sources(schgen_core PRIVATE src/pcb_placement_contract_gate.cpp src/pcb_placement_flow_gate.cpp src/pcb_placement_compose_gate.cpp)
