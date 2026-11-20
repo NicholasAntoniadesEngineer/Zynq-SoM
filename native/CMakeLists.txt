@@ -27,9 +27,9 @@ add_library(schgen_core STATIC
     src/pack_anchor.cpp src/place_search.cpp src/cc.cpp src/embed_fp.cpp
     src/pack_edges.cpp src/pcb_scan.cpp src/pack_refine.cpp src/place_geom.cpp
     src/catalog.cpp src/part_facts.cpp src/json.cpp src/circuit.cpp src/circuit_layout.cpp src/reorder.cpp src/atomic_file.cpp
-    src/ratsnest.cpp src/footprint_library.cpp src/xdc.cpp src/vivado.cpp
+    src/ratsnest.cpp src/footprint_library.cpp src/xdc.cpp
     src/bom.cpp src/project.cpp src/project_catalog.cpp src/project_outputs.cpp src/som_interface.cpp
-    src/link.cpp src/devicetree.cpp src/symbols.cpp src/validation.cpp
+    src/link.cpp src/symbols.cpp src/validation.cpp
     src/schematic.cpp src/schematic_route.cpp src/netlist_gate.cpp src/design_rules.cpp
     src/schematic_place_core.cpp src/schematic_place_fanout.cpp
     src/schematic_place_templates.cpp src/schematic_place_chain.cpp src/schematic_place_pages.cpp
@@ -1314,11 +1314,6 @@ if(BUILD_TESTING)
     target_compile_options(schgen_project_outputs_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
     add_test(NAME native_project_outputs_contracts COMMAND schgen_project_outputs_contracts
         "${CMAKE_CURRENT_SOURCE_DIR}/..")
-    add_executable(schgen_devicetree_contracts tests/devicetree_contracts.cpp)
-    target_link_libraries(schgen_devicetree_contracts PRIVATE schgen_core)
-    target_compile_options(schgen_devicetree_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
-    add_test(NAME native_devicetree_contracts COMMAND schgen_devicetree_contracts
-        "${CMAKE_CURRENT_SOURCE_DIR}/tests/data" "${CMAKE_CURRENT_SOURCE_DIR}/..")
     add_executable(schgen_link_contracts tests/link_contracts.cpp)
     target_link_libraries(schgen_link_contracts PRIVATE schgen_core)
     target_compile_options(schgen_link_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
@@ -1338,11 +1333,6 @@ if(BUILD_TESTING)
     target_compile_options(schgen_project_catalog_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
     add_test(NAME native_project_catalog_contracts COMMAND schgen_project_catalog_contracts
         "${CMAKE_CURRENT_SOURCE_DIR}/..")
-    add_executable(schgen_vivado_contracts tests/vivado_contracts.cpp)
-    target_link_libraries(schgen_vivado_contracts PRIVATE schgen_core)
-    target_compile_options(schgen_vivado_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
-    add_test(NAME native_vivado_contracts COMMAND schgen_vivado_contracts
-        "${CMAKE_CURRENT_SOURCE_DIR}/tests/data/vivado_golden.tcl")
     add_executable(schgen_bom_contracts tests/bom_contracts.cpp)
     target_link_libraries(schgen_bom_contracts PRIVATE schgen_core)
     target_compile_options(schgen_bom_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
@@ -1396,7 +1386,7 @@ if(BUILD_TESTING)
     add_test(NAME native_carrier_check_cli COMMAND schgen carrier-check --project carrier --repo "${CMAKE_CURRENT_SOURCE_DIR}/..")
     add_test(NAME native_devkit_check_cli COMMAND schgen carrier-check --project devkit_mini --repo "${CMAKE_CURRENT_SOURCE_DIR}/..")
     foreach(command board build devkit nets chir-rung w11-sweep w12-bound w12-stageprobe dump-circuits
-            selftest project-check circuit-check som-interface xdc vivado fpga bom link devicetree
+            selftest project-check circuit-check som-interface xdc bom link
             design-rules testpoints board-schematic pcb-stage pcb-drc subsystem-new render3d board-step
             model3d-check assembly ratsnest gallery diagram si-constraints fab-profile manifest preflight
             constraints powertree thermal part-rules bom-values footprint-pads pin-completeness symbol-law

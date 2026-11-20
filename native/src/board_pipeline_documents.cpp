@@ -1,7 +1,5 @@
 #include "board_pipeline_internal.hpp"
 #include "schgen/board_files.hpp"
-#include "schgen/devicetree.hpp"
-#include "schgen/vivado.hpp"
 #include "schgen/gallery.hpp"
 #include "schgen/native_render.hpp"
 #include "schgen/model3d.hpp"
@@ -19,17 +17,13 @@ void golden_stage(Context& c){
     });
 }
 void document_stages(Context& c){
-    std::optional<SomZynq> live;std::optional<XdcInput> xi;std::optional<XdcOutput> xo;
-    c.attempt("xdc",[&]{live=extract_som_zynq(c.paths.som_schematic,"U2",{"J1","J2","J3"},c.options.extraction);
-        XdcInput raw;raw.refs={"J1","J2","J3"};raw.pins_file=board_file_name(c.paths.file_stem,BoardFileKind::PinConstraints);apply_som_to_xdc(raw,*live);
-        xi=load_project_xdc_input(c.paths.repository_root,c.paths.project_root,c.sheets,raw,c.paths.som_schematic,c.paths.som_interface_file);
-        xo=generate_xdc(*xi);publish_text(c.out/"fpga"/xi->pins_file,xo->text);
-        ManufacturingXdc manifest;manifest.count=xo->entries.size();manifest.device=xi->device;
-        std::set<int> banks;for(const auto& pin:xo->entries)banks.insert(std::stoi(pin.bank));manifest.banks.assign(banks.begin(),banks.end());c.xdc=manifest;
-        c.gate("xdc",true,join(xo->checks,"\n"));});
-    c.attempt("vivado",[&]{if(!xi||!xo)throw ProjectError("validated live XDC inputs unavailable");
-        publish_text(c.out/"fpga/create_project.tcl",render_vivado(*xo,xi->device,xi->zynq_ref,xi->pins_file,xi->refs));c.gate("vivado",true,"project Tcl published");});
-    c.attempt("devicetree",[&]{if(!live)throw ProjectError("live SoM extraction unavailable");const auto r=generate_devicetree(load_devicetree_input(c.paths.repository_root,c.paths.project_root,*live,board_file_name(c.paths.file_stem,BoardFileKind::PinConstraints),c.paths.som_interface_file));publish_text(c.out/"firmware/carrier_pl.dtsi",r.text);c.gate("devicetree",true,"device tree published");});
+    c.attempt("xdc",[&]{const auto live=extract_som_zynq(c.paths.som_schematic,"U2",{"J1","J2","J3"},c.options.extraction);
+        XdcInput raw;raw.refs={"J1","J2","J3"};raw.pins_file=board_file_name(c.paths.file_stem,BoardFileKind::PinConstraints);apply_som_to_xdc(raw,live);
+        const auto xi=load_project_xdc_input(c.paths.repository_root,c.paths.project_root,c.sheets,raw,c.paths.som_schematic,c.paths.som_interface_file);
+        const auto xo=generate_xdc(xi);publish_text(c.out/"fpga"/xi.pins_file,xo.text);
+        ManufacturingXdc manifest;manifest.count=xo.entries.size();manifest.device=xi.device;
+        std::set<int> banks;for(const auto& pin:xo.entries)banks.insert(std::stoi(pin.bank));manifest.banks.assign(banks.begin(),banks.end());c.xdc=manifest;
+        c.gate("xdc",true,join(xo.checks,"\n"));});
     c.attempt("firmware",[&]{FirmwareDocsInput in;in.sheets=c.circuits;
         in.firmware_sources={c.paths.som_interface_file.string(),c.paths.som_schematic.string()+" (U9 pin map, live kicad-cli extraction)"};
         for(const auto& sc:c.circuits)in.firmware_sources.push_back(sc.path.string());

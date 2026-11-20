@@ -2,7 +2,6 @@
 #include "schgen/project.hpp"
 #include "schgen/json.hpp"
 #include "schgen/som_interface.hpp"
-#include "schgen/vivado.hpp"
 
 #include <algorithm>
 #include <fstream>
@@ -67,16 +66,13 @@ int main(int argc, char** argv) {
             const auto out = schgen::generate_xdc(in);
             require(out.entries.size() == 156 && out.checks.size() == 6, name + ": XDC coverage changed");
             require(out.text == read(paths.fpga_dir / "Zynq_Carrier_pins.xdc"), name + ": XDC artifact changed");
-            require(schgen::render_vivado(out, in.device, in.zynq_ref,
-                "Zynq_Carrier_pins.xdc", in.refs) == read(paths.fpga_dir / "create_project.tcl"),
-                name + ": Vivado artifact changed");
             auto drift = in;
             drift.jpin_net.front().second += "_CORRUPTED";
             bool rejected = false;
             try { (void)schgen::generate_xdc(drift); }
             catch (const schgen::XdcError&) { rejected = true; }
             require(rejected, name + ": live contract drift was accepted");
-            std::cout << name << ": native project-to-XDC/Vivado artifact parity passed\n";
+            std::cout << name << ": native project-to-XDC artifact parity passed\n";
         }
         return 0;
     } catch (const std::exception& error) { std::cerr << error.what() << '\n'; return 1; }

@@ -72,11 +72,9 @@ int main(int argc, char** argv) {
                          "  thermal [--project NAME] [SUBSYSTEM ...] [--pcb FILE] [-o REPORT]\n"
                          "  design-rules|testpoints [--project NAME] [SUBSYSTEM ...] [-o REPORT]\n"
                          "  som-interface [--project NAME] [--som FILE] [--refs J1,J2,J3] [-o FILE]\n"
-                         "  xdc|vivado [--project NAME] [--som FILE] [--contract FILE] [-o FILE]\n"
-                         "  fpga [--project NAME] [-o DIRECTORY]  (XDC + Vivado, one live extraction)\n"
+                         "  xdc [--project NAME] [--som FILE] [--contract FILE] [-o FILE]\n"
                          "  bom [--project NAME] [SUBSYSTEM ...] [-o FILE] [--allow-missing] [--qualified-refs]\n"
                          "  link [--project NAME] [SUBSYSTEM ...] [--contract FILE] [-o REPORT]\n"
-                         "  devicetree [--project NAME] [--som FILE] [--contract FILE] [-o FILE]\n"
                          "  board [--project NAME] [-o DIRECTORY] [--no-render] [--timing] [--audit-projections 1|2] [--compact-placement] [--initial-outline-mm WIDTHxHEIGHT] [--floorplan-spec PATH] [--interior-order 0|1|2|3] [--multiscale-outline]\n"
                          "    --compact-placement: experimental search; not an accepted layout or speedup. All board gates remain mandatory.\n";
             return 0;
