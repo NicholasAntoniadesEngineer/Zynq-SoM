@@ -2,7 +2,12 @@
 #include "schgen/json.hpp"
 #include "schgen/power_checks.hpp"
 #include "schgen/project.hpp"
+#include <libxml/parser.h>
+#include <libxml/tree.h>
 #include <algorithm>
+#include <climits>
+#include <memory>
+#include <set>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -43,6 +48,63 @@ void exact(const std::string& actual, const fs::path& expected) {
     }
     ++assertions;
 }
+std::vector<std::string> outputs(const std::vector<PowerSequenceRow>& rows) {
+    std::vector<std::string> out;
+    for (const auto& row : rows) out.push_back(row.vout);
+    return out;
+}
+bool svg_element(const xmlNode* node, const char* name) {
+    return node && node->type == XML_ELEMENT_NODE && xmlStrEqual(node->name, BAD_CAST name) &&
+        node->ns && xmlStrEqual(node->ns->href, BAD_CAST "http://www.w3.org/2000/svg");
+}
+std::size_t svg_rectangles(const std::string& text) {
+    if (text.size() > INT_MAX) throw std::runtime_error("SVG exceeds parser input limit");
+    std::unique_ptr<xmlParserCtxt, decltype(&xmlFreeParserCtxt)> context(xmlNewParserCtxt(), xmlFreeParserCtxt);
+    if (!context) throw std::bad_alloc();
+    std::unique_ptr<xmlDoc, decltype(&xmlFreeDoc)> doc(xmlCtxtReadMemory(context.get(), text.data(),
+        static_cast<int>(text.size()), nullptr, nullptr,
+        XML_PARSE_NONET | XML_PARSE_NOERROR | XML_PARSE_NOWARNING), xmlFreeDoc);
+    if (!doc) throw std::runtime_error("invalid SVG XML");
+    if (doc->intSubset || doc->extSubset) throw std::runtime_error("DTD is not allowed in SVG");
+    const auto* root = xmlDocGetRootElement(doc.get());
+    if (!svg_element(root, "svg")) throw std::runtime_error("SVG root/namespace missing");
+    std::vector<const xmlNode*> pending{root}; std::size_t count = 0;
+    while (!pending.empty()) {
+        const auto* node = pending.back(); pending.pop_back();
+        if (svg_element(node, "rect")) ++count;
+        for (auto* child = node->children; child; child = child->next) pending.push_back(child);
+    }
+    return count;
+}
+void partition_and_determinism(const std::vector<ProjectCircuit>& sheets) {
+    const auto policy = default_power_policy();
+    const auto power = analyze_power(sheets, policy);
+    const auto sequence = build_power_sequence(sheets, power, policy);
+    const auto svg = render_power_sequence_svg(sequence, power.ok(), policy);
+    const auto repeated_power = analyze_power(sheets, policy);
+    const auto repeated_sequence = build_power_sequence(sheets, repeated_power, policy);
+    const auto repeated_svg = render_power_sequence_svg(repeated_sequence, repeated_power.ok(), policy);
+    const std::set<std::string> stage0(sequence.stage0.begin(), sequence.stage0.end());
+    const auto chain_outputs = outputs(sequence.chain), module_outputs = outputs(sequence.modules);
+    const std::set<std::string> chain(chain_outputs.begin(), chain_outputs.end());
+    std::set<std::string> placed = stage0;
+    placed.insert(chain.begin(), chain.end()); placed.insert(module_outputs.begin(), module_outputs.end());
+    for (const auto& reg : power.regs) {
+        require(placed.count(reg.vout) != 0, "power-sequence drops regulator output " + reg.vout);
+        if (reg.kind == "load_switch") {
+            require(stage0.count(reg.vout) == 0, reg.vout + " load switch is in stage-0");
+            require(chain.count(reg.vout) == 0, reg.vout + " load switch is in the rail chain");
+        }
+    }
+    for (const auto& [name, source] : policy.sources) {
+        (void)source;
+        require(stage0.count(name) != 0, "source " + name + " not in stage-0");
+    }
+    require(sequence.stage0 == repeated_sequence.stage0 && chain_outputs == outputs(repeated_sequence.chain) &&
+            module_outputs == outputs(repeated_sequence.modules), "power-sequence build is not deterministic");
+    require(svg == repeated_svg, "power-sequence SVG bytes are not deterministic");
+    require(svg_rectangles(svg) >= power.regs.size(), "power-sequence SVG has fewer rail boxes than regulators");
+}
 void mutants(const std::vector<ProjectCircuit>& sheets, const PowerCheckResult& pr) {
     auto cyclic = pr; PowerReg cycle; cycle.vin = "+VBUS_IN"; cycle.vout = "+VBUS_IN"; cyclic.regs.push_back(cycle);
     throws([&] { build_power_sequence(sheets, cyclic); }, "reachable regulator cycle");
@@ -69,6 +131,7 @@ int main(int argc, char** argv) {
             exact(render_power_sequence_svg(seq, false), dir / "power_sequence_fail.svg");
             const auto native_power = analyze_power(sheets);
             exact(render_power_sequence_svg(build_power_sequence(sheets, native_power), native_power.ok()), dir / "power_sequence.svg");
+            partition_and_determinism(sheets);
             if (name == "carrier") mutants(sheets, pr);
             std::cout << name << ": power sequence matches the frozen drawings\n";
         }
