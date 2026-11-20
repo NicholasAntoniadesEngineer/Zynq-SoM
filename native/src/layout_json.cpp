@@ -14,7 +14,7 @@ using json_text::object;
 using json_text::text_value;
 
 inline constexpr std::size_t reserve_corners = 4;
-const char* const schema_name = "schgen.layout-problem/10";
+const char* const schema_name = "schgen.layout-problem/11";
 inline constexpr std::size_t point_fields = 2, disc_fields = 3, box_fields = 4;
 
 std::string point_json(Point point) { return array({integer(point.x), integer(point.y)}); }
@@ -359,6 +359,7 @@ std::string document_json(const Problem& problem, const Placement& placement) {
                                    {"source", text_value(reserve.source)},
                                    {"top", boolean(reserve.top)},
                                    {"bottom", boolean(reserve.bottom)},
+                                   {"guests", indices_json(reserve.guests)},
                                    {"pour", reserve.pour
                                                 ? object({{"owner", integer(static_cast<Nm>(reserve.pour->owner))},
                                                           {"local", array({json_text::number(reserve.pour->local[0]),
@@ -532,10 +533,11 @@ Document read_document(const JsonNode& root) {
         problem.obstacles.push_back(obstacle);
     }
     for (const auto& entry : field(root, "reserves", JsonKind::Array).array_value) {
-        reject_unknown_keys(entry, {"box", "members", "source", "top", "bottom", "pour"}, "layout reserve");
+        reject_unknown_keys(entry, {"box", "members", "source", "top", "bottom", "guests", "pour"}, "layout reserve");
         Reserve reserve{box_of(field(entry, "box", JsonKind::Array)),
                         indices_of(field(entry, "members", JsonKind::Array)), text(entry, "source"),
                         flag(entry, "top"), flag(entry, "bottom")};
+        reserve.guests = indices_of(field(entry, "guests", JsonKind::Array));
         const JsonNode* pour = object_field(entry, "pour");
         if (!pour) throw LayoutError("layout: field pour is missing");
         if (pour->kind != JsonKind::Null) {

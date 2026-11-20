@@ -41,6 +41,7 @@ nothing needs recompiling. A misspelt or unknown key stops the run with an error
 | `audit_projections` | `2` | Source audits run side by side (1 or 2) |
 | `stackup` | `JLC06161H-3313` per board | Layer build-up, by name from the catalogue below |
 | `overmold_parts` | `["HDMI-019S"]` on the carrier | Connectors whose cable overmould needs side clearance |
+| `study` | four builds, one per layer count | Optional: `stackups` lists the builds `study layers` compares |
 
 ## Layer build-ups
 
@@ -48,6 +49,11 @@ nothing needs recompiling. A misspelt or unknown key stops the run with an error
 4, 6, 8 and 10-layer builds. To try another, put its name under `stackup` and run
 again. The placed layout carries over between any two builds that have a ground
 plane under both faces. To add a build, add an entry to that file.
+
+To compare builds side by side, run `native/bin/schgen study layers` (optionally
+`devkit_mini --stackups JLC06161H-3313,JLC08161H-3313`). Each build goes to
+`out/study/<build>/<board>/` and the comparison to `out/study/layers_<board>.txt`
+and `.json`. A build that fails a gate is recorded in its column; the rest still run.
 
 ## Where things are
 

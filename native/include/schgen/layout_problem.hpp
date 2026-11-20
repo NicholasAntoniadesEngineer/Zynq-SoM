@@ -176,6 +176,7 @@ struct Reserve {
     std::string source;
     bool top = true, bottom = true;
     std::optional<PourRule> pour = std::nullopt;
+    std::vector<std::size_t> guests = {};
 };
 
 struct Rules {

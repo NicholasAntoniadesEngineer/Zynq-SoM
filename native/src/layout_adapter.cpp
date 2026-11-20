@@ -688,6 +688,10 @@ ModelBinding bind_model(const PcbModel& model, const PcbEmitPolicy& policy, cons
         claim.same_face = demand.owner_face;
         claim.or_under = demand.or_under;
         claim.first = role.protects_connector;
+        if (rules::corridor_guest(role, problem.parts[claim.owner].module))
+            for (Reserve& reserve : problem.reserves)
+                if (!reserve.pour && reserve.members == std::vector<std::size_t>{claim.owner})
+                    reserve.guests.push_back(claim.part);
         Part& part = problem.parts[claim.part];
         part.field_sensitive = part.field_sensitive || role.field_sensitive;
         part.field_source = part.field_source || loop_inductor[claim.part] != 0;

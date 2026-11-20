@@ -447,6 +447,70 @@ AttractReport attract(Kernel& kernel, Nm pitch, Nm reach) {
         ++report.seated;
         if (from.face == Face::top && kernel.placement()[part].face == Face::bottom) ++report.to_rear;
     }
+    std::map<std::size_t, std::vector<std::size_t>> siblings;
+    for (const std::size_t index : order)
+        if (!met(rules[index])) siblings[rules[index].anchor].push_back(index);
+    const Nm near_radius = std::max(reach, static_cast<Nm>(constants::ring_limit.value));
+    const std::vector<Point> near = seat_ring(pitch, near_radius, {0, 0});
+    for (const auto& [owner, wanting] : siblings) {
+        if (wanting.size() < 2) continue;
+        const Snapshot before = kernel.snapshot();
+        std::vector<char> pending(problem.parts.size(), 0);
+        for (const std::size_t index : wanting) pending[rules[index].member] = 1;
+        std::vector<std::size_t> touched;
+        for (const std::size_t index : wanting) {
+            const PadGap& rule = rules[index];
+            const std::size_t part = rule.member;
+            pending[part] = 0;
+            const Pose from = kernel.placement()[part];
+            const Pose anchor = kernel.placement()[owner];
+            const std::vector<Box> pins = named_boxes(problem, owner, anchor, rule.anchor_names);
+            if (pins.empty()) continue;
+            Box pin = pins.front();
+            for (const auto& box : pins) pin = united(pin, box);
+            const Point target{(pin.x0 + pin.x1) / 2, (pin.y0 + pin.y1) / 2};
+            const bool flips = may_sink(problem, kernel.placement(), part) || from.face == Face::bottom;
+            std::vector<Seat> seats;
+            for (const Point by : near)
+                for (const Face face : {Face::bottom, Face::top}) {
+                    if (face != from.face && !flips) continue;
+                    for (int turn = 0; turn < turn_count; ++turn) {
+                        const Pose pose{shifted(target, by), static_cast<Turn>(turn), face};
+                        if (!faced(rule, anchor, pose)) continue;
+                        const Nm gap = squared_pad_gap(problem, rule, anchor, pose);
+                        if (gap <= squared(rule.limit)) seats.push_back({pose, gap});
+                    }
+                }
+            std::stable_sort(seats.begin(), seats.end(), [](const Seat& a, const Seat& b) { return a.gap < b.gap; });
+            for (const Seat& seat : seats) {
+                if (crowds_escape(problem, kernel.placement(), part, seat.pose)) continue;
+                const std::vector<Move> moves = train(part, seat.pose);
+                std::vector<Move> back;
+                for (const Move& move : moves) back.push_back({move.part, kernel.placement()[move.part]});
+                if (!kernel.force(moves)) continue;
+                const bool sound = std::all_of(moves.begin(), moves.end(), [&](const Move& move) {
+                    const auto found = kernel.breach(move.part);
+                    return !found || (found->kind == Breach::contract && pending[found->other]);
+                });
+                if (sound) {
+                    for (const Move& move : moves) touched.push_back(move.part);
+                    break;
+                }
+                kernel.force(back);
+            }
+        }
+        const bool legal = std::none_of(touched.begin(), touched.end(),
+                                        [&](std::size_t part) { return kernel.breach(part).has_value(); }) &&
+                           std::none_of(wanting.begin(), wanting.end(), [&](std::size_t index) {
+                               return kernel.breach(rules[index].member).has_value();
+                           });
+        if (!legal || touched.empty()) {
+            kernel.restore(before);
+            continue;
+        }
+        for (const std::size_t index : wanting)
+            if (met(rules[index])) ++report.together;
+    }
     for (const std::size_t index : order)
         if (met(rules[index])) ++report.met_after;
     report.routed_after = kernel.routed_length();

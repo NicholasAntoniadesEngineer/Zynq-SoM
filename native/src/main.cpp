@@ -1,4 +1,5 @@
 #include "schgen/run_config.hpp"
+#include "schgen/study.hpp"
 #include "schgen/catalog.hpp"
 #include "schgen/circuit.hpp"
 #include "schgen/legalize.hpp"
@@ -26,6 +27,7 @@ int main(int argc, char** argv) {
             std::cout << schgen::run_usage();
             return 0;
         }
+        if (const auto status = schgen::study_command(argc, argv)) return *status;
         if (const auto status = schgen::run_config_command(argc, argv)) return *status;
         if (argc == 2 && std::string(argv[1]) == "tools") {
             std::cout << "usage: schgen <command>\n"
