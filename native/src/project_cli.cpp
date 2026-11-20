@@ -758,7 +758,8 @@ std::optional<int> run_project_command(int argc, char** argv) {
     }
     if(options.command=="power-sequence") {
         const auto power=analyze_power(circuits);
-        const auto text=render_power_sequence_svg(build_power_sequence(circuits,power),power.ok());
+        const auto mapping=link_mapping_from_json(parse_json_file((paths.project_root/"som_mapping.json").string()),paths.module.do_not_load_straps);
+        const auto text=render_power_sequence_svg(build_power_sequence(circuits,power,module_supply_rail(paths.module.draw,mapping)),load_project_config(paths).name,power.ok());
         const auto output=options.output.empty()?paths.project_root/"docs/power_sequence.svg":options.output;
         publish_text(output,text);std::cout<<options.command<<": "<<output.string()<<'\n';return 0;
     }

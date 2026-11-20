@@ -25,6 +25,7 @@ Rules the tool relies on (enforced by `native_removed_archive_contracts`):
 | `vivado_script/` | fpga/create_project.tcl and its generator | `9d2961a723a8b27af61bd49606abaea8f8ebaed4` | `f32ac35a280d8cca496f4dbec4dde9f51c63600d` |
 | `document_consistency/` | checker of the stored DESIGN_SPEC.md and COMPLIANCE.md | `e95a7702bfddd6775b5b0c482e90d29cf3c178b5` | `e4fd185c3ec9aac237b3c00f1ce534d5632d4152` |
 | `floorplan_prose/` | typed per-sheet placement notes and framing text of docs/FLOORPLAN.md and FLOORPLAN.svg | `9301deeda9d6c31cc06fc5f9230519033cd464c9` | PENDING |
+| `drawing_titles/` | typed titles, headings and always-on rail names of docs/power_sequence.svg and docs/power_tree.svg | `d6f1a6a4a9814aebb8fbf515e2494d38190bc922` | PENDING |
 
 ## Files
 
@@ -175,3 +176,9 @@ Original path, then archive path.
 - `native/src/floorplan_svg.cpp:40-40` -> `removed/floorplan_prose/fragments/floorplan_svg.cpp.L40-40.txt`
 - `native/tests/output_precision_contracts.cpp:129-129` -> `removed/floorplan_prose/fragments/output_precision_contracts.cpp.L129-129.txt`
 - `native/tests/output_precision_contracts.cpp:130-133` -> `removed/floorplan_prose/fragments/output_precision_contracts.cpp.L130-133.txt`
+
+### drawing_titles
+
+- `native/src/firmware_docs_power_sequence.cpp:44-44` -> `removed/drawing_titles/fragments/firmware_docs_power_sequence.cpp.L44-44.txt`
+- `native/src/firmware_docs_power_sequence.cpp:74-78` -> `removed/drawing_titles/fragments/firmware_docs_power_sequence.cpp.L74-78.txt`
+- `native/src/power_checks.cpp:286-286` -> `removed/drawing_titles/fragments/power_checks.cpp.L286-286.txt`

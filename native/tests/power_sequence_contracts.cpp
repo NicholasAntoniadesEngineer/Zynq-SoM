@@ -1,5 +1,6 @@
 #include "schgen/firmware_docs.hpp"
 #include "schgen/json.hpp"
+#include "schgen/link.hpp"
 #include "schgen/power_checks.hpp"
 #include "schgen/project.hpp"
 #include <libxml/parser.h>
@@ -76,14 +77,14 @@ std::size_t svg_rectangles(const std::string& text) {
     }
     return count;
 }
-void partition_and_determinism(const std::vector<ProjectCircuit>& sheets) {
+void partition_and_determinism(const std::vector<ProjectCircuit>& sheets, const std::string& module_rail, const std::string& board) {
     const auto policy = default_power_policy();
     const auto power = analyze_power(sheets, policy);
-    const auto sequence = build_power_sequence(sheets, power, policy);
-    const auto svg = render_power_sequence_svg(sequence, power.ok(), policy);
+    const auto sequence = build_power_sequence(sheets, power, module_rail, policy);
+    const auto svg = render_power_sequence_svg(sequence, board, power.ok(), policy);
     const auto repeated_power = analyze_power(sheets, policy);
-    const auto repeated_sequence = build_power_sequence(sheets, repeated_power, policy);
-    const auto repeated_svg = render_power_sequence_svg(repeated_sequence, repeated_power.ok(), policy);
+    const auto repeated_sequence = build_power_sequence(sheets, repeated_power, module_rail, policy);
+    const auto repeated_svg = render_power_sequence_svg(repeated_sequence, board, repeated_power.ok(), policy);
     const std::set<std::string> stage0(sequence.stage0.begin(), sequence.stage0.end());
     const auto chain_outputs = outputs(sequence.chain), module_outputs = outputs(sequence.modules);
     const std::set<std::string> chain(chain_outputs.begin(), chain_outputs.end());
@@ -96,6 +97,7 @@ void partition_and_determinism(const std::vector<ProjectCircuit>& sheets) {
             require(chain.count(reg.vout) == 0, reg.vout + " load switch is in the rail chain");
         }
     }
+    require(stage0.count(module_rail) != 0, "module supply rail " + module_rail + " not in stage-0");
     for (const auto& [name, source] : policy.sources) {
         (void)source;
         require(stage0.count(name) != 0, "source " + name + " not in stage-0");
@@ -105,13 +107,15 @@ void partition_and_determinism(const std::vector<ProjectCircuit>& sheets) {
     require(svg == repeated_svg, "power-sequence SVG bytes are not deterministic");
     require(svg_rectangles(svg) >= power.regs.size(), "power-sequence SVG has fewer rail boxes than regulators");
 }
-void mutants(const std::vector<ProjectCircuit>& sheets, const PowerCheckResult& pr) {
+void mutants(const std::vector<ProjectCircuit>& sheets, const PowerCheckResult& pr, const std::string& module_rail, const std::string& board) {
     auto cyclic = pr; PowerReg cycle; cycle.vin = "+VBUS_IN"; cycle.vout = "+VBUS_IN"; cyclic.regs.push_back(cycle);
-    throws([&] { build_power_sequence(sheets, cyclic); }, "reachable regulator cycle");
-    auto seq = build_power_sequence(sheets, pr); require(!seq.chain.empty(), "chain fixture empty");
+    throws([&] { build_power_sequence(sheets, cyclic, module_rail); }, "reachable regulator cycle");
+    throws([&] { build_power_sequence(sheets, pr, ""); }, "module supply rail is empty");
+    throws([&] { render_power_sequence_svg(build_power_sequence(sheets, pr, module_rail), ""); }, "board name is empty");
+    auto seq = build_power_sequence(sheets, pr, module_rail); require(!seq.chain.empty(), "chain fixture empty");
     seq.chain.front().load = overload_load; seq.chain.front().enable = "EN_<&>";
     seq.chain.front().vin = seq.stage0.at(0);
-    const auto svg = render_power_sequence_svg(seq, false);
+    const auto svg = render_power_sequence_svg(seq, board, false);
     require(svg.find("#dc2626") != std::string::npos && svg.find("(FAIL)") != std::string::npos && svg.find("EN_&amp;lt;&amp;amp;&amp;gt;") != std::string::npos, "SVG overload/status/escaping policy");
 }
 }
@@ -123,16 +127,21 @@ int main(int argc, char** argv) {
         for (const std::string name : {"carrier", "devkit_mini"}) {
             const auto dir = root / fixture_folder / name;
             const auto snapshot = parse_json_file((dir / "inputs.json").string());
-            const auto sheets = load_project_circuits(resolve_project_paths(root, name));
+            const auto paths = resolve_project_paths(root, name);
+            const auto sheets = load_project_circuits(paths);
+            const auto board = load_project_config(paths).name;
+            require(board == name, "board name from the project");
+            const auto mapping = link_mapping_from_json(parse_json_file((paths.project_root / "som_mapping.json").string()), paths.module.do_not_load_straps);
+            const auto module_rail = module_supply_rail(paths.module.draw, mapping);
             const auto pr = power(field(snapshot, "power"));
-            const auto seq = build_power_sequence(sheets, pr);
+            const auto seq = build_power_sequence(sheets, pr, module_rail);
             require(seq.stage0 == strings(field(field(snapshot, "sequence"), "stage0")), "stage0 ordering");
-            exact(render_power_sequence_svg(seq, pr.ok()), dir / "power_sequence.svg");
-            exact(render_power_sequence_svg(seq, false), dir / "power_sequence_fail.svg");
+            exact(render_power_sequence_svg(seq, board, pr.ok()), dir / "power_sequence.svg");
+            exact(render_power_sequence_svg(seq, board, false), dir / "power_sequence_fail.svg");
             const auto native_power = analyze_power(sheets);
-            exact(render_power_sequence_svg(build_power_sequence(sheets, native_power), native_power.ok()), dir / "power_sequence.svg");
-            partition_and_determinism(sheets);
-            if (name == "carrier") mutants(sheets, pr);
+            exact(render_power_sequence_svg(build_power_sequence(sheets, native_power, module_rail), board, native_power.ok()), dir / "power_sequence.svg");
+            partition_and_determinism(sheets, module_rail, board);
+            if (name == "carrier") mutants(sheets, pr, module_rail, board);
             std::cout << name << ": power sequence matches the frozen drawings\n";
         }
         std::cout << assertions << " assertions passed\n";
