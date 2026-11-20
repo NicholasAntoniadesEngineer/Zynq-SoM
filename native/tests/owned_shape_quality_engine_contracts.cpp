@@ -356,18 +356,34 @@ void pilots(const char* root, const char* catalog) {
     };
     auto no_quality = prepared; no_quality.owned_shape_quality.clear();
     const auto before = run(no_quality), after = run(prepared);
+    const auto block = [&](const auto& plan, const std::string& name) -> const auto& {
+        const auto found = std::find_if(plan.interior_blocks.begin(), plan.interior_blocks.end(),
+            [&](const auto& candidate) { return candidate.name == name; });
+        require(found != plan.interior_blocks.end(), "pilot vanished");
+        return *found;
+    };
+    for (const auto& [sheet, evidence] : in.owned_groups) {
+        (void)evidence;
+        auto only = prepared;
+        for (auto row = only.owned_shape_quality.begin(); row != only.owned_shape_quality.end();)
+            row = row->first.first == sheet ? std::next(row) : only.owned_shape_quality.erase(row);
+        const auto isolated = run(only);
+        const auto& own = block(isolated, sheet);
+        const auto& base = block(before, sheet);
+        if (own.shape_idx != base.shape_idx)
+            require(own.w == base.w && own.h == base.h, "quality changed its own pilot's primary dimensions");
+        std::cout << sheet << " own quality only: " << base.shape_idx << " -> " << own.shape_idx << " (" << own.w
+                  << " x " << own.h << ")\n";
+    }
     std::size_t changed = 0, owned = 0;
     for (const auto& b : after.interior_blocks) {
-        const auto previous = std::find_if(before.interior_blocks.begin(), before.interior_blocks.end(),
-            [&](const auto& old) { return old.name == b.name; });
-        require(previous != before.interior_blocks.end(), "pilot vanished");
+        const auto* previous = &block(before, b.name);
         const auto& shape = zones.geometry.shapes.at(b.name).at(static_cast<std::size_t>(b.shape_idx));
         const bool owned_shape = shape.tag.find("/owned-pins-") != std::string::npos;
         owned += owned_shape;
-        if (previous->shape_idx != b.shape_idx) {
-            ++changed;
-            require(previous->w == b.w && previous->h == b.h, "quality changed pilot primary dimensions");
-        }
+        require(b.w <= previous->w && b.h <= previous->h && b.w * b.h <= previous->w * previous->h,
+                "quality made a pilot's primary dimensions worse");
+        if (previous->shape_idx != b.shape_idx) ++changed;
         const auto bound = bind_pcb_zone_shapes(zones, {{b.name, b.shape_idx}});
         require(bound.top_off.at(b.name) == shape.top_off && bound.bot_off.at(b.name) == shape.bot_off,
             "whole-pack selected shape did not bind");
