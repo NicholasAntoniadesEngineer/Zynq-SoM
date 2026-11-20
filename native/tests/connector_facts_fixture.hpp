@@ -21,6 +21,8 @@ inline void use_repository_part_facts(schgen::ProjectConfig& project) {
     const schgen::PartFacts facts = repository_part_facts();
     project.connectors = facts.connectors;
     project.isolation = facts.isolation;
+    project.thermal_copper = facts.thermal_copper;
+    project.regulators = facts.regulators;
     project.model_overrides = facts.model_overrides;
     project.footprint_aliases = facts.footprint_aliases;
     project.control_grid = facts.control_grid;

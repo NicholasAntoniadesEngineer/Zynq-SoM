@@ -113,8 +113,7 @@ ViaSiteSpec thermal_rule(const PcbCheckModel &m, const PcbEmitPolicy &p) {
 }
 bool has_thermal_subjects(const PcbCheckModel& m, const PcbEmitPolicy& p) {
     return std::any_of(m.insts.begin(), m.insts.end(), [&](const auto &i) {
-        return std::any_of(p.thermal_copper.begin(), p.thermal_copper.end(),
-            [&](const auto &s) { return starts(i.value, s.first); });
+        return thermal_field_for(p.thermal_copper, p.regulators, i.value) != nullptr;
     });
 }
 ThermalNodes thermal_nodes(const PcbModel &m, const PcbEmitPolicy &p, const Uid &uid,
@@ -129,11 +128,10 @@ ThermalNodes thermal_nodes(const PcbModel &m, const PcbEmitPolicy &p, const Uid 
     std::vector<std::string> layers;
     Points placed;
     for (const auto &i : m.insts) {
-        auto match = std::find_if(p.thermal_copper.begin(), p.thermal_copper.end(),
-                                  [&](const auto &s) { return starts(i.value, s.first); });
-        if (match == p.thermal_copper.end())
+        auto found = thermal_copper_spec(p, i.value);
+        if (!found)
             continue;
-        auto spec = match->second;
+        auto spec = std::move(*found);
         if (spec.via_sites.empty())
             throw PcbEmissionError(i.ref + ": thermal copper requires preferred via sites");
         spec.pour = thermal_pour_local(spec.pour, i.mirror);
@@ -262,10 +260,9 @@ std::vector<PreferredThermalField> plan_preferred_thermal_vias(
     const auto rule = thermal_rule(m,p);
     Points occupied;
     for (const auto& i : m.insts) {
-        const auto match = std::find_if(p.thermal_copper.begin(),p.thermal_copper.end(),
-            [&](const auto& s) { return starts(i.value,s.first); });
-        if (match == p.thermal_copper.end()) continue;
-        auto spec = match->second;
+        auto found = thermal_copper_spec(p,i.value);
+        if (!found) continue;
+        auto spec = std::move(*found);
         if (spec.via_sites.empty()) throw PcbEmissionError(i.ref+": thermal copper requires preferred via sites");
         if (i.mirror) {
             for (auto& xy : spec.via_sites) xy.second = -xy.second;

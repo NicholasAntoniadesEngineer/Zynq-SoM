@@ -829,7 +829,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
             } else {
                 FootprintResolutionOptions fp;fp.parts_dir=paths.repository_root/"parts";
                 fp.library_tables={paths.repository_root/"som/fp-lib-table"};
-                fp.aliases={{"Capacitor_SMD:C_1206_3225Metric","Capacitor_SMD:C_1206_3216Metric"}};
+                for(const auto& [from,alias]:load_part_facts_in(fp.parts_dir).footprint_aliases)fp.aliases.emplace(from,alias.footprint);
                 for(const auto* root:{"/Applications/KiCad/KiCad.app/Contents/SharedSupport/footprints","/usr/share/kicad/footprints","/usr/local/share/kicad/footprints"})
                     if(fs::is_directory(root)){fp.kicad_footprint_root=root;break;}
                 const auto r=check_footprint_pads(circuits,library,fp);report=r.report();ok=r.ok;

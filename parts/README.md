@@ -93,6 +93,10 @@ hand-kept file in this folder. It holds what the generator cannot know:
   emitter places).
 - `ep_vias` — keyed by part number: `min_pads` ground via pads within
   `radius_mm` of the part's centre.
+
+  `thermal_copper` and `ep_vias` find a placed part by the `label` of the
+  part's `regulators` entry: a part whose value begins with that label. A row
+  whose part has no `regulators` entry is refused, naming the part.
 - `isolation` — keyed by part number: `margin_mm`, the margin of the plane void
   under the part's courtyard.
 - `regulators` — keyed by part number: `kind` (one of `buck`, `ldo`,

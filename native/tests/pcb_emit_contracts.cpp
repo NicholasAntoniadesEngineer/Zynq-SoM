@@ -128,6 +128,8 @@ PcbEmitPolicy policy(const JsonNode &n) {
     p.board_stem = "Zynq_Carrier";
     p.connectors = repository_connector_facts();
     p.isolation = repository_part_facts().isolation;
+    p.thermal_copper = repository_part_facts().thermal_copper;
+    p.regulators = repository_part_facts().regulators;
     p.footprint_aliases = repository_part_facts().footprint_aliases;
     for (const auto &[k, v] : field(n, "header_descriptions").object_value)
         p.header_descriptions.emplace_back(k, v.string_value);
@@ -303,8 +305,13 @@ void thermal_world_obstacles() {
     model.insts.push_back(subject);
     auto policy = default_pcb_emit_policy();
     policy.thermal_credit_needs.clear();
-    policy.thermal_copper = {{"THERMAL_TEST", {{{0, 0}, {4, 0}}, 1,
-        {-5, -5, 5, 5}, {"F.Cu", "B.Cu"}, "synthetic test geometry"}}};
+    const std::string thermal_part = "THERMAL_TEST_PART";
+    RegulatorFact thermal_regulator = repository_part_facts().regulators.begin()->second;
+    thermal_regulator.label = "THERMAL_TEST";
+    policy.regulators = {{thermal_part, thermal_regulator}};
+    ThermalCopperFact thermal_row;
+    thermal_row.field = {{{0, 0}, {4, 0}}, 1, {-5, -5, 5, 5}, {"F.Cu", "B.Cu"}, "synthetic test geometry"};
+    policy.thermal_copper = {{thermal_part, thermal_row}};
     auto sites = [&](const PcbModel &m) {
         PcbEmissionResult result;
         auto nodes = pcb_emission::thermal_nodes(m, policy,
@@ -390,7 +397,7 @@ void thermal_world_obstacles() {
     auto mirrored = model;
     mirrored.insts.front().mirror = true;
     mirrored.insts.front().side = "bottom";
-    policy.thermal_copper.front().second.via_sites = {{1,2}};
+    policy.thermal_copper.begin()->second.field.via_offsets_mm = {{1,2}};
     for (int rotation : {0,90,180,270}) {
         mirrored.insts.front().rotation=rotation;
         require(sites(mirrored)==world_turned_point(100,100,1,-2,rotation,3),

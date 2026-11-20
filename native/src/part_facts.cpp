@@ -620,6 +620,31 @@ PartFacts load_part_facts(const std::filesystem::path& file) {
     return facts;
 }
 
+PartFacts load_part_facts_in(const std::filesystem::path& parts_directory) {
+    return load_part_facts(parts_directory / facts_file_name);
+}
+
+namespace {
+template <typename Fact>
+const Fact* fact_by_label_prefix(const std::map<std::string, Fact>& rows, const RegulatorFacts& regulators, const std::string& value) {
+    for (const auto& [part, fact] : rows) {
+        const std::string& label = part_fact_of(regulators, part, "regulators").label;
+        if (label.empty()) refuse("the part facts regulators entry of " + part + " has an empty label");
+        if (value.compare(0, label.size(), label) == 0) return &fact;
+    }
+    return nullptr;
+}
+}
+
+const ThermalFieldFact* thermal_field_for(const ThermalCopperFacts& rows, const RegulatorFacts& regulators, const std::string& value) {
+    const ThermalCopperFact* row = fact_by_label_prefix(rows, regulators, value);
+    return row ? &row->field : nullptr;
+}
+
+const EpViaFact* ep_via_for(const EpViaFacts& rows, const RegulatorFacts& regulators, const std::string& value) {
+    return fact_by_label_prefix(rows, regulators, value);
+}
+
 const PartFacts& default_part_facts() {
     static const PartFacts facts = load_part_facts(SCHGEN_PART_FACTS);
     return facts;
