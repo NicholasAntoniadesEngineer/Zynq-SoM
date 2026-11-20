@@ -121,8 +121,17 @@ ComponentBasisResult audit_component_basis(const std::vector<ComponentBasisInput
 std::vector<ComponentBasisInput> author_component_basis_inputs(const std::filesystem::path& root) {
     const auto context = make_authoring_context(root);
     std::vector<ComponentBasisInput> out;
-    for(const auto& d : subsystem_library(context)) out.push_back({"library", d.name, author_subsystem(d.name, SubsystemMeta{}, context)});
-    for(const auto& d : project_subsystem_definitions()) {
+    std::vector<ProjectSubsystemDefinition> sheets;
+    for(const auto& folder : board_folders(root))
+        for(auto& sheet : project_subsystem_definitions(folder)) sheets.push_back(std::move(sheet));
+    const auto used_as_filed = [&](const std::string& name) {
+        return std::any_of(sheets.begin(), sheets.end(), [&](const ProjectSubsystemDefinition& p) {
+            return p.name == name && p.adapter && p.meta.kind == JsonKind::Object && p.meta.object_value.empty();
+        });
+    };
+    for(const auto& d : subsystem_library(context))
+        if(!used_as_filed(d.name)) out.push_back({"library", d.name, author_subsystem(d.name, SubsystemMeta{}, context)});
+    for(const auto& d : sheets) {
         ProjectAuthoringInput input; input.context = context; input.project_root = root / d.project;
         out.push_back({d.project, d.name, author_project_subsystem(d.project, d.name, input)});
     }

@@ -16,7 +16,7 @@ endif()
 # Compile one engine shared by the standalone CLI and native contracts.
 include(cmake/AuthoringPurity.cmake)
 add_library(schgen_core STATIC
-    src/occupancy.cpp src/occupancy_precision.cpp src/seat.cpp src/sexpr.cpp src/route.cpp src/emit.cpp src/stackup.cpp src/run_config.cpp src/study.cpp
+    src/occupancy.cpp src/occupancy_precision.cpp src/seat.cpp src/sexpr.cpp src/route.cpp src/emit.cpp src/stackup.cpp src/run_config.cpp src/study.cpp src/board_definition.cpp
     src/legalize.cpp src/quantize.cpp src/precision_ops.cpp src/turn.cpp src/pack.cpp
     src/legalize_precision.cpp src/stage_precision.cpp
     src/placement_precision.cpp src/output_precision.cpp src/pack_precision.cpp
@@ -42,6 +42,7 @@ add_library(schgen_core STATIC
     src/pcb_checks_model.cpp src/pcb_checks_connectors.cpp src/pcb_checks_placement.cpp
     src/pcb_checks_return_path.cpp src/pcb_checks_ampacity.cpp src/pcb_checks_escape.cpp src/pcb_checks_stitch.cpp)
 target_compile_definitions(schgen_core PRIVATE SCHGEN_STACKUP_CATALOG="${CMAKE_CURRENT_SOURCE_DIR}/stackups.json")
+target_compile_definitions(schgen_core PRIVATE SCHGEN_PART_RATINGS="${CMAKE_CURRENT_SOURCE_DIR}/../parts/part_ratings.json")
 set(SCHGEN_FLOORPLAN_SOURCES
     src/floorplan_spec.cpp src/floorplan_geometry.cpp src/floorplan_cross.cpp
     src/floorplan_pack.cpp src/floorplan_compose.cpp src/floorplan_build.cpp
@@ -153,7 +154,7 @@ set_source_files_properties(src/ratsnest_documents.cpp src/ratsnest_images.cpp s
     PROPERTIES COMPILE_OPTIONS "-ffp-contract=off")
 set_source_files_properties(src/procurement.cpp PROPERTIES COMPILE_OPTIONS "-ffp-contract=off")
 set(SCHGEN_PCB_PLACEMENT_SOURCES
-    src/pcb_escape_model.cpp src/pcb_escape_triage.cpp src/pcb_escape_plan.cpp
+    src/pcb_escape_model.cpp src/pcb_escape_triage.cpp src/pcb_escape_triage_data.cpp src/pcb_escape_plan.cpp
     src/pcb_escape_copper.cpp src/pcb_escape_json.cpp
     src/pcb_stage_geometry.cpp src/pcb_stage_search.cpp src/pcb_stage_power.cpp src/pcb_stage_zone.cpp
     src/pcb_placement_inputs.cpp src/pcb_placement_pack.cpp src/pcb_placement_variants.cpp
@@ -641,7 +642,7 @@ if(BUILD_TESTING)
     add_test(NAME native_downstream_i2c_contracts
         COMMAND schgen_downstream_i2c_contracts "${CMAKE_CURRENT_SOURCE_DIR}/..")
     set_tests_properties(native_downstream_i2c_contracts PROPERTIES TIMEOUT 120)
-    foreach(family authoring_context authoring_purity authoring_purity_config authoring_purity_repository authoring_purity_dispatch)
+    foreach(family authoring_context authoring_purity authoring_purity_config authoring_purity_repository)
         add_executable(schgen_${family}_contracts tests/${family}_contracts.cpp)
         target_link_libraries(schgen_${family}_contracts PRIVATE schgen_core)
         target_compile_options(schgen_${family}_contracts PRIVATE
@@ -655,7 +656,6 @@ if(BUILD_TESTING)
     add_test(NAME native_authoring_guard_live_contracts COMMAND schgen_native_authoring_guard_contracts
         "${CMAKE_CURRENT_SOURCE_DIR}/.." --live "${SCHGEN_AUTHORING_PURITY_CONFIGURATION}")
     set_tests_properties(native_authoring_guard_live_contracts PROPERTIES TIMEOUT 180 RUN_SERIAL TRUE)
-    add_test(NAME native_authoring_purity_dispatch_contracts COMMAND schgen_authoring_purity_dispatch_contracts)
     add_test(NAME native_authoring_purity_contracts COMMAND schgen_authoring_purity_contracts
         "${CMAKE_CURRENT_SOURCE_DIR}/.." "${SCHGEN_LIBCLANG}" ${SCHGEN_PURITY_TEST_SYSTEM_ARGUMENTS})
     add_test(NAME native_authoring_purity_config_contracts COMMAND schgen_authoring_purity_config_contracts
@@ -1172,6 +1172,18 @@ if(BUILD_TESTING)
     target_link_libraries(schgen_subsystem_data_contracts PRIVATE schgen_core)
     target_compile_options(schgen_subsystem_data_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
     add_test(NAME native_subsystem_data_contracts COMMAND schgen_subsystem_data_contracts)
+    add_executable(schgen_board_definition_contracts tests/board_definition_contracts.cpp)
+    target_link_libraries(schgen_board_definition_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_board_definition_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME native_board_definition_contracts COMMAND schgen_board_definition_contracts "${CMAKE_CURRENT_SOURCE_DIR}/..")
+    add_executable(schgen_part_ratings_contracts tests/part_ratings_contracts.cpp)
+    target_link_libraries(schgen_part_ratings_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_part_ratings_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME native_part_ratings_contracts COMMAND schgen_part_ratings_contracts)
+    add_executable(schgen_escape_triage_contracts tests/escape_triage_contracts.cpp)
+    target_link_libraries(schgen_escape_triage_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_escape_triage_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME native_escape_triage_contracts COMMAND schgen_escape_triage_contracts "${CMAKE_CURRENT_SOURCE_DIR}/..")
     add_test(NAME native_study_cli_needs_stackups COMMAND schgen study layers
         --config "${CMAKE_CURRENT_SOURCE_DIR}/tests/data/study/no_study.json")
     set_tests_properties(native_study_cli_needs_stackups PROPERTIES

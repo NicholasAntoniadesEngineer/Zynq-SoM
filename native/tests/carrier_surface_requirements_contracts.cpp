@@ -171,7 +171,7 @@ void runtime_checks(const CircuitSheetIr& circuit,const JsonNode& manifest,PcbCh
 }
 void exercise(const std::filesystem::path& root, const std::string& sheet,
               const std::filesystem::path& assets) {
-    ProjectAuthoringInput input; input.context=make_authoring_context(root);
+    ProjectAuthoringInput input; input.context=make_authoring_context(root);input.project_root=root/"carrier";
     const auto c=author_project_subsystem("carrier",sheet,input);
     const auto original=pins(c);
     require(original==pins(load_circuit_json(assets/"carrier/subsystems"/sheet/"circuit.json")), "live/frozen pin-net identities differ");

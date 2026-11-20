@@ -79,6 +79,7 @@ struct Fixture {
     ReturnPathResult v1;
     std::string interface_bytes;
     ProjectStrings functions;
+    PcbEscapeTriage escape_triage;
     std::map<std::string, PcbEscapeSignalClass> triage;
     std::size_t j1 = 0, j2 = 0, j3 = 0;
     PcbEscapeInput input() const { return {model, v1, triage, interface_bytes}; }
@@ -156,6 +157,7 @@ Fixture load(const fs::path &root, const std::string &name) {
     for (const auto &p : mapping.pudc_straps)
         functions[p.first] = p.second;
     f.functions.assign(functions.begin(), functions.end());
+    f.escape_triage = load_escape_triage(root / name);
     const auto path = root / "parts/DF40C-100DS-0.4V_51/DF40C-100DS-0.4V_51.kicad_mod";
     const auto fp = pcb_check_footprint(path.string(), read(path));
     std::map<std::string, PcbCheckFootprintPtr> mods;
@@ -168,10 +170,10 @@ Fixture load(const fs::path &root, const std::string &name) {
         for (const auto &[pad, n] : f.model.insts[idx].pad_nets) {
             (void)pad;
             if (!n.second.empty() && pcb_classify_net(n.second) == "SIGNAL")
-                f.triage[n.second] = classify_pcb_escape_signal(n.second, f.functions);
+                f.triage[n.second] = classify_pcb_escape_signal(n.second, f.functions, f.escape_triage);
         }
     for (const auto &v : f.v1.violations)
-        f.triage[v.net] = classify_pcb_escape_signal(v.net, f.functions);
+        f.triage[v.net] = classify_pcb_escape_signal(v.net, f.functions, f.escape_triage);
     return f;
 }
 void baseline(const fs::path &root, const std::string &name) {

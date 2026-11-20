@@ -1,0 +1,722 @@
+{
+  "schema": "schgen.subsystem/1",
+  "name": "bringup_modules",
+  "title": "Bring-up module gates: 10x SY6280 + status/user LEDs",
+  "interface": ["+3V3", "+3V3_HDMI_TX", "GND", "EN_HDMI_TX", "+3V3_HDMI_RX", "EN_HDMI_RX", "+3V3_LCD", "EN_LCD", "+3V3_CAM", "EN_CAM", "+3V3_SD", "EN_SD", "+5V", "+5V_USB", "EN_USB", "+3V3_PMOD", "EN_PMOD", "+3V3_USER_LED", "EN_USER_LED", "+5V_HDMI_TX", "EN_HDMI_TX_5V", "+5V_LCD", "EN_LCD_5V"],
+  "parts": [
+    {"ref": "U1", "part": "SY6280AAC"},
+    {
+      "ref": "R1",
+      "symbol": "Device:R",
+      "value": "13k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C22797"}
+    },
+    {
+      "ref": "C1",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {
+      "ref": "C2",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {
+      "ref": "D1",
+      "symbol": "Device:LED",
+      "value": "red",
+      "footprint": "LED_SMD:LED_0603_1608Metric",
+      "fields": {"LCSC": "C2286"}
+    },
+    {
+      "ref": "R2",
+      "symbol": "Device:R",
+      "value": "330R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C23138"}
+    },
+    {"ref": "U2", "part": "SY6280AAC"},
+    {
+      "ref": "R3",
+      "symbol": "Device:R",
+      "value": "13k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C22797"}
+    },
+    {
+      "ref": "C3",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {
+      "ref": "C4",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {
+      "ref": "D2",
+      "symbol": "Device:LED",
+      "value": "red",
+      "footprint": "LED_SMD:LED_0603_1608Metric",
+      "fields": {"LCSC": "C2286"}
+    },
+    {
+      "ref": "R4",
+      "symbol": "Device:R",
+      "value": "330R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C23138"}
+    },
+    {"ref": "U3", "part": "SY6280AAC"},
+    {
+      "ref": "R5",
+      "symbol": "Device:R",
+      "value": "6.8k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C23212"}
+    },
+    {
+      "ref": "C5",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {
+      "ref": "C6",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {
+      "ref": "D3",
+      "symbol": "Device:LED",
+      "value": "red",
+      "footprint": "LED_SMD:LED_0603_1608Metric",
+      "fields": {"LCSC": "C2286"}
+    },
+    {
+      "ref": "R6",
+      "symbol": "Device:R",
+      "value": "330R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C23138"}
+    },
+    {"ref": "U4", "part": "SY6280AAC"},
+    {
+      "ref": "R7",
+      "symbol": "Device:R",
+      "value": "13k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C22797"}
+    },
+    {
+      "ref": "C7",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {
+      "ref": "C8",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {
+      "ref": "D4",
+      "symbol": "Device:LED",
+      "value": "red",
+      "footprint": "LED_SMD:LED_0603_1608Metric",
+      "fields": {"LCSC": "C2286"}
+    },
+    {
+      "ref": "R8",
+      "symbol": "Device:R",
+      "value": "330R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C23138"}
+    },
+    {"ref": "U5", "part": "SY6280AAC"},
+    {
+      "ref": "R9",
+      "symbol": "Device:R",
+      "value": "6.8k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C23212"}
+    },
+    {
+      "ref": "C9",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {
+      "ref": "C10",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {
+      "ref": "D5",
+      "symbol": "Device:LED",
+      "value": "red",
+      "footprint": "LED_SMD:LED_0603_1608Metric",
+      "fields": {"LCSC": "C2286"}
+    },
+    {
+      "ref": "R10",
+      "symbol": "Device:R",
+      "value": "330R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C23138"}
+    },
+    {"ref": "U6", "part": "SY6280AAC"},
+    {
+      "ref": "R11",
+      "symbol": "Device:R",
+      "value": "6.8k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C23212"}
+    },
+    {
+      "ref": "C11",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {
+      "ref": "C12",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {
+      "ref": "D6",
+      "symbol": "Device:LED",
+      "value": "red",
+      "footprint": "LED_SMD:LED_0603_1608Metric",
+      "fields": {"LCSC": "C2286"}
+    },
+    {
+      "ref": "R12",
+      "symbol": "Device:R",
+      "value": "1k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C21190"}
+    },
+    {"ref": "U7", "part": "SY6280AAC"},
+    {
+      "ref": "R13",
+      "symbol": "Device:R",
+      "value": "13k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C22797"}
+    },
+    {
+      "ref": "C13",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {
+      "ref": "C14",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {
+      "ref": "D7",
+      "symbol": "Device:LED",
+      "value": "red",
+      "footprint": "LED_SMD:LED_0603_1608Metric",
+      "fields": {"LCSC": "C2286"}
+    },
+    {
+      "ref": "R14",
+      "symbol": "Device:R",
+      "value": "330R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C23138"}
+    },
+    {"ref": "U8", "part": "SY6280AAC"},
+    {
+      "ref": "R15",
+      "symbol": "Device:R",
+      "value": "13k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C22797"}
+    },
+    {
+      "ref": "C15",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {
+      "ref": "C16",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {
+      "ref": "D8",
+      "symbol": "Device:LED",
+      "value": "red",
+      "footprint": "LED_SMD:LED_0603_1608Metric",
+      "fields": {"LCSC": "C2286"}
+    },
+    {
+      "ref": "R16",
+      "symbol": "Device:R",
+      "value": "330R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C23138"}
+    },
+    {"ref": "U9", "part": "SY6280AAC"},
+    {
+      "ref": "R17",
+      "symbol": "Device:R",
+      "value": "13k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C22797"}
+    },
+    {
+      "ref": "C17",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {
+      "ref": "C18",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {
+      "ref": "D9",
+      "symbol": "Device:LED",
+      "value": "red",
+      "footprint": "LED_SMD:LED_0603_1608Metric",
+      "fields": {"LCSC": "C2286"}
+    },
+    {
+      "ref": "R18",
+      "symbol": "Device:R",
+      "value": "1k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C21190"}
+    },
+    {"ref": "U10", "part": "SY6280AAC"},
+    {
+      "ref": "R19",
+      "symbol": "Device:R",
+      "value": "6.8k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C23212"}
+    },
+    {
+      "ref": "C19",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {
+      "ref": "C20",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {
+      "ref": "D10",
+      "symbol": "Device:LED",
+      "value": "red",
+      "footprint": "LED_SMD:LED_0603_1608Metric",
+      "fields": {"LCSC": "C2286"}
+    },
+    {
+      "ref": "R20",
+      "symbol": "Device:R",
+      "value": "1k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C21190"}
+    },
+    {
+      "ref": "R21",
+      "symbol": "Device:R",
+      "value": "10k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C25804"}
+    },
+    {
+      "ref": "TP1",
+      "symbol": "Connector:TestPoint",
+      "value": "+3V3_HDMI_TX",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {"BOM": "exclude"}
+    },
+    {
+      "ref": "TP2",
+      "symbol": "Connector:TestPoint",
+      "value": "+3V3_HDMI_RX",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {"BOM": "exclude"}
+    },
+    {
+      "ref": "TP3",
+      "symbol": "Connector:TestPoint",
+      "value": "+3V3_LCD",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {"BOM": "exclude"}
+    },
+    {
+      "ref": "TP4",
+      "symbol": "Connector:TestPoint",
+      "value": "+3V3_CAM",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {"BOM": "exclude"}
+    },
+    {
+      "ref": "TP5",
+      "symbol": "Connector:TestPoint",
+      "value": "+3V3_SD",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {"BOM": "exclude"}
+    },
+    {
+      "ref": "TP6",
+      "symbol": "Connector:TestPoint",
+      "value": "+5V_USB",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {"BOM": "exclude"}
+    },
+    {
+      "ref": "TP7",
+      "symbol": "Connector:TestPoint",
+      "value": "+3V3_PMOD",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {"BOM": "exclude"}
+    },
+    {
+      "ref": "TP8",
+      "symbol": "Connector:TestPoint",
+      "value": "+3V3_USER_LED",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {"BOM": "exclude"}
+    },
+    {
+      "ref": "TP9",
+      "symbol": "Connector:TestPoint",
+      "value": "+5V_HDMI_TX",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {"BOM": "exclude"}
+    },
+    {
+      "ref": "TP10",
+      "symbol": "Connector:TestPoint",
+      "value": "+5V_LCD",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {"BOM": "exclude"}
+    }
+  ],
+  "nets": [
+    {
+      "name": "+3V3",
+      "pins": ["U1.5", "C1.1", "U2.5", "C3.1", "U3.5", "C5.1", "U4.5", "C7.1", "U5.5", "C9.1", "U7.5", "C13.1", "U8.5", "C15.1"]
+    },
+    {
+      "name": "+3V3_HDMI_TX",
+      "pins": ["U1.1", "C2.1", "D1.2", "TP1.1"]
+    },
+    {
+      "name": "GND",
+      "pins": ["U1.2", "R1.2", "C1.2", "C2.2", "R2.2", "U2.2", "R3.2", "C3.2", "C4.2", "R4.2", "U3.2", "R5.2", "C5.2", "C6.2", "R6.2", "U4.2", "R7.2", "C7.2", "C8.2", "R8.2", "U5.2", "R9.2", "C9.2", "C10.2", "R10.2", "U6.2", "R11.2", "C11.2", "C12.2", "R12.2", "U7.2", "R13.2", "C13.2", "C14.2", "R14.2", "U8.2", "R15.2", "C15.2", "C16.2", "R16.2", "U9.2", "R17.2", "C17.2", "C18.2", "R18.2", "U10.2", "R19.2", "C19.2", "C20.2", "R20.2", "R21.2"]
+    },
+    {
+      "name": "EN_HDMI_TX",
+      "class": "port",
+      "pins": ["U1.4"]
+    },
+    {
+      "name": "BU_ISET_HDMI_TX",
+      "pins": ["U1.3", "R1.1"]
+    },
+    {
+      "name": "BU_PG_HDMI_TX",
+      "pins": ["D1.1", "R2.1"]
+    },
+    {
+      "name": "+3V3_HDMI_RX",
+      "pins": ["U2.1", "C4.1", "D2.2", "TP2.1"]
+    },
+    {
+      "name": "EN_HDMI_RX",
+      "class": "port",
+      "pins": ["U2.4"]
+    },
+    {
+      "name": "BU_ISET_HDMI_RX",
+      "pins": ["U2.3", "R3.1"]
+    },
+    {
+      "name": "BU_PG_HDMI_RX",
+      "pins": ["D2.1", "R4.1"]
+    },
+    {
+      "name": "+3V3_LCD",
+      "pins": ["U3.1", "C6.1", "D3.2", "TP3.1"]
+    },
+    {
+      "name": "EN_LCD",
+      "class": "port",
+      "pins": ["U3.4"]
+    },
+    {
+      "name": "BU_ISET_LCD",
+      "pins": ["U3.3", "R5.1"]
+    },
+    {
+      "name": "BU_PG_LCD",
+      "pins": ["D3.1", "R6.1"]
+    },
+    {
+      "name": "+3V3_CAM",
+      "pins": ["U4.1", "C8.1", "D4.2", "TP4.1"]
+    },
+    {
+      "name": "EN_CAM",
+      "class": "port",
+      "pins": ["U4.4"]
+    },
+    {
+      "name": "BU_ISET_CAM",
+      "pins": ["U4.3", "R7.1"]
+    },
+    {
+      "name": "BU_PG_CAM",
+      "pins": ["D4.1", "R8.1"]
+    },
+    {
+      "name": "+3V3_SD",
+      "pins": ["U5.1", "C10.1", "D5.2", "R21.1", "TP5.1"]
+    },
+    {
+      "name": "EN_SD",
+      "class": "port",
+      "pins": ["U5.4"]
+    },
+    {
+      "name": "BU_ISET_SD",
+      "pins": ["U5.3", "R9.1"]
+    },
+    {
+      "name": "BU_PG_SD",
+      "pins": ["D5.1", "R10.1"]
+    },
+    {
+      "name": "+5V",
+      "pins": ["U6.5", "C11.1", "U9.5", "C17.1", "U10.5", "C19.1"]
+    },
+    {
+      "name": "+5V_USB",
+      "pins": ["U6.1", "C12.1", "D6.2", "TP6.1"]
+    },
+    {
+      "name": "EN_USB",
+      "class": "port",
+      "pins": ["U6.4"]
+    },
+    {
+      "name": "BU_ISET_USB",
+      "pins": ["U6.3", "R11.1"]
+    },
+    {
+      "name": "BU_PG_USB",
+      "pins": ["D6.1", "R12.1"]
+    },
+    {
+      "name": "+3V3_PMOD",
+      "pins": ["U7.1", "C14.1", "D7.2", "TP7.1"]
+    },
+    {
+      "name": "EN_PMOD",
+      "class": "port",
+      "pins": ["U7.4"]
+    },
+    {
+      "name": "BU_ISET_PMOD",
+      "pins": ["U7.3", "R13.1"]
+    },
+    {
+      "name": "BU_PG_PMOD",
+      "pins": ["D7.1", "R14.1"]
+    },
+    {
+      "name": "+3V3_USER_LED",
+      "pins": ["U8.1", "C16.1", "D8.2", "TP8.1"]
+    },
+    {
+      "name": "EN_USER_LED",
+      "class": "port",
+      "pins": ["U8.4"]
+    },
+    {
+      "name": "BU_ISET_USER_LED",
+      "pins": ["U8.3", "R15.1"]
+    },
+    {
+      "name": "BU_PG_USER_LED",
+      "pins": ["D8.1", "R16.1"]
+    },
+    {
+      "name": "+5V_HDMI_TX",
+      "pins": ["U9.1", "C18.1", "D9.2", "TP9.1"]
+    },
+    {
+      "name": "EN_HDMI_TX_5V",
+      "class": "port",
+      "pins": ["U9.4"]
+    },
+    {
+      "name": "BU_ISET_HDMI_TX_5V",
+      "pins": ["U9.3", "R17.1"]
+    },
+    {
+      "name": "BU_PG_HDMI_TX_5V",
+      "pins": ["D9.1", "R18.1"]
+    },
+    {
+      "name": "+5V_LCD",
+      "pins": ["U10.1", "C20.1", "D10.2", "TP10.1"]
+    },
+    {
+      "name": "EN_LCD_5V",
+      "class": "port",
+      "pins": ["U10.4"]
+    },
+    {
+      "name": "BU_ISET_LCD_5V",
+      "pins": ["U10.3", "R19.1"]
+    },
+    {
+      "name": "BU_PG_LCD_5V",
+      "pins": ["D10.1", "R20.1"]
+    }
+  ],
+  "unconnected": [],
+  "ports": [
+    {"net": "EN_HDMI_TX", "kind": "single", "expect": "bringup_en (EN AND-gate cells, dossier section 3.2)"},
+    {"net": "EN_HDMI_RX", "kind": "single", "expect": "bringup_en (EN AND-gate cells, dossier section 3.2)"},
+    {"net": "EN_LCD", "kind": "single", "expect": "bringup_en (EN AND-gate cells, dossier section 3.2)"},
+    {"net": "EN_CAM", "kind": "single", "expect": "bringup_en (EN AND-gate cells, dossier section 3.2)"},
+    {"net": "EN_SD", "kind": "single", "expect": "bringup_en (EN AND-gate cells, dossier section 3.2)"},
+    {"net": "EN_USB", "kind": "single", "expect": "bringup_en (EN AND-gate cells, dossier section 3.2)"},
+    {"net": "EN_PMOD", "kind": "single", "expect": "bringup_en (EN AND-gate cells, dossier section 3.2)"},
+    {"net": "EN_USER_LED", "kind": "single", "expect": "bringup_en (EN AND-gate cells, dossier section 3.2)"},
+    {"net": "EN_HDMI_TX_5V", "kind": "single", "expect": "bringup_en (EN AND-gate cells, dossier section 3.2)"},
+    {"net": "EN_LCD_5V", "kind": "single", "expect": "bringup_en (EN AND-gate cells, dossier section 3.2)"}
+  ],
+  "hints": [],
+  "draws": [
+    {"rail": "+3V3_HDMI_TX", "amps": 0.004, "note": "status LED (330R) on the gated output"},
+    {"rail": "+3V3_HDMI_RX", "amps": 0.004, "note": "status LED (330R) on the gated output"},
+    {"rail": "+3V3_LCD", "amps": 0.004, "note": "status LED (330R) on the gated output"},
+    {"rail": "+3V3_CAM", "amps": 0.004, "note": "status LED (330R) on the gated output"},
+    {"rail": "+3V3_SD", "amps": 0.004, "note": "status LED (330R) on the gated output"},
+    {"rail": "+5V_USB", "amps": 0.003, "note": "status LED (1k) on the gated output"},
+    {"rail": "+3V3_PMOD", "amps": 0.004, "note": "status LED (330R) on the gated output"},
+    {"rail": "+3V3_USER_LED", "amps": 0.004, "note": "status LED (330R) on the gated output"},
+    {"rail": "+5V_HDMI_TX", "amps": 0.003, "note": "status LED (1k) on the gated output"},
+    {"rail": "+5V_LCD", "amps": 0.003, "note": "status LED (1k) on the gated output"}
+  ],
+  "waivers": [],
+  "purpose": [
+    {"part": "C1", "role": "bypass", "pin": "U1.5"},
+    {"part": "C2", "role": "bypass", "pin": "U1.1"},
+    {"part": "C3", "role": "bypass", "pin": "U2.5"},
+    {"part": "C4", "role": "bypass", "pin": "U2.1"},
+    {"part": "C5", "role": "bypass", "pin": "U3.5"},
+    {"part": "C6", "role": "bypass", "pin": "U3.1"},
+    {"part": "C7", "role": "bypass", "pin": "U4.5"},
+    {"part": "C8", "role": "bypass", "pin": "U4.1"},
+    {"part": "C9", "role": "bypass", "pin": "U5.5"},
+    {"part": "C10", "role": "bypass", "pin": "U5.1"},
+    {"part": "C11", "role": "bypass", "pin": "U6.5"},
+    {"part": "C12", "role": "bypass", "pin": "U6.1"},
+    {"part": "C13", "role": "bypass", "pin": "U7.5"},
+    {"part": "C14", "role": "bypass", "pin": "U7.1"},
+    {"part": "C15", "role": "bypass", "pin": "U8.5"},
+    {"part": "C16", "role": "bypass", "pin": "U8.1"},
+    {"part": "C17", "role": "bypass", "pin": "U9.5"},
+    {"part": "C18", "role": "bypass", "pin": "U9.1"},
+    {"part": "C19", "role": "bypass", "pin": "U10.5"},
+    {"part": "C20", "role": "bypass", "pin": "U10.1"},
+    {"part": "R1", "role": "set", "pin": "U1.3"},
+    {"part": "R2", "role": "indicate", "pin": "D1.1"},
+    {"part": "R3", "role": "set", "pin": "U2.3"},
+    {"part": "R4", "role": "indicate", "pin": "D2.1"},
+    {"part": "R5", "role": "set", "pin": "U3.3"},
+    {"part": "R6", "role": "indicate", "pin": "D3.1"},
+    {"part": "R7", "role": "set", "pin": "U4.3"},
+    {"part": "R8", "role": "indicate", "pin": "D4.1"},
+    {"part": "R9", "role": "set", "pin": "U5.3"},
+    {"part": "R10", "role": "indicate", "pin": "D5.1"},
+    {"part": "R11", "role": "set", "pin": "U6.3"},
+    {"part": "R12", "role": "indicate", "pin": "D6.1"},
+    {"part": "R13", "role": "set", "pin": "U7.3"},
+    {"part": "R14", "role": "indicate", "pin": "D7.1"},
+    {"part": "R15", "role": "set", "pin": "U8.3"},
+    {"part": "R16", "role": "indicate", "pin": "D8.1"},
+    {"part": "R17", "role": "set", "pin": "U9.3"},
+    {"part": "R18", "role": "indicate", "pin": "D9.1"},
+    {"part": "R19", "role": "set", "pin": "U10.3"},
+    {"part": "R20", "role": "indicate", "pin": "D10.1"},
+    {"part": "R21", "role": "pull", "pin": "U5.1"}
+  ],
+  "free": [
+    {"part": "TP1", "reason": "probe point; it follows its net"},
+    {"part": "TP2", "reason": "probe point; it follows its net"},
+    {"part": "TP3", "reason": "probe point; it follows its net"},
+    {"part": "TP4", "reason": "probe point; it follows its net"},
+    {"part": "TP5", "reason": "probe point; it follows its net"},
+    {"part": "TP6", "reason": "probe point; it follows its net"},
+    {"part": "TP7", "reason": "probe point; it follows its net"},
+    {"part": "TP8", "reason": "probe point; it follows its net"},
+    {"part": "TP9", "reason": "probe point; it follows its net"},
+    {"part": "TP10", "reason": "probe point; it follows its net"},
+    {"part": "D1", "reason": "status LED across the gated +3V3_HDMI_TX rail; no pin drives it"},
+    {"part": "D2", "reason": "status LED across the gated +3V3_HDMI_RX rail; no pin drives it"},
+    {"part": "D3", "reason": "status LED across the gated +3V3_LCD rail; no pin drives it"},
+    {"part": "D4", "reason": "status LED across the gated +3V3_CAM rail; no pin drives it"},
+    {"part": "D5", "reason": "status LED across the gated +3V3_SD rail; no pin drives it"},
+    {"part": "D6", "reason": "status LED across the gated +5V_USB rail; no pin drives it"},
+    {"part": "D7", "reason": "status LED across the gated +3V3_PMOD rail; no pin drives it"},
+    {"part": "D8", "reason": "status LED across the gated +3V3_USER_LED rail; no pin drives it"},
+    {"part": "D9", "reason": "status LED across the gated +5V_HDMI_TX rail; no pin drives it"},
+    {"part": "D10", "reason": "status LED across the gated +5V_LCD rail; no pin drives it"}
+  ]
+}
+

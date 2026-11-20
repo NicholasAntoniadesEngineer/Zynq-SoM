@@ -1,0 +1,103 @@
+{
+  "schema": "schgen.subsystem/1",
+  "name": "motor_sense",
+  "title": "ESC motor-rail telemetry: INA3221 + 10mR shunt (I2C 0x42)",
+  "interface": ["GND", "+3V3_SC", "STM32_I2C2_SDA", "STM32_I2C2_SCL", "ESC_FAULT_N"],
+  "parts": [
+    {"ref": "J2", "part": "XT60PW-M"},
+    {"ref": "D1", "part": "SMBJ28A"},
+    {
+      "ref": "C1",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {"ref": "RS1", "part": "RLM12FTCMR010", "value": "10mR"},
+    {"ref": "J3", "part": "XT60PW-M"},
+    {"ref": "U2", "part": "INA3221AIRGVR"},
+    {
+      "ref": "C2",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {
+      "ref": "C3",
+      "symbol": "Device:C",
+      "value": "10u",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "fields": {"LCSC": "C15850"}
+    },
+    {
+      "ref": "R1",
+      "symbol": "Device:R",
+      "value": "10k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C25804"}
+    },
+    {
+      "ref": "C4",
+      "symbol": "Device:C_Polarized",
+      "value": "470uF/35V",
+      "footprint": "Capacitor_SMD:CP_Elec_10x10.5",
+      "fields": {"LCSC": "C976030"}
+    }
+  ],
+  "nets": [
+    {
+      "name": "ESC_VRAIL_IN",
+      "pins": ["J2.2", "D1.1", "C1.1", "RS1.1", "U2.12"]
+    },
+    {
+      "name": "GND",
+      "pins": ["J2.1", "J2.3", "J2.4", "D1.2", "C1.2", "J3.1", "J3.3", "J3.4", "U2.15", "U2.14", "U2.2", "U2.1", "U2.3", "U2.17", "C2.2", "C3.2", "C4.2"]
+    },
+    {
+      "name": "ESC_VRAIL",
+      "pins": ["RS1.2", "J3.2", "U2.11", "C4.1"]
+    },
+    {
+      "name": "+3V3_SC",
+      "pins": ["U2.4", "U2.16", "C2.1", "C3.1", "R1.1"]
+    },
+    {
+      "name": "STM32_I2C2_SDA",
+      "class": "port",
+      "pins": ["U2.7", "U2.5"]
+    },
+    {
+      "name": "STM32_I2C2_SCL",
+      "class": "port",
+      "pins": ["U2.6"]
+    },
+    {
+      "name": "ESC_FAULT_N",
+      "class": "port",
+      "pins": ["U2.9", "R1.2"]
+    }
+  ],
+  "unconnected": ["U2.10", "U2.13", "U2.8"],
+  "ports": [
+    {"net": "STM32_I2C2_SDA", "kind": "i2c", "role": "sda", "bus": "STM32_I2C2", "speed_hz": 400000, "expect": "som_j1_connector (STM32_I2C2 SC management bus)"},
+    {"net": "STM32_I2C2_SCL", "kind": "i2c", "role": "scl", "bus": "STM32_I2C2", "speed_hz": 400000, "expect": "som_j1_connector (STM32_I2C2 SC management bus)"},
+    {"net": "ESC_FAULT_N", "kind": "single", "expect": "som_j2_connector (bank 13 PL — ESC_FAULT_N)"}
+  ],
+  "hints": [],
+  "draws": [
+    {"rail": "+3V3_SC", "amps": 0.002, "note": "INA3221 ~0.35 mA + CRITICAL pull-up"}
+  ],
+  "waivers": [],
+  "purpose": [
+    {"part": "C2", "role": "bypass", "pin": "U2.4"},
+    {"part": "R1", "role": "pull", "pin": "U2.9"},
+    {"part": "C1", "role": "bypass", "pin": "J2.2"},
+    {"part": "C3", "role": "reservoir", "pin": "U2.4"},
+    {"part": "C4", "role": "reservoir", "pin": "J3.2"},
+    {"part": "D1", "role": "protect", "pin": "J2.2"},
+    {"part": "RS1", "role": "sense", "pin": "U2.12"}
+  ],
+  "free": []
+}
+

@@ -159,7 +159,7 @@ void source_provenance_mutation(const FirmwareDocsInput& original) {
     const auto contract=render_firmware_contract(changed);
     require(contract.find(" *   isolated/custom/circuit.json (mutated canonical source)\n")!=std::string::npos,
             "firmware contract ignored supplied source provenance");
-    require(contract.find(" *   native/src/project_authoring_registry.cpp")==std::string::npos,
+    require(contract.find(" *   carrier/board.json")==std::string::npos,
             "firmware contract retained another project's source provenance");
     std::size_t headers=0;
     for(const auto& artifact:render_scfw(changed)) {

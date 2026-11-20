@@ -81,9 +81,9 @@ int main(int argc,char** argv) {
     try {
         require(argc==3||argc==4,"usage: carrier_spice_identity_contracts REPO CATALOG [SPICE_FILE]");
         require(open_part_catalog(argv[2]),"open native catalog");
-        ProjectAuthoringInput input;input.context=make_authoring_context(argv[1]);
+        ProjectAuthoringInput input;input.context=make_authoring_context(argv[1]);input.project_root=std::filesystem::path(argv[1])/"carrier";
         const auto live=author_project_subsystem("carrier","board_aux",input);
-        const auto path=argc==4?std::filesystem::path(argv[3]):std::filesystem::path(argv[1])/"carrier/subsystems/board_aux/board_aux.cir";
+        const auto path=argc==4?std::filesystem::path(argv[3]):std::filesystem::path(argv[1])/"subsystems/board_aux/board_aux.cir";
         std::ifstream file(path);require(bool(file),"read board_aux SPICE model");
         const std::string bytes{std::istreambuf_iterator<char>(file),{}};
         const auto rows=read_passives(bytes);verify(live,rows);
@@ -108,7 +108,7 @@ int main(int argc,char** argv) {
             auto wrong=rows;wrong.at(row.first).first="wrong_rail";rejects([&]{verify(live,wrong);});
         }
         const auto hdmi=author_project_subsystem("carrier","hdmi_rx_term",input);
-        std::ifstream hdmi_file(std::filesystem::path(argv[1])/"carrier/subsystems/hdmi_rx_term/hdmi_rx_term.cir");
+        std::ifstream hdmi_file(std::filesystem::path(argv[1])/"subsystems/hdmi_rx_term/hdmi_rx_term.cir");
         require(bool(hdmi_file),"read HDMI termination SPICE model");
         const std::string hdmi_bytes{std::istreambuf_iterator<char>(hdmi_file),{}};
         const auto hdmi_rows=read_passives(hdmi_bytes,"hdmi_rx_term");verify_hdmi(hdmi,hdmi_rows);

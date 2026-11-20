@@ -11,6 +11,7 @@
 #include <unistd.h>
 
 namespace {
+constexpr std::size_t library_packages=34;
 namespace fs=std::filesystem;
 using namespace schgen;
 std::size_t checks=0;
@@ -116,7 +117,7 @@ void legacy_reports(const fs::path& root,const JsonNode& library) {
             write(base/file,inert);
     }
     auto report=check_subsystem_structure(s.path/"subsystems",native_subsystem_factories(shelf(root)),mode);
-    require(report.ok()&&report.n_ok()==17,"inert legacy library gate failed: "+report.summary());
+    require(report.ok()&&report.n_ok()==library_packages,"inert legacy library gate failed: "+report.summary());
     check_report(subsystem_structure_json(report),library,s.path);
     write_authoring_gate_report(s.path/"library-report.txt",report.summary());
     require(read(s.path/"library-report.txt")==at(library,"summary").string_value+"\n","legacy library publication bytes changed");
@@ -213,7 +214,7 @@ void connectors(const fs::path& root,const std::string& project) {
     for(const auto& row:at(fixture,"cases").array_value) {
         auto som=load_som_interface(root/project/"som_interface.json");
         auto mapping=link_mapping_from_json(parse_json_file((root/project/"som_mapping.json").string()));
-        auto policy=project_connector_policy(project);const auto ref=at(row,"ref").string_value;
+        auto policy=project_connector_policy(root/project);const auto ref=at(row,"ref").string_value;
         if(auto edits=object_field(row,"pin_edits"))for(auto& [key,c]:som.connectors)if(key==ref)
             for(const auto& [pin,value]:edits->object_value) {
                 const auto pin_name=pin;
@@ -232,6 +233,7 @@ void connectors(const fs::path& root,const std::string& project) {
     ProjectAuthoringInput input;input.project_root=root/project;input.context.library=root/subsystem_library_folder;
     input.som=load_som_interface(input.project_root/"som_interface.json");
     input.mapping=link_mapping_from_json(parse_json_file((input.project_root/"som_mapping.json").string()));
+    input.board=load_board(input.project_root);
     input.project_root="/this/path/does/not/exist";
     require(!author_project_subsystem(project,"som_j1",input).parts.empty(),"caller supplied contract was ignored");
     input.mapping->function_map["ZYNQ_PS_MIO7/VM0"]="ILLEGAL_STRAP_LOAD";
@@ -245,7 +247,7 @@ void native_packages(const fs::path& root) {
     for(const auto& f:libraries)for(const auto& file:subsystem_required_files(f.name,mode))
         write(library/f.name/file,read(root/"subsystems"/f.name/file));
     auto lib_result=check_subsystem_structure(library,libraries,mode);
-    require(lib_result.ok()&&lib_result.n_ok()==17,"native library without any Python failed: "+lib_result.summary());
+    require(lib_result.ok()&&lib_result.n_ok()==library_packages,"native library without any Python failed: "+lib_result.summary());
     require(lib_result.exit_code()==0&&lib_result.summary().find(".py")==std::string::npos,"native summary describes Python package shape");
     require(at(subsystem_structure_json(lib_result),"package_mode").string_value=="native_assets","native JSON report lacks mode");
     require(check_subsystem_structure(library,libraries,AuthoringPackageMode::legacy_python).packages.empty(),"legacy discovery contract changed");
@@ -273,6 +275,7 @@ void native_packages(const fs::path& root) {
         const auto project_root=s.path/project,base=project_root/"subsystems";
         write(project_root/"som_interface.json",read(root/project/"som_interface.json"));
         write(project_root/"som_mapping.json",read(root/project/"som_mapping.json"));
+        write(project_root/"board.json",read(root/project/"board.json"));
         ProjectAuthoringInput input;input.project_root=project_root;input.context.library=root/subsystem_library_folder;
         auto factories=native_project_factories(project,input);
         for(const auto& f:factories)for(const auto& file:carrier_required_files(f.name,f.meta.has_value(),mode))
@@ -305,9 +308,9 @@ void native_packages(const fs::path& root) {
         require(report.adapter&&!report.ok()&&!report.missing.empty(),"missing library reclassified adapter as local");
         fs::rename(s.path/"held_power",library/"power");
         require(!check_carrier_package(f.name,base,library,nullptr,mode).ok(),"native package without registry accepted");
-        fs::remove(base/"mechanical/mechanical.cir");
+        fs::remove(base/"som_j1/som_j1.cir");
         require(!check_carrier_structure(base,library,factories,mode).ok(),"missing local circuit contract accepted");
-        write(base/"mechanical/mechanical.cir",read(root/project/"subsystems/mechanical/mechanical.cir"));
+        write(base/"som_j1/som_j1.cir",read(root/project/"subsystems/som_j1/som_j1.cir"));
         require(check_carrier_structure(base,library,factories,mode).ok(),"restored native package failed");
         write_authoring_gate_report(s.path/(std::string(project)+".txt"),result.summary());
         require(read(s.path/(std::string(project)+".txt"))==result.summary()+"\n","native summary publication bytes");
@@ -334,7 +337,7 @@ int main(int argc,char** argv) {
         const auto library=parse_json_file((root/"native/tests/data/authoring/gate_library.json").string());
         constexpr auto mode=AuthoringPackageMode::native_assets;
         auto result=check_subsystem_structure(root/"subsystems",native_subsystem_factories(shelf(root)));
-        require(result.ok()&&result.n_ok()==17,"real library gate failed: "+result.summary());
+        require(result.ok()&&result.n_ok()==library_packages,"real library gate failed: "+result.summary());
         require(result.exit_code()==0&&result.mode==mode,"real repository must use the native hard gate");
         legacy_reports(root,library);
         for(const auto* project:{"carrier","devkit_mini"}) {
@@ -378,6 +381,6 @@ int main(int argc,char** argv) {
         }
         native_packages(root);
         close_part_catalog();
-        std::cout<<"PASS: "<<checks<<" assertions; 17 library + 49 project native packages, independent circuit oracles, inert legacy report bytes and no-Python asset contracts verified\n";
+        std::cout<<"PASS: "<<checks<<" assertions; 34 library + 49 project native packages, independent circuit oracles, inert legacy report bytes and no-Python asset contracts verified\n";
     }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}
 }
