@@ -80,7 +80,8 @@ target_sources(schgen_core PRIVATE src/regression_cli.cpp)
 target_sources(schgen_core PRIVATE src/measure_board.cpp src/measure_metrics.cpp src/measure_report.cpp src/measure_cli.cpp)
 target_sources(schgen_core PRIVATE src/json_text.cpp src/layout_geometry.cpp src/layout_problem.cpp src/layout_kernel.cpp
     src/layout_adapter.cpp src/layout_json.cpp src/layout_cli.cpp src/layout_squeeze.cpp src/layout_arrange.cpp src/layout_stage.cpp
-    src/layout_sink.cpp src/placement_integrity.cpp src/label_seats.cpp)
+    src/layout_sink.cpp src/placement_integrity.cpp src/label_seats.cpp
+    src/placement_report.cpp src/testpoint_map.cpp src/decoupling_report.cpp)
 set(SCHGEN_RULE_SOURCES
     src/rules/rule_context.cpp src/roles.cpp src/rules/rule_book.cpp src/rules/rule_index.cpp
     src/rules/mechanical/module_clearance.cpp src/rules/mechanical/module_escape_corridor.cpp
@@ -584,6 +585,14 @@ if(BUILD_TESTING)
     target_link_libraries(schgen_pcb_placement_gates_contracts PRIVATE schgen_core)
     target_compile_options(schgen_pcb_placement_gates_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
     add_test(NAME native_pcb_placement_gates_contracts COMMAND schgen_pcb_placement_gates_contracts "${CMAKE_CURRENT_SOURCE_DIR}/..")
+    add_executable(schgen_testpoint_map_contracts tests/testpoint_map_contracts.cpp)
+    target_link_libraries(schgen_testpoint_map_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_testpoint_map_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
+    add_test(NAME native_testpoint_map_contracts COMMAND schgen_testpoint_map_contracts "${CMAKE_CURRENT_SOURCE_DIR}/..")
+    add_executable(schgen_decoupling_report_contracts tests/decoupling_report_contracts.cpp)
+    target_link_libraries(schgen_decoupling_report_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_decoupling_report_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
+    add_test(NAME native_decoupling_report_contracts COMMAND schgen_decoupling_report_contracts "${CMAKE_CURRENT_SOURCE_DIR}/..")
     add_executable(schgen_gallery_diagram_contracts tests/gallery_diagram_contracts.cpp)
     target_link_libraries(schgen_gallery_diagram_contracts PRIVATE schgen_core)
     target_compile_options(schgen_gallery_diagram_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
