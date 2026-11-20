@@ -58,7 +58,7 @@ native/bin/schgen catalog-compile parts native/catalog.bin
 
 ## Part facts (`part_facts.json`)
 
-`parts/part_facts.json` (`schema: schgen.part_facts/2`) is the one reviewed,
+`parts/part_facts.json` (`schema: schgen.part_facts/3`) is the one reviewed,
 hand-kept file in this folder. It holds what the generator cannot know:
 
 - `classes` — the class of every schematic symbol the boards may place, keyed
@@ -82,6 +82,37 @@ hand-kept file in this folder. It holds what the generator cannot know:
 - `stated_heights` — the height above the board face, in millimetres, of every
   footprint that names no 3D model, keyed by footprint id, each with its
   `basis` and the date it was `reviewed`.
+- `thermal` — keyed by part number (the name of the part's folder), one entry
+  per part whose junction temperature is checked: `rth_ja`, `tj_max`, `rds_on`
+  and `eff`, the `package` and the `cite` of the datasheet, and an optional
+  `pour` (`rth_ja`, `cite`, `evidence`) that holds the lower thermal resistance
+  credited once the emitted copper is verified.
+- `thermal_copper` — keyed by part number: `need` (`min_vias`, `radius_mm`,
+  `pour_layers`, what the copper audit looks for) and `field` (`via_offsets_mm`,
+  `max_vias`, `pour_box_mm` as x0, y0, x1, y1, `pour_layers`, `cite`, what the
+  emitter places).
+- `ep_vias` — keyed by part number: `min_pads` ground via pads within
+  `radius_mm` of the part's centre.
+- `isolation` — keyed by part number: `margin_mm`, the margin of the plane void
+  under the part's courtyard.
+- `regulators` — keyed by part number: `kind`, `eff`, `in_pin`, `out_pin`,
+  `ilim_num`, `note`, and optionally `limit_a`, `iset_pin`, `fb_vref`, `iset_v`
+  and `enable` (`en_pin` with `vin_pins`, or `ihys_a` with
+  `recommended_max_v` and `threshold_v`).
+- `zeners` — keyed by part number: `vz_min_v`, `vz_max_v`, `izt_a`, `zzt_ohm`.
+- `reference_pins` — keyed by part number: `vref1_pin` and `vref2_pin`, the two
+  reference pins that must not sit directly on two different rails.
+- `control_grid` — keyed by part number: `button_gap_mm`, the gap when the
+  part's instances are placed as a grid of controls.
+- `model_overrides` — keyed by part number: `footprint`, `path` and
+  `rotation_z_deg` of the 3D model that replaces the footprint's own.
+- `footprint_aliases` — keyed by footprint id: `footprint`, the footprint id
+  that stands in for it.
+
+Each of these sections must be present; an empty one is `{}`. A key naming a
+part must be the name of a folder in this folder. An unknown key, a value of
+the wrong type or a repeated key fails the build, naming the file, the section
+and the key.
 
 Every other height is measured from the 3D model the part's footprint names
 (the highest mesh point of a `.wrl`, the highest vertex of a `.step`, with the

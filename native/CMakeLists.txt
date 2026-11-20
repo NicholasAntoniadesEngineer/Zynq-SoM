@@ -1189,6 +1189,11 @@ if(BUILD_TESTING)
     target_compile_options(schgen_part_connector_facts_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
     add_test(NAME native_part_connector_facts_contracts COMMAND schgen_part_connector_facts_contracts
         "${CMAKE_CURRENT_SOURCE_DIR}/.." "${CMAKE_CURRENT_BINARY_DIR}/part-connector-facts-contract-output")
+    add_executable(schgen_part_engineering_facts_contracts tests/part_engineering_facts_contracts.cpp)
+    target_link_libraries(schgen_part_engineering_facts_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_part_engineering_facts_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME native_part_engineering_facts_contracts COMMAND schgen_part_engineering_facts_contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/.." "${CMAKE_CURRENT_BINARY_DIR}/part-engineering-facts-contract-output")
     add_executable(schgen_escape_triage_contracts tests/escape_triage_contracts.cpp)
     target_link_libraries(schgen_escape_triage_contracts PRIVATE schgen_core)
     target_compile_options(schgen_escape_triage_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
