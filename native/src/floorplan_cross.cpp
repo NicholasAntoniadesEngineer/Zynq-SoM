@@ -55,13 +55,14 @@ void Engine::prepare_cross() {
             if (!mod) continue;
             CrossPart part{};
             part.ref=ref; part.sheet=sc.name; part.footprint=*mod; part.base_side="top";
-            if (starts(sc.name,"som_j")) {
-                const auto jack="J"+sc.name.substr(5);
-                if (!starts(ref,"J") || !jacks.count(jack)) continue;
+            const auto& role=sheet_role(in.roles,sc.name);
+            if (!role.module_connector.empty()) {
+                const auto& jack=role.module_connector;
+                if (p->ref!=jack || !jacks.count(jack)) continue;
                 part.owner=CrossPart::Owner::SomJack; part.key=jack;
                 const auto* j=jacks.at(jack); part.offset={j->x,j->y};
                 rotations[ref]=j->w<j->h ? 90 : 0;
-            } else if (sc.name=="som_decoupling") {
+            } else if (role.region==SheetRegion::under_module) {
                 part.owner=CrossPart::Owner::Decoupling; part.base_side="bottom";
                 dec_refs.push_back(ref);
             } else if (starts(p->lib_id,"Mechanical:MountingHole")) {
@@ -143,8 +144,8 @@ void Engine::prepare_cross() {
 void Engine::prepare_escape_rows() {
     escape_rows.clear();
     for(const auto& sheet:in.sheets) {
-        if(sheet.name.size()!=6||!starts(sheet.name,"som_j"))continue;
-        const auto ref="J"+sheet.name.substr(5);
+        const auto& ref=sheet_role(in.roles,sheet.name).module_connector;
+        if(ref.empty())continue;
         const auto jack=std::find_if(plan.som.js.begin(),plan.som.js.end(),[&](const auto& j){return j.ref==ref;});
         for(const auto& part:sheet.parts) {
             if(part.ref!=ref)continue;
@@ -216,7 +217,7 @@ std::optional<double> Engine::evaluate_estimate(const std::vector<const Floorpla
     }
     const std::array<FloorplanPoint,4> corners{{{mh_inset,mh_inset},{plan.board_w-mh_inset,mh_inset},
         {plan.board_w-mh_inset,plan.board_h-mh_inset},{mh_inset,plan.board_h-mh_inset}}};
-    const auto [rw,rh,cols,rows]=som_decoupling_grid(plan.som.w,plan.som.h,plan.dec_count,dec_inset,&plan.accounting.quantization_engagements);
+    const auto [rw,rh,cols,rows]=under_module_grid(plan.som.w,plan.som.h,plan.dec_count,dec_inset,&plan.accounting.quantization_engagements);
     std::vector<std::optional<FloorplanPoint>> positions(cross_parts.size());
     for (std::size_t i=0;i<cross_parts.size();++i) {
         const auto& part=cross_parts[i];

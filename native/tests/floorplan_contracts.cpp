@@ -4,6 +4,7 @@
 #include "../src/floorplan_internal.hpp"
 #include "board_policy_ledger_reference.hpp"
 #include "connector_facts_fixture.hpp"
+#include "sheet_roles_fixture.hpp"
 #include "floorplan_precision_fixture.hpp"
 #include "experiment_metric_contracts.hpp"
 #include "../src/near_translation_domain_internal.hpp"
@@ -95,6 +96,7 @@ SomOutline som(const J& n) {
 FloorplanInput input(const J& n) {
     FloorplanInput in;
     for (const auto& s:field(n,"sheets").array_value) in.sheets.push_back(decode_intermediate_circuit_ir(s));
+    in.roles=explicit_sheet_roles(in.sheets);
     for (const auto& b:field(n,"bindings").array_value) {
         LinkPortBinding binding; binding.sheet=str(b,"sheet"); binding.net=str(b,"net"); binding.status=str(b,"status"); binding.targets=strings(field(b,"targets"));
         binding.ptype.expect=str(field(b,"ptype"),"expect"); in.link.bindings.push_back(std::move(binding));
@@ -191,7 +193,7 @@ void compose_contracts(const std::filesystem::path& dir) {
         auto in=base;auto vars=initial;std::vector<std::string> log;
         const auto name=str(row,"name");
         in.board_w=num(row,"width");in.compact=boolean(row,"compact");
-        if(boolean(row,"jack"))in.som_j_rects["som_j1"]={40,5,50,15};
+        if(boolean(row,"jack"))in.module_rects["som_j1"]={40,5,50,15};
         if(boolean(row,"block"))in.fixed_rects.push_back({"obstacle",{0,0,100,100}});
         if(num(row,"demand"))in.channel_demand[{"a","b"}]=static_cast<int>(num(row,"demand"));
         for(const auto& term:field(row,"terms").array_value) {
@@ -325,7 +327,7 @@ void facing_projection_contracts() {
             in.metrics["source"].offsets={{"out",1+dx,1+dy},{"in",1-dx,1-dy}};
             in.metrics[target].offsets={{"p",1,1}};
             if(target_kind==1)in.som_core_page={t.first+in.origin.first,t.second+in.origin.second,t.first+2+in.origin.first,t.second+2+in.origin.second};
-            if(target_kind==2)in.som_j_rects[target]={t.first,t.second,t.first+2,t.second+2};
+            if(target_kind==2)in.module_rects[target]={t.first,t.second,t.first+2,t.second+2};
             const std::string fixed=source_moves?target:"source",moving=source_moves?"source":target;
             const auto fp=source_moves?t:s,mp=source_moves?s:t;
             in.fixed_poses[fixed]=fp;in.fixed_rects={{fixed,{fp.first,fp.second,fp.first+2,fp.second+2}}};
@@ -546,16 +548,16 @@ void primary_fanout_contracts() {
         FloorplanLegalizeInput in;
         in.board_w=60;in.board_h=60;in.compact=true;in.clear=.25;
         in.metrics["v"]={{{"p",18.5,1.5}},{{"p",18,1,19,2}},{20,20}};
-        in.som_j_rects["som_j1"]={38,30,39,31};
+        in.module_rects["som_j1"]={38,30,39,31};
         if(direction>=2) {
             in.metrics["v"]={{{"p",18.5,18.5}},{{"p",18,18,19,19}},{20,20}};
-            in.som_j_rects["som_j1"]={38,29,39,30};
+            in.module_rects["som_j1"]={38,29,39,30};
         }
         if(direction%2) {
             auto& [ref,x,y]=in.metrics["v"].offsets[0];(void)ref;std::swap(x,y);
             auto& [pad,x0,y0,x1,y1]=in.metrics["v"].pad_union[0];(void)pad;
             std::swap(x0,y0);std::swap(x1,y1);
-            auto& jack=in.som_j_rects["som_j1"];
+            auto& jack=in.module_rects["som_j1"];
             std::swap(jack.x0,jack.y0);std::swap(jack.x1,jack.y1);
         }
         in.index.hard.push_back({"near_max","v","v","som_j1",13,"pad-axis witness (includes 4 mm solver guard)",true,{},{}});
@@ -1228,7 +1230,7 @@ void current_plan_requirements(const FloorplanInput& in,const FloorplanPlan& res
     const auto keepouts=source.som_keepouts();
     const double sx=result.som_x-som_pad,sy=result.som_y-som_pad;
     const auto children=result.punch_free?som_components(sx,sy,result.dec_radius,
-        som_decoupling_cells(result.som_x,result.som_y,result.som.w,result.som.h,result.dec_count,dec_inset),
+        under_module_cells(result.som_x,result.som_y,result.som.w,result.som.h,result.dec_count,dec_inset),
         {keepouts.begin()+1,keepouts.end()},occ_bottom,occ_punch):std::vector<Comp>{};
     require(pairs_hold_from_layout(interiors,edges,sx,sy,result.som.w+2*som_pad,result.som.h+2*som_pad,
         result.punch_free?occ_top:occ_punch,children,result.board_w,result.board_h,mh_corner,occ_punch,clear),
@@ -1380,13 +1382,13 @@ void repair_choice_contracts() {
         in.compact=compact;
         in.fixed_rects={{"barrier",{8,0,12,10}}};
         in.metrics["v"]={{{"p",1,1}},{{"p",0,0,2,2}},{2,2}};
-        in.som_j_rects["som_j1"]={14,4,15,5};
+        in.module_rects["som_j1"]={14,4,15,5};
         in.index.hard.push_back({"near_max","v","v","som_j1",20,"axis repair witness",true,{},{}});
         std::vector<FloorplanLegalizeVar> vars{{"v",2,2,{9,11},9,11},{"w",2,2,{10,11},10,11}};
         if(transpose) {
             std::swap(in.board_w,in.board_h);
             in.fixed_rects={{"barrier",{0,8,10,12}}};
-            in.som_j_rects["som_j1"]={4,14,5,15};
+            in.module_rects["som_j1"]={4,14,5,15};
             for(auto& v:vars){std::swap(v.x,v.y);std::swap(v.seed.first,v.seed.second);}
         }
         const auto initial=vars;
@@ -1413,13 +1415,13 @@ void repair_choice_contracts() {
     for(bool compact:{false,true})for(bool horizontal:{false,true}) {
         FloorplanLegalizeInput in;in.board_w=12;in.board_h=6;in.clear=.3;in.compact=compact;
         in.fixed_rects={{"barrier",{4,0,12,6}}};in.fixed_poses["barrier"]={4,0};
-        in.som_j_rects["som_j1"]={10,2,11,3};
+        in.module_rects["som_j1"]={10,2,11,3};
         in.metrics["v"]={{{"p",1,1}},{{"p",1,1,1,1}},{2,2}};
         FloorplanPoint seed{1,2};
         if(horizontal) {
             std::swap(in.board_w,in.board_h);std::swap(seed.first,seed.second);
             in.fixed_rects={{"barrier",{0,4,6,12}}};in.fixed_poses["barrier"]={0,4};
-            in.som_j_rects["som_j1"]={2,10,3,11};
+            in.module_rects["som_j1"]={2,10,3,11};
         }
         in.index.hard.push_back({"near_max","v","v","som_j1",8,"authored distance, no extra search margin",true,{},{}});
         in.joint_separation_states=64;
@@ -1433,7 +1435,7 @@ void repair_choice_contracts() {
         require(floorplan_legalize_compact(in,vars,log),"joint distance envelope excluded authored-legal margin band");
         require(starts==2&&ends==2,"guarded and authored retries lost executed-work accounting");
         const auto& v=vars.front();
-        const auto target=in.som_j_rects.at("som_j1");
+        const auto target=in.module_rects.at("som_j1");
         const double dx=std::max({0.,target.x0-(v.x+1),v.x+1-target.x1});
         const double dy=std::max({0.,target.y0-(v.y+1),v.y+1-target.y1});
         require(std::hypot(dx,dy)<=8&&std::hypot(dx,dy)>4,"margin regression did not use the excluded legal band");
@@ -1444,7 +1446,7 @@ void repair_choice_contracts() {
     }
     for(const double limit:{1.,2.,3.}) {
         FloorplanLegalizeInput in;in.board_w=30;in.board_h=30;in.clear=.1;
-        in.som_j_rects["som_j1"]={10,10,12,12};
+        in.module_rects["som_j1"]={10,10,12,12};
         in.metrics["v"]={{{"p",.5,.5}},{{"p",0,0,1,1}},{1,1}};
         in.index.hard.push_back({"near_max","v","v","som_j1",limit,"tight authored limit",true,{},{}});
         std::vector<FloorplanLegalizeVar> vars{{"v",1,1,{24,10},24,10}};
@@ -1523,7 +1525,7 @@ void repair_choice_contracts() {
         std::size_t compactions=0;in.compaction_started=[&]{++compactions;};
         in.fixed_rects={{"obstacle",{0,0,20,20}}};
         in.metrics["v"]={{{"p",1,1}},{{"p",0,0,2,2}},{2,2}};
-        in.som_j_rects["som_j1"]={9,9,10,10};
+        in.module_rects["som_j1"]={9,9,10,10};
         in.index.hard.push_back({"near_max","v","v","som_j1",1,"cycle geometry witness",true,{},{}});
         const std::vector<FloorplanLegalizeVar> initial{{"v",2,2,{10,10},10,10}};
         auto quiet=initial,loud=initial;std::vector<std::string> quiet_log,loud_log;
@@ -1572,7 +1574,7 @@ void repair_choice_contracts() {
     for(const bool directional_gap:{false,true}) {
         FloorplanLegalizeInput in;in.board_w=60;in.board_h=60;in.compact=true;
         in.metrics["v"]={{{"p",5,5}},{{"p",0,0,10,10}},{10,10}};
-        in.som_j_rects["som_j1"]={25,42,26,43};
+        in.module_rects["som_j1"]={25,42,26,43};
         in.index.hard.push_back({"near_max","v","v","som_j1",5,"perpendicular-order witness",true,{},{}});
         in.fixed_rects={{"obstacle",{20,20,30,30}}};
         if(directional_gap) {
@@ -1820,7 +1822,7 @@ void joint_composer_contracts(){
         FloorplanLegalizeInput in;in.board_w=24;in.board_h=24;in.compact=true;
         in.fixed_rects={{"horizontal",{8.,double(row),14.,double(row+3)}},{"vertical",{double(column),8.,double(column+3),16.}}};
         in.metrics["v"]={{{"p",1.5,1.5}},{{"p",0,0,3,3}},{3,3}};
-        in.som_j_rects["som_j1"]={11,11,13,13};
+        in.module_rects["som_j1"]={11,11,13,13};
         in.index.hard.push_back({"near_max","v","v","som_j1",7,"joint fixture",true,{},{}});
         if(mode){
             in.primary_fanout["v"]={{.4,1.2,.8,1.6},{},1,1,std::vector<Comp>{}};

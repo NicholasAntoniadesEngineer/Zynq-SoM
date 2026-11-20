@@ -7,6 +7,8 @@
 namespace schgen {
 namespace {
 
+const char* const part_facts_file = "part_facts.json";
+
 [[noreturn]] void fail(const BoardDefinition& board, const std::string& sheet, const std::string& what) {
     throw std::runtime_error("board " + board.name + " sheet " + sheet + ": " + what);
 }
@@ -60,6 +62,27 @@ const SheetRole& sheet_role(const SheetRoles& roles, const std::string& sheet) {
     const auto found = roles.find(sheet);
     if (found == roles.end()) throw std::runtime_error("sheet roles: no role for sheet " + sheet);
     return found->second;
+}
+
+bool module_connector_sheet(const SheetRoles& roles, const std::string& sheet) { return !sheet_role(roles, sheet).module_connector.empty(); }
+
+bool under_module_sheet(const SheetRoles& roles, const std::string& sheet) { return sheet_role(roles, sheet).region == SheetRegion::under_module; }
+
+std::map<std::string, std::string> module_sheets_by_connector(const SheetRoles& roles) {
+    std::map<std::string, std::string> sheets;
+    for (const auto& [sheet, role] : roles)
+        if (!role.module_connector.empty()) sheets.emplace(role.module_connector, sheet);
+    return sheets;
+}
+
+SheetRoles load_sheet_roles(const ProjectPaths& paths, const std::vector<ProjectCircuit>& circuits) {
+    std::vector<CircuitSheetIr> sheets;
+    for (const ProjectCircuit& item : circuits) sheets.push_back(item.circuit);
+    const std::string interface_file = paths.som_interface_file.string();
+    const SomInterface module = som_interface_from_json(parse_json_file(interface_file), interface_file);
+    AuthoringContext context;
+    context.library = paths.library_dir;
+    return sheet_roles(load_board(paths.project_root), context, module, sheets, load_part_facts(paths.parts_dir / part_facts_file));
 }
 
 }

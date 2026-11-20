@@ -185,7 +185,7 @@ PcbPlacementInput load_geometry_board_inputs(const ProjectPaths& paths, const Ne
     options.root_name = paths.file_stem; options.extraction = extraction; options.reports_dir = scratch.path / "reports";
     const auto board = build_board_schematic(inputs, library, scratch.path, options);
     if (!board.ok()) throw ProjectError("geometry schematic gate failed: " + board.report);
-    auto input = load_board_inputs(paths, authored.circuits, link, extract_netlist(board.root_path, extraction));
+    auto input = load_board_inputs(paths, authored.circuits, load_sheet_roles(paths, authored.circuits), link, extract_netlist(board.root_path, extraction));
     input.floorplan.sheet_index = index;
     return input;
 }

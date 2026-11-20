@@ -37,7 +37,7 @@ void validate(const FloorplanLegalizeInput& in) {
             throw FloorplanError("floorplan compose: invalid or duplicate fixed name " + name);
         rectangle(r, name);
     }
-    for (const auto& [name, r] : in.som_j_rects) rectangle(r, name);
+    for (const auto& [name, r] : in.module_rects) rectangle(r, name);
     for (const auto& [name, p] : in.fixed_poses) point(p, name);
     for (const auto& [name, body] : in.primary_fanout) {
         if (name.empty() || name.front() == '#' || body.mask < 0 || body.mask > 3)
@@ -122,13 +122,13 @@ std::vector<FloorplanTermEval> evaluate(const FloorplanLegalizeInput& in,
         // Preserve the legacy call, guards, row order and exact work receipts.
         values = evaluate_terms(in.board_w, in.board_h, in.som_core_page,
             {poses.begin(), poses.end()}, metrics, rows, {{"ethernet", 14}, {"power_som", 25}},
-            {in.som_j_rects.begin(), in.som_j_rects.end()}, in.origin.first, in.origin.second, counts);
+            {in.module_rects.begin(), in.module_rects.end()}, in.origin.first, in.origin.second, counts);
     } else {
         values.resize(rows.size());
         if (!guarded_rows.empty()) {
             const auto evaluated = evaluate_terms(in.board_w, in.board_h, in.som_core_page,
                 {poses.begin(), poses.end()}, metrics, guarded_rows, {{"ethernet", 14}, {"power_som", 25}},
-                {in.som_j_rects.begin(), in.som_j_rects.end()}, in.origin.first, in.origin.second, counts);
+                {in.module_rects.begin(), in.module_rects.end()}, in.origin.first, in.origin.second, counts);
             for (std::size_t i = 0; i < guarded_indices.size(); ++i)
                 values[guarded_indices[i]] = evaluated[i];
         }
@@ -138,7 +138,7 @@ std::vector<FloorplanTermEval> evaluate(const FloorplanLegalizeInput& in,
         // Evaluate each row once and import actual work even on rejection.
         const auto evaluated = evaluate_terms(in.board_w, in.board_h, in.som_core_page,
             {poses.begin(), poses.end()}, metrics, strict_rows, {},
-            {in.som_j_rects.begin(), in.som_j_rects.end()}, in.origin.first, in.origin.second, counts);
+            {in.module_rects.begin(), in.module_rects.end()}, in.origin.first, in.origin.second, counts);
         for (std::size_t i = 0; i < strict_indices.size(); ++i)
             values[strict_indices[i]] = evaluated[i];
     }
@@ -190,7 +190,7 @@ public:
                 throw FloorplanError("floorplan compose: name is both fixed and movable " + name);
             frect[name] = r;
         }
-        for (const auto& [name, r] : in.som_j_rects) fixed[name] = {r.x0, r.y0};
+        for (const auto& [name, r] : in.module_rects) fixed[name] = {r.x0, r.y0};
         for (const auto& [name, v] : by_name) {
             names.push_back(name); pos_x.push_back(v->x); pos_y.push_back(v->y);
         }
@@ -569,8 +569,8 @@ private:
         const auto endpoint=[&](const std::string& name)->std::optional<Endpoint> {
             if(name=="@som")return Endpoint{{(in.som_core_page.x0+in.som_core_page.x1)/2-in.origin.first,
                 (in.som_core_page.y0+in.som_core_page.y1)/2-in.origin.second},{0,0},false};
-            const auto jack=in.som_j_rects.find(name);
-            if(jack!=in.som_j_rects.end())return Endpoint{{(jack->second.x0+jack->second.x1)/2,
+            const auto jack=in.module_rects.find(name);
+            if(jack!=in.module_rects.end())return Endpoint{{(jack->second.x0+jack->second.x1)/2,
                 (jack->second.y0+jack->second.y1)/2},{0,0},false};
             const auto metric=in.metrics.find(name);if(metric==in.metrics.end())return std::nullopt;
             const auto center=predicted_centroid(0,0,0,0,metric->second.offsets,nullptr,counts);
@@ -814,9 +814,9 @@ private:
         for (const auto& t : in.index.hard) {
             if (t.kind != "near_max") continue;
             const auto s = t.subject, g = t.target();
-            const auto jr = floorplan_detail::starts(g, "som_j") ? in.som_j_rects.find(g) : in.som_j_rects.end();
+            const auto jr = in.module_rects.find(g);
             const auto hs = hull(s);
-            const auto hg = jr == in.som_j_rects.end() ? hull(g) :
+            const auto hg = jr == in.module_rects.end() ? hull(g) :
                 std::optional<Box4>{{0, 0, jr->second.x1 - jr->second.x0, jr->second.y1 - jr->second.y0}};
             const double authored = t.bound.value_or(0);
             // Early strategies seek extra margin, but the final joint fallback
@@ -827,7 +827,7 @@ private:
             const bool sm = by_name.count(s), gm = by_name.count(g);
             if (!hs || !hg || bound < 0 || (!sm && !gm)) continue;
             const auto sr = seed_or_fixed(s, *hs);
-            const auto gr = jr == in.som_j_rects.end() ? seed_or_fixed(g, *hg) : jr->second;
+            const auto gr = jr == in.module_rects.end() ? seed_or_fixed(g, *hg) : jr->second;
             const auto sp = sm ? std::nullopt : std::optional<FloorplanPoint>{fixed_pose(s)};
             const auto gp = gm ? std::nullopt : std::optional<FloorplanPoint>{fixed_pose(g)};
             for (const auto& e : near_max_edges(s, g, bound, x, *hs, *hg, sr, gr, sm, gm, sp, gp, distance_envelope))

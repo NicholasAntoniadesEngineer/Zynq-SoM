@@ -167,7 +167,7 @@ void Placer::seed() {
         if (p.sheet == "som_decoupling" && geometry.resolvable.count(r))
             dec.push_back(r);
     auto cells =
-        som_decoupling_cells(plan.som_x, plan.som_y, plan.som.w, plan.som.h, plan.dec_count, 6, &ctx.quantization);
+        under_module_cells(plan.som_x, plan.som_y, plan.som.w, plan.som.h, plan.dec_count, 6, &ctx.quantization);
     if (dec.size() != cells.size())
         throw PcbZoneInfeasible("decoupling bank count disagrees with resolved parts");
     for (std::size_t i = 0; i < dec.size(); ++i) {

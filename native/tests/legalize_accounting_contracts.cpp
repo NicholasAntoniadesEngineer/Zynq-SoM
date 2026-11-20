@@ -123,7 +123,7 @@ void pad_retry_accounting(){
     for(const bool impossible:{false,true}) {
         FloorplanLegalizeInput in;in.board_w=60;in.board_h=60;in.clear=.25;in.compact=true;
         in.metrics["v"]={{{"p",18.5,1.5}},{{"p",18,1,19,2}},{20,20}};
-        in.som_j_rects["som_j1"]={38,30,39,31};
+        in.module_rects["som_j1"]={38,30,39,31};
         in.index.hard.push_back({"near_max","v","v","som_j1",impossible?7.:13.,"retry witness",true,{},{}});
         in.fixed_rects={{"west",{0,0,19.75,60}},{"east",{40.25,0,60,60}},
                         {"north",{0,0,60,19.75}},{"south",{0,40.25,60,60}}};
@@ -142,7 +142,7 @@ void perpendicular_retry_accounting(){
     for(const bool impossible:{false,true}) {
         FloorplanLegalizeInput in;in.board_w=60;in.board_h=60;in.compact=true;
         in.metrics["v"]={{{"p",5,5}},{{"p",0,0,10,10}},{10,10}};
-        in.som_j_rects["som_j1"]={25,42,26,43};
+        in.module_rects["som_j1"]={25,42,26,43};
         in.index.hard.push_back({"near_max","v","v","som_j1",5,"perpendicular retry",true,{},{}});
         in.fixed_rects={{"obstacle",{20,20,30,30}}};
         if(impossible)in.fixed_rects.push_back({"lower",{0,35,60,60}});
@@ -165,7 +165,7 @@ void compose(std::ostream& out,const std::filesystem::path& root){
         FloorplanLegalizeInput in;in.board_w=number(row,"width");in.board_h=100;in.som_core_page={65,65,85,85};
         in.compact=field(row,"compact").bool_value;
         for(const auto& n:{"a","b"})in.metrics[n]={{{"p",5,5}},{{"p",0,0,10,10}},{10,10}};
-        if(const auto* jack=object_field(row,"jack");jack&&jack->bool_value)in.som_j_rects["som_j1"]={40,5,50,15};
+        if(const auto* jack=object_field(row,"jack");jack&&jack->bool_value)in.module_rects["som_j1"]={40,5,50,15};
         if(field(row,"block").bool_value)in.fixed_rects.push_back({"obstacle",{0,0,100,100}});
         in.channel_demand[{"a","b"}]=static_cast<int>(number(row,"demand"));
         for(const auto& t:field(row,"terms").array_value){FloorplanTerm term;

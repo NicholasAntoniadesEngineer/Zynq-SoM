@@ -337,7 +337,7 @@ void pilots(const char* root, const char* catalog) {
         parse_json_file((paths.project_root / "som_mapping.json").string()), paths.module.do_not_load_straps);
     require(link.ok(), "live link failed");
     BoardInputOptions options; options.compact_search = true;
-    auto in = load_board_inputs(paths, circuits, link,
+    auto in = load_board_inputs(paths, circuits, schgen::load_sheet_roles(paths, circuits), link,
         extract_netlist(test::fresh_project_schematic(paths,circuits)), options);
     in.floorplan.sheets.erase(std::remove_if(in.floorplan.sheets.begin(), in.floorplan.sheets.end(),
         [&](const auto& s) { return !in.owned_groups.count(s.name); }), in.floorplan.sheets.end());

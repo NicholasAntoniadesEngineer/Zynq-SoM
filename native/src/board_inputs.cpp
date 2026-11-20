@@ -25,13 +25,14 @@ std::string relative_source(const fs::path& path, const fs::path& root) {
 }
 }
 PcbPlacementInput load_board_inputs(const ProjectPaths& paths,
-        const std::vector<ProjectCircuit>& circuits, const LinkResult& link,
+        const std::vector<ProjectCircuit>& circuits, const SheetRoles& roles, const LinkResult& link,
         const KicadNetlist& netlist, const BoardInputOptions& options) {
     PcbPlacementInput result;
     auto& floor = result.floorplan;
     floor.project = load_project_config(paths);
     floor.sheet_index = load_sheet_index(paths);
     floor.link = link;
+    floor.roles = roles;
     floor.regulators = analyze_power(circuits).regs;
     floor.module_offset = options.module_offset;
     floor.place_clear = options.place_clear;

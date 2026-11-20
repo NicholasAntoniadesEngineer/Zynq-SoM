@@ -127,7 +127,7 @@ void pcb_stages(Context& c){
         stage.inputs=c.measure("pcb_input_loading_and_netlist_validation",[&]{
             const auto nets=extract_netlist(c.schematic->root_path,c.options.extraction);
             validate_board_input_connectivity(c.circuits,c.index,nets);
-            return load_board_inputs(c.paths,c.circuits,*c.link,nets,c.options.pcb);});
+            return load_board_inputs(c.paths,c.circuits,*c.roles,*c.link,nets,c.options.pcb);});
         stage.inputs.floorplan.sheet_index=c.index;
         if(c.options.native_policy){
             const auto policy=configure_native_board_policy(c.options,c.paths,stage.inputs.floorplan);

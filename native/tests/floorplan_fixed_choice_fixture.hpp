@@ -1,5 +1,6 @@
 #pragma once
 #include "floorplan_internal.hpp"
+#include "sheet_roles_fixture.hpp"
 namespace fixed_choice_fixture {
 // Two real one-pad net participants, opposite zone preferences, one bottom
 // variant. The true-piercing pass naturally wins on estimated airwire at 50x50.
@@ -17,6 +18,7 @@ inline schgen::FloorplanInput input(){
         bottom.side="bottom";bottom.top_off.clear();bottom.bot_off[ref]={0,0};in.geometry.shapes[name]={top,bottom};
         in.spec->interior[name].layer=k==1?"top":"bottom";in.spec->interior[name].side=k==1?"W":"E";
     }
+    in.roles=explicit_sheet_roles(in.sheets);
     return in;
 }
 }

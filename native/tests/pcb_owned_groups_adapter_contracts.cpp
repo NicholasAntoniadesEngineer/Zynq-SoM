@@ -120,12 +120,12 @@ int main(int argc, char** argv) {
         require(schematic.ok(), "current schematic/netlist gate: " + schematic.report);
         const auto nets = extract_netlist(schematic.root_path);
         BoardInputOptions options; options.compact_search = true;
-        auto in = load_board_inputs(paths, circuits, link, nets, options);
+        auto in = load_board_inputs(paths, circuits, schgen::load_sheet_roles(paths, circuits), link, nets, options);
         require(in.owned_groups.size() == 2, "production loader did not resolve both mandatory sheets");
         rejects([&] { (void)part_catalog_count(); }, "production loader leaked global catalog");
         auto missing_catalog = paths;
         missing_catalog.part_catalog_file = std::filesystem::path(argv[3]) / "absent-catalog.bin";
-        rejects([&] { load_board_inputs(missing_catalog, circuits, link, nets, options); },
+        rejects([&] { load_board_inputs(missing_catalog, circuits, schgen::load_sheet_roles(missing_catalog, circuits), link, nets, options); },
                 "production loader accepted missing independent catalog");
         std::size_t rows = 0, bulk = 0;
         for (const auto& [sheet, trusted] : in.owned_groups) {

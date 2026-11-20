@@ -692,7 +692,7 @@ int main(int argc,char**argv) {
             schgen::parse_json_file((paths.project_root/"som_mapping.json").string()), paths.module.do_not_load_straps);
         require(link.ok(),"hierarchy link failed");
         schgen::BoardInputOptions options;options.compact_search=true;
-        const auto source=schgen::load_board_inputs(paths,circuits,link,
+        const auto source=schgen::load_board_inputs(paths,circuits,schgen::load_sheet_roles(paths, circuits), link,
             schgen::extract_netlist(schgen::test::fresh_project_schematic(paths,circuits)),options);
         tests(source,argv[1]);
         std::cout<<"PASS "<<checks<<" compact eviction checks\n";

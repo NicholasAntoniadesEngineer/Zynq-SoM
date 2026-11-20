@@ -64,7 +64,7 @@ int main(int argc, char** argv) {
             parse_json_file((paths.project_root / "som_mapping.json").string()), paths.module.do_not_load_straps);
         require(link.ok(), "live hierarchy link failed");
         BoardInputOptions options; options.compact_search = true;
-        const auto source = load_board_inputs(paths, circuits, link,
+        const auto source = load_board_inputs(paths, circuits, schgen::load_sheet_roles(paths, circuits), link,
             extract_netlist(test::fresh_project_schematic(paths,circuits)), options);
         for (bool reverse : {false, true}) for (bool opposite : {false, true})
             for (int fixed : {0, 1, 2}) {

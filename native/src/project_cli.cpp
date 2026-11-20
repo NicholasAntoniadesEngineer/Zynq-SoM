@@ -537,7 +537,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
         schematic.reports_dir=scratch.path/"reports";
         const auto board=build_board_schematic(inputs,library,scratch.path,schematic);
         if(!board.ok())throw ProjectError("probe schematic gate failed: "+board.report);
-        auto input=load_board_inputs(paths,authored.circuits,link,extract_netlist(board.root_path,schematic.extraction));
+        auto input=load_board_inputs(paths,authored.circuits,load_sheet_roles(paths,authored.circuits),link,extract_netlist(board.root_path,schematic.extraction));
         input.floorplan.sheet_index=index;
         const auto result=options.command=="w12-bound"?run_w12_bound(std::move(input),argument,selected):
             run_w12_stageprobe(std::move(input),argument,selected,options.conservative_only);

@@ -396,7 +396,7 @@ LoadResult load(const ProjectPaths& paths, const NetlistExtractOptions& extracti
     options.compact_search = compact_capable;
     options.floorplan_spec = floorplan_spec;
     if(floorplan_spec)std::cout<<"input floorplan_spec="<<floorplan_spec->string()<<" explicit_policy=1\n";
-    out.input = load_board_inputs(paths, circuits, link, nets, options);
+    out.input = load_board_inputs(paths, circuits, schgen::load_sheet_roles(paths, circuits), link, nets, options);
     tick("board_input_resolve");
     return out;
 }

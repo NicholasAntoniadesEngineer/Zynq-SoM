@@ -776,7 +776,7 @@ std::vector<EvalTermOut> evaluate_terms(
         poses,
     const std::vector<EvalMetric>& metrics, const std::vector<EvalTermIn>& terms,
     const std::vector<std::pair<std::string, double>>& far_guard,
-    const std::vector<std::pair<std::string, Box4>>& som_j_rects,
+    const std::vector<std::pair<std::string, Box4>>& module_rects,
     double origin_x, double origin_y, QuantizationCounts* counts) {
     std::unordered_map<std::string, std::pair<double, double>> pose_of;
     for (const auto& p : poses) {
@@ -791,7 +791,7 @@ std::vector<EvalTermOut> evaluate_terms(
         guard_of[g.first] = g.second;
     }
     std::unordered_map<std::string, Box4> jack_of;
-    for (const auto& j : som_j_rects) {
+    for (const auto& j : module_rects) {
         jack_of[j.first] = j.second;
     }
     const double budget = flow_budget(board_w, board_h, som_core);
@@ -806,11 +806,7 @@ std::vector<EvalTermOut> evaluate_terms(
             return std::make_pair(legalize_anchor_precision4dp((s.x0 + s.x1) / 2.0, counts),
                                   legalize_anchor_precision4dp((s.y0 + s.y1) / 2.0, counts));
         }
-        if (name.rfind("som_j", 0) == 0) {
-            const auto it = jack_of.find(name);
-            if (it == jack_of.end()) {
-                return std::nullopt;
-            }
+        if (const auto it = jack_of.find(name); it != jack_of.end()) {
             const Box4& r = it->second;
             return std::make_pair(
                 legalize_anchor_precision4dp((r.x0 + r.x1) / 2.0 + origin_x, counts),
@@ -830,11 +826,7 @@ std::vector<EvalTermOut> evaluate_terms(
         if (name == "@som") {
             return som_core;
         }
-        if (name.rfind("som_j", 0) == 0) {
-            const auto it = jack_of.find(name);
-            if (it == jack_of.end()) {
-                return std::nullopt;
-            }
+        if (const auto it = jack_of.find(name); it != jack_of.end()) {
             const Box4& r = it->second;
             return Box4{r.x0 + origin_x, r.y0 + origin_y, r.x1 + origin_x,
                         r.y1 + origin_y};

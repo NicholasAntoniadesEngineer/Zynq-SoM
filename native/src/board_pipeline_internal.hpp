@@ -28,6 +28,7 @@ struct Context {
     std::optional<BoardAuthoredProject> authored;
     std::vector<CircuitSheetIr> sheets;
     SheetIndex index;
+    std::optional<SheetRoles> roles;
     std::optional<LinkResult> link;
     std::optional<SomInterface> som;
     std::optional<BoardSchematicResult> schematic;

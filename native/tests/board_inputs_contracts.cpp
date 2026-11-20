@@ -52,10 +52,10 @@ void sidecar_independence(const schgen::ProjectPaths& paths,
     }
     const auto sidecar = overlay.path / "escape_block.json";
     require(!fs::exists(sidecar), "overlay starts without generated sidecar");
-    const auto baseline = load_board_inputs(isolated, circuits, link, nets);
+    const auto baseline = load_board_inputs(isolated, circuits, schgen::load_sheet_roles(isolated, circuits), link, nets);
     require(baseline.floorplan.compose.corridors.empty(), "missing sidecar leaves raw corridors empty");
     auto check = [&](const std::string& state) {
-        const auto actual = load_board_inputs(isolated, circuits, link, nets);
+        const auto actual = load_board_inputs(isolated, circuits, schgen::load_sheet_roles(isolated, circuits), link, nets);
         const auto context = paths.project_root.filename().string() + "/" + state;
         const auto& a = actual.floorplan;
         const auto& b = baseline.floorplan;
@@ -166,7 +166,7 @@ int main(int argc, char** argv) {
             const auto circuits = load_project_circuits(paths);
             KicadNetlist nets{{"caller-net", {{"R1", "1"}}}};
             LinkResult link;
-            const auto input = load_board_inputs(paths, circuits, link, nets);
+            const auto input = load_board_inputs(paths, circuits, schgen::load_sheet_roles(paths, circuits), link, nets);
             require(input.netlist.size() == 1 && input.netlist[0].first == "caller-net",
                     "caller extracted netlist must not be replaced");
             const auto reference = parse_json_file((root / "native/tests/data/floorplan" / (std::string(project) + ".json")).string());
@@ -228,7 +228,7 @@ int main(int argc, char** argv) {
             require(input.floorplan.regulators.size() == field(expected,"regulators").array_value.size(), "live power analysis");
             BoardInputOptions changed;
             changed.two_side = false; changed.place_clear = 0.75; changed.module_offset = {{3.0, 4.0}};
-            const auto variant = load_board_inputs(paths, circuits, link, nets, changed);
+            const auto variant = load_board_inputs(paths, circuits, schgen::load_sheet_roles(paths, circuits), link, nets, changed);
             require(!variant.two_side && variant.floorplan.place_clear == 0.75 &&
                     variant.floorplan.module_offset == changed.module_offset, "explicit caller policy retained");
             require(input.two_side && input.floorplan.place_clear == 0.5, "prior snapshot stays unchanged");

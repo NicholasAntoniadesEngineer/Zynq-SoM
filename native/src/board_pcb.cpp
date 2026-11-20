@@ -75,7 +75,7 @@ BoardPcbStage prepare_board_pcb(const ProjectPaths& paths,
     validate_board_input_connectivity(circuits,load_sheet_index(paths),nets);
     BoardPcbStage out;
     out.circuits = circuits;
-    out.inputs = load_board_inputs(paths, circuits, link, nets, options);
+    out.inputs = load_board_inputs(paths, circuits, load_sheet_roles(paths, circuits), link, nets, options);
     out.placement = build_pcb_model(out.inputs);
     const auto policy = pcb_emit_policy(out.inputs.floorplan.project);
     std::optional<labels::LabelSeating> seats;
