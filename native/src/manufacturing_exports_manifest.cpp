@@ -1,3 +1,4 @@
+#include "schgen/board_files.hpp"
 #include "schgen/manufacturing_exports.hpp"
 #include "schgen/pcb_checks.hpp"
 #include "manufacturing_exports_internal.hpp"
@@ -42,11 +43,11 @@ JsonNode bom(const ManufacturingManifestInput& in){
     return obj({{"lines",j(groups.size())},{"parts",j(count)},{"missing",arr(std::move(ms))},{"cost",in.preflight.cost?j(decimal_round(*in.preflight.cost,4)):JsonNode{}},{"extended",in.preflight.extended?j(static_cast<double>(*in.preflight.extended)):JsonNode{}}});
 }
 }
-std::vector<ProjectArtifact> manufacturing_artifacts(const std::filesystem::path& root,const std::filesystem::path& out){
+std::vector<ProjectArtifact> manufacturing_artifacts(const std::filesystem::path& root,const std::filesystem::path& out,const std::string& file_stem){
     namespace fs=std::filesystem;
     std::map<std::string,fs::path> selected;const auto exclude=fs::weakly_canonical(out);
     const auto add=[&](const fs::path& p){if(fs::is_regular_file(p)&&fs::weakly_canonical(p)!=exclude)selected[p.lexically_relative(root).generic_string()]=p;};
-    for(const auto& rel:{"Zynq_Carrier.kicad_sch","Zynq_Carrier.kicad_pro","Zynq_Carrier.kicad_pcb","manufacturing/SI_CONSTRAINTS.md","docs/BRINGUP.md","docs/FLOORPLAN.md","docs/DESIGN_SPEC.md","docs/COMPLIANCE.md"})add(root/rel);
+    for(const auto& rel:std::vector<std::string>{board_file_name(file_stem,BoardFileKind::Schematic),board_file_name(file_stem,BoardFileKind::Project),board_file_name(file_stem,BoardFileKind::Pcb),"manufacturing/SI_CONSTRAINTS.md","docs/BRINGUP.md","docs/FLOORPLAN.md","docs/DESIGN_SPEC.md","docs/COMPLIANCE.md"})add(root/rel);
     for(const auto& [dir,ext]:ProjectStrings{{"schematic",".kicad_sch"},{"fpga",".xdc"},{"firmware",".h"},{"manufacturing",".csv"},{"manufacturing",".txt"},{"manufacturing",".kicad_dru"},{"reports",".txt"},{"docs",".svg"}}){
         const auto p=root/dir;if(!fs::exists(p))continue;
         for(const auto& entry:fs::directory_iterator(p))if(ends(entry.path().filename().string(),ext))add(entry.path());

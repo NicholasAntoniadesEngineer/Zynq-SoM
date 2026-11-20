@@ -21,6 +21,7 @@ struct RunConfig {
     std::map<std::string, std::vector<std::string>> overmold_parts;
     std::vector<std::string> study_stackups;
     const std::string& stackup_of(const std::string& board) const;
+    const std::vector<std::string>& overmold_parts_of(const std::string& board) const;
     std::vector<std::string> board_arguments(const std::string& board, const std::filesystem::path& file) const;
 };
 

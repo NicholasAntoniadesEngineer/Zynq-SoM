@@ -32,11 +32,12 @@ struct ProjectPaths {
     std::filesystem::path circuit_catalog_file;
     std::filesystem::path schematic_dir, reports_dir, fpga_dir;
     std::optional<std::filesystem::path> run_config;
-    bool is_default_project = false;
+    std::string file_stem;
+    bool root_readme = false, owned_groups = false;
 };
 
 struct ProjectConfig {
-    std::string name, stackup;
+    std::string name, stackup, file_stem;
     bool labels = true, arrange = false;
     // Set-like membership in Python; retained in source order here.
     std::vector<std::string> wired_sheets, pilot_prox_sheets;
@@ -88,7 +89,6 @@ struct ProjectManifest {
     JsonNode raw;  // Preserve rails, BOM, GPIO/I2C, XDC and future sections.
 };
 
-// Explicit selection wins over SCHGEN_PROJECT, then defaults to carrier.
 // Relative project paths are relative to repository_root, never the cwd.
 // Paths are absolute with existing symlinks resolved; existing directories and the
 // project.json file are required. Other inputs are checked only when loaded.

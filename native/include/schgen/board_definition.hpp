@@ -40,13 +40,30 @@ struct BoardSheet {
     bool from_module() const { return !module_connector.empty(); }
 };
 
+struct BoardFiles {
+    std::string stem;
+};
+
+struct BoardFlags {
+    bool root_readme = false, owned_groups = false;
+};
+
+struct BoardHeader {
+    BoardFiles files;
+    BoardFlags flags;
+};
+
 struct BoardDefinition {
     std::string name;
+    BoardFiles files;
+    BoardFlags flags;
     BoardModule module;
     std::vector<BoardSheet> sheets;
     const BoardSheet& sheet(const std::string& name) const;
 };
 
+BoardHeader board_header_of(const JsonNode& document, const std::string& source);
+BoardHeader load_board_header(const std::filesystem::path& board_root);
 BoardDefinition parse_board(const JsonNode& document, const std::string& source);
 BoardDefinition load_board(const std::filesystem::path& board_root);
 

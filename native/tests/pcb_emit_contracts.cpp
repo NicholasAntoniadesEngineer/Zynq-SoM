@@ -124,6 +124,7 @@ PcbFootprintPool footprints(const JsonNode &n) {
 }
 PcbEmitPolicy policy(const JsonNode &n) {
     auto p = default_pcb_emit_policy();
+    p.board_stem = "Zynq_Carrier";
     for (const auto &[k, v] : field(n, "header_descriptions").object_value)
         p.header_descriptions.emplace_back(k, v.string_value);
     for (const auto &[k, v] : field(n, "switch_descriptions").object_value)
@@ -493,41 +494,43 @@ void boundaries(const fs::path &fixtures, const fs::path &output) {
     auto pool = footprints(field(raw, "footprints"));
     auto model = pcb_model_from_json(field(raw, "model"), pool);
     rejects([&] { pcb_model_from_json(field(raw, "model"), {}); }, "unresolved footprint snapshot");
+    auto stemmed = default_pcb_emit_policy();
+    stemmed.board_stem = "Zynq_Carrier";
     auto bad = model;
     bad.board_w = 0;
-    rejects([&] { render_pcb(bad); }, "outline dimensions");
+    rejects([&] { render_pcb(bad, stemmed); }, "outline dimensions");
     const auto sentinel = output / "preserve-on-failure.pcb";
     write_atomic_file(sentinel.string(), {'k', 'e', 'e', 'p'});
     rejects([&] { write_pcb(bad, sentinel); }, "outline dimensions");
     equal(read(sentinel), "keep", "render failure preserves existing file", output);
     bad = model;
     bad.origin_x = std::numeric_limits<double>::infinity();
-    rejects([&] { render_pcb(bad); }, "origin must be finite");
+    rejects([&] { render_pcb(bad, stemmed); }, "origin must be finite");
     bad = model;
     bad.insts.front().x = std::numeric_limits<double>::quiet_NaN();
-    rejects([&] { render_pcb(bad); }, "nonfinite placement");
+    rejects([&] { render_pcb(bad, stemmed); }, "nonfinite placement");
     bad = model;
     bad.insts.front().side = "sideways";
-    rejects([&] { render_pcb(bad); }, "invalid footprint side");
+    rejects([&] { render_pcb(bad, stemmed); }, "invalid footprint side");
     bad = model;
     bad.insts.front().mirror = true;
     bad.insts.front().side = "top";
-    rejects([&] { render_pcb(bad); }, "mirror=True demands");
+    rejects([&] { render_pcb(bad, stemmed); }, "mirror=True demands");
     bad = model;
     bad.insts.front().mod.reset();
-    rejects([&] { render_pcb(bad); }, "unresolved");
+    rejects([&] { render_pcb(bad, stemmed); }, "unresolved");
     bad = model;
     PcbCheckCopper copper;
     copper.kind = "arc";
     bad.copper.push_back(copper);
-    rejects([&] { render_pcb(bad); }, "unknown escape copper kind");
+    rejects([&] { render_pcb(bad, stemmed); }, "unknown escape copper kind");
     bad = model;
     bad.copper_locks[bad.copper.size()] = false;
-    rejects([&] { render_pcb(bad); }, "lock must refer to a via");
+    rejects([&] { render_pcb(bad, stemmed); }, "lock must refer to a via");
     bad = model;
     bad.copper.front().x = std::numeric_limits<double>::infinity();
-    rejects([&] { render_pcb(bad); }, "copper geometry must be finite");
-    auto p = default_pcb_emit_policy();
+    rejects([&] { render_pcb(bad, stemmed); }, "copper geometry must be finite");
+    auto p = stemmed;
     p.thermal_lattice_pitch = 0;
     rejects([&] { render_pcb(model, p); }, "lattice pitch");
     auto transport = pcb_model_json(model);

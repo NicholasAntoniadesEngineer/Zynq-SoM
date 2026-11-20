@@ -42,6 +42,12 @@ const std::string& RunConfig::stackup_of(const std::string& board) const {
     return found->second;
 }
 
+const std::vector<std::string>& RunConfig::overmold_parts_of(const std::string& board) const {
+    const auto found = overmold_parts.find(board);
+    if (found == overmold_parts.end()) fail("'overmold_parts' names no entry for board '" + board + "'");
+    return found->second;
+}
+
 std::vector<std::string> RunConfig::board_arguments(const std::string& board, const std::filesystem::path& file) const {
     std::vector<std::string> arguments{"schgen", "board", "--project", board, "--output", (output / board).string(),
                                        "--run-config", std::filesystem::absolute(file).string(),
@@ -50,12 +56,10 @@ std::vector<std::string> RunConfig::board_arguments(const std::string& board, co
     if (squeeze) arguments.push_back("--layout-squeeze");
     if (!renders) arguments.push_back("--no-render");
     if (timing) arguments.push_back("--timing");
-    const auto parts = overmold_parts.find(board);
-    if (parts != overmold_parts.end())
-        for (const std::string& part : parts->second) {
-            arguments.push_back("--overmold-part");
-            arguments.push_back(part);
-        }
+    for (const std::string& part : overmold_parts_of(board)) {
+        arguments.push_back("--overmold-part");
+        arguments.push_back(part);
+    }
     return arguments;
 }
 

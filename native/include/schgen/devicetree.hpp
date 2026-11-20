@@ -14,7 +14,7 @@ struct DeviceTreeInput {
     SomZynq live;
     XdcStrings function_map;
     std::vector<std::string> refs = {"J1", "J2", "J3"};
-    std::string contract_path, contract_source, som_source, mapping_source;
+    std::string contract_path, contract_source, som_source, mapping_source, pins_file;
 };
 
 struct DeviceTreeMio {
@@ -46,6 +46,7 @@ DeviceTreeInput load_devicetree_input(
     const std::filesystem::path& repository,
     const std::filesystem::path& project,
     const SomZynq& live,
+    const std::string& pins_file,
     const std::filesystem::path& contract = {},
     const std::vector<std::string>& refs = {"J1", "J2", "J3"});
 

@@ -1,3 +1,4 @@
+#include "schgen/board_definition.hpp"
 #include "schgen/run_config.hpp"
 #include "schgen/subsystem_data.hpp"
 #include "schgen/stackup.hpp"
@@ -136,7 +137,8 @@ ProjectPaths resolve_project_paths(const fs::path& repository_root,
         ProjectPaths out;
         out.repository_root = fs::weakly_canonical(fs::absolute(repository_root));
         const char* env = std::getenv("SCHGEN_PROJECT");
-        const fs::path selection = project ? *project : fs::path(env ? env : "carrier");
+        if (!project && !env) fail("board", "no board selected; name the board or set SCHGEN_PROJECT");
+        const fs::path selection = project ? *project : fs::path(env);
         // Like pathlib.Path(""), an explicitly empty selection denotes the repo.
         out.project_root = fs::weakly_canonical(selection.is_absolute() ? selection : out.repository_root / selection);
         // Remove a trailing separator so default-project identity is stable.
@@ -145,7 +147,10 @@ ProjectPaths resolve_project_paths(const fs::path& repository_root,
         directory(out.repository_root);
         directory(out.project_root);
         if (!regular_file(out.project_file)) fail(out.project_file.string(), "project configuration missing");
-        out.is_default_project = out.project_root == out.repository_root / "carrier";
+        const BoardHeader header = load_board_header(out.project_root);
+        out.file_stem = header.files.stem;
+        out.root_readme = header.flags.root_readme;
+        out.owned_groups = header.flags.owned_groups;
         out.subsystems_dir = out.project_root / "subsystems";
         out.library_dir = out.repository_root / subsystem_library_folder;
         out.sheet_index_file = out.project_root / "sheet_index.json";
@@ -168,6 +173,7 @@ ProjectConfig load_project_config(const ProjectPaths& paths) {
         ProjectConfig out;
         out.raw = parse_json_file(paths.project_file.string());
         out.name = string_field(out.raw, "name");
+        out.file_stem = paths.file_stem;
         const RunConfig run = apply_run_config(paths.run_config ? *paths.run_config : paths.repository_root / run_config_file, out.name);
         out.stackup = run.stackup_of(out.name);
         out.labels = run.labels;

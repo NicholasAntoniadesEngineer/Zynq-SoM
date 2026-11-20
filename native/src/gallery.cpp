@@ -175,7 +175,7 @@ GalleryInput load_gallery_input(const ProjectPaths &paths,
     GalleryInput out;
     out.repository_root = paths.repository_root;
     out.project_root = paths.project_root;
-    out.is_default_project = paths.is_default_project;
+    out.root_readme = paths.root_readme;
     for (const auto &s : sheets)
         out.sheets.push_back({s.circuit.name, s.circuit.title});
     const auto renders = paths.project_root / "renders", rats = renders / "ratsnest";
@@ -287,7 +287,7 @@ std::string render_gallery_compact(const GalleryInput &in, const fs::path &dir) 
     return join(out, "\n");
 }
 std::string gallery_readme_targets(const GalleryInput &in) {
-    return (in.is_default_project ? "README.md + " : "") + project_rel(in) + "/README.md";
+    return (in.root_readme ? "README.md + " : "") + project_rel(in) + "/README.md";
 }
 GallerySplice splice_gallery(const std::string &original, const std::string &section) {
     const auto text = universal_newlines(original);
@@ -310,7 +310,7 @@ GallerySplice splice_gallery(const std::string &original, const std::string &sec
 }
 std::vector<fs::path> write_gallery(const GalleryInput &in) {
     std::vector<std::pair<fs::path, std::string>> outputs;
-    if (in.is_default_project)
+    if (in.root_readme)
         outputs.emplace_back(in.repository_root / "README.md",
                              render_gallery_compact(in, in.repository_root));
     outputs.emplace_back(in.project_root / "README.md", render_gallery_full(in, in.project_root));

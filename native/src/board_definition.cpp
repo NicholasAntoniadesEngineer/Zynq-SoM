@@ -95,6 +95,14 @@ BoardSheet sheet_of(const JsonNode& row, const std::string& where) {
     return sheet;
 }
 
+BoardFiles files_of(const JsonNode& node, const std::string& where) {
+    reject_unknown_keys(node, {"stem"}, where + " files");
+    BoardFiles files;
+    files.stem = text(node, "stem", where + " files");
+    if (files.stem.find_first_of("/\\") != std::string::npos) fail(where, "files.stem '" + files.stem + "' holds a path separator");
+    return files;
+}
+
 }
 
 const BoardSheet& BoardDefinition::sheet(const std::string& wanted) const {
@@ -103,12 +111,30 @@ const BoardSheet& BoardDefinition::sheet(const std::string& wanted) const {
     return *found;
 }
 
+BoardHeader board_header_of(const JsonNode& document, const std::string& source) {
+    if (document.kind != JsonKind::Object) fail(source, "the document is not an object");
+    BoardHeader header;
+    header.files = files_of(member(document, "files", JsonKind::Object, source), source);
+    header.flags.root_readme = member(document, "root_readme", JsonKind::Bool, source).bool_value;
+    header.flags.owned_groups = member(document, "owned_groups", JsonKind::Bool, source).bool_value;
+    return header;
+}
+
+BoardHeader load_board_header(const std::filesystem::path& board_root) {
+    const std::filesystem::path file = board_root / board_file;
+    if (!std::filesystem::is_regular_file(file)) throw std::runtime_error("board file " + file.string() + " is missing");
+    return board_header_of(parse_json_file(file.string()), file.string());
+}
+
 BoardDefinition parse_board(const JsonNode& document, const std::string& source) {
     if (document.kind != JsonKind::Object) fail(source, "the document is not an object");
-    reject_unknown_keys(document, {"schema", "name", "module", "sheets"}, source);
+    reject_unknown_keys(document, {"schema", "name", "files", "root_readme", "owned_groups", "module", "sheets"}, source);
     if (text(document, "schema", source) != board_schema) fail(source, std::string("schema is not ") + board_schema);
     BoardDefinition board;
     board.name = text(document, "name", source);
+    const BoardHeader header = board_header_of(document, source);
+    board.files = header.files;
+    board.flags = header.flags;
     board.module = module_of(member(document, "module", JsonKind::Object, source), source);
     std::set<std::string> seen;
     for (const JsonNode& row : rows(document, "sheets", source)) {

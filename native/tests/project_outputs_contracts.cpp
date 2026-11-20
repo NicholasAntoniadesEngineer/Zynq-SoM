@@ -42,6 +42,7 @@ int main(int argc, char** argv) {
             (repository / "native/tests/data/som_real_baseline.json").string());
         const auto& zynq = field(snapshot, "zynq");
         schgen::XdcInput live;
+        live.pins_file = "Zynq_Carrier_pins.xdc";
         live.device = field(zynq, "value").string_value;
         live.zynq_ref = field(zynq, "zynq_ref").string_value;
         live.pin_names = strings(field(zynq, "pin_names"));

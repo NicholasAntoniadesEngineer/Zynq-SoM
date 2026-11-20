@@ -12,6 +12,11 @@
 #include <string>
 
 namespace {
+schgen::PcbEmitPolicy fixture_policy() {
+    auto policy = schgen::default_pcb_emit_policy();
+    policy.board_stem = "Fixture_Board";
+    return policy;
+}
 
 using namespace schgen;
 using namespace schgen::labels;
@@ -95,7 +100,7 @@ std::vector<Box> chip_pads(const PcbCheckInstance& part) {
 void a_free_part_is_labelled_beside_itself() {
     PcbModel model = board(expected::wide_board, expected::wide_board);
     add(model, "R1", chip_text, "fixture:chip", expected::part_x, expected::part_y, 0, "top");
-    const LabelSeating seating = seat_labels(model, default_pcb_emit_policy());
+    const LabelSeating seating = seat_labels(model, fixture_policy());
     const LabelSeat& seat = seating.seats.front();
     const Box court = court_of(model.insts.front(), expected::chip_court);
     require(seating.seats.size() == 1 && seat.reference == "R1" && seat.seat == Seat::beside, "a free part is seated beside");
@@ -112,7 +117,7 @@ void a_part_with_no_room_is_hidden_and_reported() {
     PcbModel model = board(expected::tight_width, expected::tight_height);
     add(model, "R1", chip_text, "fixture:chip", expected::tight_x, expected::tight_y, 0, "top");
     add(model, "R2", bare_text, "fixture:bare", expected::tight_x, expected::tight_y, 0, "bottom");
-    const LabelSeating seating = seat_labels(model, default_pcb_emit_policy());
+    const LabelSeating seating = seat_labels(model, fixture_policy());
     const LabelSeat& crowded = seating.seats[0];
     const LabelSeat& silent = seating.seats[1];
     require(crowded.seat == Seat::hidden && crowded.reason.find("off the board") != std::string::npos,
@@ -123,7 +128,7 @@ void a_part_with_no_room_is_hidden_and_reported() {
     require(seating.report.find("hidden R1 (top)") != std::string::npos &&
                 seating.report.find("hidden R2 (bottom)") != std::string::npos,
             "the report lists every hidden label");
-    const PcbEmissionResult emitted = render_pcb(model, default_pcb_emit_policy(), nullptr, &seating);
+    const PcbEmissionResult emitted = render_pcb(model, fixture_policy(), nullptr, &seating);
     require(collect_refdes_props(emitted.document, expected::text_default).empty(), "hidden labels are hidden on the silk");
 }
 
@@ -131,7 +136,7 @@ void a_label_never_covers_a_pad_or_a_drill() {
     PcbModel model = board(expected::wide_board, expected::wide_board);
     add(model, "R1", chip_text, "fixture:chip", expected::part_x, expected::part_y, 0, "top");
     add(model, "J1", post_text, "fixture:post", expected::post_x, expected::post_y, 0, "bottom");
-    const LabelSeating seating = seat_labels(model, default_pcb_emit_policy());
+    const LabelSeating seating = seat_labels(model, fixture_policy());
     const Box drill = court_of(model.insts[1], expected::post_pad);
     const Box above = layout::shifted(label_extent("R1", constants::label_height.value, false),
                                       Point{layout::to_nm(expected::part_x),
@@ -164,7 +169,7 @@ void a_label_never_covers_a_via() {
     const Point where{layout::nearest_nm(via.x), layout::nearest_nm(via.y)};
     const Box barrel{where.x - reach, where.y - reach, where.x + reach, where.y + reach};
     require(layout::overlaps(above, barrel), "the fixture via covers the first seat");
-    const LabelSeating seating = seat_labels(model, default_pcb_emit_policy());
+    const LabelSeating seating = seat_labels(model, fixture_policy());
     require(seating.seats.front().seat != Seat::hidden, "the label finds a seat past the via");
     require(!layout::overlaps(seating.seats.front().box, barrel), "no label covers a via");
     require(seating.seats.front().box != above, "the seat over the via is passed over");
@@ -181,7 +186,7 @@ void crowded_labels_keep_apart_and_pass_the_gate() {
             expected::row_start + expected::row_pitch * static_cast<double>(index), expected::part_y, expected::half,
             index % 2 == 0 ? "bottom" : "top");
     }
-    const LabelSeating seating = seat_labels(model, default_pcb_emit_policy());
+    const LabelSeating seating = seat_labels(model, fixture_policy());
     std::size_t seated = 0, top = 0;
     for (std::size_t first = 0; first < seating.seats.size(); ++first) {
         const LabelSeat& seat = seating.seats[first];
@@ -201,12 +206,12 @@ void crowded_labels_keep_apart_and_pass_the_gate() {
         }
     }
     require(seated != 0, "the row seats labels");
-    const PcbEmissionResult emitted = render_pcb(model, default_pcb_emit_policy(), nullptr, &seating);
+    const PcbEmissionResult emitted = render_pcb(model, fixture_policy(), nullptr, &seating);
     const RefdesOverlapResult gate = check_refdes_overlap(emitted.document, true);
     require(gate.ok && gate.top_pairs.empty() && gate.bottom_pairs == 0, "the silk overlap gate passes on seated labels");
     require(static_cast<std::size_t>(gate.n_top + gate.n_bottom) == seated && static_cast<std::size_t>(gate.n_top) == top,
             "the gate sees every seated label on its own face");
-    const PcbEmissionResult plain = render_pcb(model, default_pcb_emit_policy());
+    const PcbEmissionResult plain = render_pcb(model, fixture_policy());
     const auto poses = [](const Sexpr& document) {
         std::vector<std::string> out;
         for (const Sexpr& node : std::get<SexprList>(document.v)) {
@@ -243,8 +248,8 @@ void seats_are_repeatable() {
     for (std::size_t index = 0; index < expected::row_parts; ++index)
         add(model, "C" + std::to_string(index + 1), chip_text, "fixture:chip",
             expected::row_start + expected::row_pitch * static_cast<double>(index), expected::part_y, 0, "top");
-    const LabelSeating first = seat_labels(model, default_pcb_emit_policy());
-    const LabelSeating second = seat_labels(model, default_pcb_emit_policy());
+    const LabelSeating first = seat_labels(model, fixture_policy());
+    const LabelSeating second = seat_labels(model, fixture_policy());
     require(first.report == second.report, "two seatings report the same");
     for (std::size_t index = 0; index < first.seats.size(); ++index)
         require(first.seats[index].centre == second.seats[index].centre &&
@@ -252,7 +257,7 @@ void seats_are_repeatable() {
                 "two seatings agree exactly");
     add(model, "C1", chip_text, "fixture:chip", expected::part_x, expected::part_x, 0, "top");
     try {
-        seat_labels(model, default_pcb_emit_policy());
+        seat_labels(model, fixture_policy());
     } catch (const LabelError&) {
         return;
     }

@@ -199,6 +199,7 @@ void contracts(const fs::path& fixtures, const fs::path& self, const std::option
     }, "DTD is not allowed in SoM netlist XML for " + source);
     s.run("XDC consumes live maps without rail or policy rewriting", [&] {
         XdcInput input;
+        input.pins_file = "pins.xdc";
         input.refs = {"J2"};
         input.connectors = {{"J2",interface.connectors[0].second.pins}};
         input.function_map = {{"ZYNQ_PL_P","DATA_P"},{"ZYNQ_PL_N_FINAL","DATA_N"}};

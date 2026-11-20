@@ -111,7 +111,7 @@ void schematic_stage(Context& c){
     c.attempt("constraints",[&]{write_layout_constraints(c.circuits,c.paths.project_root/"research/si_spec.json",c.manufacturing);c.gate("constraints",true,"layout rules and net-class CSV published");});
     c.attempt("diagram",[&]{if(!c.link)throw ProjectError("link result unavailable");write_block_diagram(*c.link,link_som_nets_from_json(parse_json_file(c.paths.som_interface_file.string())),c.docs/"block_diagram.svg");c.gate("diagram",true,"block diagram published");});
     c.attempt("board_schematic",[&]{if(inputs.empty())throw ProjectError("no prepared sheets");
-        BoardSchematicOptions o;o.project_name=project_name;o.root_name="Zynq_Carrier";o.sheet_subdir="schematic";o.reports_dir=c.reports;o.extraction=c.options.extraction;o.netlist_workers=c.options.netlist_workers;
+        BoardSchematicOptions o;o.project_name=project_name;o.root_name=c.paths.file_stem;o.sheet_subdir="schematic";o.reports_dir=c.reports;o.extraction=c.options.extraction;o.netlist_workers=c.options.netlist_workers;
         c.schematic=with_precision_receipt([&](QuantizationCounts& counts){
             o.counts=&counts;
             return build_board_schematic(inputs,c.library,c.out,o);

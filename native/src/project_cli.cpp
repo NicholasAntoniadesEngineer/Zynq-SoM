@@ -1,4 +1,5 @@
 #include "schgen/project_cli.hpp"
+#include "schgen/board_files.hpp"
 #include "schgen/native_authoring_guard.hpp"
 
 #include "schgen/bom.hpp"
@@ -500,7 +501,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
         const std::vector<std::string> selected(options.subsystems.begin()+1,options.subsystems.end());
         if(options.command=="chir-rung"||options.command=="w11-sweep"){
             ExperimentBoardPaths files{paths.project_root/"floorplan.json",paths.reports_dir/"fallback_baseline.json",
-                paths.project_root/"Zynq_Carrier.kicad_pcb",paths.reports_dir/"experiment_verdicts.json"};
+                paths.project_root/board_file_name(paths.file_stem,BoardFileKind::Pcb),paths.reports_dir/"experiment_verdicts.json"};
             ExperimentBoardHost host;
             host.run_board=[&](const ExperimentBoardRequest& request){
                 BoardPipelineOptions build;build.native_policy=true;build.no_render=request.no_render;
@@ -532,7 +533,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
             if(band==index.end())throw ProjectError("probe sheet index missing "+sheet.name);
             inputs.push_back({sheet,band->second,std::nullopt});}
         SymbolLibrary library(paths.repository_root);BoardSchematicOptions schematic;
-        schematic.root_name="Zynq_Carrier";schematic.extraction.kicad_cli=options.kicad_cli;
+        schematic.root_name=paths.file_stem;schematic.extraction.kicad_cli=options.kicad_cli;
         schematic.reports_dir=scratch.path/"reports";
         const auto board=build_board_schematic(inputs,library,scratch.path,schematic);
         if(!board.ok())throw ProjectError("probe schematic gate failed: "+board.report);
@@ -611,7 +612,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
     }
     if (options.command == "render3d" || options.command == "board-step") {
         if (!options.subsystems.empty()) throw ProjectError(options.command + " takes no subsystem names");
-        const auto board = options.pcb.empty() ? paths.project_root / "Zynq_Carrier.kicad_pcb" : options.pcb;
+        const auto board = options.pcb.empty() ? paths.project_root / board_file_name(paths.file_stem, BoardFileKind::Pcb) : options.pcb;
         Render3dOptions render_options;
         render_options.kicad_cli = options.kicad_cli;
         if (options.command == "board-step") {
@@ -629,7 +630,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
     }
     if (options.command == "pcb-drc") {
         if (!options.subsystems.empty()) throw ProjectError("pcb-drc takes no subsystem names");
-        const auto board = options.pcb.empty() ? paths.project_root / "Zynq_Carrier.kicad_pcb" : options.pcb;
+        const auto board = options.pcb.empty() ? paths.project_root / board_file_name(paths.file_stem, BoardFileKind::Pcb) : options.pcb;
         const auto result = run_pcb_drc(board);
         const auto errors = result.n_errors ? *result.n_errors :
             run_pcb_drc(board, std::chrono::minutes{5}, false).n_violations;
@@ -654,7 +655,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
         const auto jrefs = refs(options.refs);
         const auto live = extract_som_zynq(som, "U2", jrefs, {options.kicad_cli});
         const auto input = load_devicetree_input(paths.repository_root, paths.project_root,
-                                                live, options.contract, jrefs);
+                                                live, board_file_name(paths.file_stem, BoardFileKind::PinConstraints), options.contract, jrefs);
         const auto result = generate_devicetree(input);
         const auto output = options.output.empty() ? paths.project_root / "firmware/carrier_pl.dtsi"
                                                    : options.output;
@@ -716,8 +717,9 @@ std::optional<int> run_project_command(int argc, char** argv) {
     if (options.command == "fab-profile") {
         if (!options.subsystems.empty()) throw ProjectError("fab-profile requires the emitted project board");
         const auto reports = options.output.empty() ? paths.reports_dir : options.output;
-        const auto result = run_manufacturing_fab(reports, paths.project_root / "Zynq_Carrier.kicad_pcb",
-            paths.project_root / "manufacturing/Zynq_Carrier_pcb.kicad_dru", paths.project_root / "Zynq_Carrier.kicad_pro");
+        const auto result = run_manufacturing_fab(reports, paths.project_root / board_file_name(paths.file_stem, BoardFileKind::Pcb),
+            paths.project_root / "manufacturing" / board_file_name(paths.file_stem, BoardFileKind::DesignRules),
+            paths.project_root / board_file_name(paths.file_stem, BoardFileKind::Project));
         std::cout << result.report() << '\n';
         return result.ok ? 0 : 1;
     }
@@ -756,7 +758,8 @@ std::optional<int> run_project_command(int argc, char** argv) {
     if (options.command == "manifest") {
         const auto pins = stm32_pin_map(extract_som_zynq(paths.som_schematic, "U9",
             {"J1", "J2", "J3"}, {options.kicad_cli}), load_som_interface(paths.som_interface_file));
-        const auto input = prepare_manufacturing_manifest(circuits, pins);
+        auto input = prepare_manufacturing_manifest(circuits, pins);
+        input.file_stem = paths.file_stem;
         const auto destination = options.output.empty() ? paths.manifest_file : options.output;
         run_manufacturing_manifest(input, paths.project_root, destination);
         std::cout << "MANIFEST: " << destination.string() << '\n';
@@ -765,7 +768,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
     if (options.command == "si-constraints") {
         const auto directory = options.output.empty() ? paths.project_root : options.output;
         const auto result = run_si_constraints(circuits, paths.project_root / "research/si_spec.json",
-            directory / "manufacturing/Zynq_Carrier_pcb.kicad_dru", directory / "manufacturing/SI_CONSTRAINTS.md");
+            directory / "manufacturing" / board_file_name(paths.file_stem, BoardFileKind::DesignRules), directory / "manufacturing/SI_CONSTRAINTS.md");
         std::cout << result.verdict.summary() << '\n';
         return result.verdict.ok ? 0 : 1;
     }
@@ -845,7 +848,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
             const auto result = analyze_part_rules(circuits,power);
             report = part_rules_report(result); ok = result.ok();
         } else {
-            const auto pcb = options.pcb.empty() ? paths.project_root / "Zynq_Carrier.kicad_pcb" : options.pcb;
+            const auto pcb = options.pcb.empty() ? paths.project_root / board_file_name(paths.file_stem, BoardFileKind::Pcb) : options.pcb;
             std::optional<ThermalCopper> copper;
             if (fs::exists(pcb)) copper = scan_thermal_copper(pcb);
             std::string source;
@@ -882,7 +885,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
         }
         SymbolLibrary library(paths.repository_root);
         BoardSchematicOptions build;
-        build.root_name = "Zynq_Carrier";
+        build.root_name = paths.file_stem;
         build.sheet_subdir = "schematic";
         build.reports_dir = options.output / "reports";
         build.extraction.kicad_cli = options.kicad_cli;
@@ -960,13 +963,14 @@ std::optional<int> run_project_command(int argc, char** argv) {
     live_input.refs = refs(options.refs);
     const auto live = extract_som_zynq(som, "U2", live_input.refs, {options.kicad_cli});
     apply_som_to_xdc(live_input, live);
+    live_input.pins_file = board_file_name(paths.file_stem, BoardFileKind::PinConstraints);
     const auto input = load_project_xdc_input(paths.repository_root, paths.project_root,
         sheets, std::move(live_input), som, options.contract);
     const auto xdc = generate_xdc(input);
     const auto fpga_dir = options.command == "fpga" && !options.output.empty()
                         ? options.output : paths.fpga_dir;
     const auto xdc_path = options.command == "xdc" && !options.output.empty() ? options.output
-                        : !options.xdc.empty() ? options.xdc : fpga_dir / "Zynq_Carrier_pins.xdc";
+                        : !options.xdc.empty() ? options.xdc : fpga_dir / input.pins_file;
     const auto vivado_path = options.command == "vivado" && !options.output.empty() ? options.output
                            : fpga_dir / "create_project.tcl";
     std::string vivado;

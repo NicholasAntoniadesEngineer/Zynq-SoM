@@ -46,8 +46,8 @@ void write(const std::filesystem::path& file, const std::string& text) {
 const std::string base = "{\"schema\":\"schgen.run/1\",\"boards\":[\"carrier\",\"devkit_mini\"],\"output\":\"out\",\"squeeze\":true,"
                          "\"arrange\":false,\"renders\":false,\"labels\":false,\"timing\":false,\"plane_net\":\"GND\","
                          "\"audit_projections\":2,\"stackup\":{\"carrier\":\"JLC06161H-3313\",\"devkit_mini\":\"JLC06161H-3313\"},"
-                         "\"overmold_parts\":{}}";
-const std::string studied = "\"overmold_parts\":{},\"study\":{\"stackups\":[\"JLC04161H-3313\",\"JLC08161H-3313\"]}}";
+                         "\"overmold_parts\":{\"carrier\":[],\"devkit_mini\":[]}}";
+const std::string studied = "\"overmold_parts\":{\"carrier\":[],\"devkit_mini\":[]},\"study\":{\"stackups\":[\"JLC04161H-3313\",\"JLC08161H-3313\"]}}";
 const std::string squeeze = "OWNER HOLDS: 3 small parts held\n"
                             "LAYOUT SQUEEZE: 161 x 150.5 mm to 133.25 x 125 mm, area 24230.5 to 16656.2 mm2 (-31.2%)\n"
                             "  routed airwire 10 to 9 mm\n"
@@ -77,19 +77,19 @@ void configuration() {
     using namespace schgen;
     const RunConfig bare = parse_run_config(parse_json_text(base));
     require(bare.study_stackups.empty(), "a study was invented for a file that names none");
-    const RunConfig listed = parse_run_config(parse_json_text(replaced(base, "\"overmold_parts\":{}}", studied)));
+    const RunConfig listed = parse_run_config(parse_json_text(replaced(base, "\"overmold_parts\":{\"carrier\":[],\"devkit_mini\":[]}}", studied)));
     require(listed.study_stackups == std::vector<std::string>{"JLC04161H-3313", "JLC08161H-3313"}, "study stack-ups lost");
-    rejects([] { parse_run_config(parse_json_text(replaced(base, "\"overmold_parts\":{}}", "\"overmold_parts\":{},\"study\":{}}"))); },
+    rejects([] { parse_run_config(parse_json_text(replaced(base, "\"overmold_parts\":{\"carrier\":[],\"devkit_mini\":[]}}", "\"overmold_parts\":{\"carrier\":[],\"devkit_mini\":[]},\"study\":{}}"))); },
             "'stackups' is missing");
-    rejects([] { parse_run_config(parse_json_text(replaced(base, "\"overmold_parts\":{}}", "\"overmold_parts\":{},\"study\":{\"stackups\":[]}}"))); },
+    rejects([] { parse_run_config(parse_json_text(replaced(base, "\"overmold_parts\":{\"carrier\":[],\"devkit_mini\":[]}}", "\"overmold_parts\":{\"carrier\":[],\"devkit_mini\":[]},\"study\":{\"stackups\":[]}}"))); },
             "'study.stackups' names no stack-up");
-    rejects([] { parse_run_config(parse_json_text(replaced(base, "\"overmold_parts\":{}}", "\"overmold_parts\":{},\"study\":[]}"))); },
+    rejects([] { parse_run_config(parse_json_text(replaced(base, "\"overmold_parts\":{\"carrier\":[],\"devkit_mini\":[]}}", "\"overmold_parts\":{\"carrier\":[],\"devkit_mini\":[]},\"study\":[]}"))); },
             "'study' must be an object");
     rejects([] {
-        parse_run_config(parse_json_text(replaced(base, "\"overmold_parts\":{}}",
-                                                  "\"overmold_parts\":{},\"study\":{\"stackups\":[\"A\"],\"layers\":[]}}")));
+        parse_run_config(parse_json_text(replaced(base, "\"overmold_parts\":{\"carrier\":[],\"devkit_mini\":[]}}",
+                                                  "\"overmold_parts\":{\"carrier\":[],\"devkit_mini\":[]},\"study\":{\"stackups\":[\"A\"],\"layers\":[]}}")));
     }, "layers");
-    rejects([] { parse_run_config(parse_json_text(replaced(base, "\"overmold_parts\":{}}", "\"overmold_parts\":{},\"study\":{\"stackups\":[\"\"]}}"))); },
+    rejects([] { parse_run_config(parse_json_text(replaced(base, "\"overmold_parts\":{\"carrier\":[],\"devkit_mini\":[]}}", "\"overmold_parts\":{\"carrier\":[],\"devkit_mini\":[]},\"study\":{\"stackups\":[\"\"]}}"))); },
             "not a name");
     rejects([&] { study::stackups_of(bare, parse_run_arguments({}, {study::stackups_option})); }, "no stack-ups to compare");
     require(study::stackups_of(listed, parse_run_arguments({}, {study::stackups_option})) == listed.study_stackups,
@@ -112,6 +112,9 @@ void configuration() {
     require(row.board_arguments("devkit_mini", run_config_file) != listed.board_arguments("devkit_mini", run_config_file) && row.squeeze == listed.squeeze &&
             row.plane_net == listed.plane_net, "a row must keep every other setting");
     rejects([&] { study::row_config(listed, "absent", "JLC08161H-3313"); }, "names no stack-up for board 'absent'");
+    RunConfig partial = listed;
+    partial.overmold_parts.erase("devkit_mini");
+    rejects([&] { partial.board_arguments("devkit_mini", run_config_file); }, "'overmold_parts' names no entry for board 'devkit_mini'");
     require(study::table_file(listed, "devkit_mini", ".json") == std::filesystem::path("out") / "study" / "layers_devkit_mini.json",
             "comparison file");
 }

@@ -97,6 +97,7 @@ PcbEmitPolicy pcb_emit_policy(const ProjectConfig &c) {
     auto p = default_pcb_emit_policy();
     p.interface_reference_labels_only = true;
     p.labels = c.labels;
+    p.board_stem = c.file_stem;
     p.header_descriptions = c.header_desc;
     p.switch_descriptions = c.switch_desc;
     p.model_overrides = project_pcb_model_overrides();
@@ -148,7 +149,9 @@ PcbEmissionResult render_pcb(const PcbModel &m, const PcbEmitPolicy &p, Quantiza
     PcbEmissionResult result;
     if (!counts) counts = &result.quantization_engagements;
     std::map<std::string, std::size_t> seqs;
-    const auto board = schematic_stable_uuid({"Zynq_Carrier", "pcb"});
+    if (p.board_stem.empty())
+        throw PcbEmissionError("PCB emission needs the board file stem in its policy");
+    const auto board = schematic_stable_uuid({p.board_stem, "pcb"});
     Uid uid = [&](const std::string &key) {
         return schematic_stable_uuid({board, "pcb-id", key, std::to_string(seqs[key]++)});
     };

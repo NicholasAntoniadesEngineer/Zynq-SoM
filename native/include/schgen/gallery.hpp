@@ -10,7 +10,7 @@ struct GallerySheet {
 // collections are basenames relative to renders/ and renders/ratsnest/.
 struct GalleryInput {
     std::filesystem::path repository_root, project_root;
-    bool is_default_project = false;
+    bool root_readme = false;
     std::vector<GallerySheet> sheets;
     std::set<std::string> render_files;
     std::vector<std::string> ratsnest_files;

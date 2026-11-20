@@ -41,7 +41,7 @@ struct PcbEmitPolicy {
     double default_track = 0.2032, default_clearance = 0.15;
     double power_track = 0.4, power_clearance = 0.2, minimum_hole_to_hole = 0.25;
     double stack_thickness = 1.6;
-    std::string ground_layer = "In1.Cu", power_class = "POWER";
+    std::string ground_layer = "In1.Cu", power_class = "POWER", board_stem;
     std::vector<PcbModelOverride> model_overrides;
 };
 const std::vector<PcbModelOverride>& project_pcb_model_overrides();

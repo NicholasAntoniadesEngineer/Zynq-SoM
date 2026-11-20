@@ -1,5 +1,6 @@
 {
   "name": "carrier",
+  "placement_requirements": {"applicable": true},
   "_comment": "PROJECT SPEC (P1 engine/project separation) - board-specific knowledge that previously lived as engine constants. The engine is mechanism; this file is policy. See docs/AI_PLATFORM_ROADMAP.md.",
   "placement": {
     "wired_sheets": [

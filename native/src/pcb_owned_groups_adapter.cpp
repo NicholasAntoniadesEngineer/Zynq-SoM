@@ -47,7 +47,7 @@ PlacementRequirementReport identity(const TrustedOwnedGroups& t, const PcbCheckI
 TrustedOwnedGroupInputs resolve_owned_group_inputs(const ProjectPaths& paths,
     const std::vector<ProjectCircuit>& circuits, const PcbPlacementInput& in) {
     TrustedOwnedGroupInputs result;
-    if (!in.floorplan.compact_search || !paths.is_default_project) return result;
+    if (!in.floorplan.compact_search || !paths.owned_groups) return result;
     std::map<std::string, int> bands;
     std::set<int> used_bands;
     for (const auto& [sheet, band] : in.floorplan.sheet_index)

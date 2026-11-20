@@ -16,7 +16,7 @@ endif()
 # Compile one engine shared by the standalone CLI and native contracts.
 include(cmake/AuthoringPurity.cmake)
 add_library(schgen_core STATIC
-    src/occupancy.cpp src/occupancy_precision.cpp src/seat.cpp src/sexpr.cpp src/route.cpp src/emit.cpp src/stackup.cpp src/run_config.cpp src/study.cpp src/board_definition.cpp
+    src/occupancy.cpp src/occupancy_precision.cpp src/seat.cpp src/sexpr.cpp src/route.cpp src/emit.cpp src/stackup.cpp src/run_config.cpp src/study.cpp src/board_definition.cpp src/board_files.cpp
     src/legalize.cpp src/quantize.cpp src/precision_ops.cpp src/turn.cpp src/pack.cpp
     src/legalize_precision.cpp src/stage_precision.cpp
     src/placement_precision.cpp src/output_precision.cpp src/pack_precision.cpp
@@ -1366,8 +1366,8 @@ if(BUILD_TESTING)
     target_link_libraries(schgen_initial_outline_cli_contracts PRIVATE schgen_core)
     target_compile_options(schgen_initial_outline_cli_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
     add_test(NAME native_initial_outline_cli_contracts COMMAND schgen_initial_outline_cli_contracts $<TARGET_FILE:schgen>)
-    add_test(NAME native_subsystem_check_cli COMMAND schgen subsystem-check --repo "${CMAKE_CURRENT_SOURCE_DIR}/..")
-    add_test(NAME native_carrier_check_cli COMMAND schgen carrier-check --repo "${CMAKE_CURRENT_SOURCE_DIR}/..")
+    add_test(NAME native_subsystem_check_cli COMMAND schgen subsystem-check --project carrier --repo "${CMAKE_CURRENT_SOURCE_DIR}/..")
+    add_test(NAME native_carrier_check_cli COMMAND schgen carrier-check --project carrier --repo "${CMAKE_CURRENT_SOURCE_DIR}/..")
     add_test(NAME native_devkit_check_cli COMMAND schgen carrier-check --project devkit_mini --repo "${CMAKE_CURRENT_SOURCE_DIR}/..")
     foreach(command board build devkit nets chir-rung w11-sweep w12-bound w12-stageprobe dump-circuits
             selftest project-check circuit-check som-interface xdc vivado fpga bom link devicetree

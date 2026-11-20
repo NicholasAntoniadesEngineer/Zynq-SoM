@@ -1,4 +1,5 @@
 #include "schgen/board_pcb.hpp"
+#include "schgen/board_files.hpp"
 #include "schgen/board_schematic.hpp"
 #include "schgen/atomic_file.hpp"
 #include "schgen/validation.hpp"
@@ -70,7 +71,7 @@ BoardPcbStage prepare_board_pcb(const ProjectPaths& paths,
     const auto link = link_sheets(sheets, parse_json_file(paths.som_interface_file.string()),
         parse_json_file((paths.project_root / "som_mapping.json").string()));
     if (!link.ok()) throw ProjectError(link.report());
-    const auto nets = extract_netlist(schematic.empty()?paths.project_root / "Zynq_Carrier.kicad_sch":schematic, extraction);
+    const auto nets = extract_netlist(schematic.empty()?paths.project_root / board_file_name(paths.file_stem, BoardFileKind::Schematic):schematic, extraction);
     validate_board_input_connectivity(circuits,load_sheet_index(paths),nets);
     BoardPcbStage out;
     out.circuits = circuits;
@@ -86,7 +87,8 @@ void publish_board_pcb(const BoardPcbStage& stage, const std::filesystem::path& 
                        QuantizationCounts* counts) {
     if (directory.empty()) throw ProjectError("PCB stage requires an output directory");
     const auto policy = pcb_emit_policy(stage.inputs.floorplan.project);
-    const auto project_path = directory / "Zynq_Carrier.kicad_pro";
+    const auto& stem = stage.inputs.floorplan.project.file_stem;
+    const auto project_path = directory / board_file_name(stem, BoardFileKind::Project);
     std::optional<PcbProjectDocument> existing;
     if (std::filesystem::exists(project_path)) existing = read_pcb_project(project_path);
     const auto project = render_pcb_project(stage.placement.model, project_path.filename().string(),
@@ -95,9 +97,9 @@ void publish_board_pcb(const BoardPcbStage& stage, const std::filesystem::path& 
     const auto publish = [&](const std::string& name, const std::string& text) {
         write_atomic_file((directory / name).string(), {text.begin(), text.end()});
     };
-    publish("Zynq_Carrier.kicad_pcb", stage.emission.pcb);
-    publish("Zynq_Carrier.kicad_pro", project);
-    publish("manufacturing/Zynq_Carrier_pcb.kicad_dru", rules);
+    publish(board_file_name(stem, BoardFileKind::Pcb), stage.emission.pcb);
+    publish(board_file_name(stem, BoardFileKind::Project), project);
+    publish("manufacturing/" + board_file_name(stem, BoardFileKind::DesignRules), rules);
     // Preserve the emitter's evidence in both pcb-stage and full board builds.
     // A fallback count alone does not identify the affected thermal geometry.
     std::string diagnostics = "PCB emission diagnostics (not a qualification verdict)\n";
