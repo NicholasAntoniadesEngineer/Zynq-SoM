@@ -2,6 +2,8 @@
 
 #include "schgen/thermal_checks.hpp"
 
+#include <filesystem>
+
 namespace schgen {
 
 struct PartRatings {
@@ -13,6 +15,9 @@ struct PartRatings {
 };
 using PartRatingsTable = std::vector<std::pair<std::string, PartRatings>>;
 const PartRatingsTable& default_part_ratings();
+PartRatingsTable parse_part_ratings(const JsonNode&, const std::string& source);
+PartRatingsTable load_part_ratings(const std::filesystem::path& file);
+std::filesystem::path part_ratings_file();
 // Data-only replacement for from_part_module: receive RATINGS itself. No
 // execution/import. Null/non-object/missing-or-empty kind returns no rating.
 std::optional<PartRatings> part_ratings_from_json(const JsonNode&);

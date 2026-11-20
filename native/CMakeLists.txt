@@ -42,6 +42,7 @@ add_library(schgen_core STATIC
     src/pcb_checks_model.cpp src/pcb_checks_connectors.cpp src/pcb_checks_placement.cpp
     src/pcb_checks_return_path.cpp src/pcb_checks_ampacity.cpp src/pcb_checks_escape.cpp src/pcb_checks_stitch.cpp)
 target_compile_definitions(schgen_core PRIVATE SCHGEN_STACKUP_CATALOG="${CMAKE_CURRENT_SOURCE_DIR}/stackups.json")
+target_compile_definitions(schgen_core PRIVATE SCHGEN_PART_RATINGS="${CMAKE_CURRENT_SOURCE_DIR}/../parts/part_ratings.json")
 set(SCHGEN_FLOORPLAN_SOURCES
     src/floorplan_spec.cpp src/floorplan_geometry.cpp src/floorplan_cross.cpp
     src/floorplan_pack.cpp src/floorplan_compose.cpp src/floorplan_build.cpp
@@ -1176,6 +1177,10 @@ if(BUILD_TESTING)
     target_link_libraries(schgen_board_definition_contracts PRIVATE schgen_core)
     target_compile_options(schgen_board_definition_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
     add_test(NAME native_board_definition_contracts COMMAND schgen_board_definition_contracts "${CMAKE_CURRENT_SOURCE_DIR}/..")
+    add_executable(schgen_part_ratings_contracts tests/part_ratings_contracts.cpp)
+    target_link_libraries(schgen_part_ratings_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_part_ratings_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME native_part_ratings_contracts COMMAND schgen_part_ratings_contracts)
     add_test(NAME native_study_cli_needs_stackups COMMAND schgen study layers
         --config "${CMAKE_CURRENT_SOURCE_DIR}/tests/data/study/no_study.json")
     set_tests_properties(native_study_cli_needs_stackups PROPERTIES
