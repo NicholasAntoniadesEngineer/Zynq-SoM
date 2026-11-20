@@ -37,8 +37,9 @@ const std::string& RunConfig::stackup_of(const std::string& board) const {
     return found->second;
 }
 
-std::vector<std::string> RunConfig::board_arguments(const std::string& board) const {
+std::vector<std::string> RunConfig::board_arguments(const std::string& board, const std::filesystem::path& file) const {
     std::vector<std::string> arguments{"schgen", "board", "--project", board, "--output", (output / board).string(),
+                                       "--run-config", std::filesystem::absolute(file).string(),
                                        "--audit-projections", std::to_string(audit_projections), "--plane-net",
                                        plane_net};
     if (squeeze) arguments.push_back("--layout-squeeze");

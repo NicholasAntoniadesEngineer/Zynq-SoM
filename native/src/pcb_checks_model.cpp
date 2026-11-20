@@ -39,6 +39,7 @@ Box4 PcbCheckInput::pad_bbox_at(std::size_t index)const{
     const auto& g=geometry_at(index);if(!g.pad_bbox)throw std::runtime_error(model_.insts.at(index).ref+": footprint has no measurable extent");return *g.pad_bbox;
 }
 RefdesOverlapResult check_refdes_overlap(const Sexpr& pcb,bool enforce_bottom){
+    constexpr double quarter_turn_degrees=90,half_turn_degrees=180;
     RefdesOverlapResult res;std::vector<std::pair<std::string,Box4>> top,bot;
     // The verifier keys off the property's silk layer (not footprint Cu side).
     // collect_refdes_props has placement-specific side filtering, so reuse the
@@ -56,7 +57,13 @@ RefdesOverlapResult check_refdes_overlap(const Sexpr& pcb,bool enforce_bottom){
             // text_box currently counts bytes; the gate's width is in Unicode
             // characters, as Python len(). Geometry only needs that count.
             std::size_t chars=0;for(unsigned char c:ref)if((c&0xc0)!=0x80)++chars;
-            (lay=="F.SilkS"?top:bot).emplace_back(ref,text_box(std::string(chars,'x'),x+p.first,y+p.second,font_size(prop,1),0.15));
+            auto box=text_box(std::string(chars,'x'),x+p.first,y+p.second,font_size(prop,1),0.15);
+            const double turned=local->size()>3&&std::holds_alternative<double>((*local)[3].v)?number(*local,3):0;
+            if(std::fmod(std::fabs(turned),half_turn_degrees)==quarter_turn_degrees){
+                const double cx=(box.x0+box.x1)/2,cy=(box.y0+box.y1)/2,across=(box.y1-box.y0)/2,along=(box.x1-box.x0)/2;
+                box={cx-across,cy-along,cx+across,cy+along};
+            }
+            (lay=="F.SilkS"?top:bot).emplace_back(ref,box);
         }
     }
     res.n_top=static_cast<int>(top.size());res.n_bottom=static_cast<int>(bot.size());

@@ -30,7 +30,7 @@ std::optional<int> run_config_command(int argc, char** argv) {
         if (!known.count(board)) run_config_failure("board '" + board + "' is not listed under 'boards'");
     int status = 0;
     for (const std::string& board : chosen.empty() ? config.boards : chosen) {
-        std::vector<std::string> arguments = config.board_arguments(board);
+        std::vector<std::string> arguments = config.board_arguments(board, file);
         std::vector<char*> raw;
         for (std::string& argument : arguments) raw.push_back(argument.data());
         std::cout << "== " << board << " on " << config.stackup_of(board) << " ==\n";

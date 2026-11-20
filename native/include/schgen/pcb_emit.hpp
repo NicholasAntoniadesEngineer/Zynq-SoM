@@ -6,6 +6,10 @@
 
 namespace schgen {
 
+namespace labels {
+struct LabelSeating;
+}
+
 class PcbEmissionError : public std::runtime_error {
   public:
     using std::runtime_error::runtime_error;
@@ -62,7 +66,7 @@ struct PcbEmissionResult {
 // With an external sink, it owns precision observations (including a throwing
 // prefix); the returned precision receipt is empty to prevent double imports.
 PcbEmissionResult render_pcb(const PcbModel &, const PcbEmitPolicy & = default_pcb_emit_policy(),
-                            QuantizationCounts* = nullptr);
+                            QuantizationCounts* = nullptr, const labels::LabelSeating* = nullptr);
 PcbEmissionResult write_pcb(const PcbModel &, const std::filesystem::path &,
                             const PcbEmitPolicy & = default_pcb_emit_policy(),
                             QuantizationCounts* = nullptr);

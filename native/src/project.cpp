@@ -166,7 +166,7 @@ ProjectConfig load_project_config(const ProjectPaths& paths) {
         ProjectConfig out;
         out.raw = parse_json_file(paths.project_file.string());
         out.name = string_field(out.raw, "name");
-        const RunConfig run = apply_run_config(paths.repository_root / run_config_file, out.name);
+        const RunConfig run = apply_run_config(paths.run_config ? *paths.run_config : paths.repository_root / run_config_file, out.name);
         out.stackup = run.stackup_of(out.name);
         out.labels = run.labels;
         out.arrange = run.arrange;

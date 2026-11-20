@@ -31,6 +31,7 @@ struct ProjectPaths {
     std::filesystem::path parts_dir, part_catalog_file, som_schematic;
     std::filesystem::path circuit_catalog_file;
     std::filesystem::path schematic_dir, reports_dir, fpga_dir;
+    std::optional<std::filesystem::path> run_config;
     bool is_default_project = false;
 };
 

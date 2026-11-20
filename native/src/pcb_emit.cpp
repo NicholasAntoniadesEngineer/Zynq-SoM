@@ -1,6 +1,7 @@
 #include "schgen/turn.hpp"
 #include "schgen/stackup.hpp"
 #include "pcb_emit_internal.hpp"
+#include "schgen/label_seats.hpp"
 #include "schgen/schematic.hpp"
 
 namespace schgen {
@@ -109,7 +110,10 @@ const std::vector<PcbModelOverride>& project_pcb_model_overrides() {
         "${KIPRJMOD}/../parts/FUSB302BMPX/FUSB302BMPX.wrl", 90}};
     return overrides;
 }
-PcbEmissionResult render_pcb(const PcbModel &m, const PcbEmitPolicy &p, QuantizationCounts* counts) {
+PcbEmissionResult render_pcb(const PcbModel &m, const PcbEmitPolicy &p, QuantizationCounts* counts,
+                            const labels::LabelSeating* seats) {
+    if (seats && !p.labels)
+        throw PcbEmissionError("label seats were supplied while labels are off");
     if (!std::isfinite(m.board_w) || !std::isfinite(m.board_h) || m.board_w <= 0 || m.board_h <= 0)
         throw PcbEmissionError("PCB outline dimensions must be finite and positive");
     // Typed callers bypass the JSON boundary. Reject nonfinite geometry before
@@ -221,23 +225,27 @@ PcbEmissionResult render_pcb(const PcbModel &m, const PcbEmitPolicy &p, Quantiza
         auto [ax, ay] = round_xy(b.x0, b.y0 + 3, 3, counts);
         auto [bx, by] = round_xy(b.x0 + 3, b.y0, 3, counts);
         root.push_back(emit_gr_line(ax, ay, bx, by, .15, "F.SilkS", uid("som-silk:ch")));
-        auto [x, y] = round_xy(b.x0 + 1, b.y0 - 1.2, 3, counts);
-        root.push_back(emit_gr_text("Zynq SoM", x, y, 0, "F.SilkS", uid("som-silk:label"), 1.4, .25,
+        auto [x, y] = round_xy(b.x0 + labels::constants::title_indent.value, b.y0 - labels::constants::title_rise.value, 3, counts);
+        root.push_back(emit_gr_text(labels::module_title, x, y, 0, "F.SilkS", uid("som-silk:label"),
+                                    labels::constants::title_height.value, .25,
                                     "left bottom"));
     }
     for (const auto &i : m.insts)
         root.push_back(embed(i, p, uid));
-    if (m.som_keepout) {
+    if (seats) {
+        seat_references(m, doc, *seats);
+    } else if (m.som_keepout) {
         auto b = *m.som_keepout;
         auto hidden = hide_undersom_bottom_refs(std::move(doc), b.x0, b.y0, b.x1, b.y1);
         doc = std::move(hidden.first);
         result.hidden_bottom_references = hidden.second;
     }
     // Reacquire the list after the value-returning hide transform.
-    auto labels = p.labels ? descriptors(m, p, uid, doc, counts) : std::vector<Sexpr>{};
+    auto labels = p.labels ? descriptors(m, p, uid, doc, counts, seats) : std::vector<Sexpr>{};
     auto &final = std::get<SexprList>(doc.v);
     final.insert(final.end(), labels.begin(), labels.end());
-    result.moved_references = declutter(m, doc, counts);
+    if (!seats)
+        result.moved_references = declutter(m, doc, counts);
     final.insert(final.end(), thermal.vias.begin(), thermal.vias.end());
     for (std::size_t index = 0; index < m.copper.size(); ++index) {
         const auto &c = m.copper[index];

@@ -19,7 +19,7 @@ struct RunConfig {
     std::map<std::string, std::string> stackup;
     std::map<std::string, std::vector<std::string>> overmold_parts;
     const std::string& stackup_of(const std::string& board) const;
-    std::vector<std::string> board_arguments(const std::string& board) const;
+    std::vector<std::string> board_arguments(const std::string& board, const std::filesystem::path& file) const;
 };
 
 inline constexpr const char* run_config_file = "schgen.json";

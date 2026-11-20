@@ -9,6 +9,7 @@
 #include "schgen/manufacturing_checks.hpp"
 #include "schgen/process.hpp"
 #include "schgen/placement_requirements.hpp"
+#include "schgen/label_seats.hpp"
 #include <cmath>
 #include <climits>
 #include <cstdlib>
@@ -141,8 +142,14 @@ void pcb_stages(Context& c){
             stage.placement.model=std::move(squeezed.model);
             stage.reached=rules::Stage::layout;
         }
+        const auto emit_policy=pcb_emit_policy(stage.inputs.floorplan.project);
+        std::optional<labels::LabelSeating> seats;
+        if(emit_policy.labels){
+            seats=c.measure("pcb_label_seats",[&]{return labels::seat_labels(stage.placement.model,emit_policy);});
+            c.report("label_seats.txt",seats->report);
+        }
         stage.emission=precision_receipt(c,"pcb/emission/precision",[&](auto& counts){
-            return c.measure("pcb_render",[&]{return render_pcb(stage.placement.model,pcb_emit_policy(stage.inputs.floorplan.project),&counts);});});
+            return c.measure("pcb_render",[&]{return render_pcb(stage.placement.model,emit_policy,&counts,seats?&*seats:nullptr);});});
         c.inbox.merge_once("pcb/emission",NativeAccountingBatch{{},stage.emission.fallback_events});
         c.pcb=std::move(stage);
         precision_receipt(c,"pcb/publication/precision",[&](auto& counts){publish_board_pcb(*c.pcb,c.out,&counts);return true;});
