@@ -50,6 +50,10 @@ struct ProjectConfig {
     ProjectStrings bank_rails, header_desc, switch_desc;
     ConnectorFacts connectors;
     ModuleDefinition module;
+    IsolationFacts isolation;
+    ModelOverrideFacts model_overrides;
+    FootprintAliasFacts footprint_aliases;
+    ControlGridFacts control_grid;
     JsonNode escape;  // Object, defaults to {} as in ProjectSpec.
     JsonNode raw;     // Complete project.json, including extension metadata.
 };

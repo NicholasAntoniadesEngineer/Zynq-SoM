@@ -71,8 +71,8 @@ PcbPlacementInput load_board_inputs(const ProjectPaths& paths,
         for (const auto* root : {"/Applications/KiCad/KiCad.app/Contents/SharedSupport/footprints",
                                 "/usr/share/kicad/footprints", "/usr/local/share/kicad/footprints"})
             if (fs::is_directory(root)) { resolution.kicad_footprint_root = root; break; }
-    const auto policy = pcb_emit_policy(floor.project);
-    for (const auto& [from, to] : policy.footprint_aliases) resolution.aliases.emplace(from, to);
+    const PartFacts facts = load_part_facts(resolution.parts_dir / part_facts_file);
+    for (const auto& [from, alias] : facts.footprint_aliases) resolution.aliases.emplace(from, alias.footprint);
     const auto libraries = load_footprint_library_tables(resolution);
     auto snapshot = [&](const fs::path& file) {
         const auto key = file.lexically_normal().string();
@@ -101,15 +101,17 @@ PcbPlacementInput load_board_inputs(const ProjectPaths& paths,
                 if (const auto dims = courtyard_dims_from_text(snapshot(dossier)->bytes)) floor.courtyard_dims.emplace(lib, *dims);
         }
     }
-    const PartFacts facts = load_part_facts(resolution.parts_dir / part_facts_file);
     floor.project.connectors = facts.connectors;
+    floor.project.isolation = facts.isolation;
+    floor.project.model_overrides = facts.model_overrides;
+    floor.project.footprint_aliases = facts.footprint_aliases;
+    floor.project.control_grid = facts.control_grid;
     const ModelRoots roots{default_model3d_directory(), paths.project_file.parent_path(), resolution.parts_dir};
     std::map<std::string, PartHeight> measured;
     const auto height_of = [&](const std::string& footprint, const std::string& value, const std::string& part) {
         const auto document = floor.footprints.find(floor.footprint_of.at(footprint));
-        const auto override = std::find_if(policy.model_overrides.begin(), policy.model_overrides.end(),
-            [&](const PcbModelOverride& entry) { return entry.value == value && entry.footprint == footprint; });
-        const bool overridden = override != policy.model_overrides.end();
+        const ModelOverrideFact* override = part_fact_for(facts.model_overrides, value, footprint);
+        const bool overridden = override && override->footprint == footprint;
         const std::string key = overridden ? override->path : footprint;
         auto known = measured.find(key);
         if (known == measured.end())

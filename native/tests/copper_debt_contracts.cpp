@@ -64,8 +64,8 @@ int main(int argc,char** argv) {
         }
         // Live IR, emitter and thermal policy changes all invalidate provenance.
         rejects(sources,[](auto& s){s.circuits.clear();},"empty live inputs");
-        rejects(sources,[](auto& s){s.emission.isolation_prefixes.clear();},"missing isolation targets");
-        rejects(sources,[](auto& s){s.emission.isolation_prefixes={""};},"universal prefix");
+        rejects(sources,[](auto& s){s.emission.isolation.clear();},"missing isolation targets");
+        rejects(sources,[](auto& s){for(auto& row:s.emission.isolation)row.second.margin_mm=0;},"zero isolation margin");
         rejects(sources,[](auto& s){s.emission.ground_layer="In2.Cu";},"wrong reference layer");
         rejects(sources,[](auto& s){s.emission.thermal_credit_needs.clear();},"missing emitter evidence");
         rejects(sources,[](auto& s){s.emission.thermal_copper.clear();},"missing pour emission");

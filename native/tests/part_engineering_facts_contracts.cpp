@@ -300,6 +300,17 @@ void repository_sections_load(const std::filesystem::path& repository) {
     require(part_fact_of(facts.reference_pins, "PCA9306DCUR", "reference_pins").vref2_pin == "7", "the repository file states the reference pins");
     require(part_fact_of(facts.thermal, "TLV75725PDYDR", "thermal").pour->evidence == "TLV75725_DYD", "the repository file states the thermal rows");
     require(part_fact_of(facts.thermal_copper, "LM61460AANRJRR", "thermal_copper").need.min_vias == 6, "the repository file states the thermal copper need");
+    require(facts.isolation.size() == 2 && part_fact_of(facts.isolation, "HX5008NLT", "isolation").margin_mm == 0.6 &&
+                part_fact_of(facts.isolation, "KH-5224-8P8C-D", "isolation").margin_mm == 0.6,
+            "the repository isolation rows");
+    require(facts.control_grid.size() == 1 && part_fact_of(facts.control_grid, "TS-1187A-B-A-B", "control_grid").button_gap_mm == 2,
+            "the repository control grid row");
+    require(facts.model_overrides.size() == 1 && part_fact_of(facts.model_overrides, "FUSB302BMPX", "model_overrides").rotation_z_deg == 90,
+            "the repository model override row");
+    require(facts.footprint_aliases.size() == 1 &&
+                part_fact_of(facts.footprint_aliases, "Capacitor_SMD:C_1206_3225Metric", "footprint_aliases").footprint ==
+                    "Capacitor_SMD:C_1206_3216Metric",
+            "the repository footprint alias row");
 }
 
 }

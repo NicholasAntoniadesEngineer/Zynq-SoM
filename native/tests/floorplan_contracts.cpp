@@ -106,7 +106,7 @@ FloorplanInput input(const J& n) {
     if (const auto* si=object_field(n,"si_spec")) in.si_pairs=parse_signal_specs(*si);
     in.som=som(field(n,"som")); in.som_source=str(field(n,"som"),"source");
     if (field(n,"spec").kind!=JsonKind::Null) in.spec=floorplan_spec_from_json(field(n,"spec"),"floorplan.json");
-    const auto& pr=field(n,"project"); in.project.name=str(pr,"name"); in.project.connectors=repository_connector_facts();
+    const auto& pr=field(n,"project"); in.project.name=str(pr,"name"); use_repository_part_facts(in.project);
     const auto off=point(field(pr,"module_offset")); in.project.module_offset={off.first,off.second};
     for (const auto& [k,v]:field(pr,"module_face_anchors").object_value) in.project.module_face_anchors.emplace_back(k,v.string_value);
     in.project.reg_band_prefixes=strings(field(pr,"reg_band_prefixes"));

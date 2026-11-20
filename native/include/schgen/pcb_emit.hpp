@@ -21,20 +21,16 @@ struct PcbThermalCopperSpec {
     std::vector<std::string> pour_layers;
     std::string cite;
 };
-struct PcbModelOverride {
-    std::string value, footprint, path;
-    double rotation_z = 0;
-};
 struct PcbEmitPolicy {
     bool interface_reference_labels_only = false, labels = true;
-    ProjectStrings footprint_aliases;
+    FootprintAliasFacts footprint_aliases;
     ConnectorFacts connectors;
     ProjectStrings connector_descriptions, header_descriptions, switch_descriptions;
     std::vector<std::pair<std::string, PcbThermalCopperSpec>> thermal_copper;
     std::vector<ThermalPourNeed> thermal_credit_needs;
-    std::vector<std::string> isolation_prefixes;
+    IsolationFacts isolation;
     double gnd_plane_edge_back = 0.5, gnd_plane_clearance = 0.3;
-    double pour_clearance = 0.2, zone_min_thickness = 0.25, isolation_margin = 0.6;
+    double pour_clearance = 0.2, zone_min_thickness = 0.25;
     double thermal_via_size = 0.6, thermal_via_drill = 0.3;
     double thermal_via_clear = 0.25, hole_samenet_pad = 0.1;
     double thermal_via_h2h = 0.45, thermal_via_edge = 1.0;
@@ -43,9 +39,8 @@ struct PcbEmitPolicy {
     double power_track = 0.4, power_clearance = 0.2, minimum_hole_to_hole = 0.25;
     double stack_thickness = 1.6;
     std::string ground_layer = "In1.Cu", power_class = "POWER", board_stem;
-    std::vector<PcbModelOverride> model_overrides;
+    ModelOverrideFacts model_overrides;
 };
-const std::vector<PcbModelOverride>& project_pcb_model_overrides();
 // Default constants are project independent. Header/switch descriptions are
 // taken only from the explicitly supplied project's already-parsed metadata.
 const PcbEmitPolicy &default_pcb_emit_policy();

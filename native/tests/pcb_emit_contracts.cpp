@@ -127,6 +127,8 @@ PcbEmitPolicy policy(const JsonNode &n) {
     auto p = default_pcb_emit_policy();
     p.board_stem = "Zynq_Carrier";
     p.connectors = repository_connector_facts();
+    p.isolation = repository_part_facts().isolation;
+    p.footprint_aliases = repository_part_facts().footprint_aliases;
     for (const auto &[k, v] : field(n, "header_descriptions").object_value)
         p.header_descriptions.emplace_back(k, v.string_value);
     for (const auto &[k, v] : field(n, "switch_descriptions").object_value)
@@ -141,7 +143,7 @@ void project(const fs::path &fixtures, const fs::path &output, const std::string
     auto result = render_pcb(m, p);
     equal(result.pcb, read(fixtures / (name + ".kicad_pcb")), name + " exact board", output);
     auto repaired_policy = p;
-    repaired_policy.model_overrides = project_pcb_model_overrides();
+    repaired_policy.model_overrides = repository_part_facts().model_overrides;
     const auto repaired = render_pcb(m, repaired_policy);
     if (name == "carrier") {
         auto expected = result.document;
@@ -162,10 +164,10 @@ void project(const fs::path &fixtures, const fs::path &output, const std::string
         replace_model(replace_model, expected);
         require(replaced == 1, "independent model-only correction has exactly one target");
         equal(sexpr_dumps(repaired.document), sexpr_dumps(expected), name + " repair preserves all copper and other models", output);
-        repaired_policy.model_overrides.front().value = "different-part";
+        repaired_policy.model_overrides = {{"different-part", repository_part_facts().model_overrides.begin()->second}};
         equal(render_pcb(m, repaired_policy).pcb, result.pcb, name + " model repair is part-specific", output);
-        repaired_policy.model_overrides = project_pcb_model_overrides();
-        repaired_policy.model_overrides.front().footprint = "different-footprint";
+        repaired_policy.model_overrides = repository_part_facts().model_overrides;
+        repaired_policy.model_overrides.begin()->second.footprint = "different-footprint";
         equal(render_pcb(m, repaired_policy).pcb, result.pcb, name + " model repair is footprint-specific", output);
     } else {
         equal(repaired.pcb, result.pcb, name + " no irrelevant model repair", output);

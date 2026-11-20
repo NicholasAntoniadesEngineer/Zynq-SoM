@@ -9,8 +9,6 @@ using namespace pcb_emission;
 const PcbEmitPolicy &default_pcb_emit_policy() {
     static const PcbEmitPolicy policy = [] {
         PcbEmitPolicy p;
-        p.footprint_aliases = {
-            {"Capacitor_SMD:C_1206_3225Metric", "Capacitor_SMD:C_1206_3216Metric"}};
         p.connector_descriptions = {{"pd_input", "PWR"},
                                     {"usbc_otg", "USB OTG"},
                                     {"usb_jtag_connector", "JTAG"},
@@ -63,7 +61,6 @@ const PcbEmitPolicy &default_pcb_emit_policy() {
                               "TI TLV757P DYD JESD51-5 pad-adjacent thermal vias"}}};
         for (const auto &[_, need] : default_thermal_policy().pour_needs)
             p.thermal_credit_needs.push_back(need);
-        p.isolation_prefixes = {"HX5008", "KH-5224"};
         return p;
     }();
     return policy;
@@ -97,16 +94,10 @@ PcbEmitPolicy pcb_emit_policy(const ProjectConfig &c) {
     p.connectors = c.connectors;
     p.header_descriptions = c.header_desc;
     p.switch_descriptions = c.switch_desc;
-    p.model_overrides = project_pcb_model_overrides();
+    p.isolation = c.isolation;
+    p.model_overrides = c.model_overrides;
+    p.footprint_aliases = c.footprint_aliases;
     return p;
-}
-const std::vector<PcbModelOverride>& project_pcb_model_overrides() {
-    // Genuine part-linked CAD, quarter-turn aligned to the unchanged stock pads.
-    // Provenance and orientation proof: tests/data/render_models/FUSB302B_REPAIR.md.
-    static const std::vector<PcbModelOverride> overrides{{"FUSB302BMPX",
-        "Package_DFN_QFN:WQFN-14-1EP_2.5x2.5mm_P0.5mm_EP1.45x1.45mm",
-        "${KIPRJMOD}/../parts/FUSB302BMPX/FUSB302BMPX.wrl", 90}};
-    return overrides;
 }
 PcbEmissionResult render_pcb(const PcbModel &m, const PcbEmitPolicy &p, QuantizationCounts* counts,
                             const labels::LabelSeating* seats) {
@@ -203,12 +194,11 @@ PcbEmissionResult render_pcb(const PcbModel &m, const PcbEmitPolicy &p, Quantiza
         }
     }
     for (const auto &i : m.insts)
-        if (std::any_of(p.isolation_prefixes.begin(), p.isolation_prefixes.end(),
-                        [&](const auto &prefix) { return starts(i.value, prefix); }))
+        if (const IsolationFact *isolation = part_fact_for(p.isolation, i.value, i.footprint))
             for (const CopperLayer& layer : board_stackup().copper) {
                 if (layer.role == CopperRole::signal) continue;
                 root.push_back(emit_iso_void_zone(
-                    rect_corners_ccw(isolation_void_rect(courtyard(i), p.isolation_margin, counts)),
+                    rect_corners_ccw(isolation_void_rect(courtyard(i), isolation->margin_mm, counts)),
                     uid(layer.name == p.ground_layer ? "iso-void:" + i.ref : "iso-void:" + i.ref + ":" + layer.name),
                     "ethernet_isolation_void_" + i.ref + (layer.name == p.ground_layer ? "" : "_" + layer.name.substr(0, layer.name.find('.'))),
                     layer.name, p.zone_min_thickness));

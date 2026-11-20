@@ -140,11 +140,11 @@ void verify_sources(const CopperDebtSources& s) {
             "CD-05","Bob-Smith chassis return changed");
         const auto& jack=part(sheet(s,scope,"rj45_connector"),"J1","CD-06");
         for(const auto* p:{&transformer,&jack}) claim(
-            std::any_of(s.emission.isolation_prefixes.begin(),s.emission.isolation_prefixes.end(),
-                [&](const auto& prefix){return !prefix.empty() && starts(p->value,prefix);}),
+            part_fact_for(s.emission.isolation,p->value,p->footprint)!=nullptr,
             "CD-06","live magnetics/jack omitted by isolation policy");
     }
-    claim(s.emission.ground_layer=="In1.Cu" && s.emission.isolation_margin>0,
+    claim(s.emission.ground_layer=="In1.Cu" && !s.emission.isolation.empty() &&
+        std::all_of(s.emission.isolation.begin(),s.emission.isolation.end(),[](const auto& row){return row.second.margin_mm>0;}),
         "CD-06","isolation/reference-layer policy differs from claim");
     for(const auto impedance:{90,100}) {
         const auto g=std::find_if(s.geometry.begin(),s.geometry.end(),[&](const auto& x){return x.impedance==impedance;});
@@ -160,6 +160,7 @@ CopperDebtSources author_copper_debt_sources(const std::filesystem::path& reposi
     s.basis=load_component_basis_policy(repository); s.basis_scopes=component_basis_scopes(repository);
     s.circuits=author_component_basis_inputs(repository,s.basis);
     s.thermal=default_thermal_policy(); s.emission=default_pcb_emit_policy();
+    s.emission.isolation=load_part_facts(repository/"parts"/"part_facts.json").isolation;
     for(const int impedance:{90,100}) {
         const auto* g=differential_geometry(impedance);
         if(!g) throw CopperProvenanceError("missing native differential geometry");
