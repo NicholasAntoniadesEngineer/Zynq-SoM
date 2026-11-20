@@ -24,7 +24,7 @@ Rules the tool relies on (enforced by `native_removed_archive_contracts`):
 | `device_tree/` | firmware/carrier_pl.dtsi and its generator | `9d2961a723a8b27af61bd49606abaea8f8ebaed4` | `f32ac35a280d8cca496f4dbec4dde9f51c63600d` |
 | `vivado_script/` | fpga/create_project.tcl and its generator | `9d2961a723a8b27af61bd49606abaea8f8ebaed4` | `f32ac35a280d8cca496f4dbec4dde9f51c63600d` |
 | `document_consistency/` | checker of the stored DESIGN_SPEC.md and COMPLIANCE.md | `e95a7702bfddd6775b5b0c482e90d29cf3c178b5` | `e4fd185c3ec9aac237b3c00f1ce534d5632d4152` |
-| `i2c_chip_facts/` | chip-specific I2C address functions and the sheet-named collision check they fed | `48d29d0194a10565be61ef5d8391051b1e0f7944` | `` |
+| `i2c_chip_facts/` | chip-specific I2C address functions and the sheet-named collision check they fed | `48d29d0194a10565be61ef5d8391051b1e0f7944` | `92644cdeccc63d6def0e71d9fc5dc14e7918f0af` |
 
 ## Files
 
