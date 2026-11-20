@@ -117,7 +117,7 @@ void physical(const PcbPlacementInput& input,const PcbModel& model,Require requi
     const auto v1=check_return_path(input.som_interface,input.return_path_footprints);
     std::map<std::string,ReturnStitchClass> triage;
     const auto add=[&](const std::string& net) {
-        const auto classified=classify_pcb_escape_signal(net,input.function_map);
+        const auto classified=classify_pcb_escape_signal(net,input.function_map,input.escape_triage);
         triage[net]={classified.rank(),classified.klass,classified.function};
     };
     for(const auto& part:model.insts) if(part.sheet.rfind("som_j",0)==0)

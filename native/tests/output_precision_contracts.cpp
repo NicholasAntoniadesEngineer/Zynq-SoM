@@ -93,9 +93,9 @@ PcbEscapeInput escape_input(const placement_fixture::Fixture& f,const PcbModel& 
     for(const auto& i:m.insts)if(i.sheet.compare(0,5,"som_j")==0)
         for(const auto& [pad,n]:i.pad_nets){(void)pad;
             if(!n.second.empty()&&pcb_classify_net(n.second)=="SIGNAL")
-                triage[n.second]=classify_pcb_escape_signal(n.second,f.input.function_map);
+                triage[n.second]=classify_pcb_escape_signal(n.second,f.input.function_map,f.input.escape_triage);
         }
-    for(const auto& v:v1.violations)triage[v.net]=classify_pcb_escape_signal(v.net,f.input.function_map);
+    for(const auto& v:v1.violations)triage[v.net]=classify_pcb_escape_signal(v.net,f.input.function_map,f.input.escape_triage);
     return {m,std::move(v1),std::move(triage),f.input.interface_bytes};
 }
 void rats(std::ostream& out,const RatsnestGateResult& r){

@@ -156,6 +156,7 @@ inline Fixture load(const std::filesystem::path &root, const std::string &projec
     for (const auto &entry : mapping.pudc_straps)
         functions[entry.first] = entry.second;
     input.function_map.assign(functions.begin(), functions.end());
+    input.escape_triage = load_escape_triage(root / project);
     auto path = root / "parts/DF40C-100DS-0.4V_51/DF40C-100DS-0.4V_51.kicad_mod";
     auto receptacle = pcb_check_footprint(path.string(), read(path));
     for (const auto &[r, c] : input.som_interface.connectors) {

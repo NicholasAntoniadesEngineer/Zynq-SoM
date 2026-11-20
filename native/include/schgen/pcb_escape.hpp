@@ -4,6 +4,9 @@
 #include "schgen/execution_accounting.hpp"
 #include "schgen/pcb_model.hpp"
 
+#include <filesystem>
+#include <regex>
+
 namespace schgen {
 
 class PcbEscapeError : public std::runtime_error {
@@ -14,10 +17,17 @@ struct PcbEscapeSignalClass {
     std::string net, function, klass, basis;
     int rank() const; // GENUINE=0, MODERATE=1, LOW=2; unknown is an error
 };
-// Exact curated si_triage policy with caller-owned FUNCTION_MAP + PUDC_STRAPS.
-// No default for an uncurated signal, no loader, no mutable classifier cache.
+struct PcbEscapeTriageRule {
+    std::regex pattern;
+    std::string source, klass, note;
+};
+struct PcbEscapeTriage {
+    std::vector<PcbEscapeTriageRule> rules;
+};
+PcbEscapeTriage load_escape_triage(const std::filesystem::path &board_root);
 PcbEscapeSignalClass classify_pcb_escape_signal(const std::string &net,
-                                                const ProjectStrings &function_map);
+                                                const ProjectStrings &function_map,
+                                                const PcbEscapeTriage &triage);
 
 // A value-owned invocation snapshot. Geometry is prepared once and shared by
 // obstacle collection, coexistence and checks. Nothing reads model.copper or
