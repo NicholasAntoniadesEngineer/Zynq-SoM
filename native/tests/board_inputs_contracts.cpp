@@ -52,10 +52,10 @@ void sidecar_independence(const schgen::ProjectPaths& paths,
     }
     const auto sidecar = overlay.path / "escape_block.json";
     require(!fs::exists(sidecar), "overlay starts without generated sidecar");
-    const auto baseline = load_board_inputs(isolated, circuits, schgen::load_sheet_roles(isolated, circuits), link, nets);
+    const auto baseline = load_board_inputs(isolated, circuits, schgen::load_sheet_roles(paths, circuits), link, nets);
     require(baseline.floorplan.compose.corridors.empty(), "missing sidecar leaves raw corridors empty");
     auto check = [&](const std::string& state) {
-        const auto actual = load_board_inputs(isolated, circuits, schgen::load_sheet_roles(isolated, circuits), link, nets);
+        const auto actual = load_board_inputs(isolated, circuits, schgen::load_sheet_roles(paths, circuits), link, nets);
         const auto context = paths.project_root.filename().string() + "/" + state;
         const auto& a = actual.floorplan;
         const auto& b = baseline.floorplan;

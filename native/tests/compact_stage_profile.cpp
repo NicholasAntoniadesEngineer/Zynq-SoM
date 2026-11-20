@@ -4,6 +4,7 @@
 // target_compile_options(schgen_compact_stage_profile PRIVATE
 //     -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
 #include "schgen/board_pcb.hpp"
+#include "sheet_roles_fixture.hpp"
 #include "schgen/catalog.hpp"
 #include "schgen/experiment_observers.hpp"
 #include "schgen/legalize.hpp"
@@ -381,7 +382,7 @@ LoadResult load(const ProjectPaths& paths, const NetlistExtractOptions& extracti
         sheets.push_back(source.circuit);
     }
     tick("circuit_validate");
-    const auto link = link_sheets(sheets, parse_json_file(paths.som_interface_file.string()),
+    const auto link = link_sheets(sheets, sheet_module_connectors(explicit_sheet_roles(sheets)), parse_json_file(paths.som_interface_file.string()),
         parse_json_file((paths.project_root / "som_mapping.json").string()), paths.module.do_not_load_straps);
     if (!link.ok()) throw ProjectError(link.report());
     tick("link");

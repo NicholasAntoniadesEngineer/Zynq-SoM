@@ -50,8 +50,7 @@ inline Box4 translated(Box4 b,double x,double y){return {b.x0+x,b.y0+y,b.x1+x,b.
 inline Box4 united(Box4 a,Box4 b){return {std::min(a.x0,b.x0),std::min(a.y0,b.y0),std::max(a.x1,b.x1),std::max(a.y1,b.y1)};}
 inline bool touches(Box4 a,Box4 b){return a.x0<=b.x1+1e-9&&b.x0<=a.x1+1e-9&&a.y0<=b.y1+1e-9&&b.y0<=a.y1+1e-9;}
 inline bool contains(Box4 b,double x,double y){return b.x0<=x&&x<=b.x1&&b.y0<=y&&y<=b.y1;}
-inline std::string conn_ref(const std::string& s){return s=="som_j1"?"J1":s=="som_j2"?"J2":s=="som_j3"?"J3":"";}
-inline std::map<std::string,std::size_t> connectors(const PcbCheckModel& m){std::map<std::string,std::size_t> out;for(std::size_t i=0;i<m.insts.size();++i){auto r=conn_ref(m.insts[i].sheet);if(!r.empty())out[r]=i;}return out;}
+inline std::map<std::string,std::size_t> connectors(const PcbCheckModel& m){std::map<std::string,std::size_t> out;for(std::size_t i=0;i<m.insts.size();++i){const auto& r=m.insts[i].module_connector;if(!r.empty())out[r]=i;}return out;}
 inline std::string mpn(const ConnectorFacts& facts,const PcbCheckInstance& i){if(facts.count(i.value))return i.value;auto s=i.footprint.substr(i.footprint.find_last_of(':')+1);return facts.count(s)?s:"";}
 inline std::string net_name(const PcbCheckInstance& i,const std::string& pad){auto p=i.pad_nets.find(pad);return p==i.pad_nets.end()?"":p->second.second;}
 inline const JsonNode& required(const JsonNode& n,const std::string& key){auto p=object_field(n,key);if(!p)throw std::runtime_error("PCB input missing "+key);return *p;}

@@ -1,4 +1,5 @@
 #include "pcb_placement_internal.hpp"
+#include "floorplan_internal.hpp"
 #include "schgen/layout_adapter.hpp"
 
 namespace schgen::pcb_placement {
@@ -15,7 +16,7 @@ Placer::Placer(const PcbPlacementInput &in, const PcbZoneResult &zones, const Fl
         if (!geometry.resolvable.count(p.ref) &&
             (std::find(geometry.mh_refs.begin(), geometry.mh_refs.end(), p.ref) !=
                  geometry.mh_refs.end() ||
-             p.sheet.rfind("som_j", 0) == 0 || p.sheet == "som_decoupling")) {
+             module_connector_sheet(ctx.in.floorplan.roles, p.sheet) || under_module_sheet(ctx.in.floorplan.roles, p.sheet))) {
             auto fp = ctx.resolve(p.footprint);
             if (!fp) {
                 geometry.deferred.push_back(p.ref + " (" + p.sheet + "): footprint '" +
@@ -123,15 +124,13 @@ void Placer::seed() {
         som_rel[j.ref] = {j.x, j.y};
         som_rot[j.ref] = j.w < j.h ? 90 : 0;
     }
-    for (const auto &p : ctx.parts)
-        if (geometry.resolvable.count(p.ref) && p.sheet.size() >= 6 &&
-            p.sheet.rfind("som_j", 0) == 0 && p.ref.rfind("J", 0) == 0) {
-            std::string j = "J" + p.sheet.substr(5, 1);
-            if (som_rel.count(j)) {
-                som_refs[p.ref] = j;
-                rotations[p.ref] = som_rot.at(j);
-            }
+    for (const auto &p : ctx.parts) {
+        const std::string &j = sheet_role(ctx.in.floorplan.roles, p.sheet).module_connector;
+        if (geometry.resolvable.count(p.ref) && p.lib_ref == j && som_rel.count(j)) {
+            som_refs[p.ref] = j;
+            rotations[p.ref] = som_rot.at(j);
         }
+    }
     for (const auto &[r, v] : geometry.conn_rot)
         if (geometry.resolvable.count(r))
             rotations[r] = v;
@@ -164,10 +163,10 @@ void Placer::seed() {
         }
     std::vector<std::string> dec;
     for (const auto &[r, p] : ctx.by_ref)
-        if (p.sheet == "som_decoupling" && geometry.resolvable.count(r))
+        if (under_module_sheet(ctx.in.floorplan.roles, p.sheet) && geometry.resolvable.count(r))
             dec.push_back(r);
     auto cells =
-        under_module_cells(plan.som_x, plan.som_y, plan.som.w, plan.som.h, plan.dec_count, 6, &ctx.quantization);
+        under_module_cells(plan.som_x, plan.som_y, plan.som.w, plan.som.h, plan.dec_count, floorplan_detail::dec_inset, &ctx.quantization);
     if (dec.size() != cells.size())
         throw PcbZoneInfeasible("decoupling bank count disagrees with resolved parts");
     for (std::size_t i = 0; i < dec.size(); ++i) {
@@ -184,6 +183,8 @@ void Placer::instantiate() {
     m.two_side = ctx.in.two_side;
     m.connectors = ctx.in.floorplan.project.connectors;
     m.isolation = ctx.in.floorplan.project.isolation;
+    for (const auto &entry : ctx.in.som_interface.connectors)
+        m.module_connectors.insert(entry.first);
     m.net_numbers = net_numbers;
     m.netclass_of = ctx.netclass_of;
     m.classes = ctx.classes;
@@ -209,6 +210,9 @@ void Placer::instantiate() {
         inst.rotation = rot(r);
         inst.mirror = geometry.mirror_refs.count(r);
         inst.at_module = at_module.count(r) != 0;
+        const SheetRole &role = sheet_role(ctx.in.floorplan.roles, p.sheet);
+        inst.module_connector = role.module_connector;
+        inst.under_module = role.region == SheetRegion::under_module;
         if (p.fact) {
             inst.part_class = p.fact->part_class;
             inst.height = p.fact->height;

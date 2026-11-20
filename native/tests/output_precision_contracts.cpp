@@ -1,4 +1,5 @@
 #include "schgen/run_config.hpp"
+#include "sheet_roles_fixture.hpp"
 #include "pcb_placement_fixture.hpp"
 #include "pcb_placement_requirements.hpp"
 #include "ledger_accounting_fixture.hpp"
@@ -111,7 +112,7 @@ void rats(std::ostream& out,const RatsnestGateResult& r){
 }
 void board(std::ostream& out,const std::filesystem::path& root,const std::string& name){
     auto f=placement_fixture::load(root,name);
-    auto model=pcb_model_from_json(f.model,f.expected_pool);
+    auto model=pcb_model_from_json(f.model,f.expected_pool, explicit_sheet_roles(f.model));
     model.isolation=f.input.floorplan.project.isolation;
     auto policy=pcb_emit_policy(f.input.floorplan.project);
     // This immutable rendering baseline predates service-only PCB labels.

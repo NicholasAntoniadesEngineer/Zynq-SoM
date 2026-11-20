@@ -1,6 +1,7 @@
 // Includes the owned implementation for focused final-rounded trial checks.
 // Link schgen_core, but do not compile moves.cpp separately for this target.
 #include "schgen/board_inputs.hpp"
+#include "sheet_roles_fixture.hpp"
 #include "schgen/netlist_gate.hpp"
 #include "fresh_project_schematic.hpp"
 #include "schgen/native_audit_state.hpp"
@@ -490,6 +491,7 @@ void tests(const PcbPlacementInput& source,const std::filesystem::path& root) {
         f.p->pos["R_BLOCKER"]={50,50};
         f.part("R_PARTNER",50,56,"bottom");
         f.p->ctx.by_ref.at("U_THERMAL").sheet="thermal_subject";
+        f.in.floorplan.roles["thermal_subject"]=SheetRole{};
         f.p->ctx.board_refs[f.sheet]={{"R1","R_BLOCKER"},{"R2","R_PARTNER"}};
         f.in.contracts[f.sheet]=parse_json_text(R"({"contract":"placement/lightweight-v0","structures":[
             {"type":"proximity","anchor":"R1","anchor_pins":["1"],"members":["R2"],"max_mm":10,"same_side":true}]})");
@@ -688,7 +690,7 @@ int main(int argc,char**argv) {
         const auto circuits=schgen::load_project_circuits(paths);
         std::vector<schgen::CircuitSheetIr> sheets;
         for(const auto& c:circuits)sheets.push_back(c.circuit);
-        const auto link=schgen::link_sheets(sheets,schgen::parse_json_file(paths.som_interface_file.string()),
+        const auto link=schgen::link_sheets(sheets, sheet_module_connectors(explicit_sheet_roles(sheets)),schgen::parse_json_file(paths.som_interface_file.string()),
             schgen::parse_json_file((paths.project_root/"som_mapping.json").string()), paths.module.do_not_load_straps);
         require(link.ok(),"hierarchy link failed");
         schgen::BoardInputOptions options;options.compact_search=true;

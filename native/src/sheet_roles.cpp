@@ -68,6 +68,12 @@ bool module_connector_sheet(const SheetRoles& roles, const std::string& sheet) {
 
 bool under_module_sheet(const SheetRoles& roles, const std::string& sheet) { return sheet_role(roles, sheet).region == SheetRegion::under_module; }
 
+std::map<std::string, std::string> sheet_module_connectors(const SheetRoles& roles) {
+    std::map<std::string, std::string> connectors;
+    for (const auto& [sheet, role] : roles) connectors.emplace(sheet, role.module_connector);
+    return connectors;
+}
+
 std::map<std::string, std::string> module_sheets_by_connector(const SheetRoles& roles) {
     std::map<std::string, std::string> sheets;
     for (const auto& [sheet, role] : roles)

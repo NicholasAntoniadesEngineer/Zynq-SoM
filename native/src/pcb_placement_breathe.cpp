@@ -51,10 +51,10 @@ void Placer::breathe(const std::string &phase) {
             continue;
         }
         const auto &b = ctx.by_ref.at(r);
-        bool immovable = b.sheet.rfind("som_j", 0) == 0 ||
+        bool immovable = module_connector_sheet(ctx.in.floorplan.roles, b.sheet) ||
                          std::find(geometry.mh_refs.begin(), geometry.mh_refs.end(), r) !=
                              geometry.mh_refs.end() ||
-                         geometry.conn_edge.count(r) || b.sheet == "som_decoupling" ||
+                         geometry.conn_edge.count(r) || under_module_sheet(ctx.in.floorplan.roles, b.sheet) ||
                          b.footprint.find("Fiducial") != std::string::npos ||
                          contracted.count(b.sheet) || contract_members.count(r) ||
                          // Context stores wired/near-target SHEET names. Keep
@@ -236,7 +236,7 @@ void Placer::breathe(const std::string &phase) {
                 side(r) != side(anchor) || som_refs.count(r))
                 continue;
             const auto &part = ctx.by_ref.at(r);
-            if (pcb_is_df40_part(part.sheet,pins(r)) || part.footprint.find("Fiducial") != std::string::npos ||
+            if (pcb_is_df40_part(sheet_role(ctx.in.floorplan.roles, part.sheet).module_connector,pins(r)) || part.footprint.find("Fiducial") != std::string::npos ||
                 is_testpoint_ref(r) || (part.sheet == sheet && cp(r)))
                 continue;
             out.push_back(box(r, p));
@@ -261,7 +261,7 @@ void Placer::breathe(const std::string &phase) {
         if (!geometry.bbox_of.count(r) || !geometry.resolvable.count(r) || som_refs.count(r))
             continue;
         int n = pins(r);
-        if (n >= 3 && !pcb_is_df40_part(ctx.by_ref.at(r).sheet,n) && need(n) > pc + 1e-9)
+        if (n >= 3 && !pcb_is_df40_part(sheet_role(ctx.in.floorplan.roles, ctx.by_ref.at(r).sheet).module_connector,n) && need(n) > pc + 1e-9)
             guards.push_back(r);
     }
     auto free = [&](const Group &g, FloorplanPoint delta, const Offsets *rounded = nullptr) {

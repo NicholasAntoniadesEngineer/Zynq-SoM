@@ -2,7 +2,7 @@
 
 namespace schgen {
 using namespace pcb_emission;
-PcbModel pcb_model_from_json(const JsonNode &root, const PcbFootprintPool &pool) {
+PcbModel pcb_model_from_json(const JsonNode &root, const PcbFootprintPool &pool, const SheetRoles &roles) {
     kind(root, JsonKind::Object);
     PcbModel m;
     m.board_w = jnum(required(root, "board_w"));
@@ -17,6 +17,11 @@ PcbModel pcb_model_from_json(const JsonNode &root, const PcbFootprintPool &pool)
         i.value = jstr(required(raw, "value"));
         i.footprint = jstr(required(raw, "footprint"));
         i.sheet = jstr(required(raw, "sheet"));
+        const SheetRole &role = sheet_role(roles, i.sheet);
+        i.module_connector = role.module_connector;
+        i.under_module = role.region == SheetRegion::under_module;
+        if (!i.module_connector.empty())
+            m.module_connectors.insert(i.module_connector);
         i.x = jnum(required(raw, "x"));
         i.y = jnum(required(raw, "y"));
         i.rotation = jnum(required(raw, "rotation"));

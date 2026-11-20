@@ -1,4 +1,5 @@
 #include "schgen/board_inputs.hpp"
+#include "sheet_roles_fixture.hpp"
 #include "schgen/catalog.hpp"
 #include "schgen/board_schematic.hpp"
 #include "schgen/netlist_gate.hpp"
@@ -92,7 +93,7 @@ int main(int argc, char** argv) {
         const auto circuits = load_project_circuits(paths);
         std::vector<CircuitSheetIr> sheets;
         for (const auto& c : circuits) sheets.push_back(c.circuit);
-        const auto link = link_sheets(sheets, parse_json_file(paths.som_interface_file.string()),
+        const auto link = link_sheets(sheets, sheet_module_connectors(explicit_sheet_roles(sheets)), parse_json_file(paths.som_interface_file.string()),
             parse_json_file((paths.project_root / "som_mapping.json").string()), paths.module.do_not_load_straps);
         require(link.ok(), "live link");
         std::filesystem::create_directories(argv[3]);

@@ -1,4 +1,5 @@
 #include "schgen/board_inputs.hpp"
+#include "sheet_roles_fixture.hpp"
 #include "schgen/catalog.hpp"
 #include "schgen/netlist_gate.hpp"
 #include "pcb_placement_internal.hpp"
@@ -24,6 +25,7 @@ struct Probe {
             in.floorplan.project.wired_sheets.push_back("probe_contract");
             in.contracts["probe_contract"]=parse_json_text(
                 R"({"external":{"near_max":[{"other":"bringup_rails.U1"}]}})");
+            in.floorplan.roles["probe_contract"]=SheetRole{};
         }
         const auto& row=owned_group_placements(*in.owned_groups.at("bringup_rails")).at(0);
         owner=row.owner;cap=row.cap;
@@ -54,7 +56,7 @@ int main(int argc,char** argv){try{
     const auto paths=resolve_project_paths(argv[1],"carrier");
     const auto circuits=load_project_circuits(paths);
     std::vector<CircuitSheetIr> sheets;for(const auto& c:circuits)sheets.push_back(c.circuit);
-    const auto link=link_sheets(sheets,parse_json_file(paths.som_interface_file.string()),
+    const auto link=link_sheets(sheets, sheet_module_connectors(explicit_sheet_roles(sheets)),parse_json_file(paths.som_interface_file.string()),
         parse_json_file((paths.project_root/"som_mapping.json").string()), paths.module.do_not_load_straps);
     require(link.ok(),"live hierarchy link failed");
     BoardInputOptions options;options.compact_search=true;

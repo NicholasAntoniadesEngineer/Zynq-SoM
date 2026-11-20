@@ -71,9 +71,6 @@ std::string upper(std::string text) {
     for (char& c : text) if (c >= 'a' && c <= 'z') c -= 'a' - 'A';
     return text;
 }
-bool starts_with(const std::string& text, const std::string& prefix) {
-    return text.compare(0, prefix.size(), prefix) == 0;
-}
 bool ends_with(const std::string& text, const std::string& suffix) {
     return text.size() >= suffix.size() &&
         text.compare(text.size() - suffix.size(), suffix.size(), suffix) == 0;
@@ -412,7 +409,7 @@ LinkMapping link_mapping_from_json(const JsonNode& node, const std::vector<std::
     return mapping;
 }
 
-LinkResult link_sheets(const std::vector<CircuitSheetIr>& sheets,
+LinkResult link_sheets(const std::vector<CircuitSheetIr>& sheets, const LinkSheetConnectors& sheet_connectors,
                        const LinkSomNets& som_nets, const LinkMapping& mapping,
                        const LinkDiagnosticOrder& order) {
     validate_mapping(mapping);
@@ -428,6 +425,11 @@ LinkResult link_sheets(const std::vector<CircuitSheetIr>& sheets,
         if (const auto it = mapping.rail_aliases.find(name); it != mapping.rail_aliases.end())
             return it->second;
         return name;
+    };
+    const auto connector_of = [&](const std::string& sheet) -> const std::string& {
+        const auto found = sheet_connectors.find(sheet);
+        if (found == sheet_connectors.end()) throw std::runtime_error("link: no module connector entry for sheet " + sheet);
+        return found->second;
     };
     std::set<std::string> bound_som, pool;
     std::map<std::string, std::vector<std::size_t>> ports;
@@ -481,13 +483,13 @@ LinkResult link_sheets(const std::vector<CircuitSheetIr>& sheets,
         const auto locations = som_nets.find(som_name);
         const auto user_text = join(Strings(users.begin(), users.end()), ", ");
         Strings on_conn;
-        for (const auto& user : users) if (starts_with(user, "som_j")) on_conn.push_back(user);
+        for (const auto& user : users) if (!connector_of(user).empty()) on_conn.push_back(user);
         if (const auto it = mapping.isolated_som_rails.find(rail); it != mapping.isolated_som_rails.end()) {
             std::set<std::string> connectors;
             if (locations != som_nets.end()) for (const auto& loc : locations->second)
                 connectors.insert(loc.substr(0, loc.find('.')));
             Strings offenders;
-            for (const auto& user : on_conn) if (connectors.count(upper(user.substr(4))))
+            for (const auto& user : on_conn) if (connectors.count(connector_of(user)))
                 offenders.push_back(user);
             if (!offenders.empty()) result.errors.push_back("RAIL ISOLATION VIOLATED: " + rail +
                 " is declared isolated from the SoM (" + it->second + ") but the SoM " + repr(som_name) +
@@ -547,11 +549,11 @@ LinkResult link_sheets(const std::vector<CircuitSheetIr>& sheets,
     return result;
 }
 
-LinkResult link_sheets(const std::vector<CircuitSheetIr>& sheets,
+LinkResult link_sheets(const std::vector<CircuitSheetIr>& sheets, const LinkSheetConnectors& sheet_connectors,
                        const JsonNode& contract, const JsonNode& mapping,
                        const std::vector<std::string>& do_not_load_straps,
                        const LinkDiagnosticOrder& order) {
-    return link_sheets(sheets, link_som_nets_from_json(contract), link_mapping_from_json(mapping, do_not_load_straps), order);
+    return link_sheets(sheets, sheet_connectors, link_som_nets_from_json(contract), link_mapping_from_json(mapping, do_not_load_straps), order);
 }
 
 std::string LinkResult::report() const {

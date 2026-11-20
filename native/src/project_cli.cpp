@@ -525,7 +525,8 @@ std::optional<int> run_project_command(int argc, char** argv) {
         std::vector<CircuitSheetIr> sheets;std::vector<std::string> names;
         for(const auto& circuit:authored.circuits){sheets.push_back(circuit.circuit);names.push_back(circuit.name);}
         const auto index=extend_sheet_index(load_sheet_index(paths),names).index;
-        const auto link=link_sheets(sheets,parse_json_file(paths.som_interface_file.string()),
+        const auto roles=load_sheet_roles(paths,authored.circuits);
+        const auto link=link_sheets(sheets,sheet_module_connectors(roles),parse_json_file(paths.som_interface_file.string()),
             parse_json_file((paths.project_root/"som_mapping.json").string()), paths.module.do_not_load_straps);
         if(!link.ok())throw ProjectError("probe link failed: "+link.report());
         std::vector<BoardSheetInput> inputs;
@@ -537,7 +538,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
         schematic.reports_dir=scratch.path/"reports";
         const auto board=build_board_schematic(inputs,library,scratch.path,schematic);
         if(!board.ok())throw ProjectError("probe schematic gate failed: "+board.report);
-        auto input=load_board_inputs(paths,authored.circuits,load_sheet_roles(paths,authored.circuits),link,extract_netlist(board.root_path,schematic.extraction));
+        auto input=load_board_inputs(paths,authored.circuits,roles,link,extract_netlist(board.root_path,schematic.extraction));
         input.floorplan.sheet_index=index;
         const auto result=options.command=="w12-bound"?run_w12_bound(std::move(input),argument,selected):
             run_w12_stageprobe(std::move(input),argument,selected,options.conservative_only);
@@ -928,7 +929,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
         for (const auto& sheet : sheets) validate_circuit(sheet, library);
         const auto contract = options.contract.empty() ? paths.som_interface_file : options.contract;
         const auto contract_json = parse_json_file(contract.string());
-        const auto result = link_sheets(sheets, contract_json,
+        const auto result = link_sheets(sheets, sheet_module_connectors(load_sheet_roles(paths, circuits)), contract_json,
             parse_json_file((paths.project_root / "som_mapping.json").string()), paths.module.do_not_load_straps);
         if (options.command == "diagram") {
             const auto output = options.output.empty() ? paths.project_root / "docs/block_diagram.svg" : options.output;

@@ -614,9 +614,9 @@ ModelBinding bind_model(const PcbModel& model, const PcbEmitPolicy& policy, cons
         const int pins = static_cast<int>(instance.pad_nets.size());
         const PartClass part_class = part_class_of(instance);
         const bool mezzanine = part_class == PartClass::module_connector;
-        const bool foreign = pcb_counts_as_crowder(instance.ref, instance.sheet, pins,
+        const bool foreign = pcb_counts_as_crowder(instance.ref, instance.sheet, instance.module_connector, pins,
                                                    instance.footprint, foreign_group);
-        const bool own = pcb_counts_as_crowder(instance.ref, instance.sheet, pins,
+        const bool own = pcb_counts_as_crowder(instance.ref, instance.sheet, instance.module_connector, pins,
                                                instance.footprint, instance.sheet);
         Part part;
         part.reference = instance.ref;

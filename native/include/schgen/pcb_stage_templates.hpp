@@ -32,6 +32,7 @@ struct PcbStageInput {
     PcbInterNets inter_nets;
     std::map<std::string, PcbStagePartner> partners;
     bool pilot = false;
+    bool module_connector_sheet = false;
     std::string facing, outer_dir;
     double place_clear = board_decision_policy::placement::clear;
 };

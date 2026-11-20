@@ -119,8 +119,9 @@ Engine::Engine(const FloorplanInput& input) : in(input) {
     }
     for (const auto& sheet : in.sheets) {
         if (!sheets.emplace(sheet.name, &sheet).second) throw FloorplanError("floorplan: duplicate subsystem " + repr(sheet.name));
-        if (const auto& connector = sheet_role(in.roles, sheet.name).module_connector; !connector.empty()) module_sheet_of.emplace(connector, sheet.name);
+        (void)sheet_role(in.roles, sheet.name);
     }
+    module_sheet_of = module_sheets_by_connector(in.roles);
     for (const auto& [key, fp] : in.footprints) {
         CachedFootprint cached;
         cached.bbox = footprint_bbox(fp.document, 3);

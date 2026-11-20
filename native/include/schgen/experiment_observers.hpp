@@ -185,7 +185,7 @@ FloorplanExperimentPlan capture_floorplan_experiment_plan(const FloorplanPlan &,
 // measurement never mutates production accounting or reruns packing/gates.
 FloorplanExperimentPlan measure_floorplan_experiment_plan(const FloorplanInput &, const FloorplanPlan &);
 
-struct PcbExperimentPart { std::string sheet, footprint, value; };
+struct PcbExperimentPart { std::string sheet, footprint, value, module_connector; bool under_module = false; };
 // A borrowed view of CURRENT placement state. It must be assembled at the
 // executing checkpoint, not from a final model or the pose-only stage map.
 // Resolved mods already contain the current mirror transform. Observing uses

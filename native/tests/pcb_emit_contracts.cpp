@@ -1,4 +1,5 @@
 #include "schgen/run_config.hpp"
+#include "sheet_roles_fixture.hpp"
 #include "schgen/atomic_file.hpp"
 #include "schgen/pcb_emit.hpp"
 #include "connector_facts_fixture.hpp"
@@ -140,7 +141,7 @@ PcbEmitPolicy policy(const JsonNode &n) {
 void project(const fs::path &fixtures, const fs::path &output, const std::string &name) {
     auto raw = parse_json_file((fixtures / (name + ".json")).string());
     auto pool = footprints(field(raw, "footprints"));
-    auto m = pcb_model_from_json(field(raw, "model"), pool);
+    auto m = pcb_model_from_json(field(raw, "model"), pool, explicit_sheet_roles(field(raw, "model")));
     auto p = policy(raw);
     auto result = render_pcb(m, p);
     equal(result.pcb, read(fixtures / (name + ".kicad_pcb")), name + " exact board", output);
@@ -174,7 +175,7 @@ void project(const fs::path &fixtures, const fs::path &output, const std::string
     } else {
         equal(repaired.pcb, result.pcb, name + " no irrelevant model repair", output);
     }
-    auto restored = pcb_model_from_json(pcb_model_json(m), pool);
+    auto restored = pcb_model_from_json(pcb_model_json(m), pool, explicit_sheet_roles(pcb_model_json(m)));
     equal(render_pcb(restored, p).pcb, result.pcb, name + " transport preserves emission", output);
     const auto transported = pcb_model_json(m);
     for (const auto &key :
@@ -224,11 +225,11 @@ void mutations(const fs::path &fixtures, const fs::path &output, const std::stri
     auto pool = footprints(field(raw, "footprints"));
     for (const auto &row : field(raw, "cases").array_value) {
         auto name = field(row, "name").string_value;
-        auto m = pcb_model_from_json(field(row, "model"), pool);
+        auto m = pcb_model_from_json(field(row, "model"), pool, explicit_sheet_roles(field(row, "model")));
         auto p = policy(row);
         auto result = render_pcb(m, p);
         equal(result.pcb, field(row, "pcb").string_value, name + " board", output);
-        auto restored = pcb_model_from_json(pcb_model_json(m), pool);
+        auto restored = pcb_model_from_json(pcb_model_json(m), pool, explicit_sheet_roles(pcb_model_json(m)));
         equal(render_pcb(restored, p).pcb, result.pcb, name + " model round trip", output);
         auto stats = field(row, "stats");
         require(result.hidden_bottom_references == field(stats, "hidden").number_value,
@@ -504,8 +505,8 @@ void thermal_selection_contracts() {
 void boundaries(const fs::path &fixtures, const fs::path &output) {
     auto raw = parse_json_file((fixtures / "devkit_mini.json").string());
     auto pool = footprints(field(raw, "footprints"));
-    auto model = pcb_model_from_json(field(raw, "model"), pool);
-    rejects([&] { pcb_model_from_json(field(raw, "model"), {}); }, "unresolved footprint snapshot");
+    auto model = pcb_model_from_json(field(raw, "model"), pool, explicit_sheet_roles(field(raw, "model")));
+    rejects([&] { pcb_model_from_json(field(raw, "model"), {}, explicit_sheet_roles(field(raw, "model"))); }, "unresolved footprint snapshot");
     auto stemmed = default_pcb_emit_policy();
     stemmed.board_stem = "Zynq_Carrier";
     auto bad = model;
@@ -553,7 +554,7 @@ void boundaries(const fs::path &fixtures, const fs::path &output) {
                                                     return field.first == "som_interface_sha256";
                                                 }),
                                  v.object_value.end());
-    auto missing_hash = pcb_model_from_json(transport, pool);
+    auto missing_hash = pcb_model_from_json(transport, pool, explicit_sheet_roles(transport));
     require(missing_hash.escape_interface_sha256 && missing_hash.escape_interface_sha256->empty(),
             "missing hash remains distinguishable from absent metadata");
     require(same_json(field(pcb_model_json(missing_hash), "escape_meta"),
@@ -562,7 +563,7 @@ void boundaries(const fs::path &fixtures, const fs::path &output) {
     for (auto &[k, v] : transport.object_value)
         if (k == "placed")
             v.number_value = .5;
-    rejects([&] { pcb_model_from_json(transport, pool); }, "invalid integer");
+    rejects([&] { pcb_model_from_json(transport, pool, explicit_sheet_roles(transport)); }, "invalid integer");
     ProjectConfig config;
     config.header_desc = {{"J_CUSTOM", "Custom header"}};
     config.switch_desc = {{"SW_CUSTOM", "Custom switch"}};

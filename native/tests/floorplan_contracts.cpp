@@ -827,7 +827,7 @@ void pack_behavior() {
     std::map<std::pair<bool,std::string>,FloorplanPoint> forward_edge_poses;
     for(const bool reversed:{false,true})for(const bool edge_target:{false,true})for(const bool shaped:{false,true})for(const std::string hint:{"E","N","S","W"}) {
         if(reversed&&!edge_target)continue; // Edge-to-interior authored terms.
-        auto constrained=in;SomJGeom jack;jack.ref="J2";jack.x=0;jack.y=5;jack.w=2;jack.h=10;
+        auto constrained=in;constrained.roles=explicit_sheet_roles(std::vector<std::string>{"logic","som_j2"});SomJGeom jack;jack.ref="J2";jack.x=0;jack.y=5;jack.w=2;jack.h=10;
         constrained.som.js={jack};
         FloorplanTerm term;term.kind="near_max";term.subject="logic";term.target_raw=edge_target?"connector":"som_j2";term.bound=5;
         if(reversed)std::swap(term.subject,term.target_raw);
@@ -892,7 +892,7 @@ void pack_behavior() {
     // must retain the conservative incumbent, and prior accounting survives.
     CircuitSheetIr logic;logic.name="logic";
     logic.parts.push_back({"R1","Device:R","10k","Resistor_SMD:R_0603_1608Metric",{},{},{}});
-    in.sheets={logic};in.geometry.zone_box["logic"]={12,8};
+    in.sheets={logic};in.roles=explicit_sheet_roles(in.sheets);in.geometry.zone_box["logic"]={12,8};
     FloorplanSpec fixed;fixed.outline={{100,80}};in.spec=fixed;
     in.accounting.fallback_events={"prior_zone_event"};
     const auto first=build_floorplan(in),second=build_floorplan(in);
@@ -958,7 +958,7 @@ void fixed_face_recovery(){
     FloorplanInput in;in.som.w=20;in.som.h=20;
     CircuitSheetIr logic;logic.name="logic";
     logic.parts.push_back({"R1","Device:R","10k","Resistor_SMD:R_0603_1608Metric",{},{},{}});
-    in.sheets={logic};in.geometry.zone_box["logic"]={12,8};
+    in.sheets={logic};in.roles=explicit_sheet_roles(in.sheets);in.geometry.zone_box["logic"]={12,8};
     FloorplanZoneShape top;top.w=12;top.h=8;
     auto bottom=top;bottom.side="bottom";
     in.geometry.shapes["logic"]={top,bottom};
@@ -1088,7 +1088,7 @@ void cross_behavior() {
     for(int k=1;k<=2;++k) {
         const std::string name=k==1?"source":"sink",ref="U"+std::to_string(k*1000+1);
         CircuitSheetIr s;s.name=name;s.parts.push_back({"U1","Test:One","one","Test:One",{},{},{}});
-        s.nets.push_back({"signal","port",{{"U1","1"}}});in.sheets.push_back(s);in.sheet_index.emplace_back(name,k);
+        s.nets.push_back({"signal","port",{{"U1","1"}}});in.sheets.push_back(s);in.roles=explicit_sheet_roles(in.sheets);in.sheet_index.emplace_back(name,k);
         in.geometry.zone_box[name]={2,2};in.geometry.top_off[name][ref]={0,0};in.geometry.side_of[ref]="top";
         in.geometry.resolvable[ref]="one";in.geometry.bbox_of[ref]={-1,-1,1,1};
     }

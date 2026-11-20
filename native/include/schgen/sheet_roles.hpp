@@ -24,6 +24,7 @@ SheetRoles sheet_roles(const BoardDefinition& board, const AuthoringContext& con
                        const std::vector<CircuitSheetIr>& circuits, const PartFacts& facts);
 const SheetRole& sheet_role(const SheetRoles& roles, const std::string& sheet);
 bool module_connector_sheet(const SheetRoles& roles, const std::string& sheet);
+std::map<std::string, std::string> sheet_module_connectors(const SheetRoles& roles);
 bool under_module_sheet(const SheetRoles& roles, const std::string& sheet);
 std::map<std::string, std::string> module_sheets_by_connector(const SheetRoles& roles);
 SheetRoles load_sheet_roles(const ProjectPaths& paths, const std::vector<ProjectCircuit>& circuits);

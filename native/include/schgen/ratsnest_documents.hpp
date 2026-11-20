@@ -23,7 +23,7 @@ struct RatsnestDocuments {
     double cross_mm = 0, total_mm = 0, board_w = 0, board_h = 0;
     int n_cross = 0, n_top = 0, n_bottom = 0;
 };
-RatsnestPalette ratsnest_palette(const std::vector<std::string>& sheets);
+RatsnestPalette ratsnest_palette(const std::vector<std::string>& sheets, const std::set<std::string>& module_sheets);
 std::vector<RatsnestAirwire> ratsnest_airwires(const PcbModel&, const RatsnestNets&,
     const RatsnestEdges&, const std::optional<std::string>& side = std::nullopt);
 std::string render_ratsnest_svg(const PcbModel&, const RatsnestPalette&,

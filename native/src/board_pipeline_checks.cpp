@@ -11,7 +11,7 @@ void electrical_stages(Context& c){
         c.gate("bom_footprints",r.missing_footprints.empty(),std::to_string(r.rows.size())+" line items; missing footprints: "+join(r.missing_footprints)+"; missing LCSC (advisory): "+join(r.missing_lcsc));});
     c.attempt("power_tree",[&]{c.power=run_power_checks(c.circuits,c.reports,c.docs);c.gate("power_tree",c.power->ok(),power_report(*c.power));});
     c.attempt("rail_ampacity",[&]{if(!c.som||!c.link)throw ProjectError("SoM/link inputs unavailable");
-        const auto r=analyze_rail_ampacity(c.circuits,*c.som,c.link->mapping);c.report("rail_ampacity.txt",r.report());c.gate("rail_ampacity",r.ok(),r.report());});
+        const auto r=analyze_rail_ampacity(c.circuits,c.require_roles(),*c.som,c.link->mapping);c.report("rail_ampacity.txt",r.report());c.gate("rail_ampacity",r.ok(),r.report());});
     c.attempt("testpoints",[&]{c.testpoints=check_testpoint_coverage(c.sheets);c.report("testpoints.txt",c.testpoints->report());c.gate("testpoints",c.testpoints->ok(),c.testpoints->report());});
     c.attempt("design_rules",[&]{const auto r=check_design_rules(c.sheets,[&](const std::string& id)->const SymbolDef&{return c.library.get(id);});c.report("design_rules.txt",r.report());c.gate("design_rules",r.ok(),r.report());});
     c.attempt("part_rules",[&]{if(!c.power)throw ProjectError("power result unavailable");const auto r=run_part_checks(c.circuits,c.reports,&*c.power);c.gate("part_rules",r.ok(),part_rules_report(r));});

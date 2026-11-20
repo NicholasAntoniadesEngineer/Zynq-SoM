@@ -60,7 +60,12 @@ PcbPlacementInput load_board_inputs(const ProjectPaths& paths,
     }
     floor.spec = load_floorplan_spec(options.floorplan_spec.value_or(paths.project_root / "floorplan.json").string(), names);
     const auto som_path = options.som_pcb.value_or(paths.som_pcb);
-    floor.som = extract_som_scan(read(som_path));
+    result.interface_bytes = read(paths.som_interface_file);
+    result.som_interface = som_interface_from_json(
+        parse_json_text(result.interface_bytes, paths.som_interface_file.string()), paths.som_interface_file.string());
+    std::vector<std::string> module_connectors;
+    for (const auto& entry : result.som_interface.connectors) module_connectors.push_back(entry.first);
+    floor.som = extract_som_scan(read(som_path), module_connectors);
     floor.som_source = relative_source(som_path, paths.repository_root);
     const auto si_path = paths.project_root / "research/si_spec.json";
     if (fs::is_regular_file(si_path) || needs_signal_specs(circuits)) floor.si_pairs = load_signal_specs(si_path);
@@ -132,9 +137,6 @@ PcbPlacementInput load_board_inputs(const ProjectPaths& paths,
         }
     if (floor.footprint_of.count(fiducial_footprint))
         result.fiducial_height = height_of(fiducial_footprint, {}, fiducial_footprint);
-    result.interface_bytes = read(paths.som_interface_file);
-    result.som_interface = som_interface_from_json(
-        parse_json_text(result.interface_bytes, paths.som_interface_file.string()), paths.som_interface_file.string());
     const auto mapping = link_mapping_from_json(parse_json_file((paths.project_root / "som_mapping.json").string()), paths.module.do_not_load_straps);
     auto functions = mapping.function_map;
     for (const auto& [key, value] : mapping.pudc_straps) functions[key] = value;

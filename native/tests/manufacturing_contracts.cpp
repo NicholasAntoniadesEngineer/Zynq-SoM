@@ -1,4 +1,5 @@
 #include "schgen/run_config.hpp"
+#include "sheet_roles_fixture.hpp"
 #include "schgen/assembly_documents.hpp"
 #include "connector_facts_fixture.hpp"
 #include "schgen/manufacturing_checks.hpp"
@@ -52,7 +53,7 @@ void check_images(const std::vector<AssemblyImage>& images,const std::vector<Jso
 }
 void project(const fs::path& root,const fs::path& scratch,const std::string& name){
     const auto fixture=root/"native/tests/data/manufacturing"/name;const auto output=scratch/name;const auto input=parse_json_file((fixture/"inputs.json").string());
-    const auto raw=parse_json_file((root/"native/tests/data/pcb_emit"/(name+".json")).string());auto m=pcb_model_from_json(field(raw,"model"),pool(field(raw,"footprints")));auto pol=policy(raw);auto power=power_result_from_json(field(input,"power"));auto plan=assembly_plan(m,power,pol);
+    const auto raw=parse_json_file((root/"native/tests/data/pcb_emit"/(name+".json")).string());auto m=pcb_model_from_json(field(raw,"model"),pool(field(raw,"footprints")), explicit_sheet_roles(field(raw,"model")));auto pol=policy(raw);auto power=power_result_from_json(field(input,"power"));auto plan=assembly_plan(m,power,pol);
     groups(m,plan,parse_json_file((fixture/"plan.json").string()));exact(render_assembly_markdown(m,plan,name),fixture/"ASSEMBLY.md",output/"ASSEMBLY.md");
     std::cout<<name<<": plan and assembly Markdown exact\n";
     auto paths=resolve_project_paths(root,name);auto sheets=load_project_circuits(paths);
@@ -99,7 +100,7 @@ void project(const fs::path& root,const fs::path& scratch,const std::string& nam
 }
 void mutations(const fs::path& root,const fs::path& scratch){
     const auto raw=parse_json_file((root/"native/tests/data/manufacturing/mutations.json").string());const auto fps=pool(field(raw,"footprints"));auto mutation_policy=default_pcb_emit_policy();mutation_policy.connectors=repository_connector_facts();mutation_policy.thermal_copper=repository_part_facts().thermal_copper;mutation_policy.regulators=repository_part_facts().regulators;
-    for(const auto& row:field(raw,"assembly").array_value){auto name=str(row,"name");auto m=pcb_model_from_json(field(row,"model"),fps);auto p=power_result_from_json(field(row,"power"));
+    for(const auto& row:field(raw,"assembly").array_value){auto name=str(row,"name");auto m=pcb_model_from_json(field(row,"model"),fps, explicit_sheet_roles(field(row,"model")));auto p=power_result_from_json(field(row,"power"));
         if(auto e=object_field(row,"error")){throws([&]{assembly_plan(m,p,mutation_policy);},e->string_value);continue;}
         const auto plan=assembly_plan(m,p,mutation_policy);groups(m,plan,field(row,"plan"));require(render_assembly_markdown(m,plan,name)==str(row,"markdown"),name+" mutated assembly Markdown");
         check_images(render_assembly_images(m,plan),field(row,"images").array_value,scratch/"mutations"/name,name);

@@ -1,4 +1,5 @@
 #include "schgen/run_config.hpp"
+#include "sheet_roles_fixture.hpp"
 #include "pcb_placement_fixture.hpp"
 #include "pcb_placement_internal.hpp"
 #include <iomanip>
@@ -54,9 +55,10 @@ struct Replay {
         const auto& a=field(authored,"authored");
         for(const auto& [path,bytes]:field(emit,"footprints").object_value)
             zones.footprints[path]=pcb_check_footprint(path,bytes.string_value);
-        model=pcb_model_from_json(field(emit,"model"),zones.footprints);
+        model=pcb_model_from_json(field(emit,"model"),zones.footprints, explicit_sheet_roles(field(emit,"model")));
         for(const auto& s:field(input,"sheets").array_value)
             in.floorplan.sheets.push_back(decode_intermediate_circuit_ir(s));
+        in.floorplan.roles=explicit_sheet_roles(in.floorplan.sheets);
         for(const auto& [s,index]:field(input,"sheet_index").object_value)
             in.floorplan.sheet_index.emplace_back(s,static_cast<int>(index.number_value));
         const auto& placement=field(field(a,"project"),"placement");

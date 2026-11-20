@@ -1,6 +1,7 @@
 #include "schgen/occupancy.hpp"
 #include "schgen/pcb_escape.hpp"
 #include "connector_facts_fixture.hpp"
+#include "sheet_roles_fixture.hpp"
 #include <algorithm>
 #include <cmath>
 #include <fstream>
@@ -131,6 +132,7 @@ Fixture load(const fs::path &root, const std::string &name) {
         for (const auto &[pad, p] : field(r, "pad_nets").object_value)
             i.pad_nets[pad] = {static_cast<int>(p.array_value.at(0).number_value),
                                p.array_value.at(1).string_value};
+        i.module_connector = explicit_sheet_roles(std::vector<std::string>{i.sheet}).at(i.sheet).module_connector;
         if (i.sheet == "som_j1")
             f.j1 = f.model.insts.size();
         if (i.sheet == "som_j2")
@@ -139,6 +141,7 @@ Fixture load(const fs::path &root, const std::string &name) {
             f.j3 = f.model.insts.size();
         f.model.insts.push_back(std::move(i));
     }
+    f.model.module_connectors = {"J1", "J2", "J3"};
     for (const auto &[net, n] : field(m, "net_numbers").object_value)
         f.model.net_numbers[net] = static_cast<int>(n.number_value);
     for (const auto &[net, n] : field(m, "netclass_of").object_value)
@@ -230,7 +233,7 @@ void real_mutations(const fs::path &root, const std::string &name) {
         else if (id == "gnd_zero")
             f.model.net_numbers["GND"] = 0;
         else if (id == "missing_j3")
-            f.model.insts[f.j3].sheet = "unrelated";
+            f.model.insts[f.j3].sheet = "unrelated", f.model.insts[f.j3].module_connector.clear();
         else if (id == "missing_keepout")
             f.model.som_keepout.reset();
         else if (id == "plane_uncovered")
