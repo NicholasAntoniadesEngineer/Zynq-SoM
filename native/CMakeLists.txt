@@ -43,6 +43,7 @@ add_library(schgen_core STATIC
     src/pcb_checks_return_path.cpp src/pcb_checks_ampacity.cpp src/pcb_checks_escape.cpp src/pcb_checks_stitch.cpp)
 target_compile_definitions(schgen_core PRIVATE SCHGEN_STACKUP_CATALOG="${CMAKE_CURRENT_SOURCE_DIR}/stackups.json")
 target_compile_definitions(schgen_core PRIVATE SCHGEN_PART_RATINGS="${CMAKE_CURRENT_SOURCE_DIR}/../parts/part_ratings.json")
+target_compile_definitions(schgen_core PRIVATE SCHGEN_PART_FACTS="${CMAKE_CURRENT_SOURCE_DIR}/../parts/part_facts.json")
 set(SCHGEN_FLOORPLAN_SOURCES
     src/floorplan_spec.cpp src/floorplan_geometry.cpp src/floorplan_cross.cpp
     src/floorplan_pack.cpp src/floorplan_compose.cpp src/floorplan_build.cpp

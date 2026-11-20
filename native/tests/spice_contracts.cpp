@@ -125,10 +125,10 @@ void incomplete_model_coverage(const std::filesystem::path& dir){
     }
     // A custom detection policy does not supply a voltage-reference model.
     auto policy=default_power_policy();
-    const auto known=std::find_if(policy.regulators.begin(),policy.regulators.end(),[](const auto& entry){return entry.first=="TPS54302";});
-    require(known!=policy.regulators.end()&&known->second.kind=="buck","custom buck fixture needs the known buck pin mapping");
-    const auto spec=known->second;
-    policy.regulators.insert(policy.regulators.begin(),{"UNMODELLED_BUCK",spec});
+    const auto* known=part_fact(policy.regulators,"TPS54302DDCR");
+    require(known&&known->kind=="buck","custom buck fixture needs the known buck pin mapping");
+    auto spec=*known;spec.fb_vref.reset();
+    policy.regulators.emplace("UNMODELLED_BUCK",spec);
     auto sheets=fixture_sheets(dir/"040_buck_45k3_10k.json");
     for(auto& part:sheets.front().circuit.parts)if(part.ref=="U1")part.value="UNMODELLED_BUCK";
     sheets.insert(sheets.end(),unrelated.begin(),unrelated.end());
@@ -199,7 +199,7 @@ void direct_enable_topology(const std::filesystem::path& dir){
     require(extract_spice_checks({reordered}).ok(),"valid topology depends on net ordering");
     for(int mutation=0;mutation<3;++mutation){
         auto broken=candidate;
-        if(mutation==0)for(auto& part:broken.circuit.parts)if(part.ref=="U4")part.value="LM61460_UNREVIEWED_PACKAGE";
+        if(mutation==0)for(auto& part:broken.circuit.parts)if(part.ref=="U4"){part.value="LM61460_UNREVIEWED_PACKAGE";part.lib_id=part.value+":"+part.value;}
         if(mutation==1)for(auto& net:broken.circuit.nets)if(net.name=="+VIN_SYS")net.net_class="signal";
         if(mutation==2){
             for(auto& net:broken.circuit.nets)net.pins.erase(std::remove_if(net.pins.begin(),net.pins.end(),[](const auto& p){return p.ref=="U4"&&p.pin=="7";}),net.pins.end());

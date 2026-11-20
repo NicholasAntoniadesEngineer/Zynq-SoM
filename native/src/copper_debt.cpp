@@ -64,7 +64,7 @@ void verify_sources(const CopperDebtSources& s) {
     const auto thermal = [&](const std::string& id,const CircuitPartIr& p,const std::string& prefix,
                              double bare,std::optional<double> poured,const std::string& evidence) {
         claim(starts(p.value,prefix),id,"live component identity differs from claim");
-        const auto* spec = thermal_spec_for(p.value,p.footprint,s.thermal);
+        const auto* spec = thermal_spec_for(p,s.thermal);
         claim(spec && spec->rth_ja == bare && spec->rth_ja_pour == poured &&
             spec->pour_evidence == evidence && !spec->cite.empty(),id,"live thermal policy differs from claim");
     };

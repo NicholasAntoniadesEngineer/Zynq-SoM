@@ -95,13 +95,27 @@ hand-kept file in this folder. It holds what the generator cannot know:
   `radius_mm` of the part's centre.
 - `isolation` — keyed by part number: `margin_mm`, the margin of the plane void
   under the part's courtyard.
-- `regulators` — keyed by part number: `kind`, `eff`, `in_pin`, `out_pin`,
-  `ilim_num`, `note`, and optionally `limit_a`, `iset_pin`, `fb_vref`, `iset_v`
-  and `enable` (`en_pin` with `vin_pins`, or `ihys_a` with
-  `recommended_max_v` and `threshold_v`).
-- `zeners` — keyed by part number: `vz_min_v`, `vz_max_v`, `izt_a`, `zzt_ohm`.
-- `reference_pins` — keyed by part number: `vref1_pin` and `vref2_pin`, the two
-  reference pins that must not sit directly on two different rails.
+- `regulators` — keyed by part number: `kind` (one of `buck`, `ldo`,
+  `load_switch`, `efuse`, `led_boost`), `label` (the short device name the
+  checks print), `eff`, `in_pin`, `out_pin`, `ilim_num`, `note`, and optionally
+  `limit_a`, `iset_pin`, `fb_vref`, `iset_v` and `enable`: a `direct` entry
+  (`en_pin`, `vin_pins`) or a `network` entry (`ihys_a`, `recommended_max_v`,
+  `threshold_v`, the voltage the enable pin must exceed at the low contract
+  input), each with the `cite` of the datasheet section it comes from, which
+  the check text prints. A `led_boost`
+  is not part of the power tree and states only `kind`, `label` and `iset_v`,
+  the voltage its ISET resistor senses. A part is found by the part number on
+  its instance: the `MPN` field when it has one, else the symbol name when the
+  symbol is the part's own, else its value. An instance with no row whose part number or value starts with the
+  `label` of a row is an unreviewed variant of that device: the power tree
+  reports it as an error and the SPICE gate as unverified, naming the sheet,
+  the reference, the value and the label.
+- `zeners` — keyed by the schematic value of the zener (a generic
+  `Device:D_Zener` has no folder here, so this key is not checked against the
+  folders and is matched exactly): `vz_min_v`, `vz_max_v`, `izt_a`, `zzt_ohm`.
+- `reference_pins` — keyed by part number: `label` (the short device name the
+  finding prints), `vref1_pin` and `vref2_pin`, the two reference pins that
+  must not sit directly on two different rails.
 - `control_grid` — keyed by part number: `button_gap_mm`, the gap when the
   part's instances are placed as a grid of controls.
 - `model_overrides` — keyed by part number: `footprint`, `path` and
@@ -110,7 +124,8 @@ hand-kept file in this folder. It holds what the generator cannot know:
   that stands in for it.
 
 Each of these sections must be present; an empty one is `{}`. A key naming a
-part must be the name of a folder in this folder. An unknown key, a value of
+part must be the name of a folder in this folder; the keys of `zeners` (values)
+and `footprint_aliases` (footprint ids) are the exceptions. An unknown key, a value of
 the wrong type or a repeated key fails the build, naming the file, the section
 and the key.
 

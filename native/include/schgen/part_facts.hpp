@@ -103,10 +103,12 @@ struct IsolationFact {
 struct RegulatorDirectEnable {
     std::string en_pin;
     std::vector<std::string> vin_pins;
+    std::string cite;
 };
 
 struct RegulatorEnableNetwork {
     double ihys_a = 0, recommended_max_v = 0, threshold_v = 0;
+    std::string cite;
 };
 
 struct RegulatorEnableFact {
@@ -115,7 +117,7 @@ struct RegulatorEnableFact {
 };
 
 struct RegulatorFact {
-    std::string kind;
+    std::string kind, label;
     std::optional<double> limit_a;
     double eff = 0;
     std::string in_pin, out_pin;
@@ -131,7 +133,7 @@ struct ZenerFact {
 };
 
 struct ReferencePinFact {
-    std::string vref1_pin, vref2_pin;
+    std::string label, vref1_pin, vref2_pin;
 };
 
 struct ControlGridFact {
@@ -202,6 +204,7 @@ std::pair<int, int> mating_face_vector(const ConnectorFact& fact);
 ConnectorFacts load_connector_facts(const std::filesystem::path& parts_directory);
 
 PartFacts load_part_facts(const std::filesystem::path& file);
+const PartFacts& default_part_facts();
 PartClass symbol_class(const PartFacts& facts, const std::string& symbol, const std::string& part);
 double model_top(const std::string& text, const std::string& extension, const std::string& model);
 PartHeight footprint_height(const PartFacts& facts, const std::string& footprint, const Sexpr& document,

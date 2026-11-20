@@ -92,13 +92,46 @@
     "XT60PW-M": {"mating_face": "+X", "edge_pinned": true, "overmold": false, "pad_row_face_check": false, "description": "XT60 ESC power inlet (horizontal)", "pair_label": "XT60"},
     "ZX-SH1.0-4PWT": {"mating_face": "+Y", "edge_pinned": false, "overmold": false, "pad_row_face_check": false}
   },
-  "thermal": {},
-  "thermal_copper": {},
-  "ep_vias": {},
+  "thermal": {
+    "AP2112K-1.8TRG1": {"rth_ja": 250.0, "tj_max": 125.0, "rds_on": 0.0, "eff": 0.85, "package": "SOT-23-5", "cite": "Diodes AP2112 DS (SOT-23-5 RthJA ~250 C/W; Tj_max 125 C)"},
+    "AP2112K-3.3TRG1": {"rth_ja": 250.0, "tj_max": 125.0, "rds_on": 0.0, "eff": 0.85, "package": "SOT-23-5", "cite": "Diodes AP2112 DS (SOT-23-5 RthJA ~250 C/W; Tj_max 125 C)"},
+    "LM61460AANRJRR": {"rth_ja": 58.7, "tj_max": 150.0, "rds_on": 0.0, "eff": 0.85, "package": "VQFN-HR-14 (RJR, PGND pads->GND pour)", "cite": "TI SNVSBD5D LM61460 (VQFN-HR RthJA 58.7 C/W JESD51-7 bare; Tj op-max 150 C); eff floor 0.85 (DS plots ~88-91%)", "pour": {"rth_ja": 35.0, "cite": "DS 7.3: bare 58.7 C/W (JESD51-7) vs 25 C/W on a 4-layer PCB (DS note + LM61460-Q1 EVM). Credit gated on EMITTED copper, verified in the .kicad_pcb per build: In1.Cu GND plane + 8-via PGND field + local F.Cu/B.Cu pours (SNVSBD5D 11.1.1). Credited 35 C/W — 10 C/W above the DS 4-layer 25, ~30% of the bare->4L delta held back (0.5-oz inner plane, modest pours vs the EVM, 3-buck mutual heating)", "evidence": "LM61460"}},
+    "SY6280AAC": {"rth_ja": 250.0, "tj_max": 150.0, "rds_on": 0.095, "eff": 0.85, "package": "SOT-23-5", "cite": "Silergy SY6280 DS (SOT-23-5 RthJA ~250 C/W; Rds_on ~95 mohm; Tj_max 150 C)"},
+    "TLV75725PDYDR": {"rth_ja": 231.0, "tj_max": 125.0, "rds_on": 0.0, "eff": 0.85, "package": "SOT-23-5 (DYD, EP+vias->In1 plane)", "cite": "TI TLV757P DS / fmc.md section 3 + PWR-3 (DYD thermal-pad RthJA ~92.5 C/W JESD51-7 WITH JESD51-5 vias; Tj_max 125 C); no-copper fallback = DBV bare 231 C/W", "pour": {"rth_ja": 92.5, "cite": "DS DYD RthJA 92.5 C/W presumes the JESD51-5 stackup (thermal pad soldered + vias into a buried plane). Credit gated on EMITTED copper, verified per build: In1.Cu GND plane + >=2 GND vias beside the pad + local F.Cu pour. Fallback without it: DBV bare 231 C/W (no pad benefit claimable)", "evidence": "TLV75725_DYD"}},
+    "TPS26631PWPR": {"rth_ja": 33.6, "tj_max": 125.0, "rds_on": 0.031, "eff": 0.85, "package": "HTSSOP-20 (PWP)", "cite": "TI SLVSE94 (HTSSOP-20 PowerPAD RthJA ~33.6 C/W 2s2p; FET Rds_on 31 mohm; Tj op-max 125 C)"},
+    "TPS54302DDCR": {"rth_ja": 118.9, "tj_max": 125.0, "rds_on": 0.0, "eff": 0.85, "package": "SOT-23-THIN-6 (DDC, no EP)", "cite": "TI SLVSDG6C 5.4 Thermal Information (RthJA 118.9 C/W JESD51-7; EVM 57.2 C/W) + 5.3 Rec-Op Tj-max 125 C (abs-max 150 C); no EP; eff floor 0.85 (DS plots 88-92%)"}
+  },
+  "thermal_copper": {
+    "LM61460AANRJRR": {
+      "need": {"min_vias": 6, "radius_mm": 5.2, "pour_layers": ["F.Cu", "B.Cu"]},
+      "field": {"via_offsets_mm": [[1.55, -2.5], [1.55, 2.5], [2.45, -2.5], [2.45, 2.5], [1.55, -4.35], [1.55, 4.35], [2.45, -4.35], [2.45, 4.35], [1.0, -4.35], [1.0, 4.35], [-1.6, -2.7], [-1.6, 2.7], [0.3, -2.6], [0.3, 2.6], [2.85, -1.45], [2.85, 0.0], [2.85, 1.45]], "max_vias": 8, "pour_box_mm": [-3.0, -4.75, 4.4, 4.75], "pour_layers": ["F.Cu", "B.Cu"], "cite": "TI SNVSBD5D 11.1.1 thermal-via field at PGND1/PGND2"}
+    },
+    "TLV75725PDYDR": {
+      "need": {"min_vias": 2, "radius_mm": 3.0, "pour_layers": ["F.Cu"]},
+      "field": {"via_offsets_mm": [[-1.15, 0.0], [1.15, 0.0], [-1.75, 0.0], [1.75, 0.0], [1.85, -1.0], [1.85, 1.0], [2.35, -0.55], [2.35, 0.55], [-1.85, -1.0], [-1.85, 1.0]], "max_vias": 3, "pour_box_mm": [-2.9, -1.6, 2.9, 1.6], "pour_layers": ["F.Cu"], "cite": "TI TLV757P DYD JESD51-5 pad-adjacent thermal vias"}
+    }
+  },
+  "ep_vias": {
+    "TPS26631PWPR": {"min_pads": 4, "radius_mm": 1.5}
+  },
   "isolation": {},
-  "regulators": {},
-  "zeners": {},
-  "reference_pins": {},
+  "regulators": {
+    "AP2112K-1.8TRG1": {"kind": "ldo", "label": "AP2112K", "limit_a": 0.6, "eff": 1.0, "in_pin": "1", "out_pin": "5", "ilim_num": 6800.0, "note": "600 mA LDO"},
+    "AP2112K-3.3TRG1": {"kind": "ldo", "label": "AP2112K", "limit_a": 0.6, "eff": 1.0, "in_pin": "1", "out_pin": "5", "ilim_num": 6800.0, "note": "600 mA LDO"},
+    "LM61460AANRJRR": {"kind": "buck", "label": "LM61460", "limit_a": 6.0, "eff": 0.9, "in_pin": "8", "out_pin": "10", "ilim_num": 6800.0, "note": "TI 6 A 3-36V synchronous buck (VIN1=8 ->L<-SW=10 ->rail)", "fb_vref": 1.0, "enable": {"direct": {"en_pin": "7", "vin_pins": ["8", "12"], "cite": "SNVSBD5D 8.3.1"}}},
+    "SY6280AAC": {"kind": "load_switch", "label": "SY6280", "eff": 1.0, "in_pin": "IN", "out_pin": "OUT", "iset_pin": "ISET", "ilim_num": 6800.0, "note": "ILIM = 6800/RSET from netlist"},
+    "SY7201ABC": {"kind": "led_boost", "label": "SY7201", "iset_v": 0.2},
+    "TLV75725PDYDR": {"kind": "ldo", "label": "TLV75725", "limit_a": 0.4, "eff": 1.0, "in_pin": "1", "out_pin": "5", "ilim_num": 6800.0, "note": "1 A LDO held to 0.4 A continuous (PWR-3: DYD thermal-pad, RthJA ~92.5 C/W EP-to-GND, Tj ~80 C at 0.32 W/Ta=50 C — fmc.md section 3)"},
+    "TPS26631PWPR": {"kind": "efuse", "label": "TPS26631", "eff": 1.0, "in_pin": "IN", "out_pin": "OUT", "iset_pin": "ILIM", "ilim_num": 18000.0, "note": "ILIM = 18/R_kohm from netlist (TPS2663 Eq 5)"},
+    "TPS54302DDCR": {"kind": "buck", "label": "TPS54302", "limit_a": 3.0, "eff": 0.9, "in_pin": "3", "out_pin": "2", "ilim_num": 6800.0, "note": "TI 3 A synchronous buck (SW->L->rail); thermal-gate test fixture", "fb_vref": 0.596, "enable": {"network": {"ihys_a": 1.55e-06, "recommended_max_v": 5.5, "threshold_v": 1.5, "cite": "SLVSDG6C"}}}
+  },
+  "zeners": {
+    "BZT52C5V1": {"vz_min_v": 4.845, "vz_max_v": 5.355, "izt_a": 0.02, "zzt_ohm": 17.0},
+    "MMSZ5231B": {"vz_min_v": 4.845, "vz_max_v": 5.355, "izt_a": 0.02, "zzt_ohm": 17.0}
+  },
+  "reference_pins": {
+    "PCA9306DCUR": {"label": "PCA9306", "vref1_pin": "2", "vref2_pin": "7"}
+  },
   "control_grid": {},
   "model_overrides": {},
   "footprint_aliases": {},
