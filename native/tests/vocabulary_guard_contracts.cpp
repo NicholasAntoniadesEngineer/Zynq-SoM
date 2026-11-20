@@ -466,7 +466,9 @@ Vocabulary read_vocabulary(const fs::path& repository) {
             vocabulary.module_strong.insert(connector->string_value);
             vocabulary.reference.insert(connector->string_value);
         }
-        const fs::path interface_file = folder / "som_interface.json";
+        const JsonNode& module = require_field(board, "module", JsonKind::Object, board_file.string());
+        const fs::path interface_file =
+            folder.parent_path() / schgen::require_string(module, "folder", false, board_file.string()) / "som_interface.json";
         const JsonNode interface = load_json(interface_file);
         for (const auto& entry : require_field(interface, "connectors", JsonKind::Object, interface_file.string()).object_value) {
             vocabulary.module_strong.insert(entry.first);
