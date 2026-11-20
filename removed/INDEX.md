@@ -24,6 +24,7 @@ Rules the tool relies on (enforced by `native_removed_archive_contracts`):
 | `device_tree/` | firmware/carrier_pl.dtsi and its generator | `9d2961a723a8b27af61bd49606abaea8f8ebaed4` | `f32ac35a280d8cca496f4dbec4dde9f51c63600d` |
 | `vivado_script/` | fpga/create_project.tcl and its generator | `9d2961a723a8b27af61bd49606abaea8f8ebaed4` | `f32ac35a280d8cca496f4dbec4dde9f51c63600d` |
 | `document_consistency/` | checker of the stored DESIGN_SPEC.md and COMPLIANCE.md | `e95a7702bfddd6775b5b0c482e90d29cf3c178b5` | `e4fd185c3ec9aac237b3c00f1ce534d5632d4152` |
+| `i2c_chip_facts/` | chip-specific I2C address functions and the sheet-named collision check they fed | `48d29d0194a10565be61ef5d8391051b1e0f7944` | `` |
 
 ## Files
 
@@ -144,3 +145,13 @@ Original path, then archive path.
 - `native/tests/data/doc_consistency/python_reference.json` -> `removed/document_consistency/tests/data/doc_consistency/python_reference.json`
 - `native/tests/doc_consistency_INTEGRATION.md` -> `removed/document_consistency/tests/doc_consistency_INTEGRATION.md`
 - `native/tests/doc_consistency_contracts.cpp` -> `removed/document_consistency/tests/doc_consistency_contracts.cpp`
+
+### i2c_chip_facts
+
+- `native/src/bringup_facts.cpp:25-60` -> `removed/i2c_chip_facts/fragments/bringup_facts.cpp.L25-60.txt`
+- `native/include/schgen/bringup_facts.hpp:19-24` -> `removed/i2c_chip_facts/fragments/bringup_facts.hpp.L19-24.txt`
+- `native/include/schgen/bringup_facts.hpp:27-29` -> `removed/i2c_chip_facts/fragments/bringup_facts.hpp.L27-29.txt`
+- `native/src/bringup_internal.hpp:73-111` -> `removed/i2c_chip_facts/fragments/bringup_internal.hpp.L73-111.txt`
+- `native/src/manufacturing_exports_manifest.cpp:9-15` -> `removed/i2c_chip_facts/fragments/manufacturing_exports_manifest.cpp.L9-15.txt`
+- `native/src/manufacturing_exports_manifest.cpp:32-43` -> `removed/i2c_chip_facts/fragments/manufacturing_exports_manifest.cpp.L32-43.txt`
+- `native/src/manufacturing_exports_manifest.cpp:53-66` -> `removed/i2c_chip_facts/fragments/manufacturing_exports_manifest.cpp.L53-66.txt`

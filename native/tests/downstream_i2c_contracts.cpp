@@ -1,5 +1,4 @@
-#include "schgen/bringup_facts.hpp"
-#include "schgen/firmware_docs.hpp"
+#include "schgen/i2c_inventory.hpp"
 #include "schgen/subsystem_data.hpp"
 #include "schgen/manufacturing_exports.hpp"
 #include "schgen/project_authoring.hpp"
@@ -25,7 +24,6 @@ std::string hex(int value){std::ostringstream out;out<<"0x"<<std::hex<<std::setw
 struct Device { int addr;std::string kind,ref,sheet,bus; };
 std::vector<Device> manifest_devices(const std::vector<ProjectCircuit>& sheets){
     ManufacturingManifestInput input;input.sheets=sheets;
-    // Exercise the published JSON representation, not just an internal helper.
     const auto rendered=render_manufacturing_manifest(input);
     const auto node=parse_json_text(rendered,"generated manifest");const auto& rows=field(node,"i2c_map");
     require(rows.kind==JsonKind::Array,"manifest i2c_map is not an array");std::vector<Device> out;
@@ -41,13 +39,17 @@ struct Joined {
     int firmware_address=0;
     std::vector<Device> manifest;
 };
+int eeprom_address(const CircuitSheetIr& services){
+    for(const auto& d:build_i2c_inventory({{"board_services",{},services}},default_part_facts()).devices)if(d.ref=="U1")return d.address;
+    throw std::runtime_error("inventory lost the EEPROM");
+}
 Joined join(const CircuitSheetIr& services){
-    return {bringup_id_eeprom_addr(services),manifest_devices({{"board_services",{},services}})};
+    return {eeprom_address(services),manifest_devices({{"board_services",{},services}})};
 }
 using Findings=std::set<std::string>;
 Findings policy(const Joined& in,int eeprom){
     Findings out;const auto check=[&](bool ok,const std::string& code){if(!ok)out.insert(code);};
-    check(in.firmware_address==eeprom,"firmware-helper-address");
+    check(in.firmware_address==eeprom,"inventory-address");
     check(in.manifest.size()==2,"manifest-population");
     for(const auto& expected:std::vector<std::tuple<std::string,std::string,int>>{
             {"24AA025E48","U1",eeprom},{"RV-3028","U2",0x52}}){
@@ -72,12 +74,12 @@ void rewire(CircuitSheetIr& c,const std::string& pin,const std::string& net){
     throw std::runtime_error("strap destination absent: "+net);
 }
 template<class F>void rejects(F&& fn,const std::string& reason){
-    bool failed=false;try{fn();}catch(const FirmwareDocsError& e){failed=true;require(std::string(e.what()).find(reason)!=std::string::npos,"unexpected domain failure: "+std::string(e.what()));}
+    bool failed=false;try{fn();}catch(const I2cBusError& e){failed=true;require(std::string(e.what()).find(reason)!=std::string::npos,"unexpected domain failure: "+std::string(e.what()));}
     ++mutations;require(failed,"bad circuit accepted: "+reason);
 }
 void bad_input(const CircuitSheetIr& c,const std::string& reason){
     const std::vector<ProjectCircuit> sheets{{"board_services",{},c}};
-    rejects([&]{(void)bringup_id_eeprom_addr(c);},reason);
+    rejects([&]{(void)eeprom_address(c);},reason);
     rejects([&]{(void)manifest_devices(sheets);},reason);
     rejects([&]{check_i2c_address_collisions(sheets);},reason);
 }
@@ -85,20 +87,21 @@ void mutants(const CircuitSheetIr& services,const Joined& baseline){
     for(const auto& [a1,a0,expected]:std::vector<std::tuple<bool,bool,int>>{
             {false,false,0x50},{false,true,0x51},{true,false,0x52},{true,true,0x53}}){
         auto c=services;rewire(c,"4",a1?"+3V3_AUX":"GND");rewire(c,"5",a0?"+3V3_AUX":"GND");
-        require(bringup_id_eeprom_addr(c)==expected,"live strap truth table");
+        require(eeprom_address(c)==expected,"live strap truth table");
         if(expected==0x52){
             const std::vector<ProjectCircuit> sheets{{"board_services",{},c}};const auto m=manifest_devices(sheets);
             require(m.size()==2&&m[0].addr==0x52&&m[1].addr==0x52,"manifest must not collapse colliding devices");
             rejects([&]{check_i2c_address_collisions(sheets);},"I2C address collision");
         }else require(policy(join(c),expected).empty(),"manifest join did not observe live strap "+hex(expected));
     }
-    for(const auto* pin:{"4","5"}){auto c=services;rewire(c,pin,"");bad_input(c,"floats");}
+    for(const auto* pin:{"4","5"}){auto c=services;rewire(c,pin,"");bad_input(c,"is on no net");}
+    {auto c=services;rewire(c,"5","AUX_I2C_SDA");bad_input(c,"which is the net of none of");}
     auto c=services;const auto eeprom=std::find_if(c.parts.begin(),c.parts.end(),[](const auto& p){return p.ref=="U1";});
-    require(eeprom!=c.parts.end(),"real EEPROM missing");eeprom->lib_id="UNKNOWN:DEVICE";
-    bad_input(c,"no longer carries a 24AA025E48");
+    require(eeprom!=c.parts.end(),"real EEPROM missing");eeprom->value="UNKNOWN-DEVICE";eeprom->footprint="UNKNOWN:DEVICE";
+    bad_input(c,"no i2c_devices or i2c_bridges row");
     c=services;c.parts.erase(std::remove_if(c.parts.begin(),c.parts.end(),[](const auto& p){return p.ref=="U1";}),c.parts.end());
-    bad_input(c,"no longer carries a 24AA025E48");
-    auto out=baseline;out.firmware_address=0x50;killed(out,"firmware-helper-address");
+    bad_input(c,"of no part on sheet board_services");
+    auto out=baseline;out.firmware_address=0x50;killed(out,"inventory-address");
     out=baseline;out.manifest.pop_back();killed(out,"manifest-population");
     out=baseline;out.manifest.front().kind="unknown";killed(out,"manifest-device");
     out=baseline;out.manifest.front().addr=0x50;killed(out,"manifest-address");
@@ -112,9 +115,10 @@ void aux_boundary(const CircuitSheetIr& services,const CircuitSheetIr& usb){
     for(const auto& d:m)require(d.bus==(d.sheet=="board_services"?"AUX_I2C":"STM32_I2C2"),"mixed manifest bus ownership");
     sheets.erase(sheets.begin());m=manifest_devices(sheets);
     require(m.size()==1&&m.front().addr==0x22&&m.front().bus=="STM32_I2C2","removing AUX must remove manifest rows");
-    sheets={{"renamed_services",{},services}};
-    require(manifest_devices(sheets).empty(),"consumers must not infer board_services from stale circuit name");
-    require(bringup_id_eeprom_addr(services)==0x51,"standalone firmware helper changed with sheet selection");
+    sheets={{"renamed_services",{},services}};m=manifest_devices(sheets);
+    require(m.size()==2&&std::all_of(m.begin(),m.end(),[](const auto& d){return d.sheet=="renamed_services"&&d.bus=="AUX_I2C";}),
+        "devices follow the netlist, not the sheet name");
+    require(eeprom_address(services)==0x51,"the inventory address changed with sheet selection");
     sheets.clear();require(manifest_devices({}).empty(),"empty inputs fabricated devices");
 }
 } // namespace

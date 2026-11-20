@@ -382,4 +382,12 @@ std::vector<std::string> verify_i2c_inventory(const I2cInventory& inventory, con
     return errors;
 }
 
+void check_i2c_address_collisions(const std::vector<ProjectCircuit>& sheets) {
+    const auto collisions = i2c_address_collisions(build_i2c_inventory(sheets, default_part_facts()));
+    if (collisions.empty()) return;
+    std::string text;
+    for (const std::string& line : collisions) text += (text.empty() ? "" : "; ") + line;
+    throw I2cBusError(text);
+}
+
 }

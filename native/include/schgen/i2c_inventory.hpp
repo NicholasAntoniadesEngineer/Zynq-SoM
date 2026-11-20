@@ -43,6 +43,7 @@ I2cInventory build_i2c_inventory(const std::vector<ProjectCircuit>& sheets, cons
 std::vector<std::string> i2c_address_collisions(const I2cInventory& inventory);
 std::vector<std::string> verify_i2c_inventory(const I2cInventory& inventory, const std::vector<ProjectCircuit>& sheets,
                                               const PartFacts& facts);
+void check_i2c_address_collisions(const std::vector<ProjectCircuit>& sheets);
 std::string i2c_address_hex(int address);
 
 }
