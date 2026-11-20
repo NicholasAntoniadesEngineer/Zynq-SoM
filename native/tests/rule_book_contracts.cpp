@@ -159,6 +159,12 @@ Scene baseline(const std::filesystem::path& repository) {
     std::vector<std::pair<std::string, std::string>> module_nets;
     for (const auto& pad : module->pads) module_nets.emplace_back(std::get<0>(pad), "M" + std::get<0>(pad));
     scene.add("J9", "som_j1", PartClass::module_connector, fixture::module_centre, fixture::module_centre, module, module_nets);
+    ModuleMate mate;
+    mate.connector = "J1";
+    mate.ref = "J9";
+    mate.receptacle = mate.mate = posed_footprint_pads(*module, fixture::module_centre, fixture::module_centre, 0);
+    scene.model.module_mates = {mate};
+    scene.model.module_origin = std::make_pair(0.0, 0.0);
     scene.add("C7", "module_power", PartClass::capacitor, fixture::module_capacitor_x, fixture::module_capacitor_y, small(),
               {{"1", module_nets.front().second}, {"2", "GND"}});
     scene.serve("C1", "bypass", "U1", "1");

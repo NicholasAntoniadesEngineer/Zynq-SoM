@@ -259,8 +259,14 @@ void repository_sections_are_empty(const std::filesystem::path& repository) {
     const PartFacts facts = load_part_facts(repository / "parts" / "part_facts.json");
     require(facts.thermal.empty() && facts.thermal_copper.empty() && facts.ep_vias.empty() && facts.isolation.empty() &&
                 facts.regulators.empty() && facts.zeners.empty() && facts.reference_pins.empty() && facts.control_grid.empty() &&
-                facts.model_overrides.empty() && facts.footprint_aliases.empty(),
-            "the repository file carries every engineering section, empty");
+                facts.footprint_aliases.empty(),
+            "the repository file carries every engineering section, empty apart from the model overrides");
+    require(facts.model_overrides.size() == 1 && facts.model_overrides.count("DF40C-100DP-0.4V_51") &&
+                facts.model_overrides.at("DF40C-100DP-0.4V_51").footprint == "Mylibrary:HRS_DF40C-100DP-0.4V_51_" &&
+                facts.model_overrides.at("DF40C-100DP-0.4V_51").path ==
+                    "${KIPRJMOD}/../parts/DF40C-100DP-0.4V_51/DF40C-100DP-0.4V_51.wrl" &&
+                facts.model_overrides.at("DF40C-100DP-0.4V_51").rotation_z_deg == 0,
+            "the repository's one model override binds the module connector's own model to the module mate land pattern");
 }
 
 }
