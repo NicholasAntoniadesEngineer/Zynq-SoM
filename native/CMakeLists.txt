@@ -76,7 +76,6 @@ target_sources(schgen_core PRIVATE src/pcb_drc.cpp)
 target_sources(schgen_core PRIVATE src/subsystem_build.cpp)
 target_sources(schgen_core PRIVATE src/example_devkit.cpp src/example_devkit_build.cpp)
 target_sources(schgen_core PRIVATE src/net_contract.cpp)
-target_sources(schgen_core PRIVATE src/doc_consistency.cpp)
 target_sources(schgen_core PRIVATE src/regression_cli.cpp)
 target_sources(schgen_core PRIVATE src/measure_board.cpp src/measure_metrics.cpp src/measure_report.cpp src/measure_cli.cpp)
 target_sources(schgen_core PRIVATE src/json_text.cpp src/layout_geometry.cpp src/layout_problem.cpp src/layout_kernel.cpp
@@ -105,8 +104,6 @@ set_source_files_properties(src/geometry_cli.cpp src/audit_ast_projection.cpp
 set_source_files_properties(src/regression_cli.cpp
     PROPERTIES COMPILE_OPTIONS "-Wall;-Wextra;-Wpedantic;-Werror;-ffp-contract=off")
 set_source_files_properties(src/precision_ops.cpp
-    PROPERTIES COMPILE_OPTIONS "-Wall;-Wextra;-Wpedantic;-Werror;-ffp-contract=off")
-set_source_files_properties(src/doc_consistency.cpp
     PROPERTIES COMPILE_OPTIONS "-Wall;-Wextra;-Wpedantic;-Werror;-ffp-contract=off")
 set_source_files_properties(src/net_contract.cpp src/example_devkit.cpp src/example_devkit_build.cpp
     PROPERTIES COMPILE_OPTIONS "-Wall;-Wextra;-Wpedantic;-Werror;-ffp-contract=off")
@@ -782,7 +779,6 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_SOURCE_DIR}/tests/data/part_gen" "$<TARGET_FILE:schgen>")
     add_executable(schgen_board_pipeline_contracts tests/board_pipeline_contracts.cpp)
     add_executable(schgen_net_contract_contracts tests/net_contract_contracts.cpp)
-    add_executable(schgen_doc_consistency_contracts tests/doc_consistency_contracts.cpp)
     add_executable(schgen_geometry_cli_contracts tests/geometry_cli_contracts.cpp)
     target_link_libraries(schgen_geometry_cli_contracts PRIVATE schgen_core)
     target_compile_options(schgen_geometry_cli_contracts PRIVATE
@@ -1098,9 +1094,6 @@ if(BUILD_TESTING)
     add_test(NAME native_regression_rc_smoke
         COMMAND schgen_regression_rc_smoke_contracts "${CMAKE_CURRENT_SOURCE_DIR}/..")
     set_tests_properties(native_regression_rc_smoke PROPERTIES TIMEOUT 120 LABELS "live-kicad")
-    target_link_libraries(schgen_doc_consistency_contracts PRIVATE schgen_core)
-    target_compile_options(schgen_doc_consistency_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
-    add_test(NAME native_doc_consistency_contracts COMMAND schgen_doc_consistency_contracts "${CMAKE_CURRENT_SOURCE_DIR}/.." "${CMAKE_CURRENT_BINARY_DIR}/doc-consistency-contract-output")
     target_link_libraries(schgen_net_contract_contracts PRIVATE schgen_core)
     target_compile_options(schgen_net_contract_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
     add_test(NAME native_net_contract_contracts COMMAND schgen_net_contract_contracts "${CMAKE_CURRENT_SOURCE_DIR}/.." "${CMAKE_CURRENT_BINARY_DIR}/net-contract-contract-output")

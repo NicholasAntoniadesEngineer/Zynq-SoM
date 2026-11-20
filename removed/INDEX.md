@@ -23,6 +23,7 @@ Rules the tool relies on (enforced by `native_removed_archive_contracts`):
 | `firmware_contract/` | firmware/zynq_carrier_contract.h, the shared template header, provenance, fixtures | `f32ac35a280d8cca496f4dbec4dde9f51c63600d` | `` |
 | `device_tree/` | firmware/carrier_pl.dtsi and its generator | `9d2961a723a8b27af61bd49606abaea8f8ebaed4` | `` |
 | `vivado_script/` | fpga/create_project.tcl and its generator | `9d2961a723a8b27af61bd49606abaea8f8ebaed4` | `` |
+| `document_consistency/` | checker of the stored DESIGN_SPEC.md and COMPLIANCE.md | `e95a7702bfddd6775b5b0c482e90d29cf3c178b5` | `` |
 
 ## Files
 
@@ -135,3 +136,11 @@ Original path, then archive path.
 - `native/include/schgen/vivado.hpp` -> `removed/vivado_script/source/vivado.hpp`
 - `native/tests/vivado_contracts.cpp` -> `removed/vivado_script/tests/vivado_contracts.cpp`
 - `native/tests/data/vivado_golden.tcl` -> `removed/vivado_script/tests/vivado_golden.tcl`
+
+### document_consistency
+
+- `native/src/doc_consistency.cpp` -> `removed/document_consistency/source/doc_consistency.cpp`
+- `native/include/schgen/doc_consistency.hpp` -> `removed/document_consistency/source/doc_consistency.hpp`
+- `native/tests/data/doc_consistency/python_reference.json` -> `removed/document_consistency/tests/data/doc_consistency/python_reference.json`
+- `native/tests/doc_consistency_INTEGRATION.md` -> `removed/document_consistency/tests/doc_consistency_INTEGRATION.md`
+- `native/tests/doc_consistency_contracts.cpp` -> `removed/document_consistency/tests/doc_consistency_contracts.cpp`

@@ -68,7 +68,7 @@ std::vector<ProjectArtifact> manufacturing_artifacts(const std::filesystem::path
     namespace fs=std::filesystem;
     std::map<std::string,fs::path> selected;const auto exclude=fs::weakly_canonical(out);
     const auto add=[&](const fs::path& p){if(fs::is_regular_file(p)&&fs::weakly_canonical(p)!=exclude)selected[p.lexically_relative(root).generic_string()]=p;};
-    for(const auto& rel:std::vector<std::string>{board_file_name(file_stem,BoardFileKind::Schematic),board_file_name(file_stem,BoardFileKind::Project),board_file_name(file_stem,BoardFileKind::Pcb),"manufacturing/SI_CONSTRAINTS.md","docs/FLOORPLAN.md","docs/DESIGN_SPEC.md","docs/COMPLIANCE.md"})add(root/rel);
+    for(const auto& rel:std::vector<std::string>{board_file_name(file_stem,BoardFileKind::Schematic),board_file_name(file_stem,BoardFileKind::Project),board_file_name(file_stem,BoardFileKind::Pcb),"manufacturing/SI_CONSTRAINTS.md","docs/FLOORPLAN.md"})add(root/rel);
     for(const auto& [dir,ext]:ProjectStrings{{"schematic",".kicad_sch"},{"fpga",".xdc"},{"manufacturing",".csv"},{"manufacturing",".txt"},{"manufacturing",".kicad_dru"},{"reports",".txt"},{"docs",".svg"}}){
         const auto p=root/dir;if(!fs::exists(p))continue;
         for(const auto& entry:fs::directory_iterator(p))if(ends(entry.path().filename().string(),ext))add(entry.path());
