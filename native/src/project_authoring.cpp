@@ -1,14 +1,46 @@
 #include "schgen/project_authoring.hpp"
 #include "authoring_values.hpp"
+#include "schgen/subsystem_data.hpp"
+#include <algorithm>
 
 namespace schgen {
-namespace {
-constexpr std::int32_t i2c_fast_hz=400000;
-constexpr double sdio_volts=1.8,i2c_pull_amps=0.0015;
+std::vector<ProjectSubsystemDefinition> project_subsystem_definitions(const std::filesystem::path& project_root) {
+    if(project_root.empty())throw CircuitAuthoringError("project authoring needs the board folder");
+    return project_subsystem_definitions(load_board(project_root));
+}
+std::vector<ProjectSubsystemDefinition> project_subsystem_definitions(const BoardDefinition& board) {
+    std::vector<ProjectSubsystemDefinition> out;
+    for(const BoardSheet& sheet:board.sheets)
+        out.push_back({board.name,sheet.name,!sheet.from_module(),sheet.settings,sheet.module_connector,sheet.title,sheet.additions});
+    return out;
+}
+std::vector<std::filesystem::path> board_folders(const std::filesystem::path& repository) {
+    std::vector<std::filesystem::path> folders;
+    for(const auto& entry:std::filesystem::directory_iterator(repository))
+        if(entry.is_directory()&&std::filesystem::is_regular_file(entry.path()/board_file))folders.push_back(entry.path());
+    std::sort(folders.begin(),folders.end());
+    return folders;
+}
+ConnectorAuthoringPolicy connector_policy_of(const BoardModule& module) {
+    ConnectorAuthoringPolicy p;
+    p.part=module.connector_part;
+    p.module_draw_connector=module.draw.connector;p.module_draw_rail=module.draw.rail;
+    p.module_draw_note=module.draw.note;p.module_draw_a=module.draw.amps;
+    p.sdio_level_v=module.sdio_level_v;p.sd_bus=module.sd_bus;
+    for(const BoardPair& pair:module.pairs)
+        p.pairs.push_back({pair.positive,pair.negative,pair.kind,pair.impedance?std::optional<int32_t>(*pair.impedance):std::nullopt});
+    for(const BoardLoad& load:module.loads)p.loads.push_back({load.connector,load.rail,load.amps,load.note});
+    return p;
+}
+ConnectorAuthoringPolicy project_connector_policy(const std::filesystem::path& project_root) {
+    return connector_policy_of(load_board(project_root).module);
 }
 namespace {
-const ProjectSubsystemDefinition& definition(const std::string& project,const std::string& name) {
-    for(const auto& d:project_subsystem_definitions())if(d.project==project&&d.name==name)return d;
+ProjectSubsystemDefinition definition(const std::string& project,const std::string& name,const ProjectAuthoringInput& input) {
+    for(auto& d:input.board?project_subsystem_definitions(*input.board):project_subsystem_definitions(input.project_root)) {
+        if(d.project!=project)throw CircuitAuthoringError("the board definition describes "+d.project+", not "+project);
+        if(d.name==name)return d;
+    }
     throw CircuitAuthoringError("unknown project subsystem "+project+":"+name);
 }
 JsonNode metadata(const ProjectSubsystemDefinition& d,const ProjectAuthoringInput& input) {
@@ -50,61 +82,30 @@ CircuitSheetIr author_som_connector(const std::string& ref,const std::string& na
     if(std::all_of(policy.sd_bus.begin(),policy.sd_bus.end(),has))for(const auto& s:policy.sd_bus) {
         AuthoringPort t;t.kind="sd_bus";t.bus="SDIO";t.level_v=policy.sdio_level_v;c.port_type(s,t);
     }
-    if(ref=="J1")c.draws("+5V_SOM",policy.module_draw_a,"SoM module (Zynq+DDR3L+PHYs) ~10 W class at the regulated 4.65 V (P0 rebind) — estimate, refine at bring-up");
+    if(ref==policy.module_draw_connector)c.draws(policy.module_draw_rail,policy.module_draw_a,policy.module_draw_note);
     auto loads=policy.loads;
     std::stable_sort(loads.begin(),loads.end(),[](const ConnectorAuthoringLoad& a,const ConnectorAuthoringLoad& b){return a.rail<b.rail;});
     for(const auto& l:loads)if(l.connector==ref&&has(l.rail))c.draws(l.rail,l.amps,l.note);
     return c.finish();
 }
 CircuitSheetIr author_project_subsystem(const std::string& project,const std::string& name,const ProjectAuthoringInput& input) {
-    const auto& d=definition(project,name);
+    const auto d=definition(project,name,input);
     const SubsystemMeta meta(metadata(d,input));
     if(!d.connector_ref.empty()) {
         if(input.project_root.empty()&&(!input.som||!input.mapping))throw CircuitAuthoringError("SoM authoring needs project_root or explicit som and mapping");
         const auto som=input.som?*input.som:load_som_interface(input.project_root/"som_interface.json");
         const auto map=input.mapping?*input.mapping:link_mapping_from_json(parse_json_file((input.project_root/"som_mapping.json").string()));
-        const auto policy=input.connector_policy?*input.connector_policy:project_connector_policy(project);
+        const auto policy=input.connector_policy?*input.connector_policy:input.board?connector_policy_of(input.board->module):project_connector_policy(input.project_root);
         CircuitAuthor c(author_som_connector(d.connector_ref,d.name,d.connector_title,som,map,policy,input.context),input.context);
         return meta.finish(c);
     }
     auto c=author_subsystem(name,meta,input.context);
-    if(project=="devkit_mini"&&name=="power") {
-        CircuitAuthor add(std::move(c),input.context);
-        for(const auto* net:{"EN_5V0","EN_3V3","EN_1V8"})add.testpoint(net);
-        c=add.finish();
-    }
-    if(project=="devkit_mini"&&name=="power_mon") {
-        CircuitAuthor add(std::move(c),input.context);
-        for(const auto* net:{"+3V3_SC","STM32_I2C2_SCL","STM32_I2C2_SDA"})add.testpoint(net);
-        c=add.finish();
-    }
-    if(project=="devkit_mini"&&name=="debug_boot") {
-        CircuitAuthor add(std::move(c),input.context);
-        const std::string owner="som_j1_connector";
-        for(const auto& [role,net]:std::vector<std::pair<std::string,std::string>>{{"scl","STM32_I2C2_SCL"},{"sda","STM32_I2C2_SDA"}}) {
-            const auto ref=add.auto_ref("R");
-            add.part(ref,"Device:R","4k7","Resistor_SMD:R_0603_1608Metric",{{"LCSC","C23162"}});
-            add.net("+3V3_SC",{ref+".1"});
-            AuthoringPort bus;bus.kind="i2c";bus.role=role;bus.bus="STM32_I2C2";bus.speed_hz=i2c_fast_hz;bus.expect=owner;
-            add.port(net,{ref+".2"},bus,true);
-            add.serves_module(ref,net,"pull");
-        }
-        for(const auto* net:{"SDIO_CLK","SDIO_CMD","VBUS_OUT_EN"}) {
-            const auto ref=add.auto_ref("TP");
-            add.part(ref,"Connector:TestPoint",net,"TestPoint:TestPoint_Pad_D1.5mm",{{"BOM","exclude"}});
-            AuthoringPort probe;probe.expect=owner;
-            if(std::string(net)!="VBUS_OUT_EN"){probe.kind="sd_bus";probe.bus="SDIO";probe.level_v=sdio_volts;}
-            add.port(net,{ref+".1"},probe,true);
-            add.free(ref,"probe point; it follows its net");
-        }
-        add.draws("+3V3_SC",i2c_pull_amps,"2x4k7 STM32_I2C2 pull-ups");
-        c=add.finish();
-    }
+    if(d.additions)c=extend_subsystem_data(std::move(c),*d.additions,input.context);
     return c;
 }
 std::vector<CarrierPackageFactory> native_project_factories(const std::string& project,const ProjectAuthoringInput& input) {
     std::vector<CarrierPackageFactory> out;
-    for(const auto& d:project_subsystem_definitions())if(d.project==project)
+    for(const auto& d:input.board?project_subsystem_definitions(*input.board):project_subsystem_definitions(input.project_root))if(d.project==project)
         out.push_back({d.name,[project,name=d.name,input]{return author_project_subsystem(project,name,input);},d.adapter?std::optional<JsonNode>(metadata(d,input)):std::nullopt});
     if(out.empty())throw CircuitAuthoringError("unknown authoring project "+project);
     return out;

@@ -81,7 +81,7 @@ int main(int argc,char** argv) {
     try {
         require(argc==3||argc==4,"usage: carrier_spice_identity_contracts REPO CATALOG [SPICE_FILE]");
         require(open_part_catalog(argv[2]),"open native catalog");
-        ProjectAuthoringInput input;input.context=make_authoring_context(argv[1]);
+        ProjectAuthoringInput input;input.context=make_authoring_context(argv[1]);input.project_root=std::filesystem::path(argv[1])/"carrier";
         const auto live=author_project_subsystem("carrier","board_aux",input);
         const auto path=argc==4?std::filesystem::path(argv[3]):std::filesystem::path(argv[1])/"subsystems/board_aux/board_aux.cir";
         std::ifstream file(path);require(bool(file),"read board_aux SPICE model");

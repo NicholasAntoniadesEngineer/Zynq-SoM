@@ -214,7 +214,7 @@ void connectors(const fs::path& root,const std::string& project) {
     for(const auto& row:at(fixture,"cases").array_value) {
         auto som=load_som_interface(root/project/"som_interface.json");
         auto mapping=link_mapping_from_json(parse_json_file((root/project/"som_mapping.json").string()));
-        auto policy=project_connector_policy(project);const auto ref=at(row,"ref").string_value;
+        auto policy=project_connector_policy(root/project);const auto ref=at(row,"ref").string_value;
         if(auto edits=object_field(row,"pin_edits"))for(auto& [key,c]:som.connectors)if(key==ref)
             for(const auto& [pin,value]:edits->object_value) {
                 const auto pin_name=pin;
@@ -233,6 +233,7 @@ void connectors(const fs::path& root,const std::string& project) {
     ProjectAuthoringInput input;input.project_root=root/project;input.context.library=root/subsystem_library_folder;
     input.som=load_som_interface(input.project_root/"som_interface.json");
     input.mapping=link_mapping_from_json(parse_json_file((input.project_root/"som_mapping.json").string()));
+    input.board=load_board(input.project_root);
     input.project_root="/this/path/does/not/exist";
     require(!author_project_subsystem(project,"som_j1",input).parts.empty(),"caller supplied contract was ignored");
     input.mapping->function_map["ZYNQ_PS_MIO7/VM0"]="ILLEGAL_STRAP_LOAD";
@@ -274,6 +275,7 @@ void native_packages(const fs::path& root) {
         const auto project_root=s.path/project,base=project_root/"subsystems";
         write(project_root/"som_interface.json",read(root/project/"som_interface.json"));
         write(project_root/"som_mapping.json",read(root/project/"som_mapping.json"));
+        write(project_root/"board.json",read(root/project/"board.json"));
         ProjectAuthoringInput input;input.project_root=project_root;input.context.library=root/subsystem_library_folder;
         auto factories=native_project_factories(project,input);
         for(const auto& f:factories)for(const auto& file:carrier_required_files(f.name,f.meta.has_value(),mode))

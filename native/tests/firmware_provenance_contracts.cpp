@@ -129,7 +129,7 @@ void project(const fs::path& repo, const std::string& name) {
     fs::create_directory(builder);
     rejects([&] { native_firmware_sources(isolated); }, "missing source file");
     fs::remove(builder); write(builder, source);
-    const auto registry = scratch.path / "native/src/project_authoring_registry.cpp";
+    const auto registry = isolated.project_root / "board.json";
     const auto registry_bytes = read(registry);
     fs::remove(registry);
     rejects([&] { native_firmware_sources(isolated); }, "missing source file");

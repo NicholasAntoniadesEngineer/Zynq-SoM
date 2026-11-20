@@ -99,7 +99,7 @@
           {"net": "VBUS_OUT_EN", "kind": "single", "expect": "som_j1_connector", "explicit": true}
         ],
         "draws": [
-          {"rail": "+3V3", "amps": 0.002, "note": "JTAG TMS/TDI 4k7 insurance pulls when driven"}
+          {"rail": "+3V3_SC", "amps": 0.0015, "note": "2x4k7 STM32_I2C2 pull-ups"}
         ],
         "purpose": [
           {"part": "R7", "role": "pull", "module_net": "STM32_I2C2_SCL"},

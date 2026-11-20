@@ -23,7 +23,7 @@ struct Fixture {
     SheetIndex index;
     Fixture(const fs::path& repo):paths(resolve_project_paths(repo,"carrier")),index(load_sheet_index(paths)) {
         paths.subsystems_dir=scratch.root/"manifests";
-        ProjectAuthoringInput source;source.context=make_authoring_context(repo);
+        ProjectAuthoringInput source;source.context=make_authoring_context(repo);source.project_root=repo/"carrier";
         std::map<std::string,int> bands(index.begin(),index.end());
         std::map<std::string,std::vector<KicadNetlistPin>> extraction;
         for(const auto* sheet:{"board_aux","bringup_rails"}) {

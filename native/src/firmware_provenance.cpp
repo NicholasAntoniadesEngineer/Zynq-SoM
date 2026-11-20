@@ -22,12 +22,16 @@ std::string source_path(const ProjectPaths& paths, const fs::path& source) {
         throw FirmwareDocsError("firmware provenance: source path is unsafe in a generated C comment");
     return result;
 }
-const ProjectSubsystemDefinition* declaration(const std::string& project, const std::string& name) {
-    const ProjectSubsystemDefinition* found = nullptr;
-    for (const auto& entry : project_subsystem_definitions()) {
+std::optional<ProjectSubsystemDefinition> declaration(const std::filesystem::path& project_root, const std::string& project,
+                                                      const std::string& name) {
+    std::optional<ProjectSubsystemDefinition> found;
+    const std::filesystem::path file = project_root / board_file;
+    const BoardDefinition board = parse_board(parse_json_file(file.string()), file.string());
+    if (board.name != project) return found;
+    for (const auto& entry : project_subsystem_definitions(board)) {
         if (entry.project != project || entry.name != name) continue;
         if (found) throw FirmwareDocsError("firmware provenance: duplicate native factory " + project + ":" + name);
-        found = &entry;
+        found = entry;
     }
     return found;
 }
@@ -49,8 +53,9 @@ std::vector<std::string> native_firmware_sources(const ProjectPaths& paths) {
         source_path(paths, paths.som_interface_file),
         source_path(paths, paths.som_schematic) + " (U9 pin map, live kicad-cli extraction)"};
     bool registry_added = false, adapter_added = false;
+    const std::string board_source = source_path(paths, paths.project_root / board_file);
     for (const auto& name : firmware_provenance_dependencies()) {
-        const auto* factory = declaration(project, name);
+        const auto factory = declaration(paths.project_root, project, name);
         const auto json = paths.subsystems_dir / name / "circuit.json";
         // A genuinely absent optional subsystem is not a missing constructor.
         // Once registered or present on disk it must remain in the provenance.
@@ -66,8 +71,7 @@ std::vector<std::string> native_firmware_sources(const ProjectPaths& paths) {
             continue;
         }
         if (!registry_added) {
-            result.push_back(source_path(paths, paths.repository_root / "native/src/project_authoring_registry.cpp") +
-                             " (native factory declarations and project metadata)");
+            result.push_back(board_source + " (board definition)");
             result.push_back(source_path(paths, paths.repository_root / "native/src/project_authoring.cpp") +
                              " (native project dispatch and adapter post-processing)");
             registry_added = true;

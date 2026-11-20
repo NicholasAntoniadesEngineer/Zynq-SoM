@@ -7,10 +7,10 @@ AuthoringPurityScope native_authoring_purity_scope() {
     // Reviewed named constructors; never inferred from whatever files happen to
     // exist. New files and overloads require explicit review plus live checking.
     for (const auto* name : {"authoring", "authoring_ir", "circuit_helpers", "subsystem_authoring", "subsystem_authoring_data",
-            "subsystem_registration", "project_authoring", "project_authoring_registry", "example_devkit"})
+            "subsystem_registration", "project_authoring", "example_devkit"})
         s.units.push_back(std::string("native/src/") + name + ".cpp");
     for (const auto* name : {"json", "circuit", "circuit_layout", "roles", "catalog", "link", "som_interface", "authoring_context", "symbols", "sexpr",
-            "occupancy"})
+            "occupancy", "board_definition"})
         s.providers.push_back(std::string("native/src/") + name + ".cpp");
     for (const auto* name : {"authoring_context", "symbols", "sexpr", "occupancy", "turn", "seat", "quantize", "execution_accounting", "roles",
             "named_constant"})
@@ -28,7 +28,7 @@ AuthoringPurityScope native_authoring_purity_scope() {
     // subsystem_build, and the mixed example build umbrella. Provider-only
     // headers above are not imported or directly callable by constructor units.
     for (const auto* name : {"authoring", "circuit_helpers", "catalog", "circuit", "json", "subsystem_authoring", "subsystem_data",
-            "subsystem_registration", "project_authoring", "authoring_gates", "link", "som_interface", "xdc", "example_devkit_authoring"})
+            "subsystem_registration", "project_authoring", "board_definition", "authoring_gates", "link", "som_interface", "xdc", "example_devkit_authoring"})
         s.headers.push_back(std::string("native/include/schgen/") + name + ".hpp");
     s.headers.push_back("native/src/authoring_values.hpp");
     s.constructors.push_back("native/src/subsystem_authoring.cpp::schgen::author_subsystem | schgen::CircuitSheetIr (const std::string &, const schgen::SubsystemMeta &, const schgen::AuthoringContext &)");

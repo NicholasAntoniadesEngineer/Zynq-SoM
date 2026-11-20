@@ -130,7 +130,7 @@ void reference_mutations(const ProjectCircuit& sheet){
 int main(int argc,char**argv){try{
     require(argc==4||argc==5,"usage: c1-contracts REPO CATALOG ASSET_ROOT [--emit]");
     const std::filesystem::path root=argv[1],assets=argv[3];require(open_part_catalog(argv[2]),"catalog");
-    ProjectAuthoringInput input;input.context=make_authoring_context(root);
+    ProjectAuthoringInput input;input.context=make_authoring_context(root);input.project_root=root/"carrier";
     const auto c=author_project_subsystem("carrier","board_aux",input);
     if(argc==5){require(std::string(argv[4])=="--emit","mode");std::cout<<board_pipeline_detail::json(authored_circuit_json(c))<<'\n';return 0;}
     board_aux_frozen::verify(c);board_aux_frozen::mutation_checks(c);
