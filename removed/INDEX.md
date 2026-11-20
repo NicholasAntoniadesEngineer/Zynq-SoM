@@ -24,8 +24,8 @@ Rules the tool relies on (enforced by `native_removed_archive_contracts`):
 | `device_tree/` | firmware/carrier_pl.dtsi and its generator | `9d2961a723a8b27af61bd49606abaea8f8ebaed4` | `f32ac35a280d8cca496f4dbec4dde9f51c63600d` |
 | `vivado_script/` | fpga/create_project.tcl and its generator | `9d2961a723a8b27af61bd49606abaea8f8ebaed4` | `f32ac35a280d8cca496f4dbec4dde9f51c63600d` |
 | `document_consistency/` | checker of the stored DESIGN_SPEC.md and COMPLIANCE.md | `e95a7702bfddd6775b5b0c482e90d29cf3c178b5` | `e4fd185c3ec9aac237b3c00f1ce534d5632d4152` |
-| `floorplan_prose/` | typed per-sheet placement notes and framing text of docs/FLOORPLAN.md and FLOORPLAN.svg | `9301deeda9d6c31cc06fc5f9230519033cd464c9` | PENDING |
-| `drawing_titles/` | typed titles, headings and always-on rail names of docs/power_sequence.svg and docs/power_tree.svg | `d6f1a6a4a9814aebb8fbf515e2494d38190bc922` | PENDING |
+| `floorplan_prose/` | typed per-sheet placement notes and framing text of docs/FLOORPLAN.md and FLOORPLAN.svg | `9301deeda9d6c31cc06fc5f9230519033cd464c9` | `d6f1a6a4a9814aebb8fbf515e2494d38190bc922` |
+| `drawing_titles/` | typed titles, headings and always-on rail names of docs/power_sequence.svg and docs/power_tree.svg | `d6f1a6a4a9814aebb8fbf515e2494d38190bc922` | `8409f27ff7892b01c336bc42ea0828f7a2d12957` |
 
 ## Files
 
