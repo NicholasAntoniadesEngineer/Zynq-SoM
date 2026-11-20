@@ -58,7 +58,7 @@ PcbPlacementInput load_board_inputs(const ProjectPaths& paths,
         }
     }
     floor.spec = load_floorplan_spec(options.floorplan_spec.value_or(paths.project_root / "floorplan.json").string(), names);
-    const auto som_path = options.som_pcb.value_or(paths.repository_root / "som/Zynq_SoM.kicad_pcb");
+    const auto som_path = options.som_pcb.value_or(paths.som_pcb);
     floor.som = extract_som_scan(read(som_path));
     floor.som_source = relative_source(som_path, paths.repository_root);
     const auto si_path = paths.project_root / "research/si_spec.json";
@@ -130,11 +130,11 @@ PcbPlacementInput load_board_inputs(const ProjectPaths& paths,
     result.interface_bytes = read(paths.som_interface_file);
     result.som_interface = som_interface_from_json(
         parse_json_text(result.interface_bytes, paths.som_interface_file.string()), paths.som_interface_file.string());
-    const auto mapping = link_mapping_from_json(parse_json_file((paths.project_root / "som_mapping.json").string()));
+    const auto mapping = link_mapping_from_json(parse_json_file((paths.project_root / "som_mapping.json").string()), paths.module.do_not_load_straps);
     auto functions = mapping.function_map;
     for (const auto& [key, value] : mapping.pudc_straps) functions[key] = value;
     result.function_map.assign(functions.begin(), functions.end());
-    result.escape_triage = load_escape_triage(paths.project_root);
+    result.escape_triage = load_escape_triage(paths.project_root, paths.module.escape_triage, paths.module_root.string());
     for (const auto& [ref, connector] : result.som_interface.connectors) {
         const auto value = connector.value.value_or("");
         auto dossier = resolution.parts_dir / value / (value + ".kicad_mod");

@@ -211,7 +211,7 @@ int main(int argc,char** argv) {
         std::vector<schgen::CircuitSheetIr> sheets;
         for(const auto& c:circuits)sheets.push_back(c.circuit);
         const auto link=schgen::link_sheets(sheets,schgen::parse_json_file(paths.som_interface_file.string()),
-            schgen::parse_json_file((paths.project_root/"som_mapping.json").string()));
+            schgen::parse_json_file((paths.project_root/"som_mapping.json").string()), paths.module.do_not_load_straps);
         require(link.ok(),"hierarchy link failed");
         schgen::BoardInputOptions options;options.compact_search=true;
         const auto source=schgen::load_board_inputs(paths,circuits,link,

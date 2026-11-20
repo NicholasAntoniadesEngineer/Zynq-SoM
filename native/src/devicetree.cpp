@@ -1,5 +1,6 @@
 #include "schgen/devicetree.hpp"
 
+#include "schgen/board_definition.hpp"
 #include "schgen/json.hpp"
 #include "schgen/link.hpp"
 
@@ -238,7 +239,7 @@ std::string render(const DeviceTreeInput& in, const DeviceTreeOutput& out) {
 DeviceTreeInput load_devicetree_input(const fs::path& repository, const fs::path& project,
                                      const SomZynq& live, const std::string& pins_file, const fs::path& contract,
                                      const std::vector<std::string>& refs) {
-    const auto contract_path = contract.empty() ? project / "som_interface.json" : contract;
+    const auto contract_path = contract.empty() ? module_root_in(repository, project) / module_interface_file : contract;
     const auto mapping_path = project / "som_mapping.json";
     DeviceTreeInput in;
     in.contract = load_som_interface(contract_path);
@@ -250,7 +251,7 @@ DeviceTreeInput load_devicetree_input(const fs::path& repository, const fs::path
     // The old Python module import asserted that voltage-mode boot straps
     // remained unmapped. Share the full native policy gate with link/XDC,
     // including rail/rebound aliases, while retaining original JSON order here.
-    try { (void)link_mapping_from_json(mapping); }
+    try { (void)link_mapping_from_json(mapping, load_module(module_root_in(repository, project)).do_not_load_straps); }
     catch (const std::runtime_error& error) { throw DeviceTreeError(where + ": " + error.what()); }
     merge(in.function_map, field(mapping, "function_map", JsonKind::Object, where));
     merge(in.function_map, field(mapping, "pudc_straps", JsonKind::Object, where));

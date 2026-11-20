@@ -1,6 +1,7 @@
 #include "schgen/project_outputs.hpp"
 
 #include "schgen/atomic_file.hpp"
+#include "schgen/board_definition.hpp"
 #include "schgen/json.hpp"
 #include "schgen/link.hpp"
 
@@ -43,7 +44,7 @@ XdcInput load_project_xdc_input(const std::filesystem::path& repository,
                                 XdcInput live,
                                 const std::filesystem::path& som,
                                 const std::filesystem::path& contract) {
-    const auto contract_path = contract.empty() ? project / "som_interface.json" : contract;
+    const auto contract_path = contract.empty() ? module_root_in(repository, project) / module_interface_file : contract;
     const auto mapping_path = project / "som_mapping.json";
     const auto project_path = project / "project.json";
     const auto contract_data = parse_json_file(contract_path.string());
@@ -58,7 +59,7 @@ XdcInput load_project_xdc_input(const std::filesystem::path& repository,
     const auto mapping = parse_json_file(mapping_path.string());
     // Connector authoring used to enforce protected boot straps at import.
     // Data-driven commands must retain that gate without executing authoring.
-    (void)link_mapping_from_json(mapping);
+    (void)link_mapping_from_json(mapping, load_module(module_root_in(repository, project)).do_not_load_straps);
     if (require_string(mapping, "schema", false, mapping_path.string()) != "schgen.som_mapping.v1")
         throw std::runtime_error(mapping_path.string() + ": unsupported schema");
     live.function_map = strings(field(mapping, "function_map", JsonKind::Object,

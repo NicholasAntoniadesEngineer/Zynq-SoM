@@ -154,13 +154,16 @@ ProjectPaths resolve_project_paths(const fs::path& repository_root,
         out.subsystems_dir = out.project_root / "subsystems";
         out.library_dir = out.repository_root / subsystem_library_folder;
         out.sheet_index_file = out.project_root / "sheet_index.json";
-        out.som_interface_file = out.project_root / "som_interface.json";
+        out.module_root = module_root_in(out.repository_root, out.project_root);
+        out.module = load_module(out.module_root);
+        out.som_interface_file = out.module_root / module_interface_file;
         out.manifest_file = out.project_root / "manifest.json";
         const auto catalogs = project_catalog_paths(out.repository_root, out.project_root);
         out.parts_dir = catalogs.parts_dir;
         out.part_catalog_file = catalogs.part_catalog;
         out.circuit_catalog_file = catalogs.circuit_catalog;
-        out.som_schematic = out.repository_root / "som/Zynq_SoM.kicad_sch";
+        out.som_schematic = out.module_root / out.module.schematic;
+        out.som_pcb = out.module_root / out.module.pcb;
         out.schematic_dir = out.project_root / "schematic";
         out.reports_dir = out.project_root / "reports";
         out.fpga_dir = out.project_root / "fpga";
@@ -192,6 +195,7 @@ ProjectConfig load_project_config(const ProjectPaths& paths) {
         out.header_desc = mapping(optional_object(labels, "headers"), "silk_labels.headers");
         out.switch_desc = mapping(optional_object(labels, "switches"), "silk_labels.switches");
         out.escape = optional_object(out.raw, "escape");
+        out.module = paths.module;
         return out;
     });
 }

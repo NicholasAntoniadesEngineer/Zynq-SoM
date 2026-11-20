@@ -42,11 +42,6 @@
   },
   "escape": {
     "_comment": "Measured 2026-07-29 on the live SoM interface + devkit_mini link (full J1/J2/J3 bind, same SoM contract; 4 si_triage-GENUINE pairs on the bound sheets).",
-    "netted_contacts": {
-      "J1": 93,
-      "J2": 100,
-      "J3": 100
-    },
     "genuine_pairs": 4
   }
 }

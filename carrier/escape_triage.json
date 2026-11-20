@@ -12,29 +12,14 @@
       "note": "TMDS source lane, 742.5 Mbps/lane at 720p60 — eye budget is real"
     },
     {
-      "pattern": "ETH_PHY_MDI\\d_[PN]",
-      "class": "GENUINE",
-      "note": "100BASE-TX MDI pair, 125 MBd MLT-3 through the mated interface"
-    },
-    {
       "pattern": "CAM_(D\\d|CLK)_[PN]",
       "class": "GENUINE",
       "note": "CSI-2 D-PHY lane (LVDS_25 on bank 35) — sub-ns edges"
     },
     {
-      "pattern": "USB_D[+-]",
-      "class": "GENUINE",
-      "note": "USB 2.0 HS 480 Mbps PS-OTG pair — safe-direction high (not among the 69 v1 P/N-token pairs; class affects ordering only)"
-    },
-    {
       "pattern": "FMC_(LA\\d\\d(_CC)?|CLK\\d_M2C)_[PN]",
       "class": "MODERATE",
       "note": "FMC LVDS user pair (LVDS_25) — speed set by the mezzanine, budget relaxed vs TMDS"
-    },
-    {
-      "pattern": "STM32_USB_D_[PN]",
-      "class": "MODERATE",
-      "note": "USB full-speed 12 Mbps device pair — edges matter, budget generous"
     },
     {
       "pattern": "LCD_(R|G|B)\\d",
@@ -62,11 +47,6 @@
       "note": "PMOD expansion header GPIO"
     },
     {
-      "pattern": "IO_(L\\d.*|\\d+_\\d+|0_\\d+)",
-      "class": "LOW",
-      "note": "unclaimed SoM contract GPIO (pmod/user_io headers — no function sheet)"
-    },
-    {
       "pattern": "DBG_UART_(RXD|TXD)",
       "class": "LOW",
       "note": "debug UART, <= 1 MBd"
@@ -80,11 +60,6 @@
       "pattern": "ESC_(PWM_IN\\d|BUF_OE_N|FAULT_N)",
       "class": "LOW",
       "note": "ESC PWM (50-490 Hz class) + buffer control"
-    },
-    {
-      "pattern": "ETH_LED\\d",
-      "class": "LOW",
-      "note": "PHY LED indicator"
     },
     {
       "pattern": "CAM_(EN|LED|SCL|SDA)",
@@ -102,44 +77,14 @@
       "note": "HDMI CEC / hot-plug / DDC I2C — 100 kHz class"
     },
     {
-      "pattern": "SDIO_(CLK|CMD|D\\d)",
-      "class": "LOW",
-      "note": "SDIO @ 50 MHz single-ended, short reach, terminated at the SoM"
-    },
-    {
       "pattern": "SD_CARD_DETECT",
       "class": "LOW",
       "note": "card-detect level"
     },
     {
-      "pattern": "STM32_(BOOT0|NRST|GPIO\\d|I2C2_SCL|I2C2_SDA|RAIL_EN_\\dV\\d|USB_CC\\d)",
-      "class": "LOW",
-      "note": "supervisor control / I2C / CC lines"
-    },
-    {
-      "pattern": "ZYNQ_PS_MIO\\d+([/\\\\]VM\\d)?",
-      "class": "LOW",
-      "note": "PS MIO GPIO / voltage-monitor strap"
-    },
-    {
-      "pattern": "ZYNQ_T(CK|DI|DO|MS)",
-      "class": "LOW",
-      "note": "JTAG — held static outside debug"
-    },
-    {
       "pattern": "(WATCHDOG_(KICK|RST_N)|SC_INT_N|PL_BTN\\d|PUDC_\\d+)",
       "class": "LOW",
       "note": "supervisor watchdog / interrupt / button / pull-up-during-config strap"
-    },
-    {
-      "pattern": "(USB_ID|USB_VBUS|VBUS_OUT_EN)",
-      "class": "LOW",
-      "note": "USB OTG ID / VBUS sense + enable"
-    },
-    {
-      "pattern": "VIN",
-      "class": "LOW",
-      "note": "power inlet leaked under a signal-style name (no '+' prefix) — carried by planes, not lanes"
     }
   ]
 }

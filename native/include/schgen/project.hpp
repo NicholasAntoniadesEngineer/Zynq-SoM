@@ -1,5 +1,6 @@
 #pragma once
 
+#include "schgen/board_definition.hpp"
 #include "schgen/circuit.hpp"
 #include "schgen/json.hpp"
 #include "schgen/part_facts.hpp"
@@ -29,10 +30,11 @@ struct ProjectPaths {
     std::filesystem::path repository_root, project_root;
     std::filesystem::path project_file, subsystems_dir, library_dir, sheet_index_file;
     std::filesystem::path som_interface_file, manifest_file;
-    std::filesystem::path parts_dir, part_catalog_file, som_schematic;
+    std::filesystem::path parts_dir, part_catalog_file, som_schematic, som_pcb, module_root;
     std::filesystem::path circuit_catalog_file;
     std::filesystem::path schematic_dir, reports_dir, fpga_dir;
     std::optional<std::filesystem::path> run_config;
+    ModuleDefinition module;
     std::string file_stem;
     bool root_readme = false, owned_groups = false;
 };
@@ -47,6 +49,7 @@ struct ProjectConfig {
     std::vector<std::string> reg_band_prefixes;
     ProjectStrings bank_rails, header_desc, switch_desc;
     ConnectorFacts connectors;
+    ModuleDefinition module;
     JsonNode escape;  // Object, defaults to {} as in ProjectSpec.
     JsonNode raw;     // Complete project.json, including extension metadata.
 };

@@ -30,7 +30,7 @@ BoardAuthoredProject author_board_pipeline_inputs(const ProjectPaths& paths,
     ProjectAuthoringInput input;input.project_root=paths.project_root;
     input.context=make_guarded_native_authoring_context(paths.repository_root,purity_configuration,purity_report,timing);
     input.som=load_som_interface(paths.som_interface_file);
-    input.mapping=link_mapping_from_json(parse_json_file((paths.project_root/"som_mapping.json").string()));
+    input.mapping=link_mapping_from_json(parse_json_file((paths.project_root/"som_mapping.json").string()),paths.module.do_not_load_straps);
     BoardAuthoredProject out;out.factories=native_project_factories(paths.project_root.filename().string(),input);
     std::sort(out.factories.begin(),out.factories.end(),[](const auto& a,const auto& b){return a.name<b.name;});
     std::set<std::string> names;

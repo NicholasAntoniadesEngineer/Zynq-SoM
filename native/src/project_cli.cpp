@@ -526,7 +526,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
         for(const auto& circuit:authored.circuits){sheets.push_back(circuit.circuit);names.push_back(circuit.name);}
         const auto index=extend_sheet_index(load_sheet_index(paths),names).index;
         const auto link=link_sheets(sheets,parse_json_file(paths.som_interface_file.string()),
-            parse_json_file((paths.project_root/"som_mapping.json").string()));
+            parse_json_file((paths.project_root/"som_mapping.json").string()), paths.module.do_not_load_straps);
         if(!link.ok())throw ProjectError("probe link failed: "+link.report());
         std::vector<BoardSheetInput> inputs;
         for(const auto& sheet:sheets){const auto band=std::find_if(index.begin(),index.end(),[&](const auto& entry){return entry.first==sheet.name;});
@@ -929,7 +929,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
         const auto contract = options.contract.empty() ? paths.som_interface_file : options.contract;
         const auto contract_json = parse_json_file(contract.string());
         const auto result = link_sheets(sheets, contract_json,
-            parse_json_file((paths.project_root / "som_mapping.json").string()));
+            parse_json_file((paths.project_root / "som_mapping.json").string()), paths.module.do_not_load_straps);
         if (options.command == "diagram") {
             const auto output = options.output.empty() ? paths.project_root / "docs/block_diagram.svg" : options.output;
             write_block_diagram(result, link_som_nets_from_json(contract_json), output);

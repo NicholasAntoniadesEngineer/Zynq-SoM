@@ -212,8 +212,8 @@ void mutations(const fs::path& root) {
 void connectors(const fs::path& root,const std::string& project) {
     const auto fixture=parse_json_file((root/"native/tests/data/authoring"/("connector_"+project+".json")).string());
     for(const auto& row:at(fixture,"cases").array_value) {
-        auto som=load_som_interface(root/project/"som_interface.json");
-        auto mapping=link_mapping_from_json(parse_json_file((root/project/"som_mapping.json").string()));
+        auto som=load_som_interface(module_root_of(root/project)/module_interface_file);
+        auto mapping=link_mapping_from_json(parse_json_file((root/project/"som_mapping.json").string()),load_board_module(root/project).do_not_load_straps);
         auto policy=project_connector_policy(root/project);const auto ref=at(row,"ref").string_value;
         if(auto edits=object_field(row,"pin_edits"))for(auto& [key,c]:som.connectors)if(key==ref)
             for(const auto& [pin,value]:edits->object_value) {
@@ -231,8 +231,8 @@ void connectors(const fs::path& root,const std::string& project) {
         } else require(authoring_json_equal(authored_circuit_json(run()),at(row,"circuit")),project+": dynamic connector parameters ignored");
     }
     ProjectAuthoringInput input;input.project_root=root/project;input.context.library=root/subsystem_library_folder;
-    input.som=load_som_interface(input.project_root/"som_interface.json");
-    input.mapping=link_mapping_from_json(parse_json_file((input.project_root/"som_mapping.json").string()));
+    input.som=load_som_interface(module_root_of(input.project_root)/module_interface_file);
+    input.mapping=link_mapping_from_json(parse_json_file((input.project_root/"som_mapping.json").string()),load_board_module(input.project_root).do_not_load_straps);
     input.board=load_board(input.project_root);
     input.project_root="/this/path/does/not/exist";
     require(!author_project_subsystem(project,"som_j1",input).parts.empty(),"caller supplied contract was ignored");
@@ -273,7 +273,8 @@ void native_packages(const fs::path& root) {
 
     for(const auto* project:{"carrier","devkit_mini"}) {
         const auto project_root=s.path/project,base=project_root/"subsystems";
-        write(project_root/"som_interface.json",read(root/project/"som_interface.json"));
+        write(s.path/"som"/module_file,read(root/"som"/module_file));
+        write(s.path/"som"/module_interface_file,read(root/"som"/module_interface_file));
         write(project_root/"som_mapping.json",read(root/project/"som_mapping.json"));
         write(project_root/"board.json",read(root/project/"board.json"));
         ProjectAuthoringInput input;input.project_root=project_root;input.context.library=root/subsystem_library_folder;

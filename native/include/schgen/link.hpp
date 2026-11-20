@@ -66,7 +66,7 @@ struct LinkResult {
 // Pure adapters: callers own file loading. The contract has connectors.*.pins;
 // mapping requires all six policy fields (empty maps/array are explicit policy).
 LinkSomNets link_som_nets_from_json(const JsonNode& contract);
-LinkMapping link_mapping_from_json(const JsonNode& mapping);
+LinkMapping link_mapping_from_json(const JsonNode& mapping, const std::vector<std::string>& do_not_load_straps);
 JsonNode link_result_json(const LinkResult& result);
 
 // As with Python link(), circuit semantic/pin validation belongs to the loader
@@ -76,6 +76,7 @@ LinkResult link_sheets(const std::vector<CircuitSheetIr>& sheets,
                        const LinkDiagnosticOrder& order = {});
 LinkResult link_sheets(const std::vector<CircuitSheetIr>& sheets,
                        const JsonNode& contract, const JsonNode& mapping,
+                       const std::vector<std::string>& do_not_load_straps,
                        const LinkDiagnosticOrder& order = {});
 
 std::vector<std::string> link_drift_candidates(

@@ -338,7 +338,7 @@ void live_electrical(const fs::path& root){
     Temp tmp;const auto paths=resolve_project_paths(root,fs::path("devkit_mini"));
     BoardPipelineOptions o;o.output_root=tmp.path/"out";o.no_render=true;o.spice.allow_ngspice=false;
     Context c(paths,o);c.circuits=load_project_circuits(paths);for(const auto& s:c.circuits)c.sheets.push_back(s.circuit);
-    c.som=load_som_interface(paths.som_interface_file);c.link=link_sheets(c.sheets,parse_json_file(paths.som_interface_file.string()),parse_json_file((paths.project_root/"som_mapping.json").string()));
+    c.som=load_som_interface(paths.som_interface_file);c.link=link_sheets(c.sheets,parse_json_file(paths.som_interface_file.string()),parse_json_file((paths.project_root/"som_mapping.json").string()), paths.module.do_not_load_straps);
     electrical_stages(c);
     require(c.result.gates.size()==10,"composed electrical family executes every report");
     for(const auto& g:c.result.gates)if(g.mandatory)require(g.status==BoardGateStatus::passed,"live devkit electrical gate "+g.name+": "+g.report);

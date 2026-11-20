@@ -3,6 +3,7 @@
 // complete bytes after ONLY the three documented native provenance changes.
 // Run: devicetree_contracts DATA_DIR [REPO_ROOT]. No KiCad process is needed:
 // the optional project tests reuse the separately verified real live snapshot.
+#include "schgen/board_definition.hpp"
 #include "schgen/devicetree.hpp"
 #include "schgen/json.hpp"
 
@@ -147,17 +148,23 @@ void contracts(const fs::path& fixtures,const std::optional<fs::path>& repo) {
     TempDir temp;
     const auto project=temp.path/"project";
     fs::create_directory(project);
-    const auto contract=project/"som_interface.json";
+    fs::create_directory(temp.path/"som");
+    const auto contract=temp.path/"som"/module_interface_file;
+    write(project/board_file,R"({"files":{"stem":"Fixture_Board"},"root_readme":false,"owned_groups":false,"module":{"folder":"som"}})");
+    const auto module_json=[](const std::string& straps){
+        return std::string(R"({"schema":"schgen.module/1","schematic":"M.kicad_sch","pcb":"M.kicad_pcb","connector_part":"P","draw":{"connector":"J1","rail":"VIN","amps":1,"note":"n"},"sdio_level_v":1.8,"sd_bus":[],"pairs":[],"escape_population":{"netted_contacts":{"J1":1},"return_path":{"n_pairs":0,"n_pair_contacts":0,"n_fail":0,"worst_distance":0}},"escape_triage":[{"pattern":"A","class":"LOW","note":"n"}],"do_not_load_straps":)")+straps+"}";
+    };
+    write(temp.path/"som"/module_file,module_json("[]"));
     const auto mapping=project/"som_mapping.json";
     write(contract,som_interface_json(in.contract));
-    const std::string valid=R"({"schema":"schgen.som_mapping.v1","function_map":{"ZYNQ_PS_MIO10":"ignored","ZYNQ_PS_MIO11":"ZYNQ_PS_UART0_TXD"},"pudc_straps":{"ZYNQ_PS_MIO10":"ZYNQ_PS_UART0_RXD","strap":"renamed"},"vcco_rail_map":{},"rebound_som_rails":{},"isolated_som_rails":{},"do_not_load_straps":[]})";
+    const std::string valid=R"({"schema":"schgen.som_mapping.v1","function_map":{"ZYNQ_PS_MIO10":"ignored","ZYNQ_PS_MIO11":"ZYNQ_PS_UART0_TXD"},"pudc_straps":{"ZYNQ_PS_MIO10":"ZYNQ_PS_UART0_RXD","strap":"renamed"},"vcco_rail_map":{},"rebound_som_rails":{},"isolated_som_rails":{}})";
     write(mapping,valid);
     s.run("JSON function mapping overlay retains insertion order",[&] {
         auto live=in.live;live.source=(temp.path/"not-a-schematic.kicad_sch").string();
         const auto loaded=load_devicetree_input(temp.path,project,live,pins_name);
         require(loaded.function_map==XdcStrings{{"ZYNQ_PS_MIO10","ZYNQ_PS_UART0_RXD"},
             {"ZYNQ_PS_MIO11","ZYNQ_PS_UART0_TXD"},{"strap","renamed"}},"pudc override/order changed");
-        require(loaded.mapping_source=="project/som_mapping.json" && loaded.contract_source=="project/som_interface.json",
+        require(loaded.mapping_source=="project/som_mapping.json" && loaded.contract_source=="som/som_interface.json",
                 "repository-relative sources changed");
         require(loaded.som_source=="not-a-schematic.kicad_sch","source path changed");
         require(generate_devicetree(loaded).mio_rows.size()==4,"loader did not reuse provided live extraction");
@@ -189,8 +196,8 @@ void contracts(const fs::path& fixtures,const std::optional<fs::path>& repo) {
     }
     for(const auto* policy:{"function_map","pudc_straps","vcco_rail_map","rebound_som_rails"}) {
         s.run(std::string("protected boot strap in ")+policy,[&] {
-            auto bad=changed(valid,"\"do_not_load_straps\":[]","\"do_not_load_straps\":[\"BOOT\"]");
-            bad=changed(bad,std::string("\"")+policy+"\":{",std::string("\"")+policy+"\":{\"BOOT\":\"loaded\",");
+            write(temp.path/"som"/module_file,module_json("[\"BOOT\"]"));
+            auto bad=changed(valid,std::string("\"")+policy+"\":{",std::string("\"")+policy+"\":{\"BOOT\":\"loaded\",");
             // Empty objects need no trailing comma before the closing brace.
             const auto empty=bad.find("\"loaded\",}");
             if(empty!=std::string::npos)bad.erase(empty+8,1);

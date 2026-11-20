@@ -395,7 +395,7 @@ LinkSomNets link_som_nets_from_json(const JsonNode& contract) {
     return result;
 }
 
-LinkMapping link_mapping_from_json(const JsonNode& node) {
+LinkMapping link_mapping_from_json(const JsonNode& node, const std::vector<std::string>& do_not_load_straps) {
     LinkMapping mapping;
     if (field(node, "schema", JsonKind::String, "mapping").string_value != "schgen.som_mapping.v1")
         throw std::runtime_error("link: unsupported som_mapping schema");
@@ -404,11 +404,9 @@ LinkMapping link_mapping_from_json(const JsonNode& node) {
     mapping.vcco_rail_map = string_map(node, "vcco_rail_map");
     mapping.rebound_som_rails = string_map(node, "rebound_som_rails");
     mapping.isolated_som_rails = string_map(node, "isolated_som_rails");
-    for (const auto& item : field(node, "do_not_load_straps", JsonKind::Array, "mapping").array_value) {
-        if (item.kind != JsonKind::String || item.string_value.empty())
-            throw std::runtime_error("link: mapping.do_not_load_straps must contain non-empty strings");
-        mapping.do_not_load_straps.insert(item.string_value);
-    }
+    if (object_field(node, "do_not_load_straps"))
+        throw std::runtime_error("link: mapping.do_not_load_straps belongs to the module's module.json");
+    mapping.do_not_load_straps.insert(do_not_load_straps.begin(), do_not_load_straps.end());
     if (object_field(node, "rail_aliases")) mapping.rail_aliases = string_map(node, "rail_aliases");
     validate_mapping(mapping);
     return mapping;
@@ -551,8 +549,9 @@ LinkResult link_sheets(const std::vector<CircuitSheetIr>& sheets,
 
 LinkResult link_sheets(const std::vector<CircuitSheetIr>& sheets,
                        const JsonNode& contract, const JsonNode& mapping,
+                       const std::vector<std::string>& do_not_load_straps,
                        const LinkDiagnosticOrder& order) {
-    return link_sheets(sheets, link_som_nets_from_json(contract), link_mapping_from_json(mapping), order);
+    return link_sheets(sheets, link_som_nets_from_json(contract), link_mapping_from_json(mapping, do_not_load_straps), order);
 }
 
 std::string LinkResult::report() const {

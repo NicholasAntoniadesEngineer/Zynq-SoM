@@ -294,3 +294,23 @@ Each board folder holds a `component_basis.json` with `schema`, `uses` and `shee
 Every library subsystem must be accounted for exactly once. A library subsystem in `sheets` is audited in the `library` scope. One in `board_scope_only` is not audited there. One in neither, or in both, fails with `library subsystem X is neither in sheets nor in board_scope_only of <file>` (or `is in both sheets and board_scope_only of <file>`). A name in `sheets` or `board_scope_only` that is not a library subsystem fails, naming it. A name in `board_scope_only` that is in the `sheets` of no board file fails, so it cannot go unaudited. Every board sheet is audited in the board's scope; a board sheet missing from its file's `sheets` fails as an unexpected live sheet.
 
 When you add a library subsystem, list it in `sheets` (with its obligations in `uses`) or in `board_scope_only`. The audit does not pass until you do.
+
+## 8. The module folder
+
+Every board names the folder of the module it carries in `board.json`, under `module.folder` (for example `"folder": "som"`). The folder sits at the repository root and holds `module.json` and `som_interface.json` beside the module's own KiCad project. `board.json` `module` then holds only what belongs to the board: `pairs` on nets the board maps from module pins, and `loads` on the module's supply pins.
+
+`module.json` has these keys, all required, and any other key is rejected:
+
+| Key | Contents |
+|---|---|
+| `schema` | `schgen.module/1`. |
+| `schematic`, `pcb` | File names of the module's KiCad schematic and board inside the module folder. A path separator is rejected. |
+| `connector_part` | The part name of the module connector. |
+| `draw` | `connector`, `rail`, `amps` and `note`: the module's own current draw. `rail` is the module net; a board's `rebound_som_rails` maps it to the board net. |
+| `sdio_level_v`, `sd_bus` | The module's SD bus signal level and its net names. |
+| `pairs` | Differential pairs on module pin nets, as in `board.json`. They come before the board's own pairs. |
+| `escape_population` | `netted_contacts` (contacts per connector reference) and `return_path` (`n_pairs`, `n_pair_contacts`, `n_fail`, `worst_distance`): the measured populations the escape and return-stitch gates compare the live module against. |
+| `escape_triage` | Rules `pattern`, `class` and `note` for module pin nets. They are tried after the rules in the board's own `escape_triage.json`. |
+| `do_not_load_straps` | Module pin nets that must stay unmapped in every board's `som_mapping.json`. |
+
+`som_interface.json` is written by `schgen som-interface` into the module folder. A board's `som_mapping.json` and `escape_triage.json` hold only the board's own decisions; `do_not_load_straps` in `som_mapping.json` is rejected.

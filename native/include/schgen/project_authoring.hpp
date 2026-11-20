@@ -43,7 +43,7 @@ struct ProjectSubsystemDefinition {
 std::vector<ProjectSubsystemDefinition> project_subsystem_definitions(const std::filesystem::path& project_root);
 std::vector<ProjectSubsystemDefinition> project_subsystem_definitions(const BoardDefinition& board);
 std::vector<std::filesystem::path> board_folders(const std::filesystem::path& repository);
-ConnectorAuthoringPolicy connector_policy_of(const BoardModule& module);
+ConnectorAuthoringPolicy connector_policy_of(const BoardDefinition& board);
 ConnectorAuthoringPolicy project_connector_policy(const std::filesystem::path& project_root);
 CircuitSheetIr author_som_connector(const std::string& ref, const std::string& name,
     const std::string& title, const SomInterface& som, const LinkMapping& mapping,

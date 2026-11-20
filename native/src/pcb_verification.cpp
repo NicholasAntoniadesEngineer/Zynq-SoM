@@ -32,9 +32,9 @@ PcbVerificationResult verify_pcb_geometry(const BoardPcbStage& stage,
             violation.net, input.function_map, input.escape_triage);
         triage.emplace(violation.net, ReturnStitchClass{classification.rank(), classification.klass, classification.function});
     }
-    out.return_stitch = check_return_stitch(prepared, out.return_path, triage, input.interface_bytes, &emitted);
-    out.escape_lanes = check_escape_lanes(model,
-        pcb_escape_population_from_json(input.floorplan.project.escape), input.interface_bytes);
+    const auto population = pcb_escape_population_from_json(input.floorplan.project.escape, input.floorplan.project.module);
+    out.return_stitch = check_return_stitch(prepared, out.return_path, triage, input.interface_bytes, population.return_path, &emitted);
+    out.escape_lanes = check_escape_lanes(model, population, input.interface_bytes);
     out.integrity = check_placement_integrity(prepared, model, layout::authored_intent(input));
     out.reached = stage.reached;
     out.complete = true;

@@ -129,6 +129,11 @@ inline Fixture load(const std::filesystem::path &root, const std::string &projec
         floor.project.module_face_anchors.push_back({k, v.string_value});
     floor.project.reg_band_prefixes = strings(field(placement, "reg_band_prefixes"));
     floor.project.escape = field(config, "escape");
+    auto &escape_items = floor.project.escape.object_value;
+    escape_items.erase(std::remove_if(escape_items.begin(), escape_items.end(),
+                                      [](const auto &item) { return item.first == "netted_contacts"; }),
+                       escape_items.end());
+    floor.project.module = load_board_module(root / project);
     if (const auto *labels = object_field(config, "silk_labels")) {
         if (auto h = object_field(*labels, "headers"))
             for (const auto &[k, v] : h->object_value)
@@ -151,15 +156,16 @@ inline Fixture load(const std::filesystem::path &root, const std::string &projec
             pins.push_back({p.array_value[0].string_value, p.array_value[1].string_value});
         input.netlist.push_back({row.array_value[0].string_value, pins});
     }
-    input.interface_bytes = read(root / project / "som_interface.json");
-    input.som_interface = load_som_interface(root / project / "som_interface.json");
+    input.interface_bytes = read(module_root_of(root / project) / module_interface_file);
+    input.som_interface = load_som_interface(module_root_of(root / project) / module_interface_file);
     auto mapping =
-        link_mapping_from_json(parse_json_file((root / project / "som_mapping.json").string()));
+        link_mapping_from_json(parse_json_file((root / project / "som_mapping.json").string()),
+                               load_board_module(root / project).do_not_load_straps);
     auto functions = mapping.function_map;
     for (const auto &entry : mapping.pudc_straps)
         functions[entry.first] = entry.second;
     input.function_map.assign(functions.begin(), functions.end());
-    input.escape_triage = load_escape_triage(root / project);
+    input.escape_triage = load_escape_triage(root / project, load_board_module(root / project).escape_triage, "module.json");
     auto path = root / "parts/DF40C-100DS-0.4V_51/DF40C-100DS-0.4V_51.kicad_mod";
     auto receptacle = pcb_check_footprint(path.string(), read(path));
     for (const auto &[r, c] : input.som_interface.connectors) {
