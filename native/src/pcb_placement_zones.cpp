@@ -54,8 +54,8 @@ PcbZoneResult pcb_placement::build_zones_for_search(const PcbPlacementInput &in,
         decoupling[sheet.name] = {caps.begin(), caps.end()};
     }
     for (const auto &p : ctx.parts) {
-        if (p.sheet == "som_decoupling" ||
-            (p.sheet.rfind("som_j", 0) == 0 && p.ref.rfind("J", 0) == 0))
+        const auto &role = sheet_role(in.floorplan.roles, p.sheet);
+        if (role.region == SheetRegion::under_module || p.lib_ref == role.module_connector)
             continue;
         if (edge_family(in.floorplan.project.connectors, p.value))
             edges.insert(p.sheet);

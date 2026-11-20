@@ -1,6 +1,7 @@
 #pragma once
 #include "schgen/pcb_placement.hpp"
 #include "connector_facts_fixture.hpp"
+#include "sheet_roles_fixture.hpp"
 #include <algorithm>
 #include <fstream>
 
@@ -71,6 +72,7 @@ inline Fixture load(const std::filesystem::path &root, const std::string &projec
     auto &floor = input.floorplan;
     for (const auto &s : field(in, "sheets").array_value)
         floor.sheets.push_back(decode_intermediate_circuit_ir(s));
+    floor.roles = explicit_sheet_roles(floor.sheets);
     for (const auto &b : field(in, "bindings").array_value) {
         LinkPortBinding binding;
         binding.sheet = string(b, "sheet");

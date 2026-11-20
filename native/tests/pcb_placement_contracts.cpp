@@ -1,4 +1,5 @@
 #include "schgen/run_config.hpp"
+#include "sheet_roles_fixture.hpp"
 #include "pcb_placement_fixture.hpp"
 #include "schgen/pcb_emit.hpp"
 #include "schgen/pcb_placement_gates.hpp"
@@ -55,6 +56,7 @@ void constraint_merge_contracts() {
             PcbPlacementInput in;
             CircuitSheetIr a, b; a.name="a"; b.name="b";
             in.floorplan.sheets={a,b};
+            in.floorplan.roles=explicit_sheet_roles(in.floorplan.sheets);
             if(hard) in.floorplan.project.wired_sheets={"a"};
             const std::string key=minimum?"far":"near_max";
             const std::string target=minimum?"what":"other", bound=minimum?"min_mm":"max_mm";
@@ -465,7 +467,7 @@ void run(const std::filesystem::path &root, const std::string &name, const std::
             auto pool=f.expected_pool;
             for(const auto& [path,bytes]:field(variant,"footprints").object_value)
                 pool[path]=pcb_check_footprint(path,bytes.string_value);
-            const auto original=pcb_model_from_json(*model,pool);
+            const auto original=pcb_model_from_json(*model,pool, explicit_sheet_roles(*model));
             require(!check_fanout(PcbCheckInput(original),0).ok,
                     "immutable top-preferred overlap witness must still fail the physical gate");
         }
@@ -523,7 +525,7 @@ void run(const std::filesystem::path &root, const std::string &name, const std::
     // Historical coordinates are valid renderer operands, not an optimisation
     // target. Preserve the immutable emitter oracle separately below.
     placement_requirements_test::structure(f.input,zones,result,require);
-    const auto expected=pcb_model_from_json(f.model,f.expected_pool);
+    const auto expected=pcb_model_from_json(f.model,f.expected_pool, explicit_sheet_roles(f.model));
     placement_requirements_test::physical(f.input,result.model,require);
     require(result.model.netclass_of==expected.netclass_of,name+" source net-class assignment");
     same(field(pcb_model_json(result.model),"classes"),field(f.model,"classes"),name+" source impedance classes");

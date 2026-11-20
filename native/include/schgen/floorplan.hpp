@@ -12,6 +12,7 @@
 #include "schgen/pcb_scan.hpp"
 #include "schgen/power_checks.hpp"
 #include "schgen/project.hpp"
+#include "schgen/sheet_roles.hpp"
 
 #include <map>
 #include <memory>
@@ -188,7 +189,7 @@ struct FloorplanLegalizeInput {
     // Complete disjoint occupancy masks suppress its pair separation;
     // explicit hard terms in index are still evaluated independently.
     std::map<std::pair<std::string, std::string>, int> channel_demand;
-    std::map<std::string, Box4> som_j_rects;
+    std::map<std::string, Box4> module_rects;
     double clear = board_decision_policy::floorplan::clear;
     bool compact = false;
     FloorplanPoint origin{25.0, 25.0};
@@ -281,6 +282,7 @@ struct FloorplanPlan {
 // missing keys referenced by geometry are errors, not guessed dimensions.
 struct FloorplanInput {
     std::vector<CircuitSheetIr> sheets;
+    SheetRoles roles;
     LinkResult link;
     std::vector<FloorplanRegulator> regulators;
     // Researched per-net SI data for Markdown reporting. No per-kind fallback.

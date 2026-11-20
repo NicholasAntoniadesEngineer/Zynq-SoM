@@ -1,4 +1,5 @@
 #include "schgen/run_config.hpp"
+#include "sheet_roles_fixture.hpp"
 #include "pcb_placement_fixture.hpp"
 #include "schgen/compose_repair.hpp"
 #include "schgen/atomic_file.hpp"
@@ -179,7 +180,7 @@ void units(const std::filesystem::path &base) {
 }
 void real_ledgers(const std::filesystem::path &root,const std::string &project) {
     auto fixture=placement_fixture::load(root,project);
-    auto model=pcb_model_from_json(fixture.model,fixture.expected_pool);
+    auto model=pcb_model_from_json(fixture.model,fixture.expected_pool, explicit_sheet_roles(fixture.model));
     const auto rows=field(parse_json_file((root/"native/tests/data/compose_repair"/(project+"_strict.json")).string()),"rows").array_value;
     for(const auto &r:rows) {
         auto changed=model;
@@ -293,7 +294,7 @@ struct Scratch {
     ~Scratch(){std::error_code ec;std::filesystem::remove_all(path,ec);}
 };
 void workflow(const std::filesystem::path &root) {
-    auto f=placement_fixture::load(root,"devkit_mini");const auto base=pcb_model_from_json(f.model,f.expected_pool);
+    auto f=placement_fixture::load(root,"devkit_mini");const auto base=pcb_model_from_json(f.model,f.expected_pool, explicit_sheet_roles(f.model));
     const auto oracle=parse_json_file((root/"native/tests/data/compose_repair/workflow_strict.json").string());
     auto initial=base;
     initial.insts.erase(std::remove_if(initial.insts.begin(),initial.insts.end(),[](const auto &i){return i.sheet!="uart_bridge"&&i.sheet!="usb_uart_connector";}),initial.insts.end());

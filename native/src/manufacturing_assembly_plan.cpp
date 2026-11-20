@@ -20,7 +20,7 @@ std::string description(const PcbCheckInstance& i,const PcbEmitPolicy& p) {
 std::vector<std::string> connector_notes(const PcbModel& m,Indices ids,const PcbEmitPolicy& p) {
     sort_indices(ids,m);std::vector<std::string> out,som;std::map<std::string,Indices> pairs;
     for(auto n:ids){const auto& i=m.insts.at(n);const auto* fact=connector_fact(p.connectors,stem(i));
-        if(starts(i.sheet,"som_j"))som.push_back(i.ref);
+        if(!i.module_connector.empty())som.push_back(i.ref);
         if(fact&&fact->pair_label)pairs[*fact->pair_label].push_back(n);
         if(!fact)continue;
         const auto face=mating_face_vector(*fact);

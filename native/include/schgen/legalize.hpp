@@ -105,7 +105,7 @@ std::vector<EvalTermOut> evaluate_terms(
         poses,
     const std::vector<EvalMetric>& metrics, const std::vector<EvalTermIn>& terms,
     const std::vector<std::pair<std::string, double>>& far_guard,
-    const std::vector<std::pair<std::string, Box4>>& som_j_rects,
+    const std::vector<std::pair<std::string, Box4>>& module_rects,
     double origin_x, double origin_y, QuantizationCounts* counts = nullptr);
 
 struct NamedEdge {

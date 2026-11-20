@@ -1,4 +1,5 @@
 #include "schgen/run_config.hpp"
+#include "sheet_roles_fixture.hpp"
 #include "pack_plain_observer.hpp"
 #include "schgen/pcb_emit.hpp"
 #include "schgen/pcb_placement_gates.hpp"
@@ -67,7 +68,7 @@ int main(int argc,char** argv){try{
   require(end().empty()&&again.quantization_engagements==q.quantization_engagements,"replay created work");
 
   // Independently frozen complete emitted PCB bytes, not a new candidate golden.
-  const auto frozenModel=pcb_model_from_json(f.model,f.expected_pool);
+  const auto frozenModel=pcb_model_from_json(f.model,f.expected_pool, explicit_sheet_roles(f.model));
   auto historicalPolicy=pcb_emit_policy(f.input.floorplan.project);
   // This capture predates the requested interface-only reference labels.
   // Use its actual emission input; current model construction above still

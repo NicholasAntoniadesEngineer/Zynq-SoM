@@ -67,7 +67,7 @@ void defaults(const std::filesystem::path& root,std::ostream& dump){
 FloorplanInput free_input(){
     FloorplanInput in;in.som.w=in.som.h=20;in.spec=FloorplanSpec{};
     CircuitSheetIr sc;sc.name="logic";
-    sc.parts.push_back({"R1","Device:R","10k","Resistor_SMD:R_0603_1608Metric",{},{},{}});in.sheets={sc};
+    sc.parts.push_back({"R1","Device:R","10k","Resistor_SMD:R_0603_1608Metric",{},{},{}});in.sheets={sc};in.roles=explicit_sheet_roles(in.sheets);
     in.geometry.zone_box["logic"]={12,8};FloorplanZoneShape top;top.w=12;top.h=8;auto bottom=top;bottom.side="bottom";
     in.geometry.shapes["logic"]={top,bottom};in.spec->interior["logic"].layer="bottom";
     in.accounting.fallback_events={"legalize_only_compaction","interior_reseat_retry","legalize_only_compaction"};return in;

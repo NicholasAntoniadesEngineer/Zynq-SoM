@@ -1,4 +1,5 @@
 #include "schgen/atomic_file.hpp"
+#include "sheet_roles_fixture.hpp"
 #include "schgen/diagram.hpp"
 #include "schgen/gallery.hpp"
 #include "schgen/pcb_checks.hpp"
@@ -203,7 +204,7 @@ void live_projects(const JsonNode &all, const fs::path &repo) {
             link_som_nets_from_json(parse_json_file(paths.som_interface_file.string()));
         const auto policy = link_mapping_from_json(
             parse_json_file((paths.project_root / "som_mapping.json").string()), paths.module.do_not_load_straps);
-        const auto linked = link_sheets(sheets, som, policy);
+        const auto linked = link_sheets(sheets, sheet_module_connectors(explicit_sheet_roles(sheets)), som, policy);
         const auto &rows = field(all, "diagrams").array_value;
         const auto item = std::find_if(rows.begin(), rows.end(),
                                        [&](const auto &c) { return str(c, "name") == name; });
@@ -267,14 +268,10 @@ void live_projects(const JsonNode &all, const fs::path &repo) {
             render_gallery_full(fresh, cp.project_root).find("Fresh native title \\| changed") !=
                 std::string::npos,
             "gallery consumes fresh typed circuit metadata");
-        const auto json_link = link_sheets(
-            [&] {
-                std::vector<CircuitSheetIr> out;
-                for (const auto &c : load_project_circuits(cp))
-                    out.push_back(c.circuit);
-                return out;
-            }(),
-            som, policy);
+        std::vector<CircuitSheetIr> json_sheets;
+        for (const auto &c : load_project_circuits(cp))
+            json_sheets.push_back(c.circuit);
+        const auto json_link = link_sheets(json_sheets, sheet_module_connectors(explicit_sheet_roles(json_sheets)), som, policy);
         equal_bytes(render_block_diagram(json_link, som), str(*item, "expected"),
                     "json-only-native-diagram-" + name);
         std::cout << name

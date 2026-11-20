@@ -122,7 +122,7 @@ struct SomOutline {
     std::vector<SomJGeom> js;
 };
 
-SomOutline extract_som_scan(const std::string& text);
+SomOutline extract_som_scan(const std::string& text, const std::vector<std::string>& connectors);
 
 std::vector<std::tuple<std::string, double, double, double, double>>
 pad_boxes_named(

@@ -13,6 +13,7 @@ namespace schgen {
 
 using LinkSomNets = std::map<std::string, std::vector<std::string>>;
 using LinkStringMap = std::map<std::string, std::string>;
+using LinkSheetConnectors = std::map<std::string, std::string>;
 
 // Project-local policy. Map directions match som_mapping.json: SoM -> carrier
 // for function_map, pudc_straps, vcco_rail_map and rebound_som_rails;
@@ -71,10 +72,10 @@ JsonNode link_result_json(const LinkResult& result);
 
 // As with Python link(), circuit semantic/pin validation belongs to the loader
 // and command boundary. Preserve supplied sheet/net/port-type order here.
-LinkResult link_sheets(const std::vector<CircuitSheetIr>& sheets,
+LinkResult link_sheets(const std::vector<CircuitSheetIr>& sheets, const LinkSheetConnectors& sheet_connectors,
                        const LinkSomNets& som_nets, const LinkMapping& mapping,
                        const LinkDiagnosticOrder& order = {});
-LinkResult link_sheets(const std::vector<CircuitSheetIr>& sheets,
+LinkResult link_sheets(const std::vector<CircuitSheetIr>& sheets, const LinkSheetConnectors& sheet_connectors,
                        const JsonNode& contract, const JsonNode& mapping,
                        const std::vector<std::string>& do_not_load_straps,
                        const LinkDiagnosticOrder& order = {});

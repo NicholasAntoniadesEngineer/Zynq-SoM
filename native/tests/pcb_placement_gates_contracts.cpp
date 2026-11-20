@@ -1,4 +1,5 @@
 #include "schgen/run_config.hpp"
+#include "sheet_roles_fixture.hpp"
 #include "pcb_placement_fixture.hpp"
 #include "schgen/pcb_placement_gates.hpp"
 #include "schgen/ratsnest_gate.hpp"
@@ -383,7 +384,7 @@ void baseline(const std::filesystem::path &root, const std::string &project) {
     auto raw = parse_json_file(
         (root / "native/tests/data/pcb_placement_gates" / (project + ".json")).string());
     auto f = load(root, project);
-    auto model = pcb_model_from_json(f.model, f.expected_pool);
+    auto model = pcb_model_from_json(f.model, f.expected_pool, explicit_sheet_roles(f.model));
     PcbCheckInput input(model);
     auto policy = pcb_placement_gate_policy(f.input);
     require(policy.contracts.size() == field(raw, "contracts").object_value.size(),

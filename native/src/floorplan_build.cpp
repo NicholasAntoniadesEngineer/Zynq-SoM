@@ -112,7 +112,7 @@ void Engine::initialize() {
         bindings.emplace_back(b.sheet,deferred,deferred ? b.ptype.expect : "",b.targets);
     }
     std::map<std::string,std::vector<std::pair<std::string,int>>> aff;
-    for (const auto& row:j_affinity(sheet_names,bindings)) aff.emplace(row);
+    for (const auto& row:j_affinity(sheet_names,bindings,in.roles)) aff.emplace(row);
     std::vector<std::tuple<std::string,double,double>> jack_rows;
     for (const auto& j:plan.som.js) jack_rows.emplace_back(j.ref,j.x,j.y);
     std::map<std::string,std::string> j_edges;
@@ -128,7 +128,7 @@ void Engine::initialize() {
     }
     for (const auto& [name,sc]:sheets) {
         auto parts=zone_parts(*sc);
-        if ((starts(name,"som_j") || name=="som_decoupling") && parts.empty()) continue;
+        if ((module_connector_sheet(in.roles,name) || under_module_sheet(in.roles,name)) && parts.empty()) continue;
         FloorplanBlock b; b.name=name; b.n_parts=static_cast<int>(parts.size()); b.j_aff=aff[name];
         std::sort(parts.begin(),parts.end(),[](const auto* a,const auto* b){return a->ref<b->ref;});
         for (const auto* p:parts) if (const auto* fact=connector_fact(in.project.connectors,p->value); fact && fact->edge_pinned) {
@@ -161,7 +161,7 @@ void Engine::initialize() {
     std::set<std::string> som_nets;
     for (const auto& sc:in.sheets) {
         for (const auto& n:sc.nets) {
-            if (starts(sc.name,"som_j")) {
+            if (module_connector_sheet(in.roles,sc.name)) {
                 som_nets.insert(n.name);
                 bool auxiliary=false;
                 for (const auto& p:n.pins) if (zone_refs[sc.name].count(p.ref)) auxiliary=true;
@@ -172,7 +172,7 @@ void Engine::initialize() {
             if (inserted.second) net_sheets.emplace_back(n.name,std::set<std::string>{});
             net_sheets[inserted.first->second].second.insert(sc.name);
         }
-        if (!starts(sc.name,"som_j") && std::any_of(sc.parts.begin(),sc.parts.end(),[](const auto& p){return p.footprint.find("MountingHole")==std::string::npos;})) ++n_sub;
+        if (!module_connector_sheet(in.roles,sc.name) && std::any_of(sc.parts.begin(),sc.parts.end(),[](const auto& p){return p.footprint.find("MountingHole")==std::string::npos;})) ++n_sub;
     }
     for (auto& b:plan.interior_blocks) {
         const auto explicit_anchor=spec.interior.find(b.name);
@@ -223,7 +223,7 @@ void Engine::ledger_initial(double sw,double sh) {
     calc("est_via_ordinary",jvalue(ordinary),{{"via_cost",jvalue(ordinary)}});
     calc("est_via_impedance",jvalue(impedance),{{"via_cost",jvalue(impedance)}});
     int nj=0;
-    for (const auto& sc:in.sheets) if (starts(sc.name,"som_j")) ++nj;
+    for (const auto& sc:in.sheets) if (module_connector_sheet(in.roles,sc.name)) ++nj;
     calc("subsystem_count",jvalue(n_sub),{{"n_sheets",jvalue(static_cast<int>(in.sheets.size()))},{"n_som_j",jvalue(nj)},
         {"n_mechanical_only",jvalue(static_cast<int>(in.sheets.size())-n_sub-nj)}});
     calc("seed_outline",jvalue(outline_text(sw,sh)),{{"som_w",jvalue(plan.som.w)},{"som_h",jvalue(plan.som.h)},
@@ -245,7 +245,7 @@ void Engine::ledger_initial(double sw,double sh) {
     }
     calc("d13_tier_population",jvalue(low+high),{{"n_subjects",jvalue(low+high)},{"tier_le2_0p20",jvalue(0)},
         {"tier_le8_1p50",jvalue(low)},{"tier_ge9_2p00",jvalue(high)}});
-    const auto [gw,gh,cols,rows]=som_decoupling_grid(plan.som.w,plan.som.h,plan.dec_count,dec_inset,&plan.accounting.quantization_engagements);
+    const auto [gw,gh,cols,rows]=under_module_grid(plan.som.w,plan.som.h,plan.dec_count,dec_inset,&plan.accounting.quantization_engagements);
     calc("decoupling_grid",jvalue(plan.dec_count),{{"n_caps",jvalue(plan.dec_count)},{"som_w",jvalue(plan.som.w)},
         {"som_h",jvalue(plan.som.h)},{"inset",jvalue(dec_inset)},{"grid_w",jvalue(precision.dimension(gw))},
         {"grid_h",jvalue(precision.dimension(gh))},{"cols",jvalue(cols)},{"rows",jvalue(rows)}});

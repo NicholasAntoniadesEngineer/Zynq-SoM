@@ -78,7 +78,7 @@ void declare_pipeline(NativeLedger& l){
     declare_calculation(l,"register_silence","census","registrations",{"quantize_registered","quantize_engaged","fallback_registered","fallback_fired"},"registered - engaged = declared machinery this build never used");
 }
 void record_pipeline_before(Context& c){
-    std::size_t som=0,dec=0;for(const auto& s:c.sheets){som+=s.name.rfind("som_j",0)==0;dec+=s.name=="som_decoupling";}
+    std::size_t som=0,dec=0;for(const auto& s:c.sheets){som+=module_connector_sheet(c.require_roles(),s.name);dec+=under_module_sheet(c.require_roles(),s.name);}
     c.ledger.open_step("netlist");c.ledger.calc("sheet_census",number(c.sheets.size()-som-dec),{{"n_sheets",number(c.sheets.size())},{"n_som_j",number(som)},{"n_decoupling",number(dec)}});c.ledger.close_step("netlist");
     std::map<std::string,std::size_t> multi;for(const auto& s:c.sheets)for(const auto& n:s.nets)++multi[n.name];
     const auto som_nets=link_som_nets_from_json(parse_json_file(c.paths.som_interface_file.string()));std::set<std::string> all;std::size_t cross=0;

@@ -52,9 +52,9 @@ try{
         check({{"pack_edge_component_precision4dp",static_cast<std::size_t>(4*n)}});
     }
     for(int n:{-2,0,1,5,17}) for(double w:{.5,20.12345}){
-        begin("grid");emit(som_decoupling_grid(w,13.12345,n,6 RECEIPT));
+        begin("grid");emit(under_module_grid(w,13.12345,n,6 RECEIPT));
         check({{"pack_som_grid_precision0dp",n!=0},{"pack_som_grid_trunc",n!=0}});
-        begin("cells");emit(som_decoupling_cells(-1.23455,2.55555,w,13.12345,n,6 RECEIPT));
+        begin("cells");emit(under_module_cells(-1.23455,2.55555,w,13.12345,n,6 RECEIPT));
         check({{"pack_som_grid_precision0dp",n>0},{"pack_som_grid_trunc",n>0},
                {"pack_som_cell_precision4dp",static_cast<std::size_t>(n>0?2*n:0)}});
     }

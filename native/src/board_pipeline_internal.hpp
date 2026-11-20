@@ -29,6 +29,7 @@ struct Context {
     std::optional<BoardAuthoredProject> authored;
     std::vector<CircuitSheetIr> sheets;
     SheetIndex index;
+    std::optional<SheetRoles> roles;
     std::optional<LinkResult> link;
     std::optional<SomInterface> som;
     std::optional<BoardSchematicResult> schematic;
@@ -46,6 +47,7 @@ struct Context {
     bool loaded = false, pcb_published = false;
     ExecutionTimings* timing = nullptr;
     Context(const ProjectPaths&, const BoardPipelineOptions&);
+    const SheetRoles& require_roles() const { if(!roles) throw ProjectError("sheet roles unavailable; the inputs stage did not run"); return *roles; }
     void gate(const std::string&, bool, const std::string&);
     void status(const std::string&, BoardGateStatus, const std::string&);
     void report(const std::string& filename, const std::string& value);

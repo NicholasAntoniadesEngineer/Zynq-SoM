@@ -1,4 +1,5 @@
 #include "board_pipeline_internal.hpp"
+#include "sheet_roles_fixture.hpp"
 #include "execution_timing_contracts.hpp"
 #include "precision_receipt_contracts.hpp"
 #include "schgen/selftest_full.hpp"
@@ -310,7 +311,7 @@ void live_schematic(const fs::path& root){
     o.netlist_workers=1;
     Context c(paths,o);auto circuit=selftest_rc_fixture();auto second=circuit;second.name="parallel_rc";
     c.circuits={{circuit.name,tmp.path/"circuit.json",circuit},{second.name,tmp.path/"second.json",second}};
-    c.sheets={circuit,second};c.index={{circuit.name,1},{second.name,2}};
+    c.sheets={circuit,second};c.index={{circuit.name,1},{second.name,2}};c.roles=explicit_sheet_roles(c.sheets);
     schematic_stage(c);
     for(const auto* name:{"sheet_gates","cc","board_schematic"}){const auto p=std::find_if(c.result.gates.begin(),c.result.gates.end(),[&](const auto& g){return g.name==name;});require(p!=c.result.gates.end()&&p->status==BoardGateStatus::passed,"live native stage "+std::string(name)+(p==c.result.gates.end()?" missing":": "+p->report));}
     require(fs::is_regular_file(o.output_root/"Zynq_Carrier.kicad_sch"),"actual hierarchy emitted in temporary tree");
@@ -321,7 +322,7 @@ void live_schematic(const fs::path& root){
     require(fs::is_regular_file(single.schematic)&&fs::is_regular_file(tmp.path/"single"/(circuit.name+".gates.txt")),
             "single-sheet build publishes independently checked artifacts");
     auto parallel_options=o;parallel_options.output_root=tmp.path/"parallel";parallel_options.netlist_workers=4;
-    Context parallel(paths,parallel_options);parallel.circuits=c.circuits;parallel.sheets=c.sheets;parallel.index=c.index;
+    Context parallel(paths,parallel_options);parallel.circuits=c.circuits;parallel.sheets=c.sheets;parallel.index=c.index;parallel.roles=c.roles;
     schematic_stage(parallel);
     for(const auto* name:{"sheet_gates","cc"}){
         const auto gate=[&](const Context& context)->const BoardPipelineGate&{
@@ -337,7 +338,7 @@ void live_electrical(const fs::path& root){
     Temp tmp;const auto paths=resolve_project_paths(root,fs::path("devkit_mini"));
     BoardPipelineOptions o;o.output_root=tmp.path/"out";o.no_render=true;o.spice.allow_ngspice=false;
     Context c(paths,o);c.circuits=load_project_circuits(paths);for(const auto& s:c.circuits)c.sheets.push_back(s.circuit);
-    c.som=load_som_interface(paths.som_interface_file);c.link=link_sheets(c.sheets,parse_json_file(paths.som_interface_file.string()),parse_json_file((paths.project_root/"som_mapping.json").string()), paths.module.do_not_load_straps);
+    c.roles=load_sheet_roles(paths,c.circuits);c.som=load_som_interface(paths.som_interface_file);c.link=link_sheets(c.sheets,sheet_module_connectors(*c.roles),parse_json_file(paths.som_interface_file.string()),parse_json_file((paths.project_root/"som_mapping.json").string()), paths.module.do_not_load_straps);
     electrical_stages(c);
     require(c.result.gates.size()==10,"composed electrical family executes every report");
     for(const auto& g:c.result.gates)if(g.mandatory)require(g.status==BoardGateStatus::passed,"live devkit electrical gate "+g.name+": "+g.report);

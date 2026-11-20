@@ -10,9 +10,9 @@ std::string resolve(const std::string& net,const LinkMapping& m){for(auto p:{&m.
 bool power(const std::string& net){return starts(net,"+")||net=="VBUS"||starts(net,"VDD")||starts(net,"VCC");}
 }
 double PcbRailAmpacity::util()const{return capacity_a()>0?current_a/capacity_a():std::numeric_limits<double>::infinity();}
-RailAmpacityResult analyze_rail_ampacity(const std::vector<ProjectCircuit>& sheets,const SomInterface& iface,const LinkMapping& mapping){
+RailAmpacityResult analyze_rail_ampacity(const std::vector<ProjectCircuit>& sheets,const SheetRoles& roles,const SomInterface& iface,const LinkMapping& mapping){
     RailAmpacityResult res;std::map<std::string,std::map<std::string,int>> counts;for(const auto& [ref,c]:iface.connectors)for(const auto& [pad,net]:c.pins){(void)pad;if(mapping.isolated_som_rails.count(net))continue;auto rail=resolve(net,mapping);if(power(rail))++counts[rail][ref];}
-    std::map<std::string,double> delivered;for(const auto& sc:sheets)if(starts(sc.name,"som_j")){
+    std::map<std::string,double> delivered;for(const auto& sc:sheets)if(module_connector_sheet(roles,sc.name)){
         // Sum each sheet's rail entries before adding to the project total,
         // retaining Python's floating-point evaluation order.
         std::vector<std::pair<std::string,double>> per_sheet;
