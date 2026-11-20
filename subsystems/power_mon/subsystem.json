@@ -1,0 +1,127 @@
+{
+  "schema": "schgen.subsystem/1",
+  "name": "power_mon",
+  "title": "Rail telemetry: 2x INA3221 + shunts (I2C 0x40/41)",
+  "interface": ["+VIN", "+VIN_SYS", "+5V_REG", "+5V", "+3V3_REG", "+3V3", "+1V8_REG", "+1V8", "GND", "+3V3_SC", "STM32_I2C2_SDA", "STM32_I2C2_SCL", "PMON_ALERT_N"],
+  "parts": [
+    {"ref": "U1", "part": "INA3221AIRGVR"},
+    {"ref": "U2", "part": "INA3221AIRGVR"},
+    {"ref": "RS1", "part": "RLM12FTCMR010", "value": "10mR"},
+    {"ref": "RS2", "part": "RLM12FTCMR010", "value": "10mR"},
+    {"ref": "RS3", "part": "RLM12FTCMR010", "value": "10mR"},
+    {"ref": "RS4", "part": "RLM12FTCMR020", "value": "20mR"},
+    {
+      "ref": "C1",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {
+      "ref": "C2",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {
+      "ref": "C3",
+      "symbol": "Device:C",
+      "value": "10u",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "fields": {"LCSC": "C15850"}
+    },
+    {
+      "ref": "R1",
+      "symbol": "Device:R",
+      "value": "10k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C25804"}
+    }
+  ],
+  "nets": [
+    {
+      "name": "+VIN",
+      "pins": ["RS1.1", "U1.12"]
+    },
+    {
+      "name": "+VIN_SYS",
+      "pins": ["RS1.2", "U1.11"]
+    },
+    {
+      "name": "+5V_REG",
+      "pins": ["RS2.1", "U1.15"]
+    },
+    {
+      "name": "+5V",
+      "pins": ["RS2.2", "U1.14"]
+    },
+    {
+      "name": "+3V3_REG",
+      "pins": ["RS3.1", "U1.2"]
+    },
+    {
+      "name": "+3V3",
+      "pins": ["RS3.2", "U1.1"]
+    },
+    {
+      "name": "+1V8_REG",
+      "pins": ["RS4.1", "U2.12"]
+    },
+    {
+      "name": "+1V8",
+      "pins": ["RS4.2", "U2.11"]
+    },
+    {
+      "name": "GND",
+      "pins": ["U2.15", "U2.14", "U2.2", "U2.1", "U1.3", "U1.17", "U2.3", "U2.17", "U1.5", "C1.2", "C2.2", "C3.2"]
+    },
+    {
+      "name": "+3V3_SC",
+      "pins": ["U1.4", "U1.16", "U2.4", "U2.16", "U2.5", "C1.1", "C2.1", "C3.1", "R1.1"]
+    },
+    {
+      "name": "STM32_I2C2_SDA",
+      "class": "port",
+      "pins": ["U1.7", "U2.7"]
+    },
+    {
+      "name": "STM32_I2C2_SCL",
+      "class": "port",
+      "pins": ["U1.6", "U2.6"]
+    },
+    {
+      "name": "PMON_ALERT_N",
+      "class": "port",
+      "pins": ["U1.9", "U2.9", "R1.2"]
+    }
+  ],
+  "unconnected": ["U1.10", "U1.13", "U1.8", "U2.10", "U2.13", "U2.8"],
+  "ports": [
+    {"net": "STM32_I2C2_SDA", "kind": "i2c", "role": "sda", "bus": "STM32_I2C2", "speed_hz": 400000, "expect": "som_j1_connector"},
+    {"net": "STM32_I2C2_SCL", "kind": "i2c", "role": "scl", "bus": "STM32_I2C2", "speed_hz": 400000, "expect": "som_j1_connector"},
+    {"net": "PMON_ALERT_N", "kind": "single", "expect": "bringup (TCA9535 spare port P11)"}
+  ],
+  "hints": [],
+  "draws": [
+    {"rail": "+3V3_SC", "amps": 0.002, "note": "2x INA3221 ~0.7 mA + ALERT pull-up"}
+  ],
+  "waivers": [
+    {"kind": "tp_waivers", "key": "+VIN_SYS", "reason": "reg-side of RS1 — probe across the shunt (the +VIN @ pd_input TP is the post-shunt/load side)"},
+    {"kind": "tp_waivers", "key": "+5V_REG", "reason": "reg-side of RS2 — probe across the shunt (the +5V TP is the post-shunt/load side)"},
+    {"kind": "tp_waivers", "key": "+3V3_REG", "reason": "reg-side of RS3 — probe across the shunt (the +3V3 TP is the post-shunt/load side)"},
+    {"kind": "tp_waivers", "key": "+1V8_REG", "reason": "reg-side of RS4 — probe across the shunt (the +1V8 TP is the post-shunt/load side)"}
+  ],
+  "purpose": [
+    {"part": "C1", "role": "bypass", "pin": "U1.4"},
+    {"part": "C2", "role": "bypass", "pin": "U2.4"},
+    {"part": "C3", "role": "reservoir", "pin": "U1.4"},
+    {"part": "R1", "role": "pull", "pin": "U1.9"},
+    {"part": "RS1", "role": "sense", "pin": "U1.12"},
+    {"part": "RS2", "role": "sense", "pin": "U1.15"},
+    {"part": "RS3", "role": "sense", "pin": "U1.2"},
+    {"part": "RS4", "role": "sense", "pin": "U2.12"}
+  ],
+  "free": []
+}
+

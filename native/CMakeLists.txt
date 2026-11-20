@@ -641,7 +641,7 @@ if(BUILD_TESTING)
     add_test(NAME native_downstream_i2c_contracts
         COMMAND schgen_downstream_i2c_contracts "${CMAKE_CURRENT_SOURCE_DIR}/..")
     set_tests_properties(native_downstream_i2c_contracts PROPERTIES TIMEOUT 120)
-    foreach(family authoring_context authoring_purity authoring_purity_config authoring_purity_repository authoring_purity_dispatch)
+    foreach(family authoring_context authoring_purity authoring_purity_config authoring_purity_repository)
         add_executable(schgen_${family}_contracts tests/${family}_contracts.cpp)
         target_link_libraries(schgen_${family}_contracts PRIVATE schgen_core)
         target_compile_options(schgen_${family}_contracts PRIVATE
@@ -655,7 +655,6 @@ if(BUILD_TESTING)
     add_test(NAME native_authoring_guard_live_contracts COMMAND schgen_native_authoring_guard_contracts
         "${CMAKE_CURRENT_SOURCE_DIR}/.." --live "${SCHGEN_AUTHORING_PURITY_CONFIGURATION}")
     set_tests_properties(native_authoring_guard_live_contracts PROPERTIES TIMEOUT 180 RUN_SERIAL TRUE)
-    add_test(NAME native_authoring_purity_dispatch_contracts COMMAND schgen_authoring_purity_dispatch_contracts)
     add_test(NAME native_authoring_purity_contracts COMMAND schgen_authoring_purity_contracts
         "${CMAKE_CURRENT_SOURCE_DIR}/.." "${SCHGEN_LIBCLANG}" ${SCHGEN_PURITY_TEST_SYSTEM_ARGUMENTS})
     add_test(NAME native_authoring_purity_config_contracts COMMAND schgen_authoring_purity_config_contracts

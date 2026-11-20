@@ -1,0 +1,113 @@
+{
+  "schema": "schgen.subsystem/1",
+  "name": "board_services",
+  "title": "Board services: ID-EEPROM, RTC, watchdog, QWIIC",
+  "interface": ["+3V3_AUX", "GND", "AUX_I2C_SCL", "AUX_I2C_SDA", "WATCHDOG_KICK", "WATCHDOG_RST_N"],
+  "parts": [
+    {"ref": "U1", "part": "24AA025E48T-I_OT"},
+    {
+      "ref": "C1",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {"ref": "U2", "part": "RV-3028-C7-32.768kHz-1ppm-TA-QC"},
+    {
+      "ref": "R1",
+      "symbol": "Device:R",
+      "value": "10k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C25804"}
+    },
+    {
+      "ref": "C2",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {"ref": "BT1", "part": "KH-CR1220-2"},
+    {"ref": "U3", "part": "TPS3823-33DBVR"},
+    {
+      "ref": "C3",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {
+      "ref": "R2",
+      "symbol": "Device:R",
+      "value": "1k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C21190"}
+    }
+  ],
+  "nets": [
+    {
+      "name": "+3V3_AUX",
+      "pins": ["U1.6", "U1.5", "C1.1", "U2.7", "R1.1", "C2.1", "U3.5", "C3.1"]
+    },
+    {
+      "name": "GND",
+      "pins": ["U1.2", "U1.4", "C1.2", "U2.5", "U2.8", "C2.2", "BT1.2", "U3.2", "C3.2"]
+    },
+    {
+      "name": "AUX_I2C_SCL",
+      "class": "port",
+      "pins": ["U1.1", "U2.3"]
+    },
+    {
+      "name": "AUX_I2C_SDA",
+      "class": "port",
+      "pins": ["U1.3", "U2.4"]
+    },
+    {
+      "name": "RTC_INT_N",
+      "pins": ["U2.2", "R1.2"]
+    },
+    {
+      "name": "V_RTC_BAT",
+      "pins": ["U2.6", "BT1.1"]
+    },
+    {
+      "name": "WDI_AUX",
+      "pins": ["U3.4", "R2.2"]
+    },
+    {
+      "name": "WATCHDOG_KICK",
+      "class": "port",
+      "pins": ["R2.1"]
+    },
+    {
+      "name": "WATCHDOG_RST_N",
+      "class": "port",
+      "pins": ["U3.1"]
+    }
+  ],
+  "unconnected": ["U2.1", "U3.3"],
+  "ports": [
+    {"net": "AUX_I2C_SCL", "kind": "i2c", "role": "scl", "bus": "AUX_I2C", "speed_hz": 400000, "expect": "board_aux (PCA9306 isolated side of STM32_I2C2)"},
+    {"net": "AUX_I2C_SDA", "kind": "i2c", "role": "sda", "bus": "AUX_I2C", "speed_hz": 400000, "expect": "board_aux (PCA9306 isolated side of STM32_I2C2)"},
+    {"net": "WATCHDOG_KICK", "kind": "single", "expect": "som_j3_connector (PL bank-33 +3V3/LVCMOS33 — watchdog kick/event, xdc.py live)"},
+    {"net": "WATCHDOG_RST_N", "kind": "single", "expect": "som_j3_connector (PL bank-33 +3V3/LVCMOS33 — watchdog kick/event, xdc.py live)"}
+  ],
+  "hints": [],
+  "draws": [
+    {"rail": "+3V3_AUX", "amps": 0.005, "note": "ID-EEPROM ~1mA + RV-3028 <0.1mA + TPS3823 15uA + INT# 10k pull"}
+  ],
+  "waivers": [
+    {"kind": "decap_waivers", "key": "V_RTC_BAT", "reason": "VBACKUP is the RV-3028 coin-cell backup input (a rechargeable ML1220, not a switching rail); the RTC regulates internally and a cap on the cell net is optional — no bypass fitted by design"},
+    {"kind": "reset_waivers", "key": "WATCHDOG_RST_N", "reason": "TPS3823 RESET# is a push-pull supervisor OUTPUT driving a PL bank-33 input as a firmware-mediated event (not a POR line): no pull needed (push-pull; PL internal pull holds it when +3V3_AUX is OFF), no cap by design (logic-event edge)"}
+  ],
+  "purpose": [
+    {"part": "C1", "role": "bypass", "pin": "U1.6"},
+    {"part": "R1", "role": "pull", "pin": "U2.2"},
+    {"part": "C2", "role": "bypass", "pin": "U2.7"},
+    {"part": "C3", "role": "bypass", "pin": "U3.5"},
+    {"part": "R2", "role": "series", "pin": "U3.4"}
+  ],
+  "free": []
+}
+

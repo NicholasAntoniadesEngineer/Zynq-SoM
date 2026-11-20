@@ -6,14 +6,6 @@ AuthoringPurityScope native_authoring_purity_scope() {
     const std::string signature = " | schgen::CircuitSheetIr (const schgen::SubsystemMeta &, const schgen::AuthoringContext &)";
     // Reviewed named constructors; never inferred from whatever files happen to
     // exist. New files and overloads require explicit review plus live checking.
-    for (const auto* name : {"carrier_board_aux", "carrier_board_qwiic", "carrier_board_services",
-            "carrier_bringup_en", "carrier_bringup_en_modules", "carrier_bringup_modules", "carrier_bringup_rails",
-            "carrier_debug_boot", "carrier_fmc", "carrier_hdmi_rx_term", "carrier_mechanical", "carrier_motor_pwm",
-            "carrier_motor_sense", "carrier_power_mon", "carrier_power_som", "carrier_som_decoupling", "carrier_user_io"}) {
-        const auto file = std::string("native/src/project_authoring_") + name + ".cpp";
-        s.units.push_back(file);
-        s.constructors.push_back(file + "::schgen::project_builders::" + name + signature);
-    }
     for (const auto* name : {"authoring", "authoring_ir", "circuit_helpers", "subsystem_authoring", "subsystem_authoring_data",
             "subsystem_registration", "project_authoring", "project_authoring_registry", "example_devkit"})
         s.units.push_back(std::string("native/src/") + name + ".cpp");
@@ -42,7 +34,6 @@ AuthoringPurityScope native_authoring_purity_scope() {
     s.constructors.push_back("native/src/subsystem_authoring.cpp::schgen::author_subsystem | schgen::CircuitSheetIr (const std::string &, const schgen::SubsystemMeta &, const schgen::AuthoringContext &)");
     s.constructors.push_back("native/src/subsystem_authoring_data.cpp::schgen::author_subsystem_data | schgen::CircuitSheetIr (const schgen::JsonNode &, const schgen::SubsystemMeta &, const schgen::AuthoringContext &)");
     s.constructors.push_back("native/src/project_authoring.cpp::schgen::author_project_subsystem | schgen::CircuitSheetIr (const std::string &, const std::string &, const schgen::ProjectAuthoringInput &)");
-    s.constructors.push_back("native/src/project_authoring_registry.cpp::schgen::author_registered_project_definition | schgen::CircuitSheetIr (const schgen::ProjectSubsystemDefinition &, const schgen::SubsystemMeta &, const schgen::AuthoringContext &)");
     s.constructors.push_back("native/src/project_authoring.cpp::schgen::author_som_connector | schgen::CircuitSheetIr (const std::string &, const std::string &, const std::string &, const schgen::SomInterface &, const schgen::LinkMapping &, const schgen::ConnectorAuthoringPolicy &, const schgen::AuthoringContext &)");
     s.constructors.push_back("native/src/example_devkit.cpp::schgen::author_example_devkit | std::vector<schgen::CircuitSheetIr> (const schgen::AuthoringContext &, const std::map<std::string, schgen::JsonNode> &)");
     s.constructors.push_back("native/src/example_devkit.cpp::schgen::author_example_devkit_subsystem | schgen::CircuitSheetIr (const std::string &, const schgen::AuthoringContext &, const std::optional<schgen::JsonNode> &)");

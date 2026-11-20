@@ -1,0 +1,202 @@
+{
+  "schema": "schgen.subsystem/1",
+  "name": "board_aux",
+  "title": "Board services: gated +3V3_AUX rail + PCA9306 I2C isolator",
+  "interface": ["+3V3", "+3V3_AUX", "GND", "+3V3_SC", "STM32_I2C2_SCL", "STM32_I2C2_SDA", "AUX_I2C_SCL", "AUX_I2C_SDA"],
+  "parts": [
+    {"ref": "U1", "part": "SY6280AAC"},
+    {
+      "ref": "R1",
+      "symbol": "Device:R",
+      "value": "13k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C22797"}
+    },
+    {
+      "ref": "C1",
+      "symbol": "Device:C",
+      "value": "10u",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "fields": {"LCSC": "C15850"}
+    },
+    {
+      "ref": "C2",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {
+      "ref": "C3",
+      "symbol": "Device:C",
+      "value": "10u",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "fields": {"LCSC": "C15850"}
+    },
+    {"ref": "SW1", "part": "DSHP04TSGER"},
+    {
+      "ref": "R2",
+      "symbol": "Device:R",
+      "value": "100k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C25803"}
+    },
+    {
+      "ref": "D1",
+      "symbol": "Device:LED",
+      "value": "red",
+      "footprint": "LED_SMD:LED_0603_1608Metric",
+      "fields": {"LCSC": "C2286"}
+    },
+    {
+      "ref": "R3",
+      "symbol": "Device:R",
+      "value": "330R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C23138"}
+    },
+    {"ref": "U2", "part": "PCA9306DCUR"},
+    {
+      "ref": "C4",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {
+      "ref": "R4",
+      "symbol": "Device:R",
+      "value": "100k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C25803"}
+    },
+    {
+      "ref": "R5",
+      "symbol": "Device:R",
+      "value": "4k7",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C23162"}
+    },
+    {
+      "ref": "R6",
+      "symbol": "Device:R",
+      "value": "4k7",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C23162"}
+    },
+    {
+      "ref": "C5",
+      "symbol": "Device:C",
+      "value": "100p",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14858"}
+    },
+    {
+      "ref": "TP1",
+      "symbol": "Connector:TestPoint",
+      "value": "+3V3_AUX",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {"BOM": "exclude"}
+    },
+    {
+      "ref": "TP2",
+      "symbol": "Connector:TestPoint",
+      "value": "AUX_I2C_SCL",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {"BOM": "exclude"}
+    },
+    {
+      "ref": "TP3",
+      "symbol": "Connector:TestPoint",
+      "value": "AUX_I2C_SDA",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {"BOM": "exclude"}
+    }
+  ],
+  "nets": [
+    {
+      "name": "+3V3",
+      "pins": ["U1.5", "C1.1", "SW1.1", "SW1.3", "SW1.5", "SW1.7"]
+    },
+    {
+      "name": "+3V3_AUX",
+      "pins": ["U1.1", "C2.1", "C3.1", "D1.2", "U2.8", "R4.1", "R5.1", "R6.1", "TP1.1"]
+    },
+    {
+      "name": "GND",
+      "pins": ["U1.2", "R1.2", "C1.2", "C2.2", "C3.2", "R2.2", "R3.2", "U2.1", "C4.2", "C5.2"]
+    },
+    {
+      "name": "EN_AUX",
+      "pins": ["U1.4", "SW1.8", "R2.1"]
+    },
+    {
+      "name": "BS_ISET_AUX",
+      "pins": ["U1.3", "R1.1"]
+    },
+    {
+      "name": "BS_PG_AUX",
+      "pins": ["D1.1", "R3.1"]
+    },
+    {
+      "name": "+3V3_SC",
+      "pins": ["U2.2", "C4.1"]
+    },
+    {
+      "name": "STM32_I2C2_SCL",
+      "class": "port",
+      "pins": ["U2.3"]
+    },
+    {
+      "name": "STM32_I2C2_SDA",
+      "class": "port",
+      "pins": ["U2.4"]
+    },
+    {
+      "name": "AUX_I2C_SCL",
+      "class": "port",
+      "pins": ["U2.6", "R5.2", "TP2.1"]
+    },
+    {
+      "name": "AUX_I2C_SDA",
+      "class": "port",
+      "pins": ["U2.5", "R6.2", "TP3.1"]
+    },
+    {
+      "name": "AUX_ISO_REF",
+      "pins": ["U2.7", "R4.2", "C5.1"]
+    }
+  ],
+  "unconnected": ["SW1.2", "SW1.4", "SW1.6"],
+  "ports": [
+    {"net": "STM32_I2C2_SCL", "kind": "i2c", "role": "scl", "bus": "STM32_I2C2", "speed_hz": 400000, "expect": "STM32_I2C2 management bus (bringup_rails / usb_pd / power_mon)"},
+    {"net": "STM32_I2C2_SDA", "kind": "i2c", "role": "sda", "bus": "STM32_I2C2", "speed_hz": 400000, "expect": "STM32_I2C2 management bus (bringup_rails / usb_pd / power_mon)"},
+    {"net": "AUX_I2C_SCL", "kind": "i2c", "role": "scl", "bus": "AUX_I2C", "speed_hz": 400000, "expect": "board_services (the gated peripherals on the isolated AUX bus)"},
+    {"net": "AUX_I2C_SDA", "kind": "i2c", "role": "sda", "bus": "AUX_I2C", "speed_hz": 400000, "expect": "board_services (the gated peripherals on the isolated AUX bus)"}
+  ],
+  "hints": [],
+  "draws": [
+    {"rail": "+3V3_AUX", "amps": 0.006, "note": "status LED 3.9mA + 2x4k7 AUX-bus pull-ups"}
+  ],
+  "waivers": [],
+  "purpose": [
+    {"part": "C1", "role": "reservoir", "pin": "U1.5"},
+    {"part": "C2", "role": "bypass", "pin": "U1.1"},
+    {"part": "C4", "role": "bypass", "pin": "U2.2"},
+    {"part": "R4", "role": "set", "pin": "U2.7"},
+    {"part": "R5", "role": "pull", "pin": "U2.6"},
+    {"part": "R6", "role": "pull", "pin": "U2.5"},
+    {"part": "C5", "role": "filter", "pin": "U2.7"},
+    {"part": "C3", "role": "reservoir", "pin": "U1.1"},
+    {"part": "R1", "role": "set", "pin": "U1.3"},
+    {"part": "R2", "role": "pull", "pin": "U1.4"},
+    {"part": "R3", "role": "indicate", "pin": "D1.1"}
+  ],
+  "free": [
+    {"part": "TP1", "reason": "probe point; it follows its net"},
+    {"part": "TP2", "reason": "probe point; it follows its net"},
+    {"part": "TP3", "reason": "probe point; it follows its net"},
+    {"part": "D1", "reason": "status LED across the gated +3V3_AUX rail; no pin drives it"}
+  ]
+}
+

@@ -72,23 +72,15 @@ std::vector<std::string> native_firmware_sources(const ProjectPaths& paths) {
                              " (native project dispatch and adapter post-processing)");
             registry_added = true;
         }
-        if (factory->adapter) {
-            const auto filed = paths.repository_root / subsystem_library_folder / name / subsystem_data_file;
-            if (!adapter_added) {
-                result.push_back(source_path(paths, paths.repository_root / "native/src/subsystem_authoring.cpp") +
-                                 " (native library registry)");
-                adapter_added = true;
-            }
-            result.push_back(source_path(paths, filed) + " (subsystem definition: " + name + ")");
-        } else {
-            if (!factory->circuit)
-                throw FirmwareDocsError("firmware provenance: missing native project factory " + project + ":" + name);
-            const auto own = paths.repository_root / "native/src" / ("project_authoring_" + project + "_" + name + ".cpp");
-            const auto shared = paths.repository_root / "native/src" / ("project_authoring_carrier_" + name + ".cpp");
-            const bool mine = std::filesystem::is_regular_file(own);
-            result.push_back(source_path(paths, mine ? own : shared) +
-                (mine ? " (native project builder: " : " (native project builder shared with the carrier: ") + project + ":" + name + ")");
+        if (!factory->adapter)
+            throw FirmwareDocsError("firmware provenance: " + project + ":" + name + " is not a library subsystem");
+        const auto filed = paths.repository_root / subsystem_library_folder / name / subsystem_data_file;
+        if (!adapter_added) {
+            result.push_back(source_path(paths, paths.repository_root / "native/src/subsystem_authoring.cpp") +
+                             " (native library registry)");
+            adapter_added = true;
         }
+        result.push_back(source_path(paths, filed) + " (subsystem definition: " + name + ")");
     }
     for (const auto& [relative, description] : ProjectStrings{
              {"research/debug_boot_pmod.md", "BOOTSEL decode, SWD reservation"},

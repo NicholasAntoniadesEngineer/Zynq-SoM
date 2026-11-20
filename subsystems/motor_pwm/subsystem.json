@@ -1,0 +1,228 @@
+{
+  "schema": "schgen.subsystem/1",
+  "name": "motor_pwm",
+  "title": "8-ch PWM/ESC output buffer (5V, PL-isolating)",
+  "interface": ["+5V", "GND", "ESC_BUF_OE_N", "ESC_PWM_IN0", "ESC_PWM_IN1", "ESC_PWM_IN2", "ESC_PWM_IN3", "ESC_PWM_IN4", "ESC_PWM_IN5", "ESC_PWM_IN6", "ESC_PWM_IN7", "+5V_MOTOR_IO"],
+  "parts": [
+    {"ref": "U1", "part": "SN74HCT245PWR"},
+    {
+      "ref": "C1",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {
+      "ref": "R1",
+      "symbol": "Device:R",
+      "value": "10k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C25804"}
+    },
+    {"ref": "RN1", "part": "4D03WGJ0330T5E"},
+    {"ref": "RN2", "part": "4D03WGJ0330T5E"},
+    {"ref": "J1", "part": "HX_PZ2.54-3x8P_ZZ"},
+    {
+      "ref": "D1",
+      "symbol": "Power_Protection:SRV05-4",
+      "value": "SRV05-4",
+      "footprint": "Package_TO_SOT_SMD:SOT-23-6",
+      "fields": {"LCSC": "C2836319"}
+    },
+    {
+      "ref": "D2",
+      "symbol": "Power_Protection:SRV05-4",
+      "value": "SRV05-4",
+      "footprint": "Package_TO_SOT_SMD:SOT-23-6",
+      "fields": {"LCSC": "C2836319"}
+    },
+    {"ref": "U3", "part": "SY6280AAC"},
+    {
+      "ref": "R2",
+      "symbol": "Device:R",
+      "value": "13k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C22797"}
+    },
+    {
+      "ref": "C2",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {
+      "ref": "C3",
+      "symbol": "Device:C",
+      "value": "10u",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "fields": {"LCSC": "C15850"}
+    },
+    {
+      "ref": "TP1",
+      "symbol": "Connector:TestPoint",
+      "value": "+5V_MOTOR_IO",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {"BOM": "exclude"}
+    }
+  ],
+  "nets": [
+    {
+      "name": "+5V",
+      "pins": ["U1.20", "U1.1", "C1.1", "R1.1", "D1.5", "D2.5", "U3.5", "U3.4", "C2.1"]
+    },
+    {
+      "name": "GND",
+      "pins": ["U1.10", "C1.2", "J1.17", "J1.18", "J1.19", "J1.20", "J1.21", "J1.22", "J1.23", "J1.24", "D1.2", "D2.2", "U3.2", "R2.2", "C2.2", "C3.2"]
+    },
+    {
+      "name": "ESC_BUF_OE_N",
+      "class": "port",
+      "pins": ["U1.19", "R1.2"]
+    },
+    {
+      "name": "ESC_PWM_IN0",
+      "class": "port",
+      "pins": ["U1.2"]
+    },
+    {
+      "name": "ESC_SIG0",
+      "pins": ["U1.18", "RN1.1"]
+    },
+    {
+      "name": "ESC_OUT0",
+      "pins": ["RN1.8", "J1.1", "D1.1"]
+    },
+    {
+      "name": "ESC_PWM_IN1",
+      "class": "port",
+      "pins": ["U1.3"]
+    },
+    {
+      "name": "ESC_SIG1",
+      "pins": ["U1.17", "RN1.2"]
+    },
+    {
+      "name": "ESC_OUT1",
+      "pins": ["RN1.7", "J1.2", "D1.3"]
+    },
+    {
+      "name": "ESC_PWM_IN2",
+      "class": "port",
+      "pins": ["U1.4"]
+    },
+    {
+      "name": "ESC_SIG2",
+      "pins": ["U1.16", "RN1.3"]
+    },
+    {
+      "name": "ESC_OUT2",
+      "pins": ["RN1.6", "J1.3", "D1.4"]
+    },
+    {
+      "name": "ESC_PWM_IN3",
+      "class": "port",
+      "pins": ["U1.5"]
+    },
+    {
+      "name": "ESC_SIG3",
+      "pins": ["U1.15", "RN1.4"]
+    },
+    {
+      "name": "ESC_OUT3",
+      "pins": ["RN1.5", "J1.4", "D1.6"]
+    },
+    {
+      "name": "ESC_PWM_IN4",
+      "class": "port",
+      "pins": ["U1.6"]
+    },
+    {
+      "name": "ESC_SIG4",
+      "pins": ["U1.14", "RN2.1"]
+    },
+    {
+      "name": "ESC_OUT4",
+      "pins": ["RN2.8", "J1.5", "D2.1"]
+    },
+    {
+      "name": "ESC_PWM_IN5",
+      "class": "port",
+      "pins": ["U1.7"]
+    },
+    {
+      "name": "ESC_SIG5",
+      "pins": ["U1.13", "RN2.2"]
+    },
+    {
+      "name": "ESC_OUT5",
+      "pins": ["RN2.7", "J1.6", "D2.3"]
+    },
+    {
+      "name": "ESC_PWM_IN6",
+      "class": "port",
+      "pins": ["U1.8"]
+    },
+    {
+      "name": "ESC_SIG6",
+      "pins": ["U1.12", "RN2.3"]
+    },
+    {
+      "name": "ESC_OUT6",
+      "pins": ["RN2.6", "J1.7", "D2.4"]
+    },
+    {
+      "name": "ESC_PWM_IN7",
+      "class": "port",
+      "pins": ["U1.9"]
+    },
+    {
+      "name": "ESC_SIG7",
+      "pins": ["U1.11", "RN2.4"]
+    },
+    {
+      "name": "ESC_OUT7",
+      "pins": ["RN2.5", "J1.8", "D2.6"]
+    },
+    {
+      "name": "+5V_MOTOR_IO",
+      "pins": ["J1.9", "J1.10", "J1.11", "J1.12", "J1.13", "J1.14", "J1.15", "J1.16", "U3.1", "C3.1", "TP1.1"]
+    },
+    {
+      "name": "MIO_ISET",
+      "pins": ["U3.3", "R2.1"]
+    }
+  ],
+  "unconnected": [],
+  "ports": [
+    {"net": "ESC_BUF_OE_N", "kind": "single", "expect": "som_j2_connector (bank 33/13 PL — ESC PWM 0-3 + OE)"},
+    {"net": "ESC_PWM_IN0", "kind": "single", "expect": "som_j2_connector (bank 33/13 PL — ESC PWM 0-3 + OE)"},
+    {"net": "ESC_PWM_IN1", "kind": "single", "expect": "som_j2_connector (bank 33/13 PL — ESC PWM 0-3 + OE)"},
+    {"net": "ESC_PWM_IN2", "kind": "single", "expect": "som_j2_connector (bank 33/13 PL — ESC PWM 0-3 + OE)"},
+    {"net": "ESC_PWM_IN3", "kind": "single", "expect": "som_j2_connector (bank 33/13 PL — ESC PWM 0-3 + OE)"},
+    {"net": "ESC_PWM_IN4", "kind": "single", "expect": "som_j3_connector (bank 33 PL — ESC PWM 4-7)"},
+    {"net": "ESC_PWM_IN5", "kind": "single", "expect": "som_j3_connector (bank 33 PL — ESC PWM 4-7)"},
+    {"net": "ESC_PWM_IN6", "kind": "single", "expect": "som_j3_connector (bank 33 PL — ESC PWM 4-7)"},
+    {"net": "ESC_PWM_IN7", "kind": "single", "expect": "som_j3_connector (bank 33 PL — ESC PWM 4-7)"}
+  ],
+  "hints": [],
+  "draws": [
+    {"rail": "+5V", "amps": 0.08, "note": "HCT245 buffer + light servo allowance (ILIM 523mA)"}
+  ],
+  "waivers": [],
+  "purpose": [
+    {"part": "C1", "role": "bypass", "pin": "U1.20"},
+    {"part": "R1", "role": "pull", "pin": "U1.19"},
+    {"part": "C2", "role": "bypass", "pin": "U3.5"},
+    {"part": "C3", "role": "reservoir", "pin": "U3.1"},
+    {"part": "D1", "role": "protect", "pin": "J1.2"},
+    {"part": "D2", "role": "protect", "pin": "J1.6"},
+    {"part": "R2", "role": "set", "pin": "U3.3"},
+    {"part": "RN1", "role": "series", "pin": "U1.17"},
+    {"part": "RN2", "role": "series", "pin": "U1.13"}
+  ],
+  "free": [
+    {"part": "TP1", "reason": "probe point; it follows its net"}
+  ]
+}
+

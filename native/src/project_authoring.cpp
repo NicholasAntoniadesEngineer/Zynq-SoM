@@ -67,7 +67,7 @@ CircuitSheetIr author_project_subsystem(const std::string& project,const std::st
         CircuitAuthor c(author_som_connector(d.connector_ref,d.name,d.connector_title,som,map,policy,input.context),input.context);
         return meta.finish(c);
     }
-    auto c=d.adapter?author_subsystem(name,meta,input.context):author_registered_project_definition(d,meta,input.context);
+    auto c=author_subsystem(name,meta,input.context);
     if(project=="devkit_mini"&&name=="power") {
         CircuitAuthor add(std::move(c),input.context);
         for(const auto* net:{"EN_5V0","EN_3V3","EN_1V8"})add.testpoint(net);

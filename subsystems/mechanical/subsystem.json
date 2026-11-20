@@ -1,0 +1,50 @@
+{
+  "schema": "schgen.subsystem/1",
+  "name": "mechanical",
+  "title": "Mechanical: M3 mounts + chassis-GND bond (fiducials are PCB-only, emitted by the placer)",
+  "interface": ["CHASSIS_GND"],
+  "parts": [
+    {
+      "ref": "H1",
+      "symbol": "Mechanical:MountingHole_Pad",
+      "value": "MountingHole_M3",
+      "footprint": "MountingHole:MountingHole_3.2mm_M3_Pad",
+      "fields": {"BOM": "exclude"}
+    },
+    {
+      "ref": "H2",
+      "symbol": "Mechanical:MountingHole_Pad",
+      "value": "MountingHole_M3",
+      "footprint": "MountingHole:MountingHole_3.2mm_M3_Pad",
+      "fields": {"BOM": "exclude"}
+    },
+    {
+      "ref": "H3",
+      "symbol": "Mechanical:MountingHole_Pad",
+      "value": "MountingHole_M3",
+      "footprint": "MountingHole:MountingHole_3.2mm_M3_Pad",
+      "fields": {"BOM": "exclude"}
+    },
+    {
+      "ref": "H4",
+      "symbol": "Mechanical:MountingHole_Pad",
+      "value": "MountingHole_M3",
+      "footprint": "MountingHole:MountingHole_3.2mm_M3_Pad",
+      "fields": {"BOM": "exclude"}
+    }
+  ],
+  "nets": [
+    {
+      "name": "CHASSIS_GND",
+      "pins": ["H1.1", "H2.1", "H3.1", "H4.1"]
+    }
+  ],
+  "unconnected": [],
+  "ports": [],
+  "hints": [],
+  "draws": [],
+  "waivers": [],
+  "purpose": [],
+  "free": []
+}
+
