@@ -26,7 +26,7 @@ public:
 
 struct ProjectPaths {
     std::filesystem::path repository_root, project_root;
-    std::filesystem::path project_file, subsystems_dir, sheet_index_file;
+    std::filesystem::path project_file, subsystems_dir, library_dir, sheet_index_file;
     std::filesystem::path som_interface_file, manifest_file;
     std::filesystem::path parts_dir, part_catalog_file, som_schematic;
     std::filesystem::path circuit_catalog_file;

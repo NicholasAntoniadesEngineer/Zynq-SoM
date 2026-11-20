@@ -52,7 +52,7 @@ void native_companion(const fs::path& path,const CircuitSheetIr& built,std::vect
 }
 std::vector<SubsystemPackageFactory> native_subsystem_factories(const AuthoringContext& context) {
     std::vector<SubsystemPackageFactory> out;
-    for(const auto& d:subsystem_definitions())out.push_back({d.name,d.interface,[build=d.circuit,context](const SubsystemMeta& meta){return build(meta,context);},{}});
+    for(const auto& d:subsystem_library(context))out.push_back({d.name,d.interface,[build=d.circuit,context](const SubsystemMeta& meta){return build(meta,context);},{}});
     return out;
 }
 CarrierPackageFactory native_subsystem_adapter(const std::string& name,const JsonNode& meta,const AuthoringContext& context) {

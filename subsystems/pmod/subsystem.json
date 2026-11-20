@@ -1,0 +1,428 @@
+{
+  "schema": "schgen.subsystem/1",
+  "name": "pmod",
+  "title": "2x Pmod host ports (bank 13, 200R series, gated 3V3)",
+  "interface": ["+VCC_PMOD", "GND", "PMOD0_SIG1", "PMOD0_SIG2", "PMOD0_SIG3", "PMOD0_SIG4", "PMOD0_SIG5", "PMOD0_SIG6", "PMOD0_SIG7", "PMOD0_SIG8", "PMOD1_SIG1", "PMOD1_SIG2", "PMOD1_SIG3", "PMOD1_SIG4", "PMOD1_SIG5", "PMOD1_SIG6", "PMOD1_SIG7", "PMOD1_SIG8"],
+  "parts": [
+    {"ref": "J1", "part": "DS1024-2x6R2"},
+    {"ref": "U1", "part": "TPD4E1U06DBVR", "value": "TPD4E1U06"},
+    {"ref": "U2", "part": "TPD4E1U06DBVR", "value": "TPD4E1U06"},
+    {
+      "ref": "R1",
+      "symbol": "Device:R",
+      "value": "200R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C8218"}
+    },
+    {
+      "ref": "R2",
+      "symbol": "Device:R",
+      "value": "200R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C8218"}
+    },
+    {
+      "ref": "R3",
+      "symbol": "Device:R",
+      "value": "200R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C8218"}
+    },
+    {
+      "ref": "R4",
+      "symbol": "Device:R",
+      "value": "200R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C8218"}
+    },
+    {
+      "ref": "R5",
+      "symbol": "Device:R",
+      "value": "200R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C8218"}
+    },
+    {
+      "ref": "R6",
+      "symbol": "Device:R",
+      "value": "200R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C8218"}
+    },
+    {
+      "ref": "R7",
+      "symbol": "Device:R",
+      "value": "200R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C8218"}
+    },
+    {
+      "ref": "R8",
+      "symbol": "Device:R",
+      "value": "200R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C8218"}
+    },
+    {"ref": "J2", "part": "DS1024-2x6R2"},
+    {"ref": "U3", "part": "TPD4E1U06DBVR", "value": "TPD4E1U06"},
+    {"ref": "U4", "part": "TPD4E1U06DBVR", "value": "TPD4E1U06"},
+    {
+      "ref": "R9",
+      "symbol": "Device:R",
+      "value": "200R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C8218"}
+    },
+    {
+      "ref": "R10",
+      "symbol": "Device:R",
+      "value": "200R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C8218"}
+    },
+    {
+      "ref": "R11",
+      "symbol": "Device:R",
+      "value": "200R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C8218"}
+    },
+    {
+      "ref": "R12",
+      "symbol": "Device:R",
+      "value": "200R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C8218"}
+    },
+    {
+      "ref": "R13",
+      "symbol": "Device:R",
+      "value": "200R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C8218"}
+    },
+    {
+      "ref": "R14",
+      "symbol": "Device:R",
+      "value": "200R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C8218"}
+    },
+    {
+      "ref": "R15",
+      "symbol": "Device:R",
+      "value": "200R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C8218"}
+    },
+    {
+      "ref": "R16",
+      "symbol": "Device:R",
+      "value": "200R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C8218"}
+    },
+    {
+      "ref": "C1",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {
+      "ref": "C2",
+      "symbol": "Device:C",
+      "value": "10u",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "fields": {"LCSC": "C15850"}
+    },
+    {
+      "ref": "C3",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {
+      "ref": "C4",
+      "symbol": "Device:C",
+      "value": "10u",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "fields": {"LCSC": "C15850"}
+    }
+  ],
+  "nets": [
+    {
+      "name": "PMOD0_SIG1",
+      "class": "port",
+      "pins": ["R1.1", "U1.1"]
+    },
+    {
+      "name": "PMOD0_IO1",
+      "pins": ["R1.2", "J1.1"]
+    },
+    {
+      "name": "PMOD0_SIG2",
+      "class": "port",
+      "pins": ["R2.1", "U1.3"]
+    },
+    {
+      "name": "PMOD0_IO2",
+      "pins": ["R2.2", "J1.3"]
+    },
+    {
+      "name": "PMOD0_SIG3",
+      "class": "port",
+      "pins": ["R3.1", "U1.6"]
+    },
+    {
+      "name": "PMOD0_IO3",
+      "pins": ["R3.2", "J1.5"]
+    },
+    {
+      "name": "PMOD0_SIG4",
+      "class": "port",
+      "pins": ["R4.1", "U1.4"]
+    },
+    {
+      "name": "PMOD0_IO4",
+      "pins": ["R4.2", "J1.7"]
+    },
+    {
+      "name": "PMOD0_SIG5",
+      "class": "port",
+      "pins": ["R5.1", "U2.1"]
+    },
+    {
+      "name": "PMOD0_IO5",
+      "pins": ["R5.2", "J1.2"]
+    },
+    {
+      "name": "PMOD0_SIG6",
+      "class": "port",
+      "pins": ["R6.1", "U2.3"]
+    },
+    {
+      "name": "PMOD0_IO6",
+      "pins": ["R6.2", "J1.4"]
+    },
+    {
+      "name": "PMOD0_SIG7",
+      "class": "port",
+      "pins": ["R7.1", "U2.6"]
+    },
+    {
+      "name": "PMOD0_IO7",
+      "pins": ["R7.2", "J1.6"]
+    },
+    {
+      "name": "PMOD0_SIG8",
+      "class": "port",
+      "pins": ["R8.1", "U2.4"]
+    },
+    {
+      "name": "PMOD0_IO8",
+      "pins": ["R8.2", "J1.8"]
+    },
+    {
+      "name": "PMOD1_SIG1",
+      "class": "port",
+      "pins": ["R9.1", "U3.1"]
+    },
+    {
+      "name": "PMOD1_IO1",
+      "pins": ["R9.2", "J2.1"]
+    },
+    {
+      "name": "PMOD1_SIG2",
+      "class": "port",
+      "pins": ["R10.1", "U3.3"]
+    },
+    {
+      "name": "PMOD1_IO2",
+      "pins": ["R10.2", "J2.3"]
+    },
+    {
+      "name": "PMOD1_SIG3",
+      "class": "port",
+      "pins": ["R11.1", "U3.6"]
+    },
+    {
+      "name": "PMOD1_IO3",
+      "pins": ["R11.2", "J2.5"]
+    },
+    {
+      "name": "PMOD1_SIG4",
+      "class": "port",
+      "pins": ["R12.1", "U3.4"]
+    },
+    {
+      "name": "PMOD1_IO4",
+      "pins": ["R12.2", "J2.7"]
+    },
+    {
+      "name": "PMOD1_SIG5",
+      "class": "port",
+      "pins": ["R13.1", "U4.1"]
+    },
+    {
+      "name": "PMOD1_IO5",
+      "pins": ["R13.2", "J2.2"]
+    },
+    {
+      "name": "PMOD1_SIG6",
+      "class": "port",
+      "pins": ["R14.1", "U4.3"]
+    },
+    {
+      "name": "PMOD1_IO6",
+      "pins": ["R14.2", "J2.4"]
+    },
+    {
+      "name": "PMOD1_SIG7",
+      "class": "port",
+      "pins": ["R15.1", "U4.6"]
+    },
+    {
+      "name": "PMOD1_IO7",
+      "pins": ["R15.2", "J2.6"]
+    },
+    {
+      "name": "PMOD1_SIG8",
+      "class": "port",
+      "pins": ["R16.1", "U4.4"]
+    },
+    {
+      "name": "PMOD1_IO8",
+      "pins": ["R16.2", "J2.8"]
+    },
+    {
+      "name": "+VCC_PMOD",
+      "pins": ["J1.11", "J1.12", "J2.11", "J2.12", "C1.1", "C2.1", "C3.1", "C4.1"]
+    },
+    {
+      "name": "GND",
+      "pins": ["J1.9", "J1.10", "J2.9", "J2.10", "U1.2", "U2.2", "U3.2", "U4.2", "C1.2", "C2.2", "C3.2", "C4.2"]
+    }
+  ],
+  "unconnected": ["U1.5", "U2.5", "U3.5", "U4.5"],
+  "ports": [
+    {
+      "net": "PMOD0_SIG1",
+      "kind": "single",
+      "expect": {"instance": "non_empty"}
+    },
+    {
+      "net": "PMOD0_SIG2",
+      "kind": "single",
+      "expect": {"instance": "non_empty"}
+    },
+    {
+      "net": "PMOD0_SIG3",
+      "kind": "single",
+      "expect": {"instance": "non_empty"}
+    },
+    {
+      "net": "PMOD0_SIG4",
+      "kind": "single",
+      "expect": {"instance": "non_empty"}
+    },
+    {
+      "net": "PMOD0_SIG5",
+      "kind": "single",
+      "expect": {"instance": "non_empty"}
+    },
+    {
+      "net": "PMOD0_SIG6",
+      "kind": "single",
+      "expect": {"instance": "non_empty"}
+    },
+    {
+      "net": "PMOD0_SIG7",
+      "kind": "single",
+      "expect": {"instance": "non_empty"}
+    },
+    {
+      "net": "PMOD0_SIG8",
+      "kind": "single",
+      "expect": {"instance": "non_empty"}
+    },
+    {
+      "net": "PMOD1_SIG1",
+      "kind": "single",
+      "expect": {"instance": "non_empty"}
+    },
+    {
+      "net": "PMOD1_SIG2",
+      "kind": "single",
+      "expect": {"instance": "non_empty"}
+    },
+    {
+      "net": "PMOD1_SIG3",
+      "kind": "single",
+      "expect": {"instance": "non_empty"}
+    },
+    {
+      "net": "PMOD1_SIG4",
+      "kind": "single",
+      "expect": {"instance": "non_empty"}
+    },
+    {
+      "net": "PMOD1_SIG5",
+      "kind": "single",
+      "expect": {"instance": "non_empty"}
+    },
+    {
+      "net": "PMOD1_SIG6",
+      "kind": "single",
+      "expect": {"instance": "non_empty"}
+    },
+    {
+      "net": "PMOD1_SIG7",
+      "kind": "single",
+      "expect": {"instance": "non_empty"}
+    },
+    {
+      "net": "PMOD1_SIG8",
+      "kind": "single",
+      "expect": {"instance": "non_empty"}
+    }
+  ],
+  "hints": [],
+  "draws": [
+    {
+      "rail": "+VCC_PMOD",
+      "amps": 0.2,
+      "note": {"instance": "draws", "default": "2x Pmod module budget ~100 mA each"}
+    }
+  ],
+  "waivers": [],
+  "purpose": [
+    {"part": "C1", "role": "bypass", "pin": "J1.11"},
+    {"part": "C2", "role": "reservoir", "pin": "J1.12"},
+    {"part": "C3", "role": "bypass", "pin": "J2.11"},
+    {"part": "C4", "role": "reservoir", "pin": "J2.12"},
+    {"part": "R1", "role": "limit", "pin": "J1.1"},
+    {"part": "R2", "role": "limit", "pin": "J1.3"},
+    {"part": "R3", "role": "limit", "pin": "J1.5"},
+    {"part": "R4", "role": "limit", "pin": "J1.7"},
+    {"part": "R5", "role": "limit", "pin": "J1.2"},
+    {"part": "R6", "role": "limit", "pin": "J1.4"},
+    {"part": "R7", "role": "limit", "pin": "J1.6"},
+    {"part": "R8", "role": "limit", "pin": "J1.8"},
+    {"part": "R9", "role": "limit", "pin": "J2.1"},
+    {"part": "R10", "role": "limit", "pin": "J2.3"},
+    {"part": "R11", "role": "limit", "pin": "J2.5"},
+    {"part": "R12", "role": "limit", "pin": "J2.7"},
+    {"part": "R13", "role": "limit", "pin": "J2.2"},
+    {"part": "R14", "role": "limit", "pin": "J2.4"},
+    {"part": "R15", "role": "limit", "pin": "J2.6"},
+    {"part": "R16", "role": "limit", "pin": "J2.8"},
+    {"part": "U1", "role": "protect", "pin": "R2.1"},
+    {"part": "U2", "role": "protect", "pin": "R6.1"},
+    {"part": "U3", "role": "protect", "pin": "R10.1"},
+    {"part": "U4", "role": "protect", "pin": "R14.1"}
+  ],
+  "free": []
+}
+

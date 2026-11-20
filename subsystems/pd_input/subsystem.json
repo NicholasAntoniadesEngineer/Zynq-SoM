@@ -1,0 +1,174 @@
+{
+  "schema": "schgen.subsystem/1",
+  "name": "pd_input",
+  "title": "Power inlet: USB-C PD 20V/3A + TPS26631 eFuse",
+  "interface": ["+VBUS_CONN", "+VBUS_OUT", "+VDD_LOGIC", "GND", "CHASSIS_GND", "CC1", "CC2", "USB_D_P", "USB_D_N", "FLT_N"],
+  "parts": [
+    {"ref": "J1", "part": "TYPE-C-31-M-12"},
+    {"ref": "U1", "part": "TPS26631PWPR"},
+    {"ref": "U2", "part": "USBLC6-2SC6"},
+    {
+      "ref": "C1",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {
+      "ref": "D1",
+      "symbol": "Device:D_Zener",
+      "value": "SMBJ22A",
+      "footprint": "Diode_SMD:D_SMB",
+      "fields": {"LCSC": "C10214"}
+    },
+    {
+      "ref": "R3",
+      "symbol": "Device:R",
+      "value": "100k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C25803"}
+    },
+    {
+      "ref": "R4",
+      "symbol": "Device:R",
+      "value": "5.49k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C188263"}
+    },
+    {
+      "ref": "R5",
+      "symbol": "Device:R",
+      "value": "5.1k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C23186"}
+    },
+    {
+      "ref": "C3",
+      "symbol": "Device:C",
+      "value": "47n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C1622"}
+    },
+    {
+      "ref": "R6",
+      "symbol": "Device:R",
+      "value": "100k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C25803"}
+    },
+    {
+      "ref": "C2",
+      "symbol": "Device:C",
+      "value": "10u",
+      "footprint": "Capacitor_SMD:C_1210_3225Metric",
+      "fields": {"LCSC": "C596319"}
+    },
+    {
+      "ref": "TP1",
+      "symbol": "Connector:TestPoint",
+      "value": "+VBUS_CONN",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {"BOM": "exclude"}
+    },
+    {
+      "ref": "TP2",
+      "symbol": "Connector:TestPoint",
+      "value": "+VBUS_OUT",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {"BOM": "exclude"}
+    }
+  ],
+  "nets": [
+    {
+      "name": "+VBUS_CONN",
+      "pins": ["J1.A4B9", "J1.B4A9", "C1.1", "D1.1", "U1.1", "U1.2", "U1.3", "U1.6", "U1.7", "R3.1", "TP1.1"]
+    },
+    {
+      "name": "GND",
+      "pins": ["J1.A1B12", "J1.B1A12", "C1.2", "D1.2", "U1.9", "U1.21", "U1.12", "U1.16", "R4.2", "R5.2", "C3.2", "C2.2", "U2.2"]
+    },
+    {
+      "name": "PD_OVP_SET",
+      "pins": ["U1.8", "R3.2", "R4.1"]
+    },
+    {
+      "name": "PD_ILIM_SET",
+      "pins": ["U1.11", "R5.1"]
+    },
+    {
+      "name": "PD_DVDT",
+      "pins": ["U1.10", "C3.1"]
+    },
+    {
+      "name": "FLT_N",
+      "class": "port",
+      "pins": ["U1.15", "R6.2"]
+    },
+    {
+      "name": "+VDD_LOGIC",
+      "pins": ["R6.1", "U2.5"]
+    },
+    {
+      "name": "+VBUS_OUT",
+      "pins": ["U1.18", "U1.19", "U1.20", "C2.1", "TP2.1"]
+    },
+    {
+      "name": "CC1",
+      "class": "port",
+      "pins": ["J1.A5"]
+    },
+    {
+      "name": "CC2",
+      "class": "port",
+      "pins": ["J1.B5"]
+    },
+    {
+      "name": "PD_USB_DP_CONN",
+      "pins": ["J1.A6", "J1.B6", "U2.1"]
+    },
+    {
+      "name": "PD_USB_DN_CONN",
+      "pins": ["J1.A7", "J1.B7", "U2.3"]
+    },
+    {
+      "name": "USB_D_P",
+      "class": "port",
+      "pins": ["U2.6"]
+    },
+    {
+      "name": "USB_D_N",
+      "class": "port",
+      "pins": ["U2.4"]
+    },
+    {
+      "name": "CHASSIS_GND",
+      "pins": ["J1.4", "J1.3", "J1.2", "J1.1"]
+    }
+  ],
+  "unconnected": ["J1.A8", "J1.B8", "U1.13", "U1.14", "U1.17", "U1.4", "U1.5"],
+  "ports": [
+    {"net": "FLT_N", "kind": "single", "expect": {"instance": "non_empty"}},
+    {"net": "USB_D_P", "kind": "usb_hs_pair", "pair_with": "USB_D_N", "impedance": 90}
+  ],
+  "hints": [],
+  "draws": [],
+  "waivers": [
+    {"kind": "tp_waivers", "key": "CHASSIS_GND", "reason": "chassis island is probeable at every connector shell tab (USB-C/HDMI/magjack); no pad needed"}
+  ],
+  "purpose": [
+    {"part": "C1", "role": "bypass", "pin": "U1.2"},
+    {"part": "C2", "role": "reservoir", "pin": "U1.19"},
+    {"part": "C3", "role": "set", "pin": "U1.10"},
+    {"part": "D1", "role": "protect", "pin": "J1.A4B9"},
+    {"part": "R3", "role": "sense", "pin": "U1.8"},
+    {"part": "R4", "role": "sense", "pin": "U1.8"},
+    {"part": "R5", "role": "set", "pin": "U1.11"},
+    {"part": "R6", "role": "pull", "pin": "U1.15"},
+    {"part": "U2", "role": "protect", "pin": "J1.A6"}
+  ],
+  "free": [
+    {"part": "TP1", "reason": "probe point; it follows its net"},
+    {"part": "TP2", "reason": "probe point; it follows its net"}
+  ]
+}
+

@@ -34,6 +34,7 @@ std::filesystem::path checked_dump_relative(const ProjectPaths& paths,const std:
 std::vector<CarrierPackageFactory> factories(const ProjectPaths &paths, const std::string &project, ProjectAuthoringInput input) {
     if (input.project_root.empty()) input.project_root = paths.project_root;
     if (!input.context.pins) input.context.pins = make_authoring_context(paths.repository_root).pins;
+    if (input.context.library.empty()) input.context.library = paths.library_dir;
     auto result = native_project_factories(project, input);
     std::sort(result.begin(), result.end(), [](const auto &a, const auto &b) { return a.name < b.name; });
     if (result.empty()) throw CircuitAuthoringError("no subsystems found");

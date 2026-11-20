@@ -14,6 +14,7 @@ struct AuthoringContext {
     // circuit fallback. An absent symbol resolver means unresolved inline symbols.
     std::function<CatalogPart(const std::string&)> part = lookup_part_catalog;
     std::function<std::optional<std::set<std::string>>(const std::string&)> pins;
+    std::filesystem::path library;
 };
 AuthoringContext make_authoring_context(const std::filesystem::path& repository);
 struct AuthoringPort {

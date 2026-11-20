@@ -1,0 +1,109 @@
+{
+  "schema": "schgen.subsystem/1",
+  "name": "usb_pd",
+  "title": "USB-PD: FUSB302B Type-C controller",
+  "interface": ["+VDD_LOGIC", "+VBUS_SENSE", "GND", "CC1", "CC2", "I2C_SDA", "I2C_SCL", "INT_N"],
+  "parts": [
+    {"ref": "U1", "part": "FUSB302BMPX", "symbol": "Interface_USB:FUSB302BMPX", "footprint": "Package_DFN_QFN:WQFN-14-1EP_2.5x2.5mm_P0.5mm_EP1.45x1.45mm"},
+    {
+      "ref": "C1",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {
+      "ref": "C2",
+      "symbol": "Device:C",
+      "value": "10u",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "fields": {"LCSC": "C15850"}
+    },
+    {
+      "ref": "C3",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {
+      "ref": "C4",
+      "symbol": "Device:C",
+      "value": "200p",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C113796"}
+    },
+    {
+      "ref": "C5",
+      "symbol": "Device:C",
+      "value": "200p",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C113796"}
+    }
+  ],
+  "nets": [
+    {
+      "name": "+VDD_LOGIC",
+      "pins": ["U1.3", "U1.4", "C1.1", "C2.1"]
+    },
+    {
+      "name": "+VBUS_SENSE",
+      "pins": ["U1.2", "C3.1"]
+    },
+    {
+      "name": "GND",
+      "pins": ["U1.8", "U1.9", "U1.15", "C1.2", "C2.2", "C3.2", "C4.2", "C5.2"]
+    },
+    {
+      "name": "CC1",
+      "class": "port",
+      "pins": ["U1.10", "U1.11", "C4.1"]
+    },
+    {
+      "name": "CC2",
+      "class": "port",
+      "pins": ["U1.1", "U1.14", "C5.1"]
+    },
+    {
+      "name": "I2C_SDA",
+      "class": "port",
+      "pins": ["U1.7"]
+    },
+    {
+      "name": "I2C_SCL",
+      "class": "port",
+      "pins": ["U1.6"]
+    },
+    {
+      "name": "INT_N",
+      "class": "port",
+      "pins": ["U1.5"]
+    }
+  ],
+  "unconnected": ["U1.12", "U1.13"],
+  "ports": [
+    {"net": "CC1", "kind": "single", "expect": {"instance": "non_empty"}},
+    {"net": "CC2", "kind": "single", "expect": {"instance": "non_empty"}},
+    {"net": "I2C_SDA", "kind": "i2c", "role": "sda", "bus": {"instance": "i2c", "default": "USB_PD_I2C"}, "speed_hz": 400000, "expect": {"instance": "non_empty"}},
+    {"net": "I2C_SCL", "kind": "i2c", "role": "scl", "bus": {"instance": "i2c", "default": "USB_PD_I2C"}, "speed_hz": 400000, "expect": {"instance": "non_empty"}},
+    {"net": "INT_N", "kind": "single", "expect": {"instance": "non_empty"}}
+  ],
+  "hints": [],
+  "draws": [
+    {
+      "rail": "+VDD_LOGIC",
+      "amps": 0.002,
+      "note": {"instance": "draws", "default": "FUSB302B VDD (<1 mA); INT_N/I2C pull-ups are shared and live off-subsystem"}
+    }
+  ],
+  "waivers": [],
+  "purpose": [
+    {"part": "C1", "role": "bypass", "pin": "U1.3"},
+    {"part": "C2", "role": "reservoir", "pin": "U1.3"},
+    {"part": "C3", "role": "bypass", "pin": "U1.2"},
+    {"part": "C4", "role": "filter", "pin": "U1.11"},
+    {"part": "C5", "role": "filter", "pin": "U1.14"}
+  ],
+  "free": []
+}
+

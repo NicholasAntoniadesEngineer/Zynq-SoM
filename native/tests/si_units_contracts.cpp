@@ -2,6 +2,7 @@
 // Fresh native authoring -> real research -> actual CSV/DRU/Markdown consumers.
 // No Python, saved circuit.json, generated board, subprocess, or output writes.
 #include "schgen/run_config.hpp"
+#include "schgen/subsystem_data.hpp"
 #include "schgen/manufacturing_exports.hpp"
 #include "schgen/project_authoring.hpp"
 
@@ -227,7 +228,7 @@ int main(int argc,char** argv) {
         require(argc==2,"usage: si_units_contracts REPOSITORY");schgen::apply_run_config(std::filesystem::path(argv[1])/schgen::run_config_file,"carrier");const std::filesystem::path root=argv[1];
         require(open_part_catalog((root/"native/catalog.bin").string()),"real native part catalog unavailable");
         struct Close { ~Close(){close_part_catalog();} } close;
-        std::size_t lookups=0;ProjectAuthoringInput author;author.project_root=root/"carrier";
+        std::size_t lookups=0;ProjectAuthoringInput author;author.project_root=root/"carrier";author.context.library=root/subsystem_library_folder;
         author.context.part=[&](const std::string& name){++lookups;return lookup_part_catalog(name);};
         std::vector<ProjectCircuit> sheets;for(const auto& f:native_project_factories("carrier",author))
             sheets.push_back({f.name,{},f.circuit()});

@@ -12,6 +12,8 @@ struct SubsystemDefinition {
 // There is no dependency on a saved circuit.json or Python source at runtime.
 const std::vector<SubsystemDefinition>& subsystem_definitions();
 const SubsystemDefinition& subsystem_definition(const std::string& name);
+SubsystemDefinition subsystem_definition(const std::string& name, const AuthoringContext& context);
+std::vector<SubsystemDefinition> subsystem_library(const AuthoringContext& context);
 CircuitSheetIr author_subsystem(const std::string& name, const SubsystemMeta& meta = SubsystemMeta{},
                                const AuthoringContext& context = {});
 } // namespace schgen

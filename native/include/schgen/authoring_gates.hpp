@@ -18,7 +18,7 @@ struct CarrierPackageFactory {
     std::function<CircuitSheetIr()> circuit;
     std::optional<JsonNode> meta;
 };
-std::vector<SubsystemPackageFactory> native_subsystem_factories(const AuthoringContext& context = {});
+std::vector<SubsystemPackageFactory> native_subsystem_factories(const AuthoringContext& context);
 CarrierPackageFactory native_subsystem_adapter(const std::string& name, const JsonNode& meta,
                                                const AuthoringContext& context = {});
 

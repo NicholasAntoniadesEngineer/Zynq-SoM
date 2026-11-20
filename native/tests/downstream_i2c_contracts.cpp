@@ -2,6 +2,7 @@
 // consumers. Independent policy constants come from test_downstream_i2c.py.
 // No Python, cached circuit IR, process launch or repository writes.
 #include "schgen/firmware_docs.hpp"
+#include "schgen/subsystem_data.hpp"
 #include "schgen/manufacturing_exports.hpp"
 #include "schgen/project_authoring.hpp"
 
@@ -188,7 +189,7 @@ int main(int argc,char** argv){
         require(argc==2,"usage: downstream_i2c_contracts REPOSITORY");const std::filesystem::path root=argv[1];
         require(open_part_catalog((root/"native/catalog.bin").string()),"native catalog unavailable");
         struct Close{~Close(){close_part_catalog();}}close;
-        std::size_t lookups=0;ProjectAuthoringInput author;author.project_root=root/"carrier";
+        std::size_t lookups=0;ProjectAuthoringInput author;author.project_root=root/"carrier";author.context.library=root/subsystem_library_folder;
         author.context.part=[&](const std::string& name){++lookups;return lookup_part_catalog(name);};
         const auto services=author_project_subsystem("carrier","board_services",author);
         const auto usb=author_project_subsystem("carrier","usb_pd",author);require(lookups>0,"fresh circuits bypassed real catalog");

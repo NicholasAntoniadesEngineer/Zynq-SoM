@@ -1,4 +1,5 @@
 #include "schgen/authoring_gates.hpp"
+#include "schgen/subsystem_data.hpp"
 #include "schgen/project_authoring.hpp"
 #include "historical_input_contracts.hpp"
 #include "direct_enable_reference.hpp"
@@ -33,8 +34,12 @@ void check_report(const JsonNode& actual,const JsonNode& expected,const fs::path
         require(authoring_json_equal(value,wanted),"package report differs: "+at(a[i],"name").string_value+"."+key);
     }
 }
+AuthoringContext shelf(const fs::path& root) {
+    AuthoringContext context;context.library=root/subsystem_library_folder;
+    return context;
+}
 std::vector<CarrierPackageFactory> project_factories(const fs::path& root,const std::string& project) {
-    ProjectAuthoringInput input;input.project_root=root/project;
+    ProjectAuthoringInput input;input.project_root=root/project;input.context.library=root/subsystem_library_folder;
     return native_project_factories(project,input);
 }
 void default_mode_contracts(const fs::path& root) {
@@ -58,7 +63,7 @@ void default_mode_contracts(const fs::path& root) {
 
     Scratch s;const auto empty=s.path/"empty",missing=s.path/"missing";
     fs::create_directories(empty);
-    auto libraries=native_subsystem_factories();
+    auto libraries=native_subsystem_factories(shelf(root));
     for(const auto& path:{empty,missing}) {
         const auto no_library=check_subsystem_structure(path,{});
         const auto no_project=check_carrier_structure(path,root/"subsystems",{});
@@ -110,7 +115,7 @@ void legacy_reports(const fs::path& root,const JsonNode& library) {
         for(const auto& file:std::vector<std::string>{"__init__.py",name+".py","test_"+name+".py","README.md",name+".cir"})
             write(base/file,inert);
     }
-    auto report=check_subsystem_structure(s.path/"subsystems",native_subsystem_factories(),mode);
+    auto report=check_subsystem_structure(s.path/"subsystems",native_subsystem_factories(shelf(root)),mode);
     require(report.ok()&&report.n_ok()==17,"inert legacy library gate failed: "+report.summary());
     check_report(subsystem_structure_json(report),library,s.path);
     write_authoring_gate_report(s.path/"library-report.txt",report.summary());
@@ -186,7 +191,7 @@ void mutations(const fs::path& root) {
     const auto pkg=lib/"usb_pd";
     for(const auto& name:subsystem_required_files("usb_pd",mode))write(pkg/name,"");
     write(pkg/"__init__.py","");
-    auto libs=native_subsystem_factories();
+    auto libs=native_subsystem_factories(shelf(root));
     auto l=*std::find_if(libs.begin(),libs.end(),[](const auto& x){return x.name=="usb_pd";});
     auto lr=check_subsystem_package("usb_pd",lib,&l,mode);require(lr.ok(),"valid library rejected");
     l.interface.erase(l.interface.begin());l.interface.push_back("BOGUS");lr=check_subsystem_package("usb_pd",lib,&l,mode);
@@ -224,7 +229,7 @@ void connectors(const fs::path& root,const std::string& project) {
             require(rejected,"repeated SoM signal accepted");
         } else require(authoring_json_equal(authored_circuit_json(run()),at(row,"circuit")),project+": dynamic connector parameters ignored");
     }
-    ProjectAuthoringInput input;input.project_root=root/project;
+    ProjectAuthoringInput input;input.project_root=root/project;input.context.library=root/subsystem_library_folder;
     input.som=load_som_interface(input.project_root/"som_interface.json");
     input.mapping=link_mapping_from_json(parse_json_file((input.project_root/"som_mapping.json").string()));
     input.project_root="/this/path/does/not/exist";
@@ -236,7 +241,7 @@ void connectors(const fs::path& root,const std::string& project) {
 void native_packages(const fs::path& root) {
     constexpr auto mode=AuthoringPackageMode::native_assets;
     Scratch s;const auto library=s.path/"library";
-    auto libraries=native_subsystem_factories();
+    auto libraries=native_subsystem_factories(shelf(root));
     for(const auto& f:libraries)for(const auto& file:subsystem_required_files(f.name,mode))
         write(library/f.name/file,read(root/"subsystems"/f.name/file));
     auto lib_result=check_subsystem_structure(library,libraries,mode);
@@ -268,7 +273,7 @@ void native_packages(const fs::path& root) {
         const auto project_root=s.path/project,base=project_root/"subsystems";
         write(project_root/"som_interface.json",read(root/project/"som_interface.json"));
         write(project_root/"som_mapping.json",read(root/project/"som_mapping.json"));
-        ProjectAuthoringInput input;input.project_root=project_root;
+        ProjectAuthoringInput input;input.project_root=project_root;input.context.library=root/subsystem_library_folder;
         auto factories=native_project_factories(project,input);
         for(const auto& f:factories)for(const auto& file:carrier_required_files(f.name,f.meta.has_value(),mode))
             write(base/f.name/file,read(root/project/"subsystems"/f.name/file));
@@ -328,7 +333,7 @@ int main(int argc,char** argv) {
         default_mode_contracts(root);
         const auto library=parse_json_file((root/"native/tests/data/authoring/gate_library.json").string());
         constexpr auto mode=AuthoringPackageMode::native_assets;
-        auto result=check_subsystem_structure(root/"subsystems",native_subsystem_factories());
+        auto result=check_subsystem_structure(root/"subsystems",native_subsystem_factories(shelf(root)));
         require(result.ok()&&result.n_ok()==17,"real library gate failed: "+result.summary());
         require(result.exit_code()==0&&result.mode==mode,"real repository must use the native hard gate");
         legacy_reports(root,library);

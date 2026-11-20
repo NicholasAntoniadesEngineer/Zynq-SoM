@@ -1,4 +1,5 @@
 #include "schgen/authoring_context.hpp"
+#include "schgen/subsystem_data.hpp"
 #include "schgen/symbols.hpp"
 #include <memory>
 
@@ -27,6 +28,7 @@ AuthoringContext make_authoring_context(const std::filesystem::path& repository)
     auto library=std::make_shared<SymbolLibrary>(repository);
     AuthoringContext context;
     context.pins=NativeAuthoringPinResolver(std::move(library));
+    context.library=repository/subsystem_library_folder;
     return context;
 }
 } // namespace schgen

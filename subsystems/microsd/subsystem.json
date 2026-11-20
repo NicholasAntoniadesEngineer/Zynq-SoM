@@ -1,0 +1,244 @@
+{
+  "schema": "schgen.subsystem/1",
+  "name": "microsd",
+  "title": "microSD slot (1.8V SoM <-> 3.3V card, TXS02612)",
+  "interface": ["+VDD_HOST", "+VDD_CARD", "GND", "SD_CLK", "SD_CMD", "SD_D0", "SD_D1", "SD_D2", "SD_D3", "CD_N"],
+  "parts": [
+    {"ref": "U1", "part": "TXS02612RTWR"},
+    {"ref": "J1", "part": "TF-01A"},
+    {"ref": "U2", "part": "TPD6E001RSER"},
+    {
+      "ref": "R1",
+      "symbol": "Device:R",
+      "value": "100k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C25803"}
+    },
+    {
+      "ref": "R2",
+      "symbol": "Device:R",
+      "value": "100k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C25803"}
+    },
+    {
+      "ref": "R3",
+      "symbol": "Device:R",
+      "value": "100k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C25803"}
+    },
+    {
+      "ref": "R4",
+      "symbol": "Device:R",
+      "value": "100k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C25803"}
+    },
+    {
+      "ref": "R5",
+      "symbol": "Device:R",
+      "value": "100k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C25803"}
+    },
+    {
+      "ref": "R6",
+      "symbol": "Device:R",
+      "value": "10k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C25804"}
+    },
+    {
+      "ref": "C1",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {
+      "ref": "C2",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {
+      "ref": "C3",
+      "symbol": "Device:C",
+      "value": "22u",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "fields": {"LCSC": "C45783"}
+    },
+    {
+      "ref": "C4",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {
+      "ref": "TP1",
+      "symbol": "Connector:TestPoint",
+      "value": "SD_CMD",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {"BOM": "exclude"}
+    },
+    {
+      "ref": "TP2",
+      "symbol": "Connector:TestPoint",
+      "value": "SD_CLK",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {"BOM": "exclude"}
+    }
+  ],
+  "nets": [
+    {
+      "name": "SD_CLK",
+      "class": "port",
+      "pins": ["U1.9", "TP2.1"]
+    },
+    {
+      "name": "SD_CARD_CLK",
+      "pins": ["U1.19", "J1.5", "U2.1"]
+    },
+    {
+      "name": "SD_CMD",
+      "class": "port",
+      "pins": ["U1.4", "TP1.1"]
+    },
+    {
+      "name": "SD_CARD_CMD",
+      "pins": ["U1.20", "J1.3", "U2.2", "R1.2"]
+    },
+    {
+      "name": "SD_D0",
+      "class": "port",
+      "pins": ["U1.6"]
+    },
+    {
+      "name": "SD_CARD_D0",
+      "pins": ["U1.18", "J1.7", "U2.3", "R2.2"]
+    },
+    {
+      "name": "SD_D1",
+      "class": "port",
+      "pins": ["U1.7"]
+    },
+    {
+      "name": "SD_CARD_D1",
+      "pins": ["U1.16", "J1.8", "U2.6", "R3.2"]
+    },
+    {
+      "name": "SD_D2",
+      "class": "port",
+      "pins": ["U1.1"]
+    },
+    {
+      "name": "SD_CARD_D2",
+      "pins": ["U1.23", "J1.1", "U2.7", "R4.2"]
+    },
+    {
+      "name": "SD_D3",
+      "class": "port",
+      "pins": ["U1.3"]
+    },
+    {
+      "name": "SD_CARD_D3",
+      "pins": ["U1.22", "J1.2", "U2.8", "R5.2"]
+    },
+    {
+      "name": "CD_N",
+      "class": "port",
+      "pins": ["J1.9", "R6.2"]
+    },
+    {
+      "name": "+VDD_HOST",
+      "pins": ["U1.5", "C1.1"]
+    },
+    {
+      "name": "GND",
+      "pins": ["C1.2", "C2.2", "C3.2", "C4.2", "U1.24", "U1.25", "U1.2", "U1.11", "J1.6", "J1.13", "J1.10", "J1.11", "J1.12", "U2.5"]
+    },
+    {
+      "name": "+VDD_CARD",
+      "pins": ["J1.4", "U1.21", "U1.17", "C2.1", "C3.1", "U2.10", "R1.1", "R2.1", "R3.1", "R4.1", "R5.1", "R6.1", "C4.1"]
+    }
+  ],
+  "unconnected": ["U1.10", "U1.12", "U1.13", "U1.14", "U1.15", "U1.8", "U2.4", "U2.9"],
+  "ports": [
+    {
+      "net": "SD_CLK",
+      "kind": "single",
+      "expect": {"instance": "non_empty"}
+    },
+    {"net": "SD_CLK", "kind": "sd_bus", "level_v": 1.8},
+    {
+      "net": "SD_CMD",
+      "kind": "single",
+      "expect": {"instance": "non_empty"}
+    },
+    {"net": "SD_CMD", "kind": "sd_bus", "level_v": 1.8},
+    {
+      "net": "SD_D0",
+      "kind": "single",
+      "expect": {"instance": "non_empty"}
+    },
+    {"net": "SD_D0", "kind": "sd_bus", "level_v": 1.8},
+    {
+      "net": "SD_D1",
+      "kind": "single",
+      "expect": {"instance": "non_empty"}
+    },
+    {"net": "SD_D1", "kind": "sd_bus", "level_v": 1.8},
+    {
+      "net": "SD_D2",
+      "kind": "single",
+      "expect": {"instance": "non_empty"}
+    },
+    {"net": "SD_D2", "kind": "sd_bus", "level_v": 1.8},
+    {
+      "net": "SD_D3",
+      "kind": "single",
+      "expect": {"instance": "non_empty"}
+    },
+    {"net": "SD_D3", "kind": "sd_bus", "level_v": 1.8},
+    {
+      "net": "CD_N",
+      "kind": "single",
+      "expect": {"instance": "non_empty"}
+    }
+  ],
+  "hints": [],
+  "draws": [
+    {
+      "rail": "+VDD_CARD",
+      "amps": 0.25,
+      "note": {"instance": "draws_card", "default": "SD card write burst ~200 mA + pull-ups + TXS02612 VCCB"}
+    },
+    {
+      "rail": "+VDD_HOST",
+      "amps": 0.005,
+      "note": {"instance": "draws_host", "default": "TXS02612 VCCA (host-side level)"}
+    }
+  ],
+  "waivers": [],
+  "purpose": [
+    {"part": "C1", "role": "bypass", "pin": "U1.5"},
+    {"part": "C4", "role": "bypass", "pin": "U2.10"},
+    {"part": "C2", "role": "bypass", "pin": "U1.21"},
+    {"part": "C3", "role": "reservoir", "pin": "J1.4"},
+    {"part": "R1", "role": "pull", "pin": "U1.20"},
+    {"part": "R2", "role": "pull", "pin": "U1.18"},
+    {"part": "R3", "role": "pull", "pin": "U1.16"},
+    {"part": "R4", "role": "pull", "pin": "U1.23"},
+    {"part": "R5", "role": "pull", "pin": "U1.22"},
+    {"part": "R6", "role": "pull", "pin": "J1.9"},
+    {"part": "U2", "role": "protect", "pin": "J1.5"}
+  ],
+  "free": [
+    {"part": "TP1", "reason": "probe point; it follows its net"},
+    {"part": "TP2", "reason": "probe point; it follows its net"}
+  ]
+}
+
