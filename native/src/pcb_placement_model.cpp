@@ -264,10 +264,12 @@ void Placer::escape() {
             for (const auto &[pad, n] : i.pad_nets) {
                 (void)pad;
                 if (!n.second.empty() && pcb_classify_net(n.second) == "SIGNAL")
-                    triage[n.second] = classify_pcb_escape_signal(n.second, ctx.in.function_map);
+                    triage[n.second] = classify_pcb_escape_signal(n.second, ctx.in.function_map,
+                                                                    ctx.in.escape_triage);
             }
     for (const auto &v : v1.violations)
-        triage[v.net] = classify_pcb_escape_signal(v.net, ctx.in.function_map);
+        triage[v.net] = classify_pcb_escape_signal(v.net, ctx.in.function_map,
+                                                  ctx.in.escape_triage);
     PcbEscapeInput input(out.model, v1, triage, ctx.in.interface_bytes);
     auto copper = build_pcb_escape_copper(input, &ctx.quantization);
     auto lanes = build_pcb_escape_plan(input, &ctx.quantization);

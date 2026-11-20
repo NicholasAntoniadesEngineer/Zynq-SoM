@@ -29,7 +29,8 @@ PcbVerificationResult verify_pcb_geometry(const BoardPcbStage& stage,
     out.return_path = check_return_path(input.som_interface, input.return_path_footprints);
     std::map<std::string,ReturnStitchClass> triage;
     for (const auto& violation : out.return_path.violations) {
-        const auto classification = classify_pcb_escape_signal(violation.net, input.function_map);
+        const auto classification = classify_pcb_escape_signal(
+            violation.net, input.function_map, input.escape_triage);
         triage.emplace(violation.net, ReturnStitchClass{classification.rank(), classification.klass, classification.function});
     }
     out.return_stitch = check_return_stitch(prepared, out.return_path, triage, input.interface_bytes, &emitted);

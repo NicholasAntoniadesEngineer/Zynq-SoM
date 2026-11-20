@@ -27,6 +27,7 @@ struct PcbPlacementInput {
     std::map<std::string, PcbCheckFootprintPtr> return_path_footprints;
     std::string interface_bytes;
     ProjectStrings function_map;
+    PcbEscapeTriage escape_triage;
     bool two_side = true;
     std::shared_ptr<const PcbPlacementExperiment> experiment;
     TrustedOwnedGroupInputs owned_groups; // compact-only, validated board inputs

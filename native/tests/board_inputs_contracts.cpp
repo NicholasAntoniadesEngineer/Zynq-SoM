@@ -43,7 +43,7 @@ void sidecar_independence(const schgen::ProjectPaths& paths,
     // Only project-root-relative reads need links; never link generated output.
     auto isolated = paths;
     isolated.project_root = overlay.path;
-    for (const auto* name : {"floorplan.json", "som_mapping.json", "research/si_spec.json"}) {
+    for (const auto* name : {"floorplan.json", "som_mapping.json", "escape_triage.json", "research/si_spec.json"}) {
         const auto source = paths.project_root / name;
         if (!fs::exists(source)) continue;
         const auto destination = overlay.path / name;

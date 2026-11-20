@@ -154,7 +154,7 @@ set_source_files_properties(src/ratsnest_documents.cpp src/ratsnest_images.cpp s
     PROPERTIES COMPILE_OPTIONS "-ffp-contract=off")
 set_source_files_properties(src/procurement.cpp PROPERTIES COMPILE_OPTIONS "-ffp-contract=off")
 set(SCHGEN_PCB_PLACEMENT_SOURCES
-    src/pcb_escape_model.cpp src/pcb_escape_triage.cpp src/pcb_escape_plan.cpp
+    src/pcb_escape_model.cpp src/pcb_escape_triage.cpp src/pcb_escape_triage_data.cpp src/pcb_escape_plan.cpp
     src/pcb_escape_copper.cpp src/pcb_escape_json.cpp
     src/pcb_stage_geometry.cpp src/pcb_stage_search.cpp src/pcb_stage_power.cpp src/pcb_stage_zone.cpp
     src/pcb_placement_inputs.cpp src/pcb_placement_pack.cpp src/pcb_placement_variants.cpp
@@ -1180,6 +1180,10 @@ if(BUILD_TESTING)
     target_link_libraries(schgen_part_ratings_contracts PRIVATE schgen_core)
     target_compile_options(schgen_part_ratings_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
     add_test(NAME native_part_ratings_contracts COMMAND schgen_part_ratings_contracts)
+    add_executable(schgen_escape_triage_contracts tests/escape_triage_contracts.cpp)
+    target_link_libraries(schgen_escape_triage_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_escape_triage_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME native_escape_triage_contracts COMMAND schgen_escape_triage_contracts "${CMAKE_CURRENT_SOURCE_DIR}/..")
     add_test(NAME native_study_cli_needs_stackups COMMAND schgen study layers
         --config "${CMAKE_CURRENT_SOURCE_DIR}/tests/data/study/no_study.json")
     set_tests_properties(native_study_cli_needs_stackups PROPERTIES

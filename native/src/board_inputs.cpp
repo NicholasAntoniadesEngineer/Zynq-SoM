@@ -133,6 +133,7 @@ PcbPlacementInput load_board_inputs(const ProjectPaths& paths,
     auto functions = mapping.function_map;
     for (const auto& [key, value] : mapping.pudc_straps) functions[key] = value;
     result.function_map.assign(functions.begin(), functions.end());
+    result.escape_triage = load_escape_triage(paths.project_root);
     for (const auto& [ref, connector] : result.som_interface.connectors) {
         const auto value = connector.value.value_or("");
         auto dossier = resolution.parts_dir / value / (value + ".kicad_mod");
