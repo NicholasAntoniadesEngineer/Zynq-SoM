@@ -58,7 +58,7 @@ native/bin/schgen catalog-compile parts native/catalog.bin
 
 ## Part facts (`part_facts.json`)
 
-`parts/part_facts.json` (`schema: schgen.part_facts/3`) is the one reviewed,
+`parts/part_facts.json` (`schema: schgen.part_facts/4`) is the one reviewed,
 hand-kept file in this folder. It holds what the generator cannot know:
 
 - `classes` — the class of every schematic symbol the boards may place, keyed
@@ -126,10 +126,30 @@ hand-kept file in this folder. It holds what the generator cannot know:
   `rotation_z_deg` of the 3D model that replaces the footprint's own.
 - `footprint_aliases` — keyed by footprint id: `footprint`, the footprint id
   that stands in for it.
+- `i2c_devices` — keyed by part number, one row per addressable I2C target:
+  `label` (the device name the manifest prints), `base` (the 7-bit address
+  with every strap at value 0), `data_pin` and `clock_pin`, `straps` (each a
+  `pin` and its `selects`: a map from a pin of the same part to the value added
+  to `base` when the strap pin is on that pin's net) and the datasheet `cite`.
+  Pins are named by the names in the part's `part.json`; each name must pick
+  exactly one pin. The address is `base` plus the selected values and must stay
+  within seven bits.
+- `i2c_bridges` — keyed by part number, one row per part that carries I2C
+  lines from one net to another: `joins` (pairs of pin names, one pair per
+  line), `shares_addresses` (true when a target on one side answers the
+  controller on the other at its own address, as through a level translator;
+  false for a multiplexer or an address translator) and the datasheet `cite`.
+
+The board's I2C inventory reads these two sections: a bus is the pair of nets
+on a device's data and clock pins (or a typed `i2c` port pair), named by the
+`bus` of its typed ports, else by its data net; buses joined by a bridge that
+shares addresses form one address space. An integrated circuit on a bus net
+with neither row and no `protect` purpose fails the build.
 
 Each of these sections must be present; an empty one is `{}`. A key naming a
 part must be the name of a folder in this folder; the keys of `zeners` (values)
-and `footprint_aliases` (footprint ids) are the exceptions. An unknown key, a value of
+and `footprint_aliases` (footprint ids) are the exceptions. A key of `i2c_devices` or `i2c_bridges` must also have
+a `part.json` in its folder. An unknown key, a value of
 the wrong type or a repeated key fails the build, naming the file, the section
 and the key.
 

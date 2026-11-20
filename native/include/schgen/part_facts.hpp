@@ -19,7 +19,9 @@ namespace schgen {
 namespace part_fact_constants {
 inline constexpr NamedConstant vrml_unit{"vrml_unit", 2.54, "mm", "physical",
     "KiCad reads one VRML model unit as a tenth of an inch, and the part importer writes its models in that unit"};
-inline constexpr std::array part_fact_registry{vrml_unit};
+inline constexpr NamedConstant i2c_address_max{"i2c_address_max", 127.0, "address", "physical",
+    "an I2C target address has seven bits, so the highest is 127 (NXP UM10204, 3.1.10)"};
+inline constexpr std::array part_fact_registry{vrml_unit, i2c_address_max};
 }
 
 enum class PartClass : std::uint8_t {
@@ -149,6 +151,29 @@ struct FootprintAliasFact {
     std::string footprint;
 };
 
+struct I2cPinFact {
+    std::string name, number;
+};
+
+struct I2cStrapFact {
+    I2cPinFact pin;
+    std::vector<std::pair<I2cPinFact, int>> selects;
+};
+
+struct I2cDeviceFact {
+    std::string label;
+    int base = 0;
+    I2cPinFact data, clock;
+    std::vector<I2cStrapFact> straps;
+    std::string cite;
+};
+
+struct I2cBridgeFact {
+    std::vector<std::pair<I2cPinFact, I2cPinFact>> joins;
+    bool shares_addresses = false;
+    std::string cite;
+};
+
 using ThermalFacts = std::map<std::string, ThermalFact>;
 using ThermalCopperFacts = std::map<std::string, ThermalCopperFact>;
 using EpViaFacts = std::map<std::string, EpViaFact>;
@@ -159,6 +184,8 @@ using ReferencePinFacts = std::map<std::string, ReferencePinFact>;
 using ControlGridFacts = std::map<std::string, ControlGridFact>;
 using ModelOverrideFacts = std::map<std::string, ModelOverrideFact>;
 using FootprintAliasFacts = std::map<std::string, FootprintAliasFact>;
+using I2cDeviceFacts = std::map<std::string, I2cDeviceFact>;
+using I2cBridgeFacts = std::map<std::string, I2cBridgeFact>;
 
 template <typename Fact>
 const Fact* part_fact(const std::map<std::string, Fact>& section, const std::string& name) {
@@ -194,6 +221,8 @@ struct PartFacts {
     ControlGridFacts control_grid;
     ModelOverrideFacts model_overrides;
     FootprintAliasFacts footprint_aliases;
+    I2cDeviceFacts i2c_devices;
+    I2cBridgeFacts i2c_bridges;
 };
 
 struct ModelRoots {
