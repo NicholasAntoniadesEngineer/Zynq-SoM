@@ -300,6 +300,16 @@ void repository_sections_load(const std::filesystem::path& repository) {
     require(part_fact_of(facts.reference_pins, "PCA9306DCUR", "reference_pins").vref2_pin == "7", "the repository file states the reference pins");
     require(part_fact_of(facts.thermal, "TLV75725PDYDR", "thermal").pour->evidence == "TLV75725_DYD", "the repository file states the thermal rows");
     require(part_fact_of(facts.thermal_copper, "LM61460AANRJRR", "thermal_copper").need.min_vias == 6, "the repository file states the thermal copper need");
+    require(thermal_field_for(facts.thermal_copper, facts.regulators, "LM61460")->max_vias == 8 &&
+                thermal_field_for(facts.thermal_copper, facts.regulators, "TLV75725")->max_vias == 3 &&
+                thermal_field_for(facts.thermal_copper, facts.regulators, "10k") == nullptr,
+            "a placed value finds its thermal field row by the regulator label");
+    require(ep_via_for(facts.ep_vias, facts.regulators, "TPS26631")->min_pads == 4 && ep_via_for(facts.ep_vias, facts.regulators, "LM61460") == nullptr,
+            "a placed value finds its exposed-pad via row by the regulator label");
+    refuses([&] { thermal_field_for(facts.thermal_copper, RegulatorFacts{}, "LM61460"); }, "LM61460AANRJRR has no regulators",
+            "thermal_copper: a row whose part has no regulators entry is refused");
+    refuses([&] { ep_via_for(facts.ep_vias, RegulatorFacts{}, "TPS26631"); }, "TPS26631PWPR has no regulators",
+            "ep_vias: a row whose part has no regulators entry is refused");
     require(facts.isolation.size() == 2 && part_fact_of(facts.isolation, "HX5008NLT", "isolation").margin_mm == 0.6 &&
                 part_fact_of(facts.isolation, "KH-5224-8P8C-D", "isolation").margin_mm == 0.6,
             "the repository isolation rows");

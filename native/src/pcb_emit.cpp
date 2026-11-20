@@ -22,43 +22,6 @@ const PcbEmitPolicy &default_pcb_emit_policy() {
                                     {"lcd", "LCD"},
                                     {"pmod", "PMOD"},
                                     {"pmod_expansion", "PMOD"}};
-        p.thermal_copper = {{"LM61460",
-                             {{{1.55, -2.5},
-                               {1.55, 2.5},
-                               {2.45, -2.5},
-                               {2.45, 2.5},
-                               {1.55, -4.35},
-                               {1.55, 4.35},
-                               {2.45, -4.35},
-                               {2.45, 4.35},
-                               {1, -4.35},
-                               {1, 4.35},
-                               {-1.6, -2.7},
-                               {-1.6, 2.7},
-                               {.3, -2.6},
-                               {.3, 2.6},
-                               {2.85, -1.45},
-                               {2.85, 0},
-                               {2.85, 1.45}},
-                              8,
-                              {-3, -4.75, 4.4, 4.75},
-                              {"F.Cu", "B.Cu"},
-                              "TI SNVSBD5D 11.1.1 thermal-via field at PGND1/PGND2"}},
-                            {"TLV75725",
-                             {{{-1.15, 0},
-                               {1.15, 0},
-                               {-1.75, 0},
-                               {1.75, 0},
-                               {1.85, -1},
-                               {1.85, 1},
-                               {2.35, -.55},
-                               {2.35, .55},
-                               {-1.85, -1},
-                               {-1.85, 1}},
-                              3,
-                              {-2.9, -1.6, 2.9, 1.6},
-                              {"F.Cu"},
-                              "TI TLV757P DYD JESD51-5 pad-adjacent thermal vias"}}};
         for (const auto &[_, need] : default_thermal_policy().pour_needs)
             p.thermal_credit_needs.push_back(need);
         return p;
@@ -95,9 +58,19 @@ PcbEmitPolicy pcb_emit_policy(const ProjectConfig &c) {
     p.header_descriptions = c.header_desc;
     p.switch_descriptions = c.switch_desc;
     p.isolation = c.isolation;
+    p.thermal_copper = c.thermal_copper;
+    p.regulators = c.regulators;
     p.model_overrides = c.model_overrides;
     p.footprint_aliases = c.footprint_aliases;
     return p;
+}
+std::optional<PcbThermalCopperSpec> thermal_copper_spec(const PcbEmitPolicy &p, const std::string &value) {
+    const ThermalFieldFact *field = thermal_field_for(p.thermal_copper, p.regulators, value);
+    if (!field)
+        return std::nullopt;
+    return PcbThermalCopperSpec{field->via_offsets_mm, static_cast<std::size_t>(field->max_vias),
+                                {field->pour_box_mm[0], field->pour_box_mm[1], field->pour_box_mm[2], field->pour_box_mm[3]},
+                                field->pour_layers, field->cite};
 }
 PcbEmissionResult render_pcb(const PcbModel &m, const PcbEmitPolicy &p, QuantizationCounts* counts,
                             const labels::LabelSeating* seats) {

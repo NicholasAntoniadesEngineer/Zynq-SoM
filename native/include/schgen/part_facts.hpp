@@ -210,6 +210,9 @@ std::pair<int, int> mating_face_vector(const ConnectorFact& fact);
 ConnectorFacts load_connector_facts(const std::filesystem::path& parts_directory);
 
 PartFacts load_part_facts(const std::filesystem::path& file);
+PartFacts load_part_facts_in(const std::filesystem::path& parts_directory);
+const ThermalFieldFact* thermal_field_for(const ThermalCopperFacts& rows, const RegulatorFacts& regulators, const std::string& value);
+const EpViaFact* ep_via_for(const EpViaFacts& rows, const RegulatorFacts& regulators, const std::string& value);
 const PartFacts& default_part_facts();
 PartClass symbol_class(const PartFacts& facts, const std::string& symbol, const std::string& part);
 double model_top(const std::string& text, const std::string& extension, const std::string& model);

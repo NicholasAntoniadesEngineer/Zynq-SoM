@@ -103,6 +103,8 @@ PcbPlacementInput load_board_inputs(const ProjectPaths& paths,
     }
     floor.project.connectors = facts.connectors;
     floor.project.isolation = facts.isolation;
+    floor.project.thermal_copper = facts.thermal_copper;
+    floor.project.regulators = facts.regulators;
     floor.project.model_overrides = facts.model_overrides;
     floor.project.footprint_aliases = facts.footprint_aliases;
     floor.project.control_grid = facts.control_grid;

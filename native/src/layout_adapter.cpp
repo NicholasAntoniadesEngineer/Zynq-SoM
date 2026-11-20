@@ -360,12 +360,11 @@ void reserve_thermal_fields(const PcbModel& model, const PcbEmitPolicy& policy, 
         const auto owner = std::find_if(model.insts.begin(), model.insts.end(),
                                         [&](const PcbCheckInstance& instance) { return instance.ref == owner_name; });
         if (owner == model.insts.end()) throw LayoutError("layout: thermal pour " + zone.name + " names no part");
-        const auto spec = std::find_if(policy.thermal_copper.begin(), policy.thermal_copper.end(),
-                                       [&](const auto& row) { return starts_with(owner->value, row.first); });
-        if (spec == policy.thermal_copper.end())
+        const auto spec = thermal_copper_spec(policy, owner->value);
+        if (!spec)
             throw LayoutError("layout: thermal pour " + zone.name + " has no pour rule for " + owner->value);
         const std::size_t index = static_cast<std::size_t>(owner - model.insts.begin());
-        const Box4& local = spec->second.pour;
+        const Box4& local = spec->pour;
         reserve.pour = PourRule{index, {local.x0, local.y0, local.x1, local.y1}, policy.gnd_plane_edge_back, owner->mirror};
         if (std::find(reserve.members.begin(), reserve.members.end(), index) == reserve.members.end())
             reserve.members.push_back(index);

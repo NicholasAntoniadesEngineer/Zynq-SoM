@@ -51,6 +51,8 @@ struct ProjectConfig {
     ConnectorFacts connectors;
     ModuleDefinition module;
     IsolationFacts isolation;
+    ThermalCopperFacts thermal_copper;
+    RegulatorFacts regulators;
     ModelOverrideFacts model_overrides;
     FootprintAliasFacts footprint_aliases;
     ControlGridFacts control_grid;

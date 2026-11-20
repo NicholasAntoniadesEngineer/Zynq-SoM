@@ -26,7 +26,8 @@ struct PcbEmitPolicy {
     FootprintAliasFacts footprint_aliases;
     ConnectorFacts connectors;
     ProjectStrings connector_descriptions, header_descriptions, switch_descriptions;
-    std::vector<std::pair<std::string, PcbThermalCopperSpec>> thermal_copper;
+    ThermalCopperFacts thermal_copper;
+    RegulatorFacts regulators;
     std::vector<ThermalPourNeed> thermal_credit_needs;
     IsolationFacts isolation;
     double gnd_plane_edge_back = 0.5, gnd_plane_clearance = 0.3;
@@ -45,6 +46,7 @@ struct PcbEmitPolicy {
 // taken only from the explicitly supplied project's already-parsed metadata.
 const PcbEmitPolicy &default_pcb_emit_policy();
 PcbEmitPolicy pcb_emit_policy(const ProjectConfig &);
+std::optional<PcbThermalCopperSpec> thermal_copper_spec(const PcbEmitPolicy &, const std::string &value);
 
 struct PcbEmissionResult {
     Sexpr document;
