@@ -3,6 +3,8 @@
   "name": "board_services",
   "title": "Board services: ID-EEPROM, RTC, watchdog, QWIIC",
   "interface": ["+3V3_AUX", "GND", "AUX_I2C_SCL", "AUX_I2C_SDA", "WATCHDOG_KICK", "WATCHDOG_RST_N"],
+  "placement": {"region": "board", "silk_label": null, "far_guard_mm": null, "escape_basis": null, "escape_escalates": false, "reserves_edge": false},
+  "checks": {"dividers": [], "divider_sources": [], "iset_window_ma": null},
   "parts": [
     {"ref": "U1", "part": "24AA025E48T-I_OT"},
     {

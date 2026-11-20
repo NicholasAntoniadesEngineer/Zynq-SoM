@@ -3,6 +3,8 @@
   "name": "bringup_rails",
   "title": "Bring-up controls: rail/module DIPs + TCA9535 + buttons",
   "interface": ["+3V3_SC", "BU_DIP_5V0", "BU_DIP_3V3", "BU_DIP_1V8", "BU_DIP_USER_LED", "BU_DIP_HDMI_TX", "BU_DIP_HDMI_RX", "BU_DIP_LCD", "BU_DIP_CAM", "BU_DIP_SD", "BU_DIP_USB", "BU_DIP_PMOD", "BU_DIP_SPARE", "BU_DIP_HDMI_TX_5V", "BU_DIP_LCD_5V", "GND", "BU_OVR_HDMI_TX", "BU_OVR_HDMI_RX", "BU_OVR_LCD", "BU_OVR_CAM", "BU_OVR_SD", "BU_OVR_USB", "BU_OVR_PMOD", "BU_OVR_USER_LED", "BU_OVR_LCD_BL", "BU_OVR_HDMI_TX_5V", "BU_OVR_LCD_5V", "PMON_ALERT_N", "USBOTG_FLT_N", "PD_FLT_N", "STM32_I2C2_SCL", "STM32_I2C2_SDA", "SC_INT_N", "PL_BTN0", "+3V3", "PL_BTN1", "STM32_NRST", "PUDC_34"],
+  "placement": {"region": "board", "silk_label": null, "far_guard_mm": null, "escape_basis": null, "escape_escalates": false, "reserves_edge": false},
+  "checks": {"dividers": [], "divider_sources": [], "iset_window_ma": null},
   "parts": [
     {"ref": "SW1", "part": "DSHP04TSGER"},
     {"ref": "SW2", "part": "DSHP08TSGER"},

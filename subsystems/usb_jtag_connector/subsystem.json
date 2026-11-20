@@ -3,6 +3,8 @@
   "name": "usb_jtag_connector",
   "title": "USB-C UFP debug port -> CH347T (protected)",
   "interface": ["+VBUS", "GND", "CHASSIS_GND", "USB_DP", "USB_DM"],
+  "placement": {"region": "board", "silk_label": null, "far_guard_mm": null, "escape_basis": null, "escape_escalates": false, "reserves_edge": false},
+  "checks": {"dividers": [], "divider_sources": [], "iset_window_ma": null},
   "parts": [
     {"ref": "J1", "part": "TYPE-C-31-M-12"},
     {"ref": "U1", "part": "USBLC6-2SC6"},

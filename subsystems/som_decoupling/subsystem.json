@@ -3,6 +3,8 @@
   "name": "som_decoupling",
   "title": "SoM power-entry decoupling under the DF40 mezzanine",
   "interface": ["+5V_SOM", "GND", "+3V3", "+3V3_SC"],
+  "placement": {"region": "under_module", "silk_label": null, "far_guard_mm": null, "escape_basis": null, "escape_escalates": false, "reserves_edge": false},
+  "checks": {"dividers": [], "divider_sources": [], "iset_window_ma": null},
   "parts": [
     {
       "ref": "C1",

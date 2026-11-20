@@ -3,6 +3,8 @@
   "name": "power_mon",
   "title": "Rail telemetry: 2x INA3221 + shunts (I2C 0x40/41)",
   "interface": ["+VIN", "+VIN_SYS", "+5V_REG", "+5V", "+3V3_REG", "+3V3", "+1V8_REG", "+1V8", "GND", "+3V3_SC", "STM32_I2C2_SDA", "STM32_I2C2_SCL", "PMON_ALERT_N"],
+  "placement": {"region": "board", "silk_label": null, "far_guard_mm": null, "escape_basis": null, "escape_escalates": false, "reserves_edge": false},
+  "checks": {"dividers": [], "divider_sources": [], "iset_window_ma": null},
   "parts": [
     {"ref": "U1", "part": "INA3221AIRGVR"},
     {"ref": "U2", "part": "INA3221AIRGVR"},

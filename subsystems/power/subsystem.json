@@ -3,6 +3,8 @@
   "name": "power",
   "title": "Power: +VIN->+5V->+3V3 bucks + +1V8 LDO, PG LEDs",
   "interface": ["+VIN", "+VOUT_5V_REG", "+VOUT_5V", "+VOUT_3V3_REG", "+VOUT_3V3", "+VOUT_1V8_REG", "+VOUT_1V8", "GND", "EN_VOUT_5V", "EN_VOUT_3V3", "EN_VOUT_1V8"],
+  "placement": {"region": "board", "silk_label": null, "far_guard_mm": null, "escape_basis": null, "escape_escalates": false, "reserves_edge": false},
+  "checks": {"dividers": [], "divider_sources": [], "iset_window_ma": null},
   "parts": [
     {"ref": "U1", "part": "LM61460AANRJRR"},
     {

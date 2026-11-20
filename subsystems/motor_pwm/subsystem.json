@@ -3,6 +3,8 @@
   "name": "motor_pwm",
   "title": "8-ch PWM/ESC output buffer (5V, PL-isolating)",
   "interface": ["+5V", "GND", "ESC_BUF_OE_N", "ESC_PWM_IN0", "ESC_PWM_IN1", "ESC_PWM_IN2", "ESC_PWM_IN3", "ESC_PWM_IN4", "ESC_PWM_IN5", "ESC_PWM_IN6", "ESC_PWM_IN7", "+5V_MOTOR_IO"],
+  "placement": {"region": "board", "silk_label": null, "far_guard_mm": null, "escape_basis": null, "escape_escalates": false, "reserves_edge": false},
+  "checks": {"dividers": [], "divider_sources": [], "iset_window_ma": null},
   "parts": [
     {"ref": "U1", "part": "SN74HCT245PWR"},
     {
