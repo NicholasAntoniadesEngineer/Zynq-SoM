@@ -275,3 +275,22 @@ Roles are listed in one place, `native/src/roles.cpp`; reach values are in `nati
 3. Add the other files the structure gate requires. For a library package (`AuthoringPackageMode::native_assets`, the mode used by the board pipeline and by the `subsystem-check` command) `check_subsystem_package` requires two regular files in the folder: `README.md` and `<name>.cir`. A missing file is reported as missing. Nothing else is required; for example `placement_contract.json` is not checked by this gate. If the folder also holds `circuit.json`, it must match the built circuit, and then `layout.json` must exist and match too (`circuit.json differs from the native authoring factory`, `layout.json is missing beside circuit.json`, `layout.json differs from the native authoring factory`).
 4. Make `interface` match the circuit. The gate builds the circuit with empty board settings and requires: a non-empty `interface`, no duplicate names (`duplicate name in native INTERFACE`), every non-signal net listed (`net 'X' is an external but not in the declared INTERFACE`), and no listed name that is not such a net (`INTERFACE name 'X' is not an external net of the built circuit`). A build failure is reported as `circuit() build failed: <message>`.
 5. Run the application. No rebuild is needed: the file is read when the subsystem is requested. A board uses it by name with its own `SubsystemMeta` (section 4).
+
+## 7. Component basis files
+
+The component basis audit checks that every resistor, capacitor and inductor value, and every port speed and impedance, in the built circuits is backed by a written engineering basis. The audit's inputs are data: one file for the library and one per board. The application reads them when it runs; `load_component_basis_policy` takes the repository root and fails with a message naming the file and the row when a file is missing or malformed. Every file has `"schema": "schgen.component_basis/1"`, and a key outside the lists below is rejected.
+
+`subsystems/component_basis.json` holds the shared declarations and the library scope. It has these keys, all required:
+
+| Key | Contents |
+|---|---|
+| `declarations` | Rows of `name`, `value`, `unit`, `basis`, `class` and `numeric` (a boolean). The text keys must not be empty. A name may not be listed twice. A row may be used by several subsystems and several boards. |
+| `uses` | Rows of `sheet`, `target`, `attribute`, `declaration` and `type`: one obligation each. `sheet` must be in this file's `sheets`, and `declaration` must be a declared name. |
+| `sheets` | Library subsystems audited in the `library` scope, built with empty settings. A name may not be listed twice. |
+| `board_scope_only` | Library subsystems audited only under the boards that use them. A name may not be listed twice. |
+
+Each board folder holds a `component_basis.json` with `schema`, `uses` and `sheets` only; a `declarations` or `board_scope_only` key is rejected. The scope of a board is its folder name. Its `uses` may name any declaration in `subsystems/component_basis.json` but only sheets in its own `sheets`. A board file is required for every folder that holds a `board.json`. The loaded policy lists the library rows first, then each board in folder order, keeping the file order within each scope.
+
+Every library subsystem must be accounted for exactly once. A library subsystem in `sheets` is audited in the `library` scope. One in `board_scope_only` is not audited there. One in neither, or in both, fails with `library subsystem X is neither in sheets nor in board_scope_only of <file>` (or `is in both sheets and board_scope_only of <file>`). A name in `sheets` or `board_scope_only` that is not a library subsystem fails, naming it. A name in `board_scope_only` that is in the `sheets` of no board file fails, so it cannot go unaudited. Every board sheet is audited in the board's scope; a board sheet missing from its file's `sheets` fails as an unexpected live sheet.
+
+When you add a library subsystem, list it in `sheets` (with its obligations in `uses`) or in `board_scope_only`. The audit does not pass until you do.

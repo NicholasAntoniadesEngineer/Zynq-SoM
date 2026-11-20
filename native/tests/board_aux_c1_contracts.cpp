@@ -13,10 +13,10 @@
 namespace schgen::board_pipeline_detail { std::string json(const JsonNode&); }
 using namespace schgen;
 void require(bool ok,const std::string& why){if(!ok)throw std::runtime_error(why);}
-void verify_component_basis(const CircuitSheetIr& c){
+void verify_component_basis(const CircuitSheetIr& c,const std::filesystem::path& root){
     // Project the actual authority, never synthesize expected values from c.
     // Keep every obligation on this sheet, including ports and other passives.
-    const auto& production=default_component_basis_policy();
+    const auto production=load_component_basis_policy(root);
     ComponentBasisPolicy focused;
     std::set<std::string> names;
     for(const auto& s:production.sheets)
@@ -136,7 +136,7 @@ int main(int argc,char**argv){try{
     board_aux_frozen::verify(c);board_aux_frozen::mutation_checks(c);
     const auto frozen=load_circuit_json(assets/"carrier/subsystems/board_aux/circuit.json");
     require(authoring_json_equal(authored_circuit_json(c),authored_circuit_json(frozen)),"derived circuit");
-    verify_caps(c);cap_mutations(c);verify_component_basis(c);
+    verify_caps(c);cap_mutations(c);verify_component_basis(c,root);
     SymbolLibrary lib(root);require(check_circuit_electrical(c,lib).ok(),"ERM");
     const auto decaps=[&](const CircuitSheetIr& sheet){return check_design_rules({sheet},[&](const std::string& id)->const SymbolDef&{return lib.get(id);}).decap;};
     require(decaps(c).empty(),"live auxiliary supply/reference decoupling");
