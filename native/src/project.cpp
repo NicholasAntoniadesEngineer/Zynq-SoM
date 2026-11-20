@@ -1,4 +1,5 @@
 #include "schgen/run_config.hpp"
+#include "schgen/subsystem_data.hpp"
 #include "schgen/stackup.hpp"
 #include "schgen/project.hpp"
 #include "schgen/project_catalog.hpp"
@@ -146,6 +147,7 @@ ProjectPaths resolve_project_paths(const fs::path& repository_root,
         if (!regular_file(out.project_file)) fail(out.project_file.string(), "project configuration missing");
         out.is_default_project = out.project_root == out.repository_root / "carrier";
         out.subsystems_dir = out.project_root / "subsystems";
+        out.library_dir = out.repository_root / subsystem_library_folder;
         out.sheet_index_file = out.project_root / "sheet_index.json";
         out.som_interface_file = out.project_root / "som_interface.json";
         out.manifest_file = out.project_root / "manifest.json";

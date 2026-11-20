@@ -3,6 +3,7 @@
 // test_hs_family_contracts.py. Production authoring, catalogs and JSON are real;
 // no Python, saved circuit JSON, board snapshot or geometry result is used.
 #include "schgen/project.hpp"
+#include "schgen/subsystem_data.hpp"
 #include "schgen/project_authoring.hpp"
 
 #include <algorithm>
@@ -275,7 +276,7 @@ int main(int argc,char** argv){
         const auto config=load_project_config(resolve_project_paths(root,"carrier"));
         const std::set<std::string> wired(config.wired_sheets.begin(),config.wired_sheets.end());
         std::size_t lookups=0,authored=0;
-        ProjectAuthoringInput author;author.project_root=root/"carrier";
+        ProjectAuthoringInput author;author.project_root=root/"carrier";author.context.library=root/subsystem_library_folder;
         author.context.part=[&](const std::string& name){++lookups;return lookup_part_catalog(name);};
         const auto factories=native_project_factories("carrier",author);
         for(const bool light:{true,false})for(const auto& name:light?lightweight:critical){

@@ -1,0 +1,233 @@
+{
+  "schema": "schgen.subsystem/1",
+  "name": "ethernet",
+  "title": "Ethernet: HX5008NL magnetics + Bob-Smith",
+  "interface": ["CHASSIS_GND", "MDI0_P", "MDI0_N", "MDI1_P", "MDI1_N", "MDI2_P", "MDI2_N", "MDI3_P", "MDI3_N", "MX0_P", "MX0_N", "MX1_P", "MX1_N", "MX2_P", "MX2_N", "MX3_P", "MX3_N"],
+  "parts": [
+    {
+      "ref": "T1",
+      "part": "HX5008NLT",
+      "fields": {"ALT_LCSC": "C47575004"}
+    },
+    {
+      "ref": "R1",
+      "symbol": "Device:R",
+      "value": "75R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C4275"}
+    },
+    {
+      "ref": "C1",
+      "symbol": "Device:C",
+      "value": "1n",
+      "footprint": "Capacitor_SMD:C_1206_3225Metric",
+      "fields": {"LCSC": "C9196"}
+    },
+    {
+      "ref": "R2",
+      "symbol": "Device:R",
+      "value": "75R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C4275"}
+    },
+    {
+      "ref": "C2",
+      "symbol": "Device:C",
+      "value": "1n",
+      "footprint": "Capacitor_SMD:C_1206_3225Metric",
+      "fields": {"LCSC": "C9196"}
+    },
+    {
+      "ref": "R3",
+      "symbol": "Device:R",
+      "value": "75R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C4275"}
+    },
+    {
+      "ref": "C3",
+      "symbol": "Device:C",
+      "value": "1n",
+      "footprint": "Capacitor_SMD:C_1206_3225Metric",
+      "fields": {"LCSC": "C9196"}
+    },
+    {
+      "ref": "R4",
+      "symbol": "Device:R",
+      "value": "75R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C4275"}
+    },
+    {
+      "ref": "C4",
+      "symbol": "Device:C",
+      "value": "1n",
+      "footprint": "Capacitor_SMD:C_1206_3225Metric",
+      "fields": {"LCSC": "C9196"}
+    },
+    {
+      "ref": "C5",
+      "symbol": "Device:C",
+      "value": "1n",
+      "footprint": "Capacitor_SMD:C_1206_3225Metric",
+      "fields": {"LCSC": "C9196"}
+    }
+  ],
+  "nets": [
+    {
+      "name": "MDI0_P",
+      "class": "port",
+      "pins": ["T1.2"]
+    },
+    {
+      "name": "MDI0_N",
+      "class": "port",
+      "pins": ["T1.3"]
+    },
+    {
+      "name": "MX0_P",
+      "class": "port",
+      "pins": ["T1.23"]
+    },
+    {
+      "name": "MX0_N",
+      "class": "port",
+      "pins": ["T1.22"]
+    },
+    {
+      "name": "MDI1_P",
+      "class": "port",
+      "pins": ["T1.5"]
+    },
+    {
+      "name": "MDI1_N",
+      "class": "port",
+      "pins": ["T1.6"]
+    },
+    {
+      "name": "MX1_P",
+      "class": "port",
+      "pins": ["T1.20"]
+    },
+    {
+      "name": "MX1_N",
+      "class": "port",
+      "pins": ["T1.19"]
+    },
+    {
+      "name": "MDI2_P",
+      "class": "port",
+      "pins": ["T1.8"]
+    },
+    {
+      "name": "MDI2_N",
+      "class": "port",
+      "pins": ["T1.9"]
+    },
+    {
+      "name": "MX2_P",
+      "class": "port",
+      "pins": ["T1.17"]
+    },
+    {
+      "name": "MX2_N",
+      "class": "port",
+      "pins": ["T1.16"]
+    },
+    {
+      "name": "MDI3_P",
+      "class": "port",
+      "pins": ["T1.11"]
+    },
+    {
+      "name": "MDI3_N",
+      "class": "port",
+      "pins": ["T1.12"]
+    },
+    {
+      "name": "MX3_P",
+      "class": "port",
+      "pins": ["T1.14"]
+    },
+    {
+      "name": "MX3_N",
+      "class": "port",
+      "pins": ["T1.13"]
+    },
+    {
+      "name": "MCT1",
+      "pins": ["T1.24", "R1.1", "C1.1"]
+    },
+    {
+      "name": "BS_COMMON",
+      "pins": ["R1.2", "C1.2", "R2.2", "C2.2", "R3.2", "C3.2", "R4.2", "C4.2", "C5.1"]
+    },
+    {
+      "name": "MCT2",
+      "pins": ["T1.21", "R2.1", "C2.1"]
+    },
+    {
+      "name": "MCT3",
+      "pins": ["T1.18", "R3.1", "C3.1"]
+    },
+    {
+      "name": "MCT4",
+      "pins": ["T1.15", "R4.1", "C4.1"]
+    },
+    {
+      "name": "CHASSIS_GND",
+      "pins": ["C5.2"]
+    }
+  ],
+  "unconnected": ["T1.1", "T1.10", "T1.4", "T1.7"],
+  "ports": [
+    {"net": "MDI0_P", "kind": "diff_pair", "pair_with": "MDI0_N", "impedance": 100},
+    {
+      "net": "MX0_P",
+      "kind": "diff_pair",
+      "pair_with": "MX0_N",
+      "impedance": 100,
+      "expect": {"instance": "non_empty"}
+    },
+    {"net": "MDI1_P", "kind": "diff_pair", "pair_with": "MDI1_N", "impedance": 100},
+    {
+      "net": "MX1_P",
+      "kind": "diff_pair",
+      "pair_with": "MX1_N",
+      "impedance": 100,
+      "expect": {"instance": "non_empty"}
+    },
+    {"net": "MDI2_P", "kind": "diff_pair", "pair_with": "MDI2_N", "impedance": 100},
+    {
+      "net": "MX2_P",
+      "kind": "diff_pair",
+      "pair_with": "MX2_N",
+      "impedance": 100,
+      "expect": {"instance": "non_empty"}
+    },
+    {"net": "MDI3_P", "kind": "diff_pair", "pair_with": "MDI3_N", "impedance": 100},
+    {
+      "net": "MX3_P",
+      "kind": "diff_pair",
+      "pair_with": "MX3_N",
+      "impedance": 100,
+      "expect": {"instance": "non_empty"}
+    }
+  ],
+  "hints": [],
+  "draws": [],
+  "waivers": [],
+  "purpose": [
+    {"part": "C1", "role": "terminate", "pin": "T1.24"},
+    {"part": "C2", "role": "terminate", "pin": "T1.21"},
+    {"part": "C3", "role": "terminate", "pin": "T1.18"},
+    {"part": "C4", "role": "terminate", "pin": "T1.15"},
+    {"part": "C5", "role": "terminate", "pin": "R3.2"},
+    {"part": "R1", "role": "terminate", "pin": "T1.24"},
+    {"part": "R2", "role": "terminate", "pin": "T1.21"},
+    {"part": "R3", "role": "terminate", "pin": "T1.18"},
+    {"part": "R4", "role": "terminate", "pin": "T1.15"}
+  ],
+  "free": []
+}
+

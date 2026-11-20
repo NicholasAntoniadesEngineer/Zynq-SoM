@@ -1,0 +1,276 @@
+{
+  "schema": "schgen.subsystem/1",
+  "name": "usb_jtag",
+  "title": "USB-JTAG/UART bridge: CH347T, isolated",
+  "interface": ["+VBUS_USB", "+3V3_ISLAND", "GND", "USB_DP", "USB_DM", "JTAG_TCK", "JTAG_TDI", "JTAG_TMS", "JTAG_TDO", "UART_RXD", "UART_TXD"],
+  "parts": [
+    {"ref": "U4", "part": "AP2112K-3.3TRG1"},
+    {
+      "ref": "C1",
+      "symbol": "Device:C",
+      "value": "1u",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C15849"}
+    },
+    {
+      "ref": "C2",
+      "symbol": "Device:C",
+      "value": "10u",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "fields": {"LCSC": "C15850"}
+    },
+    {
+      "ref": "C3",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {"ref": "U1", "part": "CH347T", "value": "CH347T"},
+    {
+      "ref": "C4",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {"ref": "Y1", "part": "1C208000BC0R", "value": "8MHz"},
+    {
+      "ref": "C5",
+      "symbol": "Device:C",
+      "value": "16p",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C162205"}
+    },
+    {
+      "ref": "C6",
+      "symbol": "Device:C",
+      "value": "16p",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C162205"}
+    },
+    {
+      "ref": "R1",
+      "symbol": "Device:R",
+      "value": "10k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C25804"}
+    },
+    {
+      "ref": "R2",
+      "symbol": "Device:R",
+      "value": "10k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C25804"}
+    },
+    {
+      "ref": "R3",
+      "symbol": "Device:R",
+      "value": "10k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C25804"}
+    },
+    {"ref": "U2", "part": "SN74LVC125ADR"},
+    {
+      "ref": "C7",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {
+      "ref": "R4",
+      "symbol": "Device:R",
+      "value": "100k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C25803"}
+    },
+    {"ref": "SW1", "part": "DSHP04TSGER"},
+    {
+      "ref": "TP1",
+      "symbol": "Connector:TestPoint",
+      "value": "+3V3_ISLAND",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {"BOM": "exclude"}
+    },
+    {
+      "ref": "TP2",
+      "symbol": "Connector:TestPoint",
+      "value": "UART_TXD",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {"BOM": "exclude"}
+    },
+    {
+      "ref": "TP3",
+      "symbol": "Connector:TestPoint",
+      "value": "UART_RXD",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {"BOM": "exclude"}
+    }
+  ],
+  "nets": [
+    {
+      "name": "+VBUS_USB",
+      "pins": ["U4.1", "U4.3", "C1.1"]
+    },
+    {
+      "name": "+3V3_ISLAND",
+      "pins": ["U4.5", "C2.1", "C3.1", "U1.14", "C4.1", "R1.1", "U2.14", "C7.1", "R4.1", "TP1.1"]
+    },
+    {
+      "name": "GND",
+      "pins": ["U4.2", "C1.2", "C2.2", "C3.2", "U1.18", "C4.2", "Y1.2", "Y1.4", "C5.2", "C6.2", "R2.2", "R3.2", "U2.7", "C7.2", "SW1.8"]
+    },
+    {
+      "name": "USB_DP",
+      "class": "port",
+      "pins": ["U1.17"]
+    },
+    {
+      "name": "USB_DM",
+      "class": "port",
+      "pins": ["U1.16"]
+    },
+    {
+      "name": "DBG_XI",
+      "pins": ["U1.19", "Y1.1", "C5.1"]
+    },
+    {
+      "name": "DBG_XO",
+      "pins": ["U1.20", "Y1.3", "C6.1"]
+    },
+    {
+      "name": "DBG_RST_N",
+      "pins": ["U1.1", "R1.2"]
+    },
+    {
+      "name": "DBG_MODE_DTR1",
+      "pins": ["U1.10", "R2.1"]
+    },
+    {
+      "name": "DBG_MODE_RTS1",
+      "pins": ["U1.13", "R3.1"]
+    },
+    {
+      "name": "DBG_FT_TCK",
+      "pins": ["U1.6", "U2.2"]
+    },
+    {
+      "name": "DBG_FT_TMS",
+      "pins": ["U1.5", "U2.12"]
+    },
+    {
+      "name": "DBG_FT_TDI",
+      "pins": ["U1.8", "U2.5"]
+    },
+    {
+      "name": "DBG_FT_TDO",
+      "pins": ["U1.7", "U2.8"]
+    },
+    {
+      "name": "JTAG_TCK",
+      "class": "port",
+      "pins": ["U2.3"]
+    },
+    {
+      "name": "JTAG_TDI",
+      "class": "port",
+      "pins": ["U2.6"]
+    },
+    {
+      "name": "JTAG_TMS",
+      "class": "port",
+      "pins": ["U2.11"]
+    },
+    {
+      "name": "JTAG_TDO",
+      "class": "port",
+      "pins": ["U2.9"]
+    },
+    {
+      "name": "DBG_JTAG_OE_N",
+      "pins": ["U2.1", "U2.4", "U2.10", "U2.13", "R4.2", "SW1.1"]
+    },
+    {
+      "name": "UART_RXD",
+      "class": "port",
+      "pins": ["U1.3", "TP3.1"]
+    },
+    {
+      "name": "UART_TXD",
+      "class": "port",
+      "pins": ["U1.4", "TP2.1"]
+    }
+  ],
+  "unconnected": ["SW1.2", "SW1.3", "SW1.4", "SW1.5", "SW1.6", "SW1.7", "U1.11", "U1.12", "U1.15", "U1.2", "U1.9", "U4.4"],
+  "ports": [
+    {
+      "net": "USB_DP",
+      "kind": "usb_hs_pair",
+      "pair_with": "USB_DM",
+      "impedance": 90,
+      "expect": {"instance": "as_given"}
+    },
+    {
+      "net": "JTAG_TCK",
+      "kind": "single",
+      "expect": {"instance": "non_empty"}
+    },
+    {
+      "net": "JTAG_TDI",
+      "kind": "single",
+      "expect": {"instance": "non_empty"}
+    },
+    {
+      "net": "JTAG_TMS",
+      "kind": "single",
+      "expect": {"instance": "non_empty"}
+    },
+    {
+      "net": "JTAG_TDO",
+      "kind": "single",
+      "expect": {"instance": "non_empty"}
+    },
+    {
+      "net": "UART_RXD",
+      "kind": "single",
+      "expect": {"instance": "non_empty"}
+    },
+    {
+      "net": "UART_TXD",
+      "kind": "single",
+      "expect": {"instance": "non_empty"}
+    }
+  ],
+  "hints": [],
+  "draws": [
+    {
+      "rail": "+3V3_ISLAND",
+      "amps": 0.045,
+      "note": {"instance": "draws", "default": "CH347 ~38 mA typ (DS) + SN74LVC125 + RST/mode/OE pull network"}
+    }
+  ],
+  "waivers": [
+    {"kind": "reset_waivers", "key": "DBG_RST_N", "reason": "CH347 RST#: 10k pull-up + the chip's built-in power-on reset (DS 5.1); no external RC cap fitted by design"}
+  ],
+  "purpose": [
+    {"part": "C1", "role": "reservoir", "pin": "U4.1"},
+    {"part": "C2", "role": "reservoir", "pin": "U4.5"},
+    {"part": "C3", "role": "bypass", "pin": "U4.5"},
+    {"part": "C4", "role": "bypass", "pin": "U1.14"},
+    {"part": "R1", "role": "pull", "pin": "U1.1"},
+    {"part": "C7", "role": "bypass", "pin": "U2.14"},
+    {"part": "R4", "role": "pull", "pin": "U2.1"},
+    {"part": "C5", "role": "timing", "pin": "Y1.1"},
+    {"part": "C6", "role": "timing", "pin": "Y1.3"},
+    {"part": "R2", "role": "pull", "pin": "U1.10"},
+    {"part": "R3", "role": "pull", "pin": "U1.13"},
+    {"part": "Y1", "role": "timing", "pin": "U1.19"}
+  ],
+  "free": [
+    {"part": "TP1", "reason": "probe point; it follows its net"},
+    {"part": "TP2", "reason": "probe point; it follows its net"},
+    {"part": "TP3", "reason": "probe point; it follows its net"}
+  ]
+}
+

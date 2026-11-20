@@ -1,0 +1,413 @@
+{
+  "schema": "schgen.subsystem/1",
+  "name": "lcd",
+  "title": "40-pin TTL RGB LCD + SY7201 backlight boost",
+  "interface": ["+VBOOST_IN", "+VDD_LCD", "+VDD_TP_CLAMP", "GND", "LCD_R0", "LCD_R1", "LCD_R2", "LCD_R3", "LCD_R4", "LCD_R5", "LCD_R6", "LCD_R7", "LCD_G0", "LCD_G1", "LCD_G2", "LCD_G3", "LCD_G4", "LCD_G5", "LCD_G6", "LCD_G7", "LCD_B0", "LCD_B1", "LCD_B2", "LCD_B3", "LCD_B4", "LCD_B5", "LCD_B6", "LCD_B7", "LCD_DISP", "LCD_HSYNC", "LCD_VSYNC", "LCD_DE", "TP_SDA", "TP_SCL", "TP_RST", "TP_INT", "LCD_PCLK", "BL_PWM"],
+  "parts": [
+    {"ref": "J1", "part": "AFC07-S40FCA-00"},
+    {"ref": "U1", "part": "SY7201ABC"},
+    {"ref": "L1", "part": "SWPA4030S100MT", "value": "10uH"},
+    {
+      "ref": "D1",
+      "symbol": "Device:D_Schottky",
+      "value": "SS34",
+      "footprint": "Diode_SMD:D_SMA",
+      "fields": {"LCSC": "C8678"}
+    },
+    {
+      "ref": "R1",
+      "symbol": "Device:R",
+      "value": "1.5R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C22769"}
+    },
+    {
+      "ref": "C1",
+      "symbol": "Device:C",
+      "value": "10u",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "fields": {"LCSC": "C15850"}
+    },
+    {
+      "ref": "C2",
+      "symbol": "Device:C",
+      "value": "2.2u",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "fields": {"LCSC": "C125847"}
+    },
+    {
+      "ref": "C3",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {"ref": "U2", "part": "USBLC6-2SC6"},
+    {
+      "ref": "R2",
+      "symbol": "Device:R",
+      "value": "4k7",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C23162"}
+    },
+    {
+      "ref": "R3",
+      "symbol": "Device:R",
+      "value": "4k7",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C23162"}
+    },
+    {
+      "ref": "R5",
+      "symbol": "Device:R",
+      "value": "100k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C25803"}
+    },
+    {
+      "ref": "R6",
+      "symbol": "Device:R",
+      "value": "10k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C25804"}
+    },
+    {
+      "ref": "R7",
+      "symbol": "Device:R",
+      "value": "22R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C23345"}
+    },
+    {
+      "ref": "C4",
+      "symbol": "Device:C",
+      "value": "10u",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "fields": {"LCSC": "C15850"}
+    },
+    {
+      "ref": "C5",
+      "symbol": "Device:C",
+      "value": "1u",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C15849"}
+    },
+    {
+      "ref": "R4",
+      "symbol": "Device:R",
+      "value": "100k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C25803"}
+    },
+    {
+      "ref": "TP1",
+      "symbol": "Connector:TestPoint",
+      "value": "+VBOOST_IN",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {"BOM": "exclude"}
+    },
+    {
+      "ref": "TP2",
+      "symbol": "Connector:TestPoint",
+      "value": "TP_SDA",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {"BOM": "exclude"}
+    },
+    {
+      "ref": "TP3",
+      "symbol": "Connector:TestPoint",
+      "value": "TP_SCL",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {"BOM": "exclude"}
+    }
+  ],
+  "nets": [
+    {
+      "name": "LCD_R0",
+      "class": "port",
+      "pins": ["J1.5"]
+    },
+    {
+      "name": "LCD_R1",
+      "class": "port",
+      "pins": ["J1.6"]
+    },
+    {
+      "name": "LCD_R2",
+      "class": "port",
+      "pins": ["J1.7"]
+    },
+    {
+      "name": "LCD_R3",
+      "class": "port",
+      "pins": ["J1.8"]
+    },
+    {
+      "name": "LCD_R4",
+      "class": "port",
+      "pins": ["J1.9"]
+    },
+    {
+      "name": "LCD_R5",
+      "class": "port",
+      "pins": ["J1.10"]
+    },
+    {
+      "name": "LCD_R6",
+      "class": "port",
+      "pins": ["J1.11"]
+    },
+    {
+      "name": "LCD_R7",
+      "class": "port",
+      "pins": ["J1.12"]
+    },
+    {
+      "name": "LCD_G0",
+      "class": "port",
+      "pins": ["J1.13"]
+    },
+    {
+      "name": "LCD_G1",
+      "class": "port",
+      "pins": ["J1.14"]
+    },
+    {
+      "name": "LCD_G2",
+      "class": "port",
+      "pins": ["J1.15"]
+    },
+    {
+      "name": "LCD_G3",
+      "class": "port",
+      "pins": ["J1.16"]
+    },
+    {
+      "name": "LCD_G4",
+      "class": "port",
+      "pins": ["J1.17"]
+    },
+    {
+      "name": "LCD_G5",
+      "class": "port",
+      "pins": ["J1.18"]
+    },
+    {
+      "name": "LCD_G6",
+      "class": "port",
+      "pins": ["J1.19"]
+    },
+    {
+      "name": "LCD_G7",
+      "class": "port",
+      "pins": ["J1.20"]
+    },
+    {
+      "name": "LCD_B0",
+      "class": "port",
+      "pins": ["J1.21"]
+    },
+    {
+      "name": "LCD_B1",
+      "class": "port",
+      "pins": ["J1.22"]
+    },
+    {
+      "name": "LCD_B2",
+      "class": "port",
+      "pins": ["J1.23"]
+    },
+    {
+      "name": "LCD_B3",
+      "class": "port",
+      "pins": ["J1.24"]
+    },
+    {
+      "name": "LCD_B4",
+      "class": "port",
+      "pins": ["J1.25"]
+    },
+    {
+      "name": "LCD_B5",
+      "class": "port",
+      "pins": ["J1.26"]
+    },
+    {
+      "name": "LCD_B6",
+      "class": "port",
+      "pins": ["J1.27"]
+    },
+    {
+      "name": "LCD_B7",
+      "class": "port",
+      "pins": ["J1.28"]
+    },
+    {
+      "name": "LCD_DISP",
+      "class": "port",
+      "pins": ["J1.31", "R6.1"]
+    },
+    {
+      "name": "LCD_HSYNC",
+      "class": "port",
+      "pins": ["J1.32"]
+    },
+    {
+      "name": "LCD_VSYNC",
+      "class": "port",
+      "pins": ["J1.33"]
+    },
+    {
+      "name": "LCD_DE",
+      "class": "port",
+      "pins": ["J1.34"]
+    },
+    {
+      "name": "CTP_SDA_FFC",
+      "pins": ["J1.37", "U2.1"]
+    },
+    {
+      "name": "CTP_SCL_FFC",
+      "pins": ["J1.38", "U2.3"]
+    },
+    {
+      "name": "TP_SDA",
+      "class": "port",
+      "pins": ["U2.6", "R2.1", "TP2.1"]
+    },
+    {
+      "name": "TP_SCL",
+      "class": "port",
+      "pins": ["U2.4", "R3.1", "TP3.1"]
+    },
+    {
+      "name": "+VDD_TP_CLAMP",
+      "pins": ["U2.5"]
+    },
+    {
+      "name": "GND",
+      "pins": ["U2.2", "R5.2", "J1.3", "J1.29", "J1.36", "C3.2", "C4.2", "U1.2", "C1.2", "C2.2", "R1.2", "C5.2", "R4.2"]
+    },
+    {
+      "name": "TP_RST",
+      "class": "port",
+      "pins": ["J1.39", "R5.1"]
+    },
+    {
+      "name": "TP_INT",
+      "class": "port",
+      "pins": ["J1.40"]
+    },
+    {
+      "name": "+VDD_LCD",
+      "pins": ["R2.2", "R3.2", "R6.2", "J1.4", "C3.1", "C4.1"]
+    },
+    {
+      "name": "LCD_PCLK_PANEL",
+      "pins": ["J1.30", "R7.1"]
+    },
+    {
+      "name": "LCD_PCLK",
+      "class": "port",
+      "pins": ["R7.2"]
+    },
+    {
+      "name": "+VBOOST_IN",
+      "pins": ["U1.6", "L1.1", "C1.1", "C5.1", "TP1.1"]
+    },
+    {
+      "name": "LCD_BL_SW",
+      "pins": ["L1.2", "U1.1", "D1.2"]
+    },
+    {
+      "name": "LCD_VLED_P",
+      "pins": ["D1.1", "C2.1", "U1.5", "J1.2"]
+    },
+    {
+      "name": "LCD_VLED_N",
+      "pins": ["J1.1", "R1.1", "U1.3"]
+    },
+    {
+      "name": "BL_PWM",
+      "class": "port",
+      "pins": ["U1.4", "R4.1"]
+    }
+  ],
+  "unconnected": ["J1.35", "J1.41", "J1.42"],
+  "ports": [
+    {"net": "LCD_R0", "kind": "single", "expect": {"instance": "non_empty"}},
+    {"net": "LCD_R1", "kind": "single", "expect": {"instance": "non_empty"}},
+    {"net": "LCD_R2", "kind": "single", "expect": {"instance": "non_empty"}},
+    {"net": "LCD_R3", "kind": "single", "expect": {"instance": "non_empty"}},
+    {"net": "LCD_R4", "kind": "single", "expect": {"instance": "non_empty"}},
+    {"net": "LCD_R5", "kind": "single", "expect": {"instance": "non_empty"}},
+    {"net": "LCD_R6", "kind": "single", "expect": {"instance": "non_empty"}},
+    {"net": "LCD_R7", "kind": "single", "expect": {"instance": "non_empty"}},
+    {"net": "LCD_G0", "kind": "single", "expect": {"instance": "non_empty"}},
+    {"net": "LCD_G1", "kind": "single", "expect": {"instance": "non_empty"}},
+    {"net": "LCD_G2", "kind": "single", "expect": {"instance": "non_empty"}},
+    {"net": "LCD_G3", "kind": "single", "expect": {"instance": "non_empty"}},
+    {"net": "LCD_G4", "kind": "single", "expect": {"instance": "non_empty"}},
+    {"net": "LCD_G5", "kind": "single", "expect": {"instance": "non_empty"}},
+    {"net": "LCD_G6", "kind": "single", "expect": {"instance": "non_empty"}},
+    {"net": "LCD_G7", "kind": "single", "expect": {"instance": "non_empty"}},
+    {"net": "LCD_B0", "kind": "single", "expect": {"instance": "non_empty"}},
+    {"net": "LCD_B1", "kind": "single", "expect": {"instance": "non_empty"}},
+    {"net": "LCD_B2", "kind": "single", "expect": {"instance": "non_empty"}},
+    {"net": "LCD_B3", "kind": "single", "expect": {"instance": "non_empty"}},
+    {"net": "LCD_B4", "kind": "single", "expect": {"instance": "non_empty"}},
+    {"net": "LCD_B5", "kind": "single", "expect": {"instance": "non_empty"}},
+    {"net": "LCD_B6", "kind": "single", "expect": {"instance": "non_empty"}},
+    {"net": "LCD_B7", "kind": "single", "expect": {"instance": "non_empty"}},
+    {"net": "LCD_DISP", "kind": "single", "expect": {"instance": "non_empty"}},
+    {"net": "LCD_HSYNC", "kind": "single", "expect": {"instance": "non_empty"}},
+    {"net": "LCD_VSYNC", "kind": "single", "expect": {"instance": "non_empty"}},
+    {"net": "LCD_DE", "kind": "single", "expect": {"instance": "non_empty"}},
+    {"net": "TP_SDA", "kind": "i2c", "role": "sda", "bus": {"instance": "i2c", "default": "LCD_CTP"}, "speed_hz": 400000, "expect": {"instance": "non_empty"}},
+    {"net": "TP_SCL", "kind": "i2c", "role": "scl", "bus": {"instance": "i2c", "default": "LCD_CTP"}, "speed_hz": 400000, "expect": {"instance": "non_empty"}},
+    {"net": "TP_RST", "kind": "single", "expect": {"instance": "non_empty"}},
+    {"net": "TP_INT", "kind": "single", "expect": {"instance": "non_empty"}},
+    {"net": "LCD_PCLK", "kind": "single", "expect": {"instance": "non_empty"}},
+    {"net": "BL_PWM", "kind": "single", "expect": {"instance": "non_empty"}}
+  ],
+  "hints": [],
+  "draws": [
+    {
+      "rail": "+VDD_LCD",
+      "amps": 0.1,
+      "note": {"instance": "draws_lcd", "default": "panel logic 25-75 mA + touch <= 25 mA"}
+    },
+    {
+      "rail": "+VBOOST_IN",
+      "amps": 0.45,
+      "note": {"instance": "draws_boost", "default": "SY7201 boost input @133 mA LED string (operating point + margin)"}
+    }
+  ],
+  "waivers": [
+    {"kind": "reset_waivers", "key": "TP_RST", "reason": "GPIO-driven reset, held by 100k pull-down until PL releases"},
+    {"kind": "part_rule_waivers", "key": "C2", "reason": "MLCC 50V on LCD_VLED_P: the 30V is the rare open-LED OVP-clamp transient, not continuous (string ~9.6V); 50V/X7R dossier-sized for it (lcd_backlight.md). 2x derate targets continuous DC bias, not a fault clamp"}
+  ],
+  "purpose": [
+    {"part": "C1", "role": "reservoir", "pin": "U1.6"},
+    {"part": "C2", "role": "switching", "pin": "D1.1"},
+    {"part": "C3", "role": "bypass", "pin": "J1.4"},
+    {"part": "C4", "role": "reservoir", "pin": "J1.4"},
+    {"part": "C5", "role": "bypass", "pin": "U1.6"},
+    {"part": "D1", "role": "switching", "pin": "U1.1"},
+    {"part": "L1", "role": "switching", "pin": "U1.1"},
+    {"part": "R1", "role": "sense", "pin": "U1.3"},
+    {"part": "R2", "role": "pull", "pin": "U2.6"},
+    {"part": "R3", "role": "pull", "pin": "U2.4"},
+    {"part": "R4", "role": "pull", "pin": "U1.4"},
+    {"part": "R5", "role": "pull", "pin": "J1.39"},
+    {"part": "R6", "role": "pull", "pin": "J1.31"},
+    {"part": "R7", "role": "series", "module_net": "LCD_PCLK"},
+    {"part": "U2", "role": "protect", "pin": "J1.37"}
+  ],
+  "free": [
+    {"part": "TP1", "reason": "probe point; it follows its net"},
+    {"part": "TP2", "reason": "probe point; it follows its net"},
+    {"part": "TP3", "reason": "probe point; it follows its net"}
+  ]
+}
+

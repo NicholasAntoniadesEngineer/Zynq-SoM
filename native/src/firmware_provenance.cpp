@@ -1,6 +1,7 @@
 #include "schgen/firmware_provenance.hpp"
 #include "schgen/firmware_docs.hpp"
 #include "schgen/project_authoring.hpp"
+#include "schgen/subsystem_data.hpp"
 
 #include <set>
 
@@ -72,18 +73,13 @@ std::vector<std::string> native_firmware_sources(const ProjectPaths& paths) {
             registry_added = true;
         }
         if (factory->adapter) {
-            // Confirm this is a callable compiled library declaration, not
-            // merely an adapter record with a plausible source filename.
-            const auto& library = subsystem_definition(name);
-            if (!library.circuit)
-                throw FirmwareDocsError("firmware provenance: missing native library factory " + name);
+            const auto filed = paths.repository_root / subsystem_library_folder / name / subsystem_data_file;
             if (!adapter_added) {
                 result.push_back(source_path(paths, paths.repository_root / "native/src/subsystem_authoring.cpp") +
                                  " (native library registry)");
                 adapter_added = true;
             }
-            result.push_back(source_path(paths, paths.repository_root / "native/src" /
-                ("subsystem_authoring_" + name + ".cpp")) + " (native reusable builder: " + name + ")");
+            result.push_back(source_path(paths, filed) + " (subsystem definition: " + name + ")");
         } else {
             if (!factory->circuit)
                 throw FirmwareDocsError("firmware provenance: missing native project factory " + project + ":" + name);

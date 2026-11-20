@@ -1,4 +1,5 @@
 #include "schgen/subsystem_authoring.hpp"
+#include "schgen/subsystem_data.hpp"
 #include "schgen/symbols.hpp"
 #include <algorithm>
 #include <iostream>
@@ -83,9 +84,11 @@ int main(int argc,char** argv) {
         require(open_part_catalog((root/"native/catalog.bin").string()),"cannot open part catalog");
         SymbolLibrary symbols(root);AuthoringContext context;
         context.pins=[&](const auto& lib)->std::optional<std::set<std::string>>{try{return symbols.pin_numbers(lib);}catch(const SymbolError&){return std::nullopt;}};
-        require(subsystem_definitions().size()==17,"library coverage");
+        context.library=root/subsystem_library_folder;
+        const auto library=subsystem_library(context);
+        require(library.size()==17,"library coverage");
         std::size_t cases=0;
-        for(const auto& def:subsystem_definitions()) {
+        for(const auto& def:library) {
             const auto fixture=parse_json_file((root/"native/tests/data/authoring"/(def.name+".json")).string());
             const auto& iface=at(fixture,"interface").array_value;require(iface.size()==def.interface.size(),def.name+": interface size");
             for(std::size_t i=0;i<iface.size();++i)require(iface[i].string_value==def.interface[i],def.name+": interface declaration");

@@ -122,7 +122,7 @@ void project(const fs::path& repo, const std::string& name) {
         rejects([&] { native_firmware_sources(isolated); }, "canonical circuit name mismatch for power");
     }
     write(json, bytes);
-    const auto builder = scratch.path / "native/src/subsystem_authoring_power.cpp";
+    const auto builder = scratch.path / "subsystems/power/subsystem.json";
     const auto source = read(builder);
     fs::remove(builder);
     rejects([&] { native_firmware_sources(isolated); }, "missing source file");

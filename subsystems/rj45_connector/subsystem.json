@@ -1,0 +1,131 @@
+{
+  "schema": "schgen.subsystem/1",
+  "name": "rj45_connector",
+  "title": "RJ45 8P8C jack (plain, ext. magnetics)",
+  "interface": ["+VLED", "GND", "CHASSIS_GND", "RJ45_MDI0_P", "RJ45_MDI0_N", "RJ45_MDI1_P", "RJ45_MDI1_N", "RJ45_MDI2_P", "RJ45_MDI2_N", "RJ45_MDI3_P", "RJ45_MDI3_N"],
+  "parts": [
+    {"ref": "J1", "part": "KH-5224-8P8C-D"},
+    {
+      "ref": "R1",
+      "symbol": "Device:R",
+      "value": "330R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C23138"}
+    },
+    {
+      "ref": "R2",
+      "symbol": "Device:R",
+      "value": "330R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {"LCSC": "C23138"}
+    }
+  ],
+  "nets": [
+    {
+      "name": "RJ45_MDI0_P",
+      "class": "port",
+      "pins": ["J1.1"]
+    },
+    {
+      "name": "RJ45_MDI0_N",
+      "class": "port",
+      "pins": ["J1.2"]
+    },
+    {
+      "name": "RJ45_MDI1_P",
+      "class": "port",
+      "pins": ["J1.3"]
+    },
+    {
+      "name": "RJ45_MDI1_N",
+      "class": "port",
+      "pins": ["J1.6"]
+    },
+    {
+      "name": "RJ45_MDI2_P",
+      "class": "port",
+      "pins": ["J1.4"]
+    },
+    {
+      "name": "RJ45_MDI2_N",
+      "class": "port",
+      "pins": ["J1.5"]
+    },
+    {
+      "name": "RJ45_MDI3_P",
+      "class": "port",
+      "pins": ["J1.7"]
+    },
+    {
+      "name": "RJ45_MDI3_N",
+      "class": "port",
+      "pins": ["J1.8"]
+    },
+    {
+      "name": "+VLED",
+      "pins": ["R1.1", "R2.1"]
+    },
+    {
+      "name": "RJ45_LED_L",
+      "pins": ["R1.2", "J1.9"]
+    },
+    {
+      "name": "GND",
+      "pins": ["J1.10", "J1.12"]
+    },
+    {
+      "name": "RJ45_LED_R",
+      "pins": ["R2.2", "J1.11"]
+    },
+    {
+      "name": "CHASSIS_GND",
+      "pins": ["J1.13"]
+    }
+  ],
+  "unconnected": [],
+  "ports": [
+    {
+      "net": "RJ45_MDI0_P",
+      "kind": "diff_pair",
+      "pair_with": "RJ45_MDI0_N",
+      "impedance": 100,
+      "expect": {"instance": "non_empty"}
+    },
+    {
+      "net": "RJ45_MDI1_P",
+      "kind": "diff_pair",
+      "pair_with": "RJ45_MDI1_N",
+      "impedance": 100,
+      "expect": {"instance": "non_empty"}
+    },
+    {
+      "net": "RJ45_MDI2_P",
+      "kind": "diff_pair",
+      "pair_with": "RJ45_MDI2_N",
+      "impedance": 100,
+      "expect": {"instance": "non_empty"}
+    },
+    {
+      "net": "RJ45_MDI3_P",
+      "kind": "diff_pair",
+      "pair_with": "RJ45_MDI3_N",
+      "impedance": 100,
+      "expect": {"instance": "non_empty"}
+    }
+  ],
+  "hints": [],
+  "draws": [
+    {
+      "rail": "+VLED",
+      "amps": 0.008,
+      "note": {"instance": "draws", "default": "RJ45 housing LEDs (2x 330R port-present indicator)"}
+    }
+  ],
+  "waivers": [],
+  "purpose": [
+    {"part": "R1", "role": "indicate", "pin": "J1.9"},
+    {"part": "R2", "role": "indicate", "pin": "J1.11"}
+  ],
+  "free": []
+}
+

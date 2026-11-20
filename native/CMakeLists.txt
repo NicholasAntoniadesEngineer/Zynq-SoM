@@ -1168,6 +1168,10 @@ if(BUILD_TESTING)
     target_link_libraries(schgen_study_contracts PRIVATE schgen_core)
     target_compile_options(schgen_study_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
     add_test(NAME native_study_contracts COMMAND schgen_study_contracts)
+    add_executable(schgen_subsystem_data_contracts tests/subsystem_data_contracts.cpp)
+    target_link_libraries(schgen_subsystem_data_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_subsystem_data_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME native_subsystem_data_contracts COMMAND schgen_subsystem_data_contracts)
     add_test(NAME native_study_cli_needs_stackups COMMAND schgen study layers
         --config "${CMAKE_CURRENT_SOURCE_DIR}/tests/data/study/no_study.json")
     set_tests_properties(native_study_cli_needs_stackups PROPERTIES
