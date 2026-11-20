@@ -140,6 +140,11 @@ void add_port(CircuitAuthor& circuit, const JsonNode& row, const SubsystemMeta& 
     if (typed || (explicit_type && explicit_type->bool_value)) circuit.port_type(net, type);
 }
 
+const std::vector<JsonNode>& listed(const JsonNode& node, const std::string& key, const std::string& where, bool complete) {
+    static const std::vector<JsonNode> none;
+    return complete || object_field(node, key) ? rows(node, key, where) : none;
+}
+
 void add_purpose(CircuitAuthor& circuit, const JsonNode& row, const std::string& where) {
     reject_unknown_keys(row, {"part", "role", "pin", "net", "module_net"}, where + " purpose");
     const std::string part = text(row, "part", where), role = text(row, "role", where);
@@ -150,6 +155,37 @@ void add_purpose(CircuitAuthor& circuit, const JsonNode& row, const std::string&
     if (pin) circuit.serves(part, *pin, role);
     if (net) circuit.serves_net(part, *net, role);
     if (module_net) circuit.serves_module(part, *module_net, role);
+}
+
+void apply_sections(CircuitAuthor& circuit, const JsonNode& document, const SubsystemMeta& meta, const std::string& where,
+                    bool complete) {
+    for (const JsonNode& row : listed(document, "parts", where, complete)) add_part(circuit, row, where);
+    for (const JsonNode& row : listed(document, "nets", where, complete)) {
+        reject_unknown_keys(row, {"name", "class", "pins"}, where + " net");
+        circuit.net(text(row, "name", where), texts(row, "pins", where), optional_text(row, "class", where));
+    }
+    if (complete || object_field(document, "unconnected")) circuit.nc(texts(document, "unconnected", where));
+    for (const JsonNode& row : listed(document, "ports", where, complete)) add_port(circuit, row, meta, where);
+    for (const JsonNode& row : listed(document, "hints", where, complete)) {
+        reject_unknown_keys(row, {"net", "style"}, where + " hint");
+        circuit.hint(text(row, "net", where), text(row, "style", where));
+    }
+    for (const JsonNode& row : listed(document, "draws", where, complete)) {
+        reject_unknown_keys(row, {"rail", "amps", "note"}, where + " draw");
+        const JsonNode* stated = object_field(row, "note");
+        if (!stated) fail(where, "a draw lacks its note");
+        const std::string note = per_board(*stated, where, meta, Setting::note);
+        circuit.draws(text(row, "rail", where), member(row, "amps", JsonKind::Number, where).number_value, note);
+    }
+    for (const JsonNode& row : listed(document, "waivers", where, complete)) {
+        reject_unknown_keys(row, {"kind", "key", "reason"}, where + " waiver");
+        circuit.waive(text(row, "kind", where), text(row, "key", where), text(row, "reason", where));
+    }
+    for (const JsonNode& row : listed(document, "purpose", where, complete)) add_purpose(circuit, row, where);
+    for (const JsonNode& row : listed(document, "free", where, complete)) {
+        reject_unknown_keys(row, {"part", "reason"}, where + " free part");
+        circuit.free(text(row, "part", where), text(row, "reason", where));
+    }
 }
 
 }
@@ -167,34 +203,17 @@ CircuitSheetIr author_subsystem_data(const JsonNode& document, const SubsystemMe
     if (text(document, "schema", where) != subsystem_data_schema)
         fail(where, std::string("schema is not ") + subsystem_data_schema);
     CircuitAuthor circuit(text(document, "name", where), text(document, "title", where), context);
-    for (const JsonNode& row : rows(document, "parts", where)) add_part(circuit, row, where);
-    for (const JsonNode& row : rows(document, "nets", where)) {
-        reject_unknown_keys(row, {"name", "class", "pins"}, where + " net");
-        circuit.net(text(row, "name", where), texts(row, "pins", where), optional_text(row, "class", where));
-    }
-    circuit.nc(texts(document, "unconnected", where));
-    for (const JsonNode& row : rows(document, "ports", where)) add_port(circuit, row, meta, where);
-    for (const JsonNode& row : rows(document, "hints", where)) {
-        reject_unknown_keys(row, {"net", "style"}, where + " hint");
-        circuit.hint(text(row, "net", where), text(row, "style", where));
-    }
-    for (const JsonNode& row : rows(document, "draws", where)) {
-        reject_unknown_keys(row, {"rail", "amps", "note"}, where + " draw");
-        const JsonNode* stated = object_field(row, "note");
-        if (!stated) fail(where, "a draw lacks its note");
-        const std::string note = per_board(*stated, where, meta, Setting::note);
-        circuit.draws(text(row, "rail", where), member(row, "amps", JsonKind::Number, where).number_value, note);
-    }
-    for (const JsonNode& row : rows(document, "waivers", where)) {
-        reject_unknown_keys(row, {"kind", "key", "reason"}, where + " waiver");
-        circuit.waive(text(row, "kind", where), text(row, "key", where), text(row, "reason", where));
-    }
-    for (const JsonNode& row : rows(document, "purpose", where)) add_purpose(circuit, row, where);
-    for (const JsonNode& row : rows(document, "free", where)) {
-        reject_unknown_keys(row, {"part", "reason"}, where + " free part");
-        circuit.free(text(row, "part", where), text(row, "reason", where));
-    }
+    apply_sections(circuit, document, meta, where, true);
     return meta.finish(circuit);
+}
+
+CircuitSheetIr extend_subsystem_data(CircuitSheetIr sheet, const JsonNode& additions, const AuthoringContext& context) {
+    const std::string where = sheet.name + " additions";
+    if (additions.kind != JsonKind::Object) fail(where, "the additions are not an object");
+    reject_unknown_keys(additions, {"parts", "nets", "unconnected", "ports", "hints", "draws", "waivers", "purpose", "free"}, where);
+    CircuitAuthor circuit(std::move(sheet), context);
+    apply_sections(circuit, additions, SubsystemMeta{}, where, false);
+    return circuit.finish();
 }
 
 SubsystemDefinition subsystem_data_definition(const JsonNode& document, const std::string& source) {

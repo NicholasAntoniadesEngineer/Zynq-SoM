@@ -1,0 +1,203 @@
+{
+  "schema": "schgen.board/1",
+  "name": "carrier",
+  "module": {
+    "connector_part": "DF40C-100DP-0.4V_51",
+    "draw": {"connector": "J1", "rail": "+5V_SOM", "amps": 2.15, "note": "SoM module (Zynq+DDR3L+PHYs) ~10 W class at the regulated 4.65 V (P0 rebind) — estimate, refine at bring-up"},
+    "sdio_level_v": 1.8,
+    "sd_bus": ["SDIO_CLK", "SDIO_CMD", "SDIO_D0", "SDIO_D1", "SDIO_D2", "SDIO_D3"],
+    "pairs": [
+      {"positive": "ETH_PHY_MDI0_P", "negative": "ETH_PHY_MDI0_N", "kind": "diff_pair", "impedance": 100},
+      {"positive": "ETH_PHY_MDI1_P", "negative": "ETH_PHY_MDI1_N", "kind": "diff_pair", "impedance": 100},
+      {"positive": "ETH_PHY_MDI2_P", "negative": "ETH_PHY_MDI2_N", "kind": "diff_pair", "impedance": 100},
+      {"positive": "ETH_PHY_MDI3_P", "negative": "ETH_PHY_MDI3_N", "kind": "diff_pair", "impedance": 100},
+      {"positive": "STM32_USB_D_P", "negative": "STM32_USB_D_N", "kind": "usb_hs_pair"},
+      {"positive": "USB_D+", "negative": "USB_D-", "kind": "usb_hs_pair"},
+      {"positive": "ZYNQ_HDMI_TX_TMDS_CLK_P", "negative": "ZYNQ_HDMI_TX_TMDS_CLK_N", "kind": "tmds_pair"},
+      {"positive": "ZYNQ_HDMI_TX_TMDS_0_P", "negative": "ZYNQ_HDMI_TX_TMDS_0_N", "kind": "tmds_pair"},
+      {"positive": "ZYNQ_HDMI_TX_TMDS_1_P", "negative": "ZYNQ_HDMI_TX_TMDS_1_N", "kind": "tmds_pair"},
+      {"positive": "ZYNQ_HDMI_TX_TMDS_2_P", "negative": "ZYNQ_HDMI_TX_TMDS_2_N", "kind": "tmds_pair"},
+      {"positive": "HDMI_RX_CLK_P", "negative": "HDMI_RX_CLK_N", "kind": "tmds_pair"},
+      {"positive": "HDMI_RX_D0_P", "negative": "HDMI_RX_D0_N", "kind": "tmds_pair"},
+      {"positive": "HDMI_RX_D1_P", "negative": "HDMI_RX_D1_N", "kind": "tmds_pair"},
+      {"positive": "HDMI_RX_D2_P", "negative": "HDMI_RX_D2_N", "kind": "tmds_pair"},
+      {"positive": "CAM_CLK_P", "negative": "CAM_CLK_N", "kind": "diff_pair", "impedance": 100},
+      {"positive": "CAM_D0_P", "negative": "CAM_D0_N", "kind": "diff_pair", "impedance": 100},
+      {"positive": "CAM_D1_P", "negative": "CAM_D1_N", "kind": "diff_pair", "impedance": 100},
+      {"positive": "FMC_CLK0_M2C_P", "negative": "FMC_CLK0_M2C_N", "kind": "diff_pair", "impedance": 100},
+      {"positive": "FMC_CLK1_M2C_P", "negative": "FMC_CLK1_M2C_N", "kind": "diff_pair", "impedance": 100},
+      {"positive": "FMC_LA00_CC_P", "negative": "FMC_LA00_CC_N", "kind": "diff_pair", "impedance": 100},
+      {"positive": "FMC_LA01_CC_P", "negative": "FMC_LA01_CC_N", "kind": "diff_pair", "impedance": 100},
+      {"positive": "FMC_LA02_P", "negative": "FMC_LA02_N", "kind": "diff_pair", "impedance": 100},
+      {"positive": "FMC_LA03_P", "negative": "FMC_LA03_N", "kind": "diff_pair", "impedance": 100},
+      {"positive": "FMC_LA04_P", "negative": "FMC_LA04_N", "kind": "diff_pair", "impedance": 100},
+      {"positive": "FMC_LA05_P", "negative": "FMC_LA05_N", "kind": "diff_pair", "impedance": 100},
+      {"positive": "FMC_LA06_P", "negative": "FMC_LA06_N", "kind": "diff_pair", "impedance": 100},
+      {"positive": "FMC_LA07_P", "negative": "FMC_LA07_N", "kind": "diff_pair", "impedance": 100},
+      {"positive": "FMC_LA08_P", "negative": "FMC_LA08_N", "kind": "diff_pair", "impedance": 100},
+      {"positive": "FMC_LA09_P", "negative": "FMC_LA09_N", "kind": "diff_pair", "impedance": 100},
+      {"positive": "FMC_LA10_P", "negative": "FMC_LA10_N", "kind": "diff_pair", "impedance": 100},
+      {"positive": "FMC_LA11_P", "negative": "FMC_LA11_N", "kind": "diff_pair", "impedance": 100}
+    ],
+    "loads": [
+      {"connector": "J2", "rail": "+3V3", "amps": 0.02, "note": "Zynq banks 13+33 VCCO (LVCMOS33 static + PL output drive) + on-SoM BMI323 VDDIO rider"},
+      {"connector": "J3", "rail": "+2V5_VADJ", "amps": 0.05, "note": "Zynq bank 35 VCCO (LVDS_25 drivers, camera/FMC) — sec 3.1 re-budget"},
+      {"connector": "J3", "rail": "+3V3", "amps": 0.01, "note": "Zynq bank 34 VCCO (LCD LVCMOS33 bus drive)"}
+    ]
+  },
+  "sheets": [
+    {"name": "board_aux"},
+    {"name": "board_qwiic"},
+    {"name": "board_services"},
+    {"name": "bringup_en"},
+    {"name": "bringup_en_modules"},
+    {"name": "bringup_modules"},
+    {"name": "bringup_rails"},
+    {
+      "name": "camera",
+      "settings": {
+        "bind": {"+VDD_CAM": "+3V3_CAM", "GND": "GND", "CSI_D0_P": "CAM_D0_P", "CSI_D0_N": "CAM_D0_N", "CSI_D1_P": "CAM_D1_P", "CSI_D1_N": "CAM_D1_N", "CSI_CLK_P": "CAM_CLK_P", "CSI_CLK_N": "CAM_CLK_N", "CAM_SCL": "CAM_SCL", "CAM_SDA": "CAM_SDA", "CAM_EN": "CAM_EN", "CAM_LED": "CAM_LED"},
+        "expects": {"CSI_D0_P": "som_j3_connector (PL bank 35, LVDS_25, +VCCO_35=2.5V)", "CSI_D0_N": "som_j3_connector (PL bank 35, LVDS_25, +VCCO_35=2.5V)", "CSI_D1_P": "som_j3_connector (PL bank 35, LVDS_25, +VCCO_35=2.5V)", "CSI_D1_N": "som_j3_connector (PL bank 35, LVDS_25, +VCCO_35=2.5V)", "CSI_CLK_P": "som_j3_connector (PL bank 35, LVDS_25, +VCCO_35=2.5V)", "CSI_CLK_N": "som_j3_connector (PL bank 35, LVDS_25, +VCCO_35=2.5V)", "CAM_SCL": "som_j3_connector (PL bank 33, +VCCO_33=3.3V)", "CAM_SDA": "som_j3_connector (PL bank 33, +VCCO_33=3.3V)", "CAM_EN": "som_j3_connector (PL bank 33, +VCCO_33=3.3V)", "CAM_LED": "som_j3_connector (PL bank 33, +VCCO_33=3.3V)"},
+        "buses": {"i2c": "CAM_I2C"},
+        "notes": {"draws": "RPi camera module budget (camera_csi.md: V2 typ ~250 mA)"}
+      }
+    },
+    {"name": "debug_boot"},
+    {
+      "name": "ethernet",
+      "settings": {
+        "bind": {"CHASSIS_GND": "CHASSIS_GND", "MDI0_P": "ETH_PHY_MDI0_P", "MDI0_N": "ETH_PHY_MDI0_N", "MDI1_P": "ETH_PHY_MDI1_P", "MDI1_N": "ETH_PHY_MDI1_N", "MDI2_P": "ETH_PHY_MDI2_P", "MDI2_N": "ETH_PHY_MDI2_N", "MDI3_P": "ETH_PHY_MDI3_P", "MDI3_N": "ETH_PHY_MDI3_N", "MX0_P": "ETH_LINE_MDI_0_P", "MX0_N": "ETH_LINE_MDI_0_N", "MX1_P": "ETH_LINE_MDI_1_P", "MX1_N": "ETH_LINE_MDI_1_N", "MX2_P": "ETH_LINE_MDI_2_P", "MX2_N": "ETH_LINE_MDI_2_N", "MX3_P": "ETH_LINE_MDI_3_P", "MX3_N": "ETH_LINE_MDI_3_N"},
+        "expects": {"MX0_P": "rj45_connector (wave 2)", "MX1_P": "rj45_connector (wave 2)", "MX2_P": "rj45_connector (wave 2)", "MX3_P": "rj45_connector (wave 2)"}
+      }
+    },
+    {"name": "fmc"},
+    {
+      "name": "hdmi_rx",
+      "settings": {
+        "bind": {"+VDD_LOGIC": "+3V3_HDMI_RX", "GND": "GND", "CHASSIS_GND": "CHASSIS_GND", "TMDS_RX_D2_P": "HDMI_RX_D2_P", "TMDS_RX_D2_N": "HDMI_RX_D2_N", "TMDS_RX_D1_P": "HDMI_RX_D1_P", "TMDS_RX_D1_N": "HDMI_RX_D1_N", "TMDS_RX_D0_P": "HDMI_RX_D0_P", "TMDS_RX_D0_N": "HDMI_RX_D0_N", "TMDS_RX_CLK_P": "HDMI_RX_CLK_P", "TMDS_RX_CLK_N": "HDMI_RX_CLK_N", "HDMI_5V_DET": "HDMI_RX_5V_DET", "CEC": "HDMI_RX_CEC"},
+        "expects": {"TMDS_RX_D2_P": "som_j2_j3_connector (wave 3 FPGA bank function map)", "TMDS_RX_D1_P": "som_j2_j3_connector (wave 3 FPGA bank function map)", "TMDS_RX_D0_P": "som_j2_j3_connector (wave 3 FPGA bank function map)", "TMDS_RX_CLK_P": "som_j2_j3_connector (wave 3 FPGA bank function map)", "HDMI_5V_DET": "som_j2_j3_connector (wave 3 FPGA bank function map)", "CEC": "som_j2_j3_connector (wave 3 FPGA bank function map)"},
+        "notes": {"draws": "CEC 27k pull-up (EEPROM + EDID WC# are cable-5V-fed)"}
+      }
+    },
+    {"name": "hdmi_rx_term"},
+    {
+      "name": "hdmi_tx",
+      "settings": {
+        "bind": {"+VDD_IO": "+3V3_HDMI_TX", "+5V": "+5V_HDMI_TX", "GND": "GND", "CHASSIS_GND": "CHASSIS_GND", "TMDS_D2_P": "ZYNQ_HDMI_TX_TMDS_2_P", "TMDS_D2_N": "ZYNQ_HDMI_TX_TMDS_2_N", "TMDS_D1_P": "ZYNQ_HDMI_TX_TMDS_1_P", "TMDS_D1_N": "ZYNQ_HDMI_TX_TMDS_1_N", "TMDS_D0_P": "ZYNQ_HDMI_TX_TMDS_0_P", "TMDS_D0_N": "ZYNQ_HDMI_TX_TMDS_0_N", "TMDS_CLK_P": "ZYNQ_HDMI_TX_TMDS_CLK_P", "TMDS_CLK_N": "ZYNQ_HDMI_TX_TMDS_CLK_N", "CEC": "ZYNQ_HDMI_TX_CEC", "DDC_SCL": "ZYNQ_HDMI_TX_SCL", "DDC_SDA": "ZYNQ_HDMI_TX_SDA", "HPD": "ZYNQ_HDMI_TX_HPD"},
+        "expects": {"TMDS_D2_P": "som_j2_connector (wave 3 PL function map)", "TMDS_D1_P": "som_j2_connector (wave 3 PL function map)", "TMDS_D0_P": "som_j2_connector (wave 3 PL function map)", "TMDS_CLK_P": "som_j2_connector (wave 3 PL function map)", "CEC": "som_j2_connector (wave 3 PL function map)", "DDC_SCL": "som_j2_connector (wave 3 PL function map)", "DDC_SDA": "som_j2_connector (wave 3 PL function map)", "HPD": "som_j2_connector (wave 3 PL function map)"}
+      }
+    },
+    {
+      "name": "lcd",
+      "settings": {
+        "bind": {"+VBOOST_IN": "+5V_LCD", "+VDD_LCD": "+3V3_LCD", "+VDD_TP_CLAMP": "+3V3", "GND": "GND", "LCD_R0": "LCD_R0", "LCD_R1": "LCD_R1", "LCD_R2": "LCD_R2", "LCD_R3": "LCD_R3", "LCD_R4": "LCD_R4", "LCD_R5": "LCD_R5", "LCD_R6": "LCD_R6", "LCD_R7": "LCD_R7", "LCD_G0": "LCD_G0", "LCD_G1": "LCD_G1", "LCD_G2": "LCD_G2", "LCD_G3": "LCD_G3", "LCD_G4": "LCD_G4", "LCD_G5": "LCD_G5", "LCD_G6": "LCD_G6", "LCD_G7": "LCD_G7", "LCD_B0": "LCD_B0", "LCD_B1": "LCD_B1", "LCD_B2": "LCD_B2", "LCD_B3": "LCD_B3", "LCD_B4": "LCD_B4", "LCD_B5": "LCD_B5", "LCD_B6": "LCD_B6", "LCD_B7": "LCD_B7", "LCD_DISP": "LCD_DISP", "LCD_HSYNC": "LCD_HSYNC", "LCD_VSYNC": "LCD_VSYNC", "LCD_DE": "LCD_DE", "LCD_PCLK": "LCD_PCLK", "BL_PWM": "LCD_BL_PWM", "TP_SDA": "LCD_CTP_SDA", "TP_SCL": "LCD_CTP_SCL", "TP_RST": "LCD_CTP_RST", "TP_INT": "LCD_CTP_INT"},
+        "expects": {"LCD_R0": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)", "LCD_R1": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)", "LCD_R2": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)", "LCD_R3": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)", "LCD_R4": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)", "LCD_R5": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)", "LCD_R6": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)", "LCD_R7": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)", "LCD_G0": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)", "LCD_G1": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)", "LCD_G2": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)", "LCD_G3": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)", "LCD_G4": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)", "LCD_G5": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)", "LCD_G6": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)", "LCD_G7": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)", "LCD_B0": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)", "LCD_B1": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)", "LCD_B2": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)", "LCD_B3": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)", "LCD_B4": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)", "LCD_B5": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)", "LCD_B6": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)", "LCD_B7": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)", "LCD_DISP": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)", "LCD_HSYNC": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)", "LCD_VSYNC": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)", "LCD_DE": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)", "LCD_PCLK": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)", "BL_PWM": "som_j3_connector (PL bank 34, +VCCO_34=3.3V)", "TP_SDA": "som_j2_connector (PL bank 13 — touch I2C only)", "TP_SCL": "som_j2_connector (PL bank 13 — touch I2C only)", "TP_RST": "som_j2_connector (PL bank 13 — touch I2C only)", "TP_INT": "som_j2_connector (PL bank 13 — touch I2C only)"},
+        "buses": {"i2c": "LCD_CTP"},
+        "notes": {"draws_lcd": "panel logic 25-75 mA + touch <= 25 mA (lcd_backlight.md)", "draws_boost": "SY7201 boost input @133 mA LED string (lcd_backlight.md operating point + margin)"}
+      }
+    },
+    {"name": "mechanical"},
+    {
+      "name": "microsd",
+      "settings": {
+        "bind": {"+VDD_HOST": "+1V8", "+VDD_CARD": "+3V3_SD", "GND": "GND", "SD_CLK": "SDIO_CLK", "SD_CMD": "SDIO_CMD", "SD_D0": "SDIO_D0", "SD_D1": "SDIO_D1", "SD_D2": "SDIO_D2", "SD_D3": "SDIO_D3", "CD_N": "SD_CARD_DETECT"},
+        "expects": {"CD_N": "som_j1_connector (STM32 GPIO function map)"},
+        "notes": {"draws_card": "SD card write burst ~200 mA + pull-ups + TXS02612 VCCB", "draws_host": "TXS02612 VCCA (SoM-side level)"}
+      }
+    },
+    {"name": "motor_pwm"},
+    {"name": "motor_sense"},
+    {
+      "name": "pd_input",
+      "settings": {
+        "bind": {"+VBUS_CONN": "+VBUS_IN", "+VBUS_OUT": "+VIN", "+VDD_LOGIC": "+3V3_SC", "GND": "GND", "CHASSIS_GND": "CHASSIS_GND", "CC1": "STM32_USB_CC1", "CC2": "STM32_USB_CC2", "USB_D_P": "STM32_USB_D_P", "USB_D_N": "STM32_USB_D_N", "FLT_N": "PD_FLT_N"},
+        "expects": {"FLT_N": "bringup (TCA9535 expander port P15)"}
+      }
+    },
+    {
+      "name": "pmod",
+      "settings": {
+        "bind": {"+VCC_PMOD": "+3V3_PMOD", "GND": "GND", "PMOD0_SIG1": "IO_L2_P_13", "PMOD0_SIG2": "IO_L2_N_13", "PMOD0_SIG3": "IO_L3_P_13", "PMOD0_SIG4": "IO_L3_N_13", "PMOD0_SIG5": "IO_L4_P_13", "PMOD0_SIG6": "IO_L4_N_13", "PMOD0_SIG7": "IO_L5P_13", "PMOD0_SIG8": "IO_L5_N_13", "PMOD1_SIG1": "IO_L7_P_13", "PMOD1_SIG2": "IO_L7_N_13", "PMOD1_SIG3": "IO_L8_P_13", "PMOD1_SIG4": "IO_L8_N_13", "PMOD1_SIG5": "IO_L9_DQS_P_13", "PMOD1_SIG6": "IO_L9_DQS_N_13", "PMOD1_SIG7": "IO_L10_P_13", "PMOD1_SIG8": "IO_L10_N_13"},
+        "expects": {"PMOD0_SIG1": "som_j2_connector", "PMOD0_SIG2": "som_j2_connector", "PMOD0_SIG3": "som_j2_connector", "PMOD0_SIG4": "som_j2_connector", "PMOD0_SIG5": "som_j2_connector", "PMOD0_SIG6": "som_j2_connector", "PMOD0_SIG7": "som_j2_connector", "PMOD0_SIG8": "som_j2_connector", "PMOD1_SIG1": "som_j2_connector", "PMOD1_SIG2": "som_j2_connector", "PMOD1_SIG3": "som_j2_connector", "PMOD1_SIG4": "som_j2_connector", "PMOD1_SIG5": "som_j2_connector", "PMOD1_SIG6": "som_j2_connector", "PMOD1_SIG7": "som_j2_connector", "PMOD1_SIG8": "som_j2_connector"},
+        "notes": {"draws": "2x Pmod module budget ~100 mA each"}
+      }
+    },
+    {
+      "name": "pmod_expansion",
+      "settings": {
+        "bind": {"+VDD_PMOD": "+3V3", "+VSW_PMOD": "+3V3_PMODX", "GND": "GND", "PMOD_IO1": "PMODX_IO1", "PMOD_IO2": "PMODX_IO2", "PMOD_IO3": "PMODX_IO3", "PMOD_IO4": "PMODX_IO4", "PMOD_IO5": "PMODX_IO5", "PMOD_IO6": "PMODX_IO6", "PMOD_IO7": "PMODX_IO7", "PMOD_IO8": "PMODX_IO8"},
+        "expects": {"PMOD_IO1": "som_j2_connector (PL bank 13, +VCCO_13=+3V3, LVCMOS33)", "PMOD_IO2": "som_j2_connector (PL bank 13, +VCCO_13=+3V3, LVCMOS33)", "PMOD_IO3": "som_j2_connector (PL bank 13, +VCCO_13=+3V3, LVCMOS33)", "PMOD_IO4": "som_j2_connector (PL bank 13, +VCCO_13=+3V3, LVCMOS33)", "PMOD_IO5": "som_j2_connector (PL bank 13, +VCCO_13=+3V3, LVCMOS33)", "PMOD_IO6": "som_j2_connector (PL bank 13, +VCCO_13=+3V3, LVCMOS33)", "PMOD_IO7": "som_j2_connector (PL bank 13, +VCCO_13=+3V3, LVCMOS33)", "PMOD_IO8": "som_j2_connector (PL bank 13, +VCCO_13=+3V3, LVCMOS33)"},
+        "notes": {"draws_pmod": "1x Pmod module budget ~100 mA (Digilent spec) + status LED"}
+      }
+    },
+    {
+      "name": "power",
+      "settings": {
+        "bind": {"+VIN": "+VIN_SYS", "+VOUT_5V_REG": "+5V_REG", "+VOUT_3V3_REG": "+3V3_REG", "+VOUT_1V8_REG": "+1V8_REG", "+VOUT_5V": "+5V", "+VOUT_3V3": "+3V3", "+VOUT_1V8": "+1V8", "GND": "GND", "EN_VOUT_5V": "EN_5V0", "EN_VOUT_3V3": "EN_3V3", "EN_VOUT_1V8": "EN_1V8"},
+        "expects": {"EN_VOUT_5V": "bringup (wave 2 rail-enable cells, dossier section 3.1)", "EN_VOUT_3V3": "bringup (wave 2 rail-enable cells, dossier section 3.1)", "EN_VOUT_1V8": "bringup (wave 2 rail-enable cells, dossier section 3.1)"},
+        "notes": {"draws_5v": "PG LED (KT-0603R + 1k, ~3 mA) + FB divider 60 uA", "draws_3v3": "PG LED (330R ~3.9 mA) + 1V8 PG sense LED chain (330R ~3.9 mA) + FB divider 27 uA", "draws_1v8": "PG FET gate divider 10k+100k (16 uA), rounded up"}
+      }
+    },
+    {"name": "power_mon"},
+    {"name": "power_som"},
+    {
+      "name": "rj45_connector",
+      "settings": {
+        "bind": {"+VLED": "+3V3", "GND": "GND", "CHASSIS_GND": "CHASSIS_GND", "RJ45_MDI0_P": "ETH_LINE_MDI_0_P", "RJ45_MDI0_N": "ETH_LINE_MDI_0_N", "RJ45_MDI1_P": "ETH_LINE_MDI_1_P", "RJ45_MDI1_N": "ETH_LINE_MDI_1_N", "RJ45_MDI2_P": "ETH_LINE_MDI_2_P", "RJ45_MDI2_N": "ETH_LINE_MDI_2_N", "RJ45_MDI3_P": "ETH_LINE_MDI_3_P", "RJ45_MDI3_N": "ETH_LINE_MDI_3_N"},
+        "notes": {"draws": "RJ45 housing LEDs (2x 330R port-present indicator)"}
+      }
+    },
+    {"name": "som_decoupling"},
+    {"name": "som_j1", "module_connector": "J1", "title": "SoM J1: power / USB / STM32 / JTAG / SDIO / ETH MDI"},
+    {"name": "som_j2", "module_connector": "J2", "title": "SoM J2: FPGA bank 13/33 IO + VCCO rails"},
+    {"name": "som_j3", "module_connector": "J3", "title": "SoM J3: FPGA bank 33/34/35 IO + VCCO rails"},
+    {
+      "name": "uart_bridge",
+      "settings": {
+        "bind": {"+VDD_IO": "+3V3", "GND": "GND", "USB_VBUS": "USB_UART_VBUS", "USB_DP": "USB_UART_DP", "USB_DM": "USB_UART_DM", "UART_TXD": "ZYNQ_PS_UART0_RXD", "UART_RXD": "ZYNQ_PS_UART0_TXD", "UART_RTS_N": "ZYNQ_PS_UART0_CTS_N", "UART_CTS_N": "ZYNQ_PS_UART0_RTS_N"},
+        "expects": {"USB_VBUS": "usb_uart_connector (wave 2)", "USB_DP": "usb_uart_connector (wave 2)", "UART_TXD": "som_j1_connector (wave 3 MIO function map)", "UART_RXD": "som_j1_connector (wave 3 MIO function map)", "UART_RTS_N": "som_j1_connector (wave 3 MIO function map)", "UART_CTS_N": "som_j1_connector (wave 3 MIO function map)"},
+        "notes": {"draws": "CP2102N active ~14 mA typ + RST 1k pull-up"}
+      }
+    },
+    {
+      "name": "usb_jtag",
+      "settings": {
+        "bind": {"+VBUS_USB": "+5V_DBG", "+3V3_ISLAND": "+3V3_DBG", "GND": "GND", "USB_DP": "DBG_USB_DP", "USB_DM": "DBG_USB_DM", "JTAG_TCK": "ZYNQ_TCK", "JTAG_TDI": "ZYNQ_TDI", "JTAG_TMS": "ZYNQ_TMS", "JTAG_TDO": "ZYNQ_TDO", "UART_RXD": "DBG_UART_RXD", "UART_TXD": "DBG_UART_TXD"},
+        "expects": {"USB_DP": "usb_jtag_connector (USB-C UFP receptacle + USBLC6 ESD)", "JTAG_TCK": "debug_boot (the 2x7 JTAG header carries the same ZYNQ_T* nets)", "JTAG_TDI": "debug_boot (the 2x7 JTAG header carries the same ZYNQ_T* nets)", "JTAG_TMS": "debug_boot (the 2x7 JTAG header carries the same ZYNQ_T* nets)", "JTAG_TDO": "debug_boot (the 2x7 JTAG header carries the same ZYNQ_T* nets)", "UART_RXD": "som_j2_connector (PL bank 13 EMIO UART, LVCMOS33 — FUNCTION_MAP)", "UART_TXD": "som_j2_connector (PL bank 13 EMIO UART, LVCMOS33 — FUNCTION_MAP)"},
+        "notes": {"draws": "CH347 ~38 mA typ (DS) + SN74LVC125 + RST/mode/OE pull network"}
+      }
+    },
+    {
+      "name": "usb_jtag_connector",
+      "settings": {
+        "bind": {"+VBUS": "+5V_DBG", "GND": "GND", "CHASSIS_GND": "CHASSIS_GND", "USB_DP": "DBG_USB_DP", "USB_DM": "DBG_USB_DM"},
+        "expects": {"USB_DP": "usb_jtag (CH347T bridge)"}
+      }
+    },
+    {
+      "name": "usb_pd",
+      "settings": {
+        "bind": {"+VDD_LOGIC": "+3V3_SC", "+VBUS_SENSE": "+VBUS_IN", "GND": "GND", "CC1": "STM32_USB_CC1", "CC2": "STM32_USB_CC2", "I2C_SDA": "STM32_I2C2_SDA", "I2C_SCL": "STM32_I2C2_SCL", "INT_N": "SC_INT_N"},
+        "expects": {"I2C_SDA": "som_j1_connector (wave 3 STM32 GPIO function map)", "I2C_SCL": "som_j1_connector (wave 3 STM32 GPIO function map)", "INT_N": "som_j1_connector (wave 3 STM32 GPIO function map)"},
+        "buses": {"i2c": "STM32_I2C2"},
+        "notes": {"draws": "FUSB302B VDD (<1 mA); SC_INT_N pulled on bringup_rails (G2 wire-OR, single 10k)"}
+      }
+    },
+    {
+      "name": "usb_uart_connector",
+      "settings": {
+        "bind": {"GND": "GND", "CHASSIS_GND": "CHASSIS_GND", "VBUS": "USB_UART_VBUS", "USB_DP": "USB_UART_DP", "USB_DM": "USB_UART_DM"}
+      }
+    },
+    {
+      "name": "usbc_otg",
+      "settings": {
+        "bind": {"+VBUS_SUPPLY": "+5V_USB", "+VDD_LOGIC": "+3V3_SC", "GND": "GND", "CHASSIS_GND": "CHASSIS_GND", "USB_DP": "USB_D+", "USB_DM": "USB_D-", "VBUS": "USB_VBUS", "VBUS_EN": "VBUS_OUT_EN", "FLT_N": "USBOTG_FLT_N", "USB_ID": "USB_ID"},
+        "expects": {"VBUS_EN": "som_j1_connector (STM32 GPIO function map)", "USB_ID": "som_j1_connector (STM32 GPIO function map)", "FLT_N": "bringup (TCA9535 expander port P14)"},
+        "notes": {"draws_vbus": "downstream USB device budget, TPS2051C current-limited", "draws_flt": "USBOTG_FLT# 100k pull-up (G4 re-rail)"}
+      }
+    },
+    {"name": "user_io"}
+  ]
+}
+

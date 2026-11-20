@@ -40,6 +40,7 @@ AuthoringPurityScope native_authoring_purity_scope() {
         s.headers.push_back(std::string("native/include/schgen/") + name + ".hpp");
     s.headers.push_back("native/src/authoring_values.hpp");
     s.constructors.push_back("native/src/subsystem_authoring.cpp::schgen::author_subsystem | schgen::CircuitSheetIr (const std::string &, const schgen::SubsystemMeta &, const schgen::AuthoringContext &)");
+    s.constructors.push_back("native/src/subsystem_authoring_data.cpp::schgen::extend_subsystem_data | schgen::CircuitSheetIr (schgen::CircuitSheetIr, const schgen::JsonNode &, const schgen::AuthoringContext &)");
     s.constructors.push_back("native/src/subsystem_authoring_data.cpp::schgen::author_subsystem_data | schgen::CircuitSheetIr (const schgen::JsonNode &, const schgen::SubsystemMeta &, const schgen::AuthoringContext &)");
     s.constructors.push_back("native/src/project_authoring.cpp::schgen::author_project_subsystem | schgen::CircuitSheetIr (const std::string &, const std::string &, const schgen::ProjectAuthoringInput &)");
     s.constructors.push_back("native/src/project_authoring_registry.cpp::schgen::author_registered_project_definition | schgen::CircuitSheetIr (const schgen::ProjectSubsystemDefinition &, const schgen::SubsystemMeta &, const schgen::AuthoringContext &)");
@@ -60,6 +61,7 @@ AuthoringPurityScope native_authoring_purity_scope() {
         "native/src/subsystem_authoring_data.cpp::schgen::add_part | void (schgen::CircuitAuthor &, const schgen::JsonNode &, const std::string &)",
         "native/src/subsystem_authoring_data.cpp::schgen::add_port | void (schgen::CircuitAuthor &, const schgen::JsonNode &, const schgen::SubsystemMeta &, const std::string &)",
         "native/src/subsystem_authoring_data.cpp::schgen::add_purpose | void (schgen::CircuitAuthor &, const schgen::JsonNode &, const std::string &)",
+        "native/src/subsystem_authoring_data.cpp::schgen::apply_sections | void (schgen::CircuitAuthor &, const schgen::JsonNode &, const schgen::SubsystemMeta &, const std::string &, bool)",
         "native/src/circuit.cpp::schgen::parse_sheet_ir | schgen::CircuitSheetIr (const schgen::JsonNode &)",
         "native/src/circuit.cpp::schgen::decode_intermediate_circuit_ir | schgen::CircuitSheetIr (const schgen::JsonNode &)"
     };

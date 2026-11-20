@@ -16,7 +16,7 @@ endif()
 # Compile one engine shared by the standalone CLI and native contracts.
 include(cmake/AuthoringPurity.cmake)
 add_library(schgen_core STATIC
-    src/occupancy.cpp src/occupancy_precision.cpp src/seat.cpp src/sexpr.cpp src/route.cpp src/emit.cpp src/stackup.cpp src/run_config.cpp src/study.cpp
+    src/occupancy.cpp src/occupancy_precision.cpp src/seat.cpp src/sexpr.cpp src/route.cpp src/emit.cpp src/stackup.cpp src/run_config.cpp src/study.cpp src/board_definition.cpp
     src/legalize.cpp src/quantize.cpp src/precision_ops.cpp src/turn.cpp src/pack.cpp
     src/legalize_precision.cpp src/stage_precision.cpp
     src/placement_precision.cpp src/output_precision.cpp src/pack_precision.cpp
@@ -1172,6 +1172,10 @@ if(BUILD_TESTING)
     target_link_libraries(schgen_subsystem_data_contracts PRIVATE schgen_core)
     target_compile_options(schgen_subsystem_data_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
     add_test(NAME native_subsystem_data_contracts COMMAND schgen_subsystem_data_contracts)
+    add_executable(schgen_board_definition_contracts tests/board_definition_contracts.cpp)
+    target_link_libraries(schgen_board_definition_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_board_definition_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME native_board_definition_contracts COMMAND schgen_board_definition_contracts "${CMAKE_CURRENT_SOURCE_DIR}/..")
     add_test(NAME native_study_cli_needs_stackups COMMAND schgen study layers
         --config "${CMAKE_CURRENT_SOURCE_DIR}/tests/data/study/no_study.json")
     set_tests_properties(native_study_cli_needs_stackups PROPERTIES
