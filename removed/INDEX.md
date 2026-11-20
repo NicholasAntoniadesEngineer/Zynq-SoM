@@ -17,13 +17,13 @@ Rules the tool relies on (enforced by `native_removed_archive_contracts`):
 
 | folder | what it holds | source commit | move commit |
 |---|---|---|---|
-| `bringup_manual/` | docs/BRINGUP.md and the renderer that wrote it | `f32ac35a280d8cca496f4dbec4dde9f51c63600d` | `` |
-| `test_plan/` | docs/TEST_PLAN.md and the renderer that wrote it | `f32ac35a280d8cca496f4dbec4dde9f51c63600d` | `` |
-| `sc_firmware_scaffold/` | firmware/sc/* system-controller scaffold and its generator | `f32ac35a280d8cca496f4dbec4dde9f51c63600d` | `` |
-| `firmware_contract/` | firmware/zynq_carrier_contract.h, the shared template header, provenance, fixtures | `f32ac35a280d8cca496f4dbec4dde9f51c63600d` | `` |
-| `device_tree/` | firmware/carrier_pl.dtsi and its generator | `9d2961a723a8b27af61bd49606abaea8f8ebaed4` | `` |
-| `vivado_script/` | fpga/create_project.tcl and its generator | `9d2961a723a8b27af61bd49606abaea8f8ebaed4` | `` |
-| `document_consistency/` | checker of the stored DESIGN_SPEC.md and COMPLIANCE.md | `e95a7702bfddd6775b5b0c482e90d29cf3c178b5` | `` |
+| `bringup_manual/` | docs/BRINGUP.md and the renderer that wrote it | `f32ac35a280d8cca496f4dbec4dde9f51c63600d` | `e95a7702bfddd6775b5b0c482e90d29cf3c178b5` |
+| `test_plan/` | docs/TEST_PLAN.md and the renderer that wrote it | `f32ac35a280d8cca496f4dbec4dde9f51c63600d` | `e95a7702bfddd6775b5b0c482e90d29cf3c178b5` |
+| `sc_firmware_scaffold/` | firmware/sc/* system-controller scaffold and its generator | `f32ac35a280d8cca496f4dbec4dde9f51c63600d` | `e95a7702bfddd6775b5b0c482e90d29cf3c178b5` |
+| `firmware_contract/` | firmware/zynq_carrier_contract.h, the shared template header, provenance, fixtures | `f32ac35a280d8cca496f4dbec4dde9f51c63600d` | `e95a7702bfddd6775b5b0c482e90d29cf3c178b5` |
+| `device_tree/` | firmware/carrier_pl.dtsi and its generator | `9d2961a723a8b27af61bd49606abaea8f8ebaed4` | `f32ac35a280d8cca496f4dbec4dde9f51c63600d` |
+| `vivado_script/` | fpga/create_project.tcl and its generator | `9d2961a723a8b27af61bd49606abaea8f8ebaed4` | `f32ac35a280d8cca496f4dbec4dde9f51c63600d` |
+| `document_consistency/` | checker of the stored DESIGN_SPEC.md and COMPLIANCE.md | `e95a7702bfddd6775b5b0c482e90d29cf3c178b5` | `e4fd185c3ec9aac237b3c00f1ce534d5632d4152` |
 
 ## Files
 
