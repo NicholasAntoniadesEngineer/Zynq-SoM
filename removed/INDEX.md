@@ -24,6 +24,7 @@ Rules the tool relies on (enforced by `native_removed_archive_contracts`):
 | `device_tree/` | firmware/carrier_pl.dtsi and its generator | `9d2961a723a8b27af61bd49606abaea8f8ebaed4` | `f32ac35a280d8cca496f4dbec4dde9f51c63600d` |
 | `vivado_script/` | fpga/create_project.tcl and its generator | `9d2961a723a8b27af61bd49606abaea8f8ebaed4` | `f32ac35a280d8cca496f4dbec4dde9f51c63600d` |
 | `document_consistency/` | checker of the stored DESIGN_SPEC.md and COMPLIANCE.md | `e95a7702bfddd6775b5b0c482e90d29cf3c178b5` | `e4fd185c3ec9aac237b3c00f1ce534d5632d4152` |
+| `floorplan_prose/` | typed per-sheet placement notes and framing text of docs/FLOORPLAN.md and FLOORPLAN.svg | `9301deeda9d6c31cc06fc5f9230519033cd464c9` | PENDING |
 
 ## Files
 
@@ -144,3 +145,33 @@ Original path, then archive path.
 - `native/tests/data/doc_consistency/python_reference.json` -> `removed/document_consistency/tests/data/doc_consistency/python_reference.json`
 - `native/tests/doc_consistency_INTEGRATION.md` -> `removed/document_consistency/tests/doc_consistency_INTEGRATION.md`
 - `native/tests/doc_consistency_contracts.cpp` -> `removed/document_consistency/tests/doc_consistency_contracts.cpp`
+
+### floorplan_prose
+
+- `native/src/floorplan_notes.cpp` -> `removed/floorplan_prose/source/floorplan_notes.cpp`
+- `native/tests/data/floorplan/carrier.json` key `expected.notes` -> `removed/floorplan_prose/tests/data/floorplan/carrier_expected_notes.json`
+- `native/tests/data/floorplan/devkit_mini.json` key `expected.notes` -> `removed/floorplan_prose/tests/data/floorplan/devkit_mini_expected_notes.json`
+- `native/include/schgen/floorplan.hpp:248-251` -> `removed/floorplan_prose/fragments/floorplan.hpp.L248-251.txt`
+- `native/include/schgen/floorplan.hpp:328-329` -> `removed/floorplan_prose/fragments/floorplan.hpp.L328-329.txt`
+- `native/include/schgen/floorplan.hpp:331-331` -> `removed/floorplan_prose/fragments/floorplan.hpp.L331-331.txt`
+- `native/include/schgen/floorplan.hpp:334-334` -> `removed/floorplan_prose/fragments/floorplan.hpp.L334-334.txt`
+- `native/include/schgen/floorplan.hpp:343-343` -> `removed/floorplan_prose/fragments/floorplan.hpp.L343-343.txt`
+- `native/tests/floorplan_contracts.cpp:1298-1301` -> `removed/floorplan_prose/fragments/floorplan_contracts.cpp.L1298-1301.txt`
+- `native/tests/floorplan_contracts.cpp:1315-1317` -> `removed/floorplan_prose/fragments/floorplan_contracts.cpp.L1315-1317.txt`
+- `native/src/floorplan_md.cpp:110-111` -> `removed/floorplan_prose/fragments/floorplan_md.cpp.L110-111.txt`
+- `native/src/floorplan_md.cpp:112-116` -> `removed/floorplan_prose/fragments/floorplan_md.cpp.L112-116.txt`
+- `native/src/floorplan_md.cpp:19-19` -> `removed/floorplan_prose/fragments/floorplan_md.cpp.L19-19.txt`
+- `native/src/floorplan_md.cpp:20-21` -> `removed/floorplan_prose/fragments/floorplan_md.cpp.L20-21.txt`
+- `native/src/floorplan_md.cpp:23-24` -> `removed/floorplan_prose/fragments/floorplan_md.cpp.L23-24.txt`
+- `native/src/floorplan_md.cpp:26-26` -> `removed/floorplan_prose/fragments/floorplan_md.cpp.L26-26.txt`
+- `native/src/floorplan_md.cpp:28-28` -> `removed/floorplan_prose/fragments/floorplan_md.cpp.L28-28.txt`
+- `native/src/floorplan_md.cpp:31-31` -> `removed/floorplan_prose/fragments/floorplan_md.cpp.L31-31.txt`
+- `native/src/floorplan_output.cpp:9-11` -> `removed/floorplan_prose/fragments/floorplan_output.cpp.L9-11.txt`
+- `native/src/floorplan_svg.cpp:103-107` -> `removed/floorplan_prose/fragments/floorplan_svg.cpp.L103-107.txt`
+- `native/src/floorplan_svg.cpp:124-130` -> `removed/floorplan_prose/fragments/floorplan_svg.cpp.L124-130.txt`
+- `native/src/floorplan_svg.cpp:131-131` -> `removed/floorplan_prose/fragments/floorplan_svg.cpp.L131-131.txt`
+- `native/src/floorplan_svg.cpp:30-30` -> `removed/floorplan_prose/fragments/floorplan_svg.cpp.L30-30.txt`
+- `native/src/floorplan_svg.cpp:36-38` -> `removed/floorplan_prose/fragments/floorplan_svg.cpp.L36-38.txt`
+- `native/src/floorplan_svg.cpp:40-40` -> `removed/floorplan_prose/fragments/floorplan_svg.cpp.L40-40.txt`
+- `native/tests/output_precision_contracts.cpp:129-129` -> `removed/floorplan_prose/fragments/output_precision_contracts.cpp.L129-129.txt`
+- `native/tests/output_precision_contracts.cpp:130-133` -> `removed/floorplan_prose/fragments/output_precision_contracts.cpp.L130-133.txt`

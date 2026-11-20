@@ -919,11 +919,11 @@ void pack_behavior() {
             "stage rerender is byte stable without solver or global context restoration");
     auto unicode=captured.plan;unicode.som_source="<&>";auto& label=unicode.interior_blocks[0];
     label.name.clear();for(int k=0;k<20;++k)label.name+="μ";label.w=20;
-    const auto svg=render_floorplan_svg(unicode,{});
+    const auto svg=render_floorplan_svg(unicode);
     require(svg.find("font-size=\"9.2\"")!=std::string::npos&&svg.find("&lt;&amp;&gt;")!=std::string::npos,
             "SVG text fits Unicode code points and escapes XML metacharacters");
     unicode.board_w=std::numeric_limits<double>::infinity();
-    throws([&]{render_floorplan_svg(unicode,{});},"board dimensions");
+    throws([&]{render_floorplan_svg(unicode);},"board dimensions");
     const auto seed=render_floorplan_spec_json(unicode);
     require(seed.find("\\u03bc")!=std::string::npos,"seed JSON escapes Unicode as Python does");
     unicode.interior_blocks[0].name="\xf0\x9f\x94\xa7\n\"\\";
@@ -1295,26 +1295,19 @@ void frozen(const std::filesystem::path& dir,const std::string& name,bool geomet
     // with the independent physical-pad/MST oracle, not the obsolete score.
     require(std::abs(e.estimate()-experiment_metric_contracts::estimate(in,e.plan,false))<1e-8,
             name+": frozen geometry estimate matches independent physical-side oracle");
-    const auto notes=build_floorplan_notes(e.plan,in);
-    std::vector<J> note_rows;
-    for(const auto& n:notes)note_rows.push_back(jobject({{"n",jvalue(n.n)},{"block",jvalue(n.block)},{"short",jvalue(n.short_text)},{"long",jvalue(n.long_text)}}));
-    same(jarray(note_rows),field(expected,"notes"),name+".notes");
     std::ifstream svgfile(dir/(name+".svg"));const std::string svg((std::istreambuf_iterator<char>(svgfile)),{});
-    const auto rendered=render_floorplan_svg(e.plan,notes);
+    const auto rendered=render_floorplan_svg(e.plan);
     if(rendered!=svg) {
         std::size_t k=0;while(k<std::min(rendered.size(),svg.size())&&rendered[k]==svg[k])++k;
         throw std::runtime_error(name+": SVG bytes at "+std::to_string(k)+": "+rendered.substr(k,100)+" expected "+svg.substr(k,100));
     }
     require(true,name+": byte exact SVG");
     std::ifstream mdfile(dir/(name+".md"));const std::string md((std::istreambuf_iterator<char>(mdfile)),{});
-    const auto markdown=render_floorplan_md(e.plan,notes,in);
+    const auto markdown=render_floorplan_md(e.plan,in);
     require(markdown.find(".py")==std::string::npos,name+": current floorplan Markdown has no obsolete Python source paths");
     require(markdown.find("native/src/constraints.cpp")!=std::string::npos &&
             markdown.find("native/src/power_checks.cpp")!=std::string::npos,
             name+": current floorplan cites native electrical producers");
-    for(const auto& note:notes)
-        require(note.short_text.find(".py")==std::string::npos && note.long_text.find(".py")==std::string::npos,
-                name+": current placement notes have no obsolete Python source paths");
     if(markdown!=md) {
         std::size_t k=0;while(k<std::min(markdown.size(),md.size())&&markdown[k]==md[k])++k;
         throw std::runtime_error(name+": Markdown bytes at "+std::to_string(k)+": "+markdown.substr(k,100)+" expected "+md.substr(k,100));
@@ -1322,7 +1315,7 @@ void frozen(const std::filesystem::path& dir,const std::string& name,bool geomet
     require(true,name+": byte exact Markdown");
     if(!in.si_pairs.empty()) {
         auto missing_si=in;missing_si.si_pairs.clear();
-        throws([&]{render_floorplan_md(e.plan,notes,missing_si);},"has no row");
+        throws([&]{render_floorplan_md(e.plan,missing_si);},"has no row");
     }
     if (geometry_only) return;
     const auto result=build_floorplan(in);
@@ -1370,7 +1363,7 @@ void frozen(const std::filesystem::path& dir,const std::string& name,bool geomet
     require(write_floorplan_spec(result,seed_path)==seed_path&&read_bytes(seed_path)==seed,name+": publication matches current seed");
     require(load_floorplan_spec(seed_path.string())->names().size()==result.edge_blocks.size()+result.interior_blocks.size(),
             name+": exported spec reloads every subsystem");
-    const FloorplanDocuments replacement{{},"replacement SVG\n","replacement Markdown\n",{}};
+    const FloorplanDocuments replacement{"replacement SVG\n","replacement Markdown\n",{}};
     write_floorplan_documents(replacement,publication.directory);
     require(read_bytes(paths[0])==replacement.svg&&read_bytes(paths[1])==replacement.markdown,name+": replaces existing documents");
     throws([&]{write_floorplan_documents(documents,paths[0]);},"filesystem");

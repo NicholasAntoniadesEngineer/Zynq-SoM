@@ -1,0 +1,3 @@
+    for(const auto& note:notes)
+        require(note.short_text.find(".py")==std::string::npos && note.long_text.find(".py")==std::string::npos,
+                name+": current placement notes have no obsolete Python source paths");

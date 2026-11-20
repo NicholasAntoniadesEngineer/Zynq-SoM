@@ -1,0 +1,1 @@
+    line("SoM outline: **"+number(plan.som.w)+" x "+number(plan.som.h)+" mm**. The DF40 mezzanine connectors sit on the SoM's bottom copper; the carrier-top view below mirrors their X coordinate (bottom view). Verify mate orientation against the DF40 datasheet before committing footprints.");

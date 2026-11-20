@@ -6,9 +6,8 @@ FloorplanDocuments render_floorplan_documents(const FloorplanPlan& plan,
                                                const FloorplanInput& input, ExecutionFailureReceipt* failure) {
     FloorplanDocuments out;
     try {
-    out.notes=build_floorplan_notes(plan,input);
-    out.svg=render_floorplan_svg(plan,out.notes,&out.accounting.quantization_engagements);
-    out.markdown=render_floorplan_md(plan,out.notes,input);
+    out.svg=render_floorplan_svg(plan,&out.accounting.quantization_engagements);
+    out.markdown=render_floorplan_md(plan,input);
     return out;
     } catch (...) { capture_execution_failure(failure,out.accounting);throw; }
 }

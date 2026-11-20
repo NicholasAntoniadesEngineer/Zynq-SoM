@@ -1,0 +1,5 @@
+        for (std::size_t k=0;k<note_of[b.name].size();++k) {
+            const double bcx=x+16*k;
+            emit("<circle cx=\""+number(bcx)+"\" cy=\""+number(y)+"\" r=\"7\" fill=\"white\" stroke=\"#111827\" stroke-width=\"1.2\"/>");
+            emit("<text x=\""+number(bcx)+"\" y=\""+number(y+3)+"\" text-anchor=\"middle\" font-size=\"9\" font-weight=\"bold\">"+std::to_string(note_of[b.name][k])+"</text>");
+        }

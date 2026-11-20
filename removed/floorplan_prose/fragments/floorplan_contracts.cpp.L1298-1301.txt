@@ -1,0 +1,4 @@
+    const auto notes=build_floorplan_notes(e.plan,in);
+    std::vector<J> note_rows;
+    for(const auto& n:notes)note_rows.push_back(jobject({{"n",jvalue(n.n)},{"block",jvalue(n.block)},{"short",jvalue(n.short_text)},{"long",jvalue(n.long_text)}}));
+    same(jarray(note_rows),field(expected,"notes"),name+".notes");
