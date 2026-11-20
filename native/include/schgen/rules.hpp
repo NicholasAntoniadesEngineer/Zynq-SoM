@@ -23,6 +23,8 @@ inline constexpr NamedConstant judging_resolution{"judging_resolution", 1e-3, "m
 inline constexpr std::array rule_registry{judging_resolution};
 }
 
+inline constexpr std::string_view bypass_rule_id = "bypass-on-pin-face-or-under";
+
 enum class Enforcement : std::uint8_t { gate, measured };
 
 enum class Stage : std::uint8_t { placement, layout };
@@ -110,6 +112,15 @@ private:
     std::vector<Regulator> regulators_;
     std::map<std::string, std::map<std::string, std::string>> pin_names_;
 };
+
+struct BypassVerdict {
+    double gap = 0;
+    bool beside = false, under = false;
+    std::optional<Finding> finding;
+};
+
+BypassVerdict bypass_verdict(const RuleContext& context, const Service& service);
+std::string bypass_note(const std::vector<BypassVerdict>& verdicts, double reach);
 
 using Check = RuleResult (*)(const RuleContext&);
 
