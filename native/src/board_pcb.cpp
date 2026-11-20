@@ -2,6 +2,7 @@
 #include "schgen/board_schematic.hpp"
 #include "schgen/atomic_file.hpp"
 #include "schgen/validation.hpp"
+#include "schgen/label_seats.hpp"
 
 namespace schgen {
 void validate_board_input_connectivity(const std::vector<ProjectCircuit>& circuits,
@@ -75,7 +76,10 @@ BoardPcbStage prepare_board_pcb(const ProjectPaths& paths,
     out.circuits = circuits;
     out.inputs = load_board_inputs(paths, circuits, link, nets, options);
     out.placement = build_pcb_model(out.inputs);
-    out.emission = render_pcb(out.placement.model, pcb_emit_policy(out.inputs.floorplan.project));
+    const auto policy = pcb_emit_policy(out.inputs.floorplan.project);
+    std::optional<labels::LabelSeating> seats;
+    if (policy.labels) seats = labels::seat_labels(out.placement.model, policy);
+    out.emission = render_pcb(out.placement.model, policy, nullptr, seats ? &*seats : nullptr);
     return out;
 }
 void publish_board_pcb(const BoardPcbStage& stage, const std::filesystem::path& directory,

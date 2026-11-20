@@ -10,11 +10,11 @@
 
 namespace schgen {
 
-int run_board(const RunConfig& config, const std::string& board) {
+int run_board(const RunConfig& config, const std::string& board, const std::filesystem::path& file) {
     const ProjectCatalogPaths catalogue = project_catalog_paths(std::filesystem::current_path(), board);
     if (!compile_part_catalog(catalogue.parts_dir.string(), catalogue.part_catalog.string()))
         throw std::runtime_error("the part catalogue could not be compiled from " + catalogue.parts_dir.string());
-    std::vector<std::string> arguments = config.board_arguments(board);
+    std::vector<std::string> arguments = config.board_arguments(board, file);
     std::vector<char*> raw;
     for (std::string& argument : arguments) raw.push_back(argument.data());
     std::cout << "== " << board << " on " << config.stackup_of(board) << " ==\n";
@@ -30,7 +30,7 @@ std::optional<int> run_config_command(int argc, char** argv) {
     const RunConfig config = load_run_config(request.file);
     int status = 0;
     for (const std::string& board : chosen_boards(config, request.boards)) {
-        const int result = run_board(config, board);
+        const int result = run_board(config, board, request.file);
         if (result != 0) status = result;
     }
     return status;

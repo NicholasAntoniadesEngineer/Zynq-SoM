@@ -12,7 +12,7 @@
 namespace schgen {
 namespace {
 
-int isolated_board(const RunConfig& config, const std::string& board) {
+int isolated_board(const RunConfig& config, const std::string& board, const std::filesystem::path& file) {
     std::cout.flush();
     std::cerr.flush();
     const pid_t child = fork();
@@ -21,7 +21,7 @@ int isolated_board(const RunConfig& config, const std::string& board) {
         int status = EXIT_FAILURE;
         try {
             study_stackup(config.stackup_of(board));
-            status = run_board(config, board);
+            status = run_board(config, board, file);
         } catch (const std::exception& error) {
             std::cerr << "schgen: " << error.what() << "\n";
         }
@@ -55,7 +55,7 @@ std::optional<int> study_command(int argc, char** argv) {
             const RunConfig row = study::row_config(config, board, name);
             const std::filesystem::path output = row.output / board, reports = output / study::reports_folder;
             for (const char* report : {study::verdict_report, study::squeeze_report}) std::filesystem::remove(reports / report);
-            rows.push_back(study::measured_row(catalogue.named(name), output, isolated_board(row, board)));
+            rows.push_back(study::measured_row(catalogue.named(name), output, isolated_board(row, board, request.file)));
         }
         const std::string table = study::table(board, rows);
         publish_text(study::table_file(config, board, ".txt"), table);

@@ -163,6 +163,7 @@ struct ThermalNodes {
 ThermalNodes thermal_nodes(const PcbModel &, const PcbEmitPolicy &, const Uid &,
                            PcbEmissionResult &, QuantizationCounts*);
 std::vector<Sexpr> descriptors(const PcbModel &, const PcbEmitPolicy &, const Uid &, const Sexpr &,
-                               QuantizationCounts* = nullptr);
+                               QuantizationCounts* = nullptr, const labels::LabelSeating* = nullptr);
+void seat_references(const PcbModel &, Sexpr &, const labels::LabelSeating &);
 int declutter(const PcbModel &, Sexpr &, QuantizationCounts* counts = nullptr);
 } // namespace schgen::pcb_emission

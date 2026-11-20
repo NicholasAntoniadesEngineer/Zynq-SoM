@@ -109,7 +109,7 @@ void configuration() {
     require(row.stackup_of("devkit_mini") == "JLC08161H-3313" && row.stackup_of("carrier") == "JLC06161H-3313",
             "a row must change the stack-up of its own board only");
     require(row.output == std::filesystem::path("out") / "study" / "JLC08161H-3313", "row output folder");
-    require(row.board_arguments("devkit_mini") != listed.board_arguments("devkit_mini") && row.squeeze == listed.squeeze &&
+    require(row.board_arguments("devkit_mini", run_config_file) != listed.board_arguments("devkit_mini", run_config_file) && row.squeeze == listed.squeeze &&
             row.plane_net == listed.plane_net, "a row must keep every other setting");
     rejects([&] { study::row_config(listed, "absent", "JLC08161H-3313"); }, "names no stack-up for board 'absent'");
     require(study::table_file(listed, "devkit_mini", ".json") == std::filesystem::path("out") / "study" / "layers_devkit_mini.json",

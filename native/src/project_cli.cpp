@@ -57,7 +57,7 @@ namespace {
 namespace fs = std::filesystem;
 struct Options {
     std::string command, refs = "J1,J2,J3", kicad_cli = "kicad-cli";
-    fs::path repository = fs::current_path(), som, contract, output, xdc, pcb;
+    fs::path repository = fs::current_path(), som, contract, output, xdc, pcb, run_config;
     std::optional<fs::path> project;
     std::vector<std::string> subsystems;
     bool allow_missing = false, qualified_refs = false, no_ngspice = false, keep = false;
@@ -238,7 +238,7 @@ Options parse(int argc, char** argv) {
             arg == "--contract" || arg == "--output" || arg == "-o" ||
             arg == "--xdc" || arg == "--refs" || arg == "--kicad-cli" || arg == "--pcb" ||
             arg == "--subsystem" || arg == "--qty" || arg == "--min-stock" || arg == "--initial-outline-mm" ||
-            arg == "--floorplan-spec" || arg == "--interior-order") {
+            arg == "--floorplan-spec" || arg == "--interior-order" || arg == "--run-config") {
             if (++i == argc) throw std::runtime_error("missing value for " + arg);
             const std::string key = arg == "-o" ? "--output" : arg;
             if (arg != "--subsystem" && !seen.insert(key).second)
@@ -254,6 +254,7 @@ Options parse(int argc, char** argv) {
             else if (arg == "--pcb") out.pcb = value;
             else if (arg == "--refs") out.refs = value;
             else if (arg == "--floorplan-spec") out.floorplan_spec = value;
+            else if (arg == "--run-config") out.run_config = value;
             else if (arg == "--interior-order") {
                 int order = 0;
                 const auto parsed = std::from_chars(value.data(), value.data()+value.size(), order);
@@ -299,6 +300,7 @@ Options parse(int argc, char** argv) {
         if(out.command=="w12-stageprobe")allowed.insert("--cons-only");
     } else if (out.command == "board") {
         allowed.insert("--audit-projections");
+        allowed.insert("--run-config");
         allowed.insert("--reseat-victim-shapes");
         allowed.insert("--compact-placement");
         allowed.insert("--layout-squeeze");allowed.insert("--plane-net");allowed.insert("--overmold-part");
@@ -465,7 +467,8 @@ std::optional<int> run_project_command(int argc, char** argv) {
         const auto result=build_example_devkit(sheets,library,options.output,build);
         std::cout<<result.report;return result.ok()?0:1;
     }
-    const auto paths = resolve_project_paths(options.repository, options.project);
+    auto paths = resolve_project_paths(options.repository, options.project);
+    if (!options.run_config.empty()) paths.run_config = fs::absolute(options.run_config);
     const auto config = load_project_config(paths);
     if(options.command=="subsystem-check"||options.command=="carrier-check"){
         if(!options.subsystems.empty())throw ProjectError(options.command+" takes no subsystem selection");
