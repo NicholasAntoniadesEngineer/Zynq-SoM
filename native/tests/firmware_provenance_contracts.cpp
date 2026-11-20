@@ -70,8 +70,10 @@ void project(const fs::path& repo, const std::string& name) {
     isolated.repository_root = scratch.path;
     isolated.project_root = scratch.path / name;
     isolated.subsystems_dir = isolated.project_root / "subsystems";
-    isolated.som_interface_file = isolated.project_root / "som_interface.json";
+    isolated.som_interface_file = scratch.path / "som" / module_interface_file;
     isolated.som_schematic = scratch.path / "som/Zynq_SoM.kicad_sch";
+    fs::create_directories(scratch.path / "som");
+    fs::copy_file(repo / "som" / module_file, scratch.path / "som" / module_file);
     // Copy ONLY explicit provenance assets: no Python, catalog generation,
     // imports, or constructors. Real canonical JSON is independently parsed.
     for (const auto& entry : lines(expected)) {
@@ -166,7 +168,7 @@ void project(const fs::path& repo, const std::string& name) {
     fs::rename(previous, scratch.path / "unregistered");
     isolated.project_root = scratch.path / "unregistered";
     isolated.subsystems_dir = isolated.project_root / "subsystems";
-    isolated.som_interface_file = isolated.project_root / "som_interface.json";
+    isolated.som_interface_file = scratch.path / "som" / module_interface_file;
     const auto ir_only = native_firmware_sources(isolated);
     require(std::any_of(ir_only.begin(), ir_only.end(), [](const auto& entry) {
         return entry == "native authoring factory not registered for unregistered:power (canonical IR only; no native builder provenance claimed)";

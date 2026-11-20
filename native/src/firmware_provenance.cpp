@@ -26,7 +26,7 @@ std::optional<ProjectSubsystemDefinition> declaration(const std::filesystem::pat
                                                       const std::string& name) {
     std::optional<ProjectSubsystemDefinition> found;
     const std::filesystem::path file = project_root / board_file;
-    const BoardDefinition board = parse_board(parse_json_file(file.string()), file.string());
+    const BoardDefinition board = parse_board(parse_json_file(file.string()), file.string(), load_board_module(project_root));
     if (board.name != project) return found;
     for (const auto& entry : project_subsystem_definitions(board)) {
         if (entry.project != project || entry.name != name) continue;

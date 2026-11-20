@@ -115,7 +115,7 @@ void parser(const JsonNode& reference) {
 void safety(const fs::path& repo, const fs::path& work) {
     const auto project = work / "safety/devkit_mini";
     write(project / "project.json", "{}"); write(project / "floorplan.json", "{}\n");
-    write(project / "board.json", R"({"files": {"stem": "Fixture_Board"}, "root_readme": false, "owned_groups": false})");
+    write(project / "board.json", R"({"files": {"stem": "Fixture_Board"}, "root_readme": false, "owned_groups": false, "module": {"folder": "som"}})");
     const auto original = snapshot(project);
     const auto invoke = [&](const fs::path& output, const std::vector<std::string>& extra) {
         std::vector<std::string> args{"floorplan", "--repo", repo.string(), "--project", project.string(), "--output", output.string(), "--kicad-cli", "/no/extractor"};
@@ -156,6 +156,7 @@ fs::path mirror(const fs::path& repo, const fs::path& work) {
         if (entry.path().extension() != ".json" && entry.path().extension() != ".md" && entry.path().extension() != ".cir") continue;
         write(output / relative, read(entry.path()));
     }
+    for (const auto* name : {module_file, module_interface_file}) write(work / "input/som" / name, read(repo / "som" / name));
     // Poison ALL canonical IR and cached board transports. A live geometry
     // command must use native factories and new private extraction instead.
     for (const auto& entry : fs::recursive_directory_iterator(output / "subsystems"))

@@ -149,15 +149,16 @@ Fixture load(const fs::path &root, const std::string &name) {
                                                         number(g, "width_mm"), number(g, "gap_mm"),
                                                         string(g, "source")};
     }
-    f.interface_bytes = read(root / name / "som_interface.json");
-    auto iface = load_som_interface(root / name / "som_interface.json");
+    f.interface_bytes = read(module_root_of(root / name) / module_interface_file);
+    auto iface = load_som_interface(module_root_of(root / name) / module_interface_file);
     auto mapping =
-        link_mapping_from_json(parse_json_file((root / name / "som_mapping.json").string()));
+        link_mapping_from_json(parse_json_file((root / name / "som_mapping.json").string()),
+                               load_board_module(root / name).do_not_load_straps);
     auto functions = mapping.function_map;
     for (const auto &p : mapping.pudc_straps)
         functions[p.first] = p.second;
     f.functions.assign(functions.begin(), functions.end());
-    f.escape_triage = load_escape_triage(root / name);
+    f.escape_triage = load_escape_triage(root / name, load_board_module(root / name).escape_triage, "module.json");
     const auto path = root / "parts/DF40C-100DS-0.4V_51/DF40C-100DS-0.4V_51.kicad_mod";
     const auto fp = pcb_check_footprint(path.string(), read(path));
     std::map<std::string, PcbCheckFootprintPtr> mods;
@@ -196,14 +197,14 @@ void baseline(const fs::path &root, const std::string &name) {
     good.copper = copper.copper;
     good.escape_interface_sha256 = copper.meta.som_interface_sha256;
     auto config = parse_json_file((root / name / "project.json").string());
-    require(check_escape_lanes(good, pcb_escape_population_from_json(field(config, "escape")),
-                               f.interface_bytes)
+    const auto population = pcb_escape_population_from_json(field(config, "escape"), load_board_module(root / name));
+    require(check_escape_lanes(good, population, f.interface_bytes)
                 .ok,
             "generated lane plan gates");
     std::map<std::string, ReturnStitchClass> cl;
     for (const auto &[net, t] : f.triage)
         cl[net] = {t.rank(), t.klass, t.function};
-    require(check_return_stitch(PcbCheckInput(good), f.v1, cl, f.interface_bytes).ok,
+    require(check_return_stitch(PcbCheckInput(good), f.v1, cl, f.interface_bytes, population.return_path).ok,
             "generated copper return-stitch gate");
     // Exact frozen inputs retained; caller mutation cannot affect a prepared invocation.
     f.model.net_numbers.erase("GND");

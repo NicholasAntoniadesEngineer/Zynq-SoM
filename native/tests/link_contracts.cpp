@@ -74,7 +74,7 @@ JsonNode arr(std::vector<JsonNode> values = {}) {
 JsonNode empty_mapping() {
     return obj({{"schema", str("schgen.som_mapping.v1")}, {"function_map", obj()},
         {"pudc_straps", obj()}, {"vcco_rail_map", obj()}, {"rebound_som_rails", obj()},
-        {"isolated_som_rails", obj()}, {"do_not_load_straps", arr()}});
+        {"isolated_som_rails", obj()}});
 }
 const JsonNode& field(const JsonNode& object, const std::string& key) {
     const auto* value = object_field(object, key);
@@ -273,7 +273,8 @@ void mapping_and_json_contracts() {
         rejects([&] { run({}, {}, invalid); }, "SoM voltage straps mapped: ['BOOT']");
     }
     auto policy = empty_mapping();
-    require(link_mapping_from_json(policy).function_map.empty(), "explicit empty policy rejected");
+    require(link_mapping_from_json(policy, {}).function_map.empty(), "explicit empty policy rejected");
+    require(link_mapping_from_json(policy, {"BOOT"}).do_not_load_straps == std::set<std::string>{"BOOT"}, "module straps are carried");
     const auto contract = obj({{"connectors", obj({
         {"J2", obj({{"pins", obj({{"1", str("N")}})}})},
         {"J1", obj({{"pins", obj({{"10", str("N")}, {"2", str("N")}, {"02", str("N")},
@@ -282,25 +283,27 @@ void mapping_and_json_contracts() {
     const auto nets = link_som_nets_from_json(contract);
     equal(nets.at("N"), {"J1.-10", "J1.-2", "J1.2", "J1.02", "J1.10", "J1.+1_0",
         "J1.10000000000000000000000", "J2.1"}, "stable arbitrary-width numeric pin sorting");
-    require(link_sheets({sheet("a", {"N"})}, contract, policy).ok(), "JSON overload failed");
+    require(link_sheets({sheet("a", {"N"})}, contract, policy, {}).ok(), "JSON overload failed");
     for (const auto* pin : {"1tail", "", "-", "1__0", "1_"})
         rejects([&] { link_som_nets_from_json(obj({{"connectors", obj({
             {"J1", obj({{"pins", obj({{pin, str("X")}})}})}})}})); }, "invalid literal for int()");
     rejects([&] { link_som_nets_from_json(obj()); }, "contract.connectors");
     for (std::size_t i = 0; i < policy.object_value.size(); ++i) {
         auto missing = policy; missing.object_value.erase(missing.object_value.begin() + i);
-        rejects([&] { link_mapping_from_json(missing); }, "missing or has the wrong type");
+        rejects([&] { link_mapping_from_json(missing, {}); }, "missing or has the wrong type");
     }
     auto wrong = policy; wrong.object_value[1].second = arr();
-    rejects([&] { link_mapping_from_json(wrong); }, "mapping.function_map");
+    rejects([&] { link_mapping_from_json(wrong, {}); }, "mapping.function_map");
     wrong = policy; wrong.object_value[0].second = str("v2");
-    rejects([&] { link_mapping_from_json(wrong); }, "unsupported som_mapping schema");
+    rejects([&] { link_mapping_from_json(wrong, {}); }, "unsupported som_mapping schema");
     wrong = policy; wrong.object_value[1].second = obj({{"X", str("")}});
-    rejects([&] { link_mapping_from_json(wrong); }, "must contain non-empty strings");
+    rejects([&] { link_mapping_from_json(wrong, {}); }, "must contain non-empty strings");
     wrong = policy; wrong.object_value[1].second = obj({{"X", str("A")}, {"X", str("B")}});
-    rejects([&] { link_mapping_from_json(wrong); }, "duplicate mapping.function_map");
-    wrong = policy; wrong.object_value.back().second = arr({str("")});
-    rejects([&] { link_mapping_from_json(wrong); }, "do_not_load_straps must contain");
+    rejects([&] { link_mapping_from_json(wrong, {}); }, "duplicate mapping.function_map");
+    wrong = policy; wrong.object_value.push_back({"do_not_load_straps", arr()});
+    rejects([&] { link_mapping_from_json(wrong, {}); }, "belongs to the module's module.json");
+    wrong = policy; wrong.object_value[1].second = obj({{"BOOT", str("FUNC")}});
+    rejects([&] { link_mapping_from_json(wrong, {"BOOT"}); }, "SoM voltage straps mapped");
     auto typed = type("N", "single");
     typed.has_bus = typed.has_role = typed.has_expect = true;  // Present empty != null.
     typed.has_speed_hz = true; typed.speed_hz = 400000;
@@ -380,7 +383,7 @@ void corpus(const std::string& path) {
         for (const auto& item : field(hints, "pairs").array_value)
             order.pairs.push_back({static_cast<std::size_t>(field(item, "sheet_index").number_value),
                 field(item, "net").string_value, strings(field(item, "members"))});
-        const auto result = run(sheets, som, link_mapping_from_json(field(test, "mapping")), order);
+        const auto result = run(sheets, som, link_mapping_from_json(field(test, "mapping"), {}), order);
         compare_json(link_result_json(result), field(test, "expected"), field(test, "name").string_value);
     }
     std::cout << "Python corpus parity: " << data.array_value.size() << " cases\n";
@@ -392,7 +395,7 @@ void snapshot(const std::string& subsystems, const std::string& contract,
     std::vector<CircuitSheetIr> sheets;
     for (const auto& name : strings(field(expected, "sheets")))
         sheets.push_back(load_circuit_json(std::filesystem::path(subsystems) / name / "circuit.json"));
-    const auto result = link_sheets(sheets, parse_json_file(contract), parse_json_file(mapping));
+    const auto result = link_sheets(sheets, parse_json_file(contract), parse_json_file(mapping), {});
     compare_json(link_result_json(result), expected, "snapshot");
     std::cout << "Python snapshot parity: " << sheets.size() << " sheets, " << result.bindings.size()
               << " bindings, " << result.rail_bindings.size() << " rails; all fields/report bytes match\n";

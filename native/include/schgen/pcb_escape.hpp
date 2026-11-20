@@ -1,5 +1,6 @@
 #pragma once
 
+#include "schgen/board_definition.hpp"
 #include "schgen/pack.hpp"
 #include "schgen/execution_accounting.hpp"
 #include "schgen/pcb_model.hpp"
@@ -24,7 +25,9 @@ struct PcbEscapeTriageRule {
 struct PcbEscapeTriage {
     std::vector<PcbEscapeTriageRule> rules;
 };
-PcbEscapeTriage load_escape_triage(const std::filesystem::path &board_root);
+PcbEscapeTriage load_escape_triage(const std::filesystem::path &board_root,
+                                   const std::vector<ModuleTriageRule> &module_rules,
+                                   const std::string &module_origin);
 PcbEscapeSignalClass classify_pcb_escape_signal(const std::string &net,
                                                 const ProjectStrings &function_map,
                                                 const PcbEscapeTriage &triage);

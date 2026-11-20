@@ -146,9 +146,5 @@
   "isolated_som_rails": {
     "+3V3": "SoM MPM3834 3V3 output on J1.24-27 — carrier LM61460 (power:U2) is the only +3V3 source",
     "+1V8": "SoM MPM3834 1V8 output on J1.56/58/60 — carrier AP2112K (power:U3) is the only +1V8 source"
-  },
-  "do_not_load_straps": [
-    "ZYNQ_PS_MIO7/VM0",
-    "ZYNQ_PS_MIO8\\VM1"
-  ]
+  }
 }

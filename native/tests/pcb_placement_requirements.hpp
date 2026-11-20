@@ -112,7 +112,8 @@ void physical(const PcbPlacementInput& input,const PcbModel& model,Require requi
     const auto fanout=check_fanout(check,0);require(fanout.ok,fanout.summary());
     const auto ratsnest=check_ratsnest(check,nullptr,nullptr,input.floorplan.cross_budget_k);
     require(ratsnest.ok,ratsnest.summary());
-    const auto lanes=check_escape_lanes(model,pcb_escape_population_from_json(input.floorplan.project.escape),input.interface_bytes);
+    const auto population=pcb_escape_population_from_json(input.floorplan.project.escape,input.floorplan.project.module);
+    const auto lanes=check_escape_lanes(model,population,input.interface_bytes);
     require(lanes.ok,lanes.summary());
     const auto v1=check_return_path(input.som_interface,input.return_path_footprints);
     std::map<std::string,ReturnStitchClass> triage;
@@ -127,7 +128,7 @@ void physical(const PcbPlacementInput& input,const PcbModel& model,Require requi
     for(const auto& violation:v1.violations) add(violation.net);
     const auto rendered=render_pcb(model,pcb_emit_policy(input.floorplan.project));
     const PcbEmittedBoard emitted{"in-memory-current-board",rendered.document};
-    const auto stitch=check_return_stitch(check,v1,triage,input.interface_bytes,&emitted);
+    const auto stitch=check_return_stitch(check,v1,triage,input.interface_bytes,population.return_path,&emitted);
     require(stitch.ok,stitch.summary());
     require(pcb_escape_file_parity(emitted,model.copper)=="ok","escape copper and ground plane emitted intact");
 }

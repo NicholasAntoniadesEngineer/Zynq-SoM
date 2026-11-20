@@ -3,7 +3,7 @@
 # Device: XC7Z020-CLG484 (U2 on the SoM)
 # Sources (all programmatic, zero hand-typed pins):
 #   ball map : som/Zynq_SoM.kicad_sch netlist (kicad-cli, at generation time)
-#   contract : carrier/som_interface.json (cross-checked pin-for-pin, stale = build FAIL)
+#   contract : som/som_interface.json (cross-checked pin-for-pin, stale = build FAIL)
 #   types    : carrier subsystems' typed-port registry
 # VCCO rail map (project fpga.bank_rails): bank 13 = +3V3, bank 33 = +3V3, bank 34 = +3V3, bank 35 = +2V5_VADJ
 # 156 pins, banks 13/33/34/35, 30 clock-capable (MRCC/SRCC)
