@@ -51,8 +51,8 @@ JsonNode jarray(std::vector<JsonNode> values) {
 JsonNode point_json(FloorplanPoint p) { return jarray({jvalue(p.first), jvalue(p.second)}); }
 JsonNode halo_json(Halo h) { return jarray({jvalue(h.w), jvalue(h.e), jvalue(h.n), jvalue(h.s)}); }
 int side_mask(const std::string& side) { return side == "bottom" ? occ_bottom : occ_top; }
-bool overmold(const FloorplanBlock& b) {
-    return std::any_of(b.conns.begin(), b.conns.end(), [](const auto& c) { return c.value == "HDMI-019S"; });
+bool overmold(const ConnectorFacts& facts, const FloorplanBlock& b) {
+    return std::any_of(b.conns.begin(), b.conns.end(), [&](const auto& c) { return connector_fact_of(facts, c.value).overmold; });
 }
 }  // namespace schgen::floorplan_detail
 

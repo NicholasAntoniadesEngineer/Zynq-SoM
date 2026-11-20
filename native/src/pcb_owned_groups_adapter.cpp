@@ -133,6 +133,7 @@ PcbCheckModel local_model(const Context& ctx, const Geometry& g, const std::stri
     PcbCheckModel model; model.origin_x = model.origin_y = 0;
     model.board_w = shape.w; model.board_h = shape.h;
     model.net_numbers = trusted.net_numbers;
+    model.connectors = ctx.in.floorplan.project.connectors;
     std::set<std::string> seen;
     for (const auto* offsets : {&shape.top_off, &shape.bot_off})
         for (const auto& [ref, xy] : *offsets) {

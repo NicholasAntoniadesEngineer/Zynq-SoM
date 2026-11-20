@@ -36,9 +36,11 @@ std::string render_floorplan_md(const FloorplanPlan& plan,const std::vector<Floo
     line("## Edge connectors (pinned to edges by their mating direction)");line();
     line("| edge | sheet | block (x, y, w x h) | connector(s) | notes |");line("|---|---|---|---|---|");
     const std::map<std::string,int> edge_order{{"N",0},{"W",1},{"E",2},{"S",3}};
-    const std::map<std::string,std::string> families{{"TYPE-C-31-M-12","USB-C receptacle"},{"HDMI-019S","HDMI receptacle"},
-        {"AFC07-S40FCA-00","FFC 40-pin 0.5mm (LCD)"},{"SFW15R-1STE1LF","FFC 15-pin 1mm (camera)"},
-        {"TF-01A","microSD push-pull"},{"DS1024-2x6R2","PMOD 2x6 socket"},{"XT60PW-M","XT60 ESC power inlet (horizontal)"}};
+    const auto described=[&](const std::string& value)->const std::string&{
+        const auto& description=connector_fact_of(input.project.connectors,value).description;
+        if(!description)throw FloorplanError("floorplan: "+value+" has no description in the part facts");
+        return *description;
+    };
     std::vector<const FloorplanBlock*> edges,interior;
     for(const auto& b:plan.edge_blocks)edges.push_back(&b);
     for(const auto& b:plan.interior_blocks)interior.push_back(&b);
@@ -46,7 +48,7 @@ std::string render_floorplan_md(const FloorplanPlan& plan,const std::vector<Floo
     std::sort(interior.begin(),interior.end(),[](const auto* a,const auto* b){return a->name<b->name;});
     for(const auto* p:edges){
         const auto& b=*p;std::vector<std::string> cs,rs;
-        for(const auto& c:b.conns)cs.push_back(c.value+" ("+(families.count(c.value)?families.at(c.value):"?")+")");
+        for(const auto& c:b.conns)cs.push_back(c.value+" ("+described(c.value)+")");
         for(const auto& r:b.reserved)rs.push_back("RESERVED: "+r+" (deferred)");
         std::string conns=join(cs,", ");if(!rs.empty())conns+=(conns.empty()?"":"; ")+join(rs,", ");
         line("| "+b.edge+" | "+b.name+" | ("+number(b.x)+", "+number(b.y)+", "+number(b.w)+" x "+number(b.h)+") | "+conns+" | "+join(note_of[b.name]," ")+" |");

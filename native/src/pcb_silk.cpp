@@ -87,23 +87,25 @@ std::vector<Sexpr> descriptors(const PcbModel &m, const PcbEmitPolicy &p, const 
                 occupied.add({layout::to_mm(seat.box.x0), layout::to_mm(seat.box.y0), layout::to_mm(seat.box.x1),
                               layout::to_mm(seat.box.y1)},
                              counts);
-    std::vector<std::string> pmods;
+    std::map<std::string, std::vector<std::string>> numbered;
     for (const auto &i : m.insts)
-        if (i.value == "DS1024-2x6R2")
-            pmods.push_back(i.ref);
-    std::sort(pmods.begin(), pmods.end());
-    std::map<std::string, int> ordinal;
-    for (std::size_t n = 0; n < pmods.size(); ++n)
-        ordinal[pmods[n]] = static_cast<int>(n);
+        if (const auto *fact = connector_fact(p.connectors, i.value); fact && fact->numbered_label)
+            numbered[*fact->numbered_label].push_back(i.ref);
+    std::map<std::string, std::string> ordinal;
+    for (auto &[label, refs] : numbered) {
+        std::sort(refs.begin(), refs.end());
+        for (std::size_t n = 0; n < refs.size(); ++n)
+            ordinal[refs[n]] = label + std::to_string(n);
+    }
     for (const auto &i : m.insts) {
-        if (!lookup(p.connector_mating_faces, i.value))
+        if (!connector_fact(p.connectors, i.value))
             continue;
         auto text = lookup(p.connector_descriptions, i.sheet);
         if (!text)
             continue;
         std::string desc = *text;
         if (ordinal.count(i.ref))
-            desc = "PMOD" + std::to_string(ordinal.at(i.ref));
+            desc = ordinal.at(i.ref);
         auto b = courtyard(i);
         std::array<double, 4> distances{b.y0 - bounds.y0, bounds.y1 - b.y1, b.x0 - bounds.x0,
                                         bounds.x1 - b.x1};

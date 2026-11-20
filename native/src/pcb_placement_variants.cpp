@@ -78,8 +78,8 @@ bool connector_anchor(const Context& ctx,const Geometry& g,const std::string& re
     const auto& part=ctx.by_ref.at(ref);
     const bool probe_pad=part.lib_id=="Connector:TestPoint"&&
         part.footprint=="TestPoint:TestPoint_Pad_D1.5mm";
-    return g.conn_rot.count(ref)||g.conn_edge.count(ref)||edge_family(part.value)||
-        connector_value(part.value)||ref_prefix(ref)=="J"||
+    return g.conn_rot.count(ref)||g.conn_edge.count(ref)||edge_family(ctx.in.floorplan.project.connectors,part.value)||
+        connector_value(ctx.in.floorplan.project.connectors,part.value)||ref_prefix(ref)=="J"||
         (part.lib_id.find("Connector")!=std::string::npos&&!probe_pad)||
         part.footprint.find("PinHeader")!=std::string::npos||
         part.footprint.find("PinSocket")!=std::string::npos||

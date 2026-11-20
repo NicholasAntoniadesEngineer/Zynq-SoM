@@ -47,8 +47,8 @@ void registry(){
         require(observed==QuantizationCounts{{name,1}}&&value==(name==mech?0:1),"callback executes its actual primitive exactly once");
     }
 }
-void mechanical_mutations(){
-    PcbCheckModel model;model.board_w=model.board_h=100;
+void mechanical_mutations(const ConnectorFacts& connectors){
+    PcbCheckModel model;model.connectors=connectors;model.board_w=model.board_h=100;
     PcbCheckInstance part;part.ref="J1";part.value="HDMI-019S";part.x=50;part.y=124;
     part.mod=pcb_check_footprint("connector.kicad_mod",R"((footprint "connector" (fp_rect (start -1 -1) (end 1 1) (layer "F.CrtYd"))))");
     model.insts={part};
@@ -62,28 +62,28 @@ void mechanical_mutations(){
     model.insts[0].value="nonconnector";model.insts[0].mod.reset();begin();const auto skipped=check_placement_mech(PcbCheckInput(model));const auto unused=end();
     require(skipped.n_connectors==0&&skipped.quantization_engagements.empty()&&unused.empty(),"skipped nonconnector fabricates no engagements");
 }
-void rotations(std::ostream& output){
+void rotations(std::ostream& output,const ConnectorFacts& connectors){
     for(const auto* value:{"TYPE-C-31-M-12","HDMI-019S","AFC07-S40FCA-00","KH-5224-8P8C-D","TF-01A","SFW15R-1STE1LF","ZX-SH1.0-4PWT","DS1024-2x6R2","XT60PW-M","unknown"}){
         const bool xt=std::string(value)=="XT60PW-M";
         const std::map<std::string,std::size_t> expected=xt?std::map<std::string,std::size_t>{{"N",3},{"E",2},{"S",6},{"W",4}}:std::map<std::string,std::size_t>{{"N",5},{"E",3},{"S",2},{"W",5}};
         for(const auto* edge:{"N","E","S","W","n","e","s","w","","bad"}){
             std::string key=edge;if(key.size()==1&&key[0]>='a'&&key[0]<='z')key[0]=static_cast<char>(key[0]-'a'+'A');
             const auto found=expected.find(key);QuantizationCounts wanted;if(found!=expected.end())wanted[stage]=found->second;
-            QuantizationCounts counts;begin();const auto rot=pcb_stage::connector_rotation(value,edge,counts);const auto observed=end();
+            QuantizationCounts counts;begin();const auto rot=pcb_stage::connector_rotation(connectors,value,edge,counts);const auto observed=end();
             require(counts==wanted&&observed==wanted,"independent cardinal short-circuit call table");
-            begin();const auto legacy=pcb_stage::connector_rotation(value,edge);const auto unaccounted=end();
+            begin();const auto legacy=pcb_stage::connector_rotation(connectors,value,edge);const auto unaccounted=end();
             require(legacy==rot&&unaccounted==wanted&&counts==wanted,"unaccounted API preserves math without mutating caller counters");
             output<<"ROTATION "<<std::quoted(value)<<' '<<std::quoted(edge)<<' '<<rot<<'\n';
         }
     }
     QuantizationCounts full{{stage,std::numeric_limits<std::size_t>::max()}};
-    bool threw=false;begin();try{pcb_stage::connector_rotation("XT60PW-M","E",full);}catch(const std::overflow_error&){threw=true;}const auto observed=end();
+    bool threw=false;begin();try{pcb_stage::connector_rotation(connectors,"XT60PW-M","E",full);}catch(const std::overflow_error&){threw=true;}const auto observed=end();
     require(threw&&observed.empty()&&full.at(stage)==std::numeric_limits<std::size_t>::max(),"overflow rejects before executing unbooked primitive");
 }
 void show(const QuantizationCounts& counts){std::cout<<'{';bool first=true;for(const auto& [k,n]:counts){if(!first)std::cout<<',';first=false;std::cout<<std::quoted(k)<<':'<<n;}std::cout<<'}';}
 void boards(const std::filesystem::path& root,bool capture){
     using namespace placement_fixture;
-    std::ostringstream output;output<<std::setprecision(17);rotations(output);
+    std::ostringstream output;output<<std::setprecision(17);rotations(output,load_connector_facts(root/"parts"));
     const auto historical=read(root/"native/tests/data/connector_precision/legacy_output.txt");
     const auto board_boundary=historical.find("BOARD devkit_mini\n");
     require(board_boundary!=std::string::npos&&output.str()==historical.substr(0,board_boundary),
@@ -120,4 +120,4 @@ void boards(const std::filesystem::path& root,bool capture){
 }
 extern "C" void __cyg_profile_func_enter(void* fn,void*){if(!observing.load(std::memory_order_relaxed))return;if(fn==reinterpret_cast<void*>(&schgen::mechanical_direction_component))++entries[0];else if(fn==reinterpret_cast<void*>(&schgen::stage_direction_component))++entries[1];}
 extern "C" void __cyg_profile_func_exit(void*,void*){}
-int main(int argc,char** argv){try{if(argc<2||argc>3||(argc==3&&std::string(argv[2])!="--capture-additive"))throw std::runtime_error("repo [--capture-additive]");schgen::apply_run_config(std::filesystem::path(argv[1])/schgen::run_config_file,"carrier");scalars();registry();mechanical_mutations();boards(argv[1],argc==3);std::cerr<<checks<<" connector precision contracts passed\n";return 0;}catch(const std::exception& e){std::cerr<<"Connector precision FAILED: "<<e.what()<<'\n';return 1;}}
+int main(int argc,char** argv){try{if(argc<2||argc>3||(argc==3&&std::string(argv[2])!="--capture-additive"))throw std::runtime_error("repo [--capture-additive]");schgen::apply_run_config(std::filesystem::path(argv[1])/schgen::run_config_file,"carrier");scalars();registry();mechanical_mutations(schgen::load_connector_facts(std::filesystem::path(argv[1])/"parts"));boards(argv[1],argc==3);std::cerr<<checks<<" connector precision contracts passed\n";return 0;}catch(const std::exception& e){std::cerr<<"Connector precision FAILED: "<<e.what()<<'\n';return 1;}}

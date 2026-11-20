@@ -280,7 +280,7 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
         if (b.order_hint) row.order_hint=*b.order_hint;
         row.reach=b.fanout_reach; row.inset=b.fanout_inset;
         for (const auto& [j,n]:b.j_aff) row.j_aff.emplace_back(j,n);
-        row.overmold=overmold(b); row.current_edge=b.edge; row.assigned_edge=edge_of.at(b.name);
+        row.overmold=overmold(in.project.connectors,b); row.current_edge=b.edge; row.assigned_edge=edge_of.at(b.name);
         edge_rows.push_back(std::move(row));
     }
     std::vector<PackEdgeJack> jacks;

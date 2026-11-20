@@ -58,7 +58,7 @@ native/bin/schgen catalog-compile parts native/catalog.bin
 
 ## Part facts (`part_facts.json`)
 
-`parts/part_facts.json` (`schema: schgen.part_facts/1`) is the one reviewed,
+`parts/part_facts.json` (`schema: schgen.part_facts/2`) is the one reviewed,
 hand-kept file in this folder. It holds what the generator cannot know:
 
 - `classes` — the class of every schematic symbol the boards may place, keyed
@@ -70,6 +70,15 @@ hand-kept file in this folder. It holds what the generator cannot know:
   outside the board; a `header` is a pin header reached from above. The key is
   the symbol id because that is the one identity every authored part carries:
   a part authored with a stock KiCad symbol keeps no link to a part folder.
+- `connectors` — one entry per `connector` symbol, keyed by part name (the
+  symbol `TF-01A:TF-01A` is entry `TF-01A`): `mating_face` (`+X`, `-X`, `+Y`
+  or `-Y`, the direction the mouth faces at rotation 0), `edge_pinned` (the
+  floorplan pins the part to a board edge), `overmold` (a cable plug overmold
+  spacing rule applies), `pad_row_face_check` (the mating face is cross-checked
+  against the pad rows), and the optional strings `description` (required when
+  edge-pinned; the floorplan edge table), `numbered_label` (silk label stem,
+  numbered across the board) and `pair_label` (name of a two-part IN/OUT pair
+  in the assembly notes).
 - `stated_heights` — the height above the board face, in millimetres, of every
   footprint that names no 3D model, keyed by footprint id, each with its
   `basis` and the date it was `reviewed`.

@@ -27,7 +27,8 @@ struct PcbModelOverride {
 };
 struct PcbEmitPolicy {
     bool interface_reference_labels_only = false, labels = true;
-    ProjectStrings footprint_aliases, connector_mating_faces;
+    ProjectStrings footprint_aliases;
+    ConnectorFacts connectors;
     ProjectStrings connector_descriptions, header_descriptions, switch_descriptions;
     std::vector<std::pair<std::string, PcbThermalCopperSpec>> thermal_copper;
     std::vector<ThermalPourNeed> thermal_credit_needs;

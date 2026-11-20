@@ -4,7 +4,7 @@
 
 namespace schgen::pcb_emission {
 bool interface_label_part(const PcbFootprintInst& i,const PcbEmitPolicy& p) {
-    if(lookup(p.connector_mating_faces,i.value)||lookup(p.header_descriptions,i.ref)||
+    if(connector_fact(p.connectors,i.value)||lookup(p.header_descriptions,i.ref)||
        lookup(p.switch_descriptions,i.ref))return true;
     const auto digit=i.ref.find_first_of("0123456789");
     const auto prefix=i.ref.substr(0,digit);
@@ -62,7 +62,7 @@ Sexpr embed(const PcbFootprintInst &i, const PcbEmitPolicy &p, const Uid &uid) {
     std::unordered_map<int, std::pair<int, std::string>> inherited;
     for (const auto &[seq, n, name] : thermal_via_scan(doc, nets))
         inherited[seq] = {n, name};
-    bool hide = lookup(p.connector_mating_faces, i.value) || lookup(p.header_descriptions, i.ref) ||
+    bool hide = connector_fact(p.connectors, i.value) || lookup(p.header_descriptions, i.ref) ||
                 lookup(p.switch_descriptions, i.ref) ||
                 i.footprint.find("TestPoint") != std::string::npos;
     if(p.interface_reference_labels_only)hide=!interface_label_part(i,p);

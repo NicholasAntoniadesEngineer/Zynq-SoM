@@ -86,18 +86,16 @@ std::optional<FloorplanPoint> direction(const std::string &input) {
         return {{-1, 0}};
     return {};
 }
-bool connector_value(const std::string &value) {
-    static const std::set<std::string> names{"TYPE-C-31-M-12", "HDMI-019S",    "AFC07-S40FCA-00",
-                                             "KH-5224-8P8C-D", "TF-01A",       "SFW15R-1STE1LF",
-                                             "ZX-SH1.0-4PWT",  "DS1024-2x6R2", "XT60PW-M"};
-    return names.count(value) != 0;
+bool connector_value(const ConnectorFacts &facts, const std::string &value) {
+    return connector_fact(facts, value) != nullptr;
 }
-bool connector(const PcbCheckFootprint &fp) {
-    return connector_value(std::filesystem::path(fp.source).stem().string());
+bool connector(const ConnectorFacts &facts, const PcbCheckFootprint &fp) {
+    return connector_value(facts, std::filesystem::path(fp.source).stem().string());
 }
 namespace {
-double connector_rotation_impl(const std::string &value, const std::string &edge,
-                               QuantizationCounts* counts) {
+const std::pair<int, int> unlisted_face{0, 1};
+double connector_rotation_impl(const ConnectorFacts &facts, const std::string &value,
+                               const std::string &edge, QuantizationCounts* counts) {
     auto d = direction(edge);
     if (!d)
         return 0;
@@ -106,28 +104,29 @@ double connector_rotation_impl(const std::string &value, const std::string &edge
         if (counts) checked_quantization_add(*counts, name);
         return stage_direction_component(value);
     };
-    bool x = value == "XT60PW-M";
+    const ConnectorFact *fact = connector_fact(facts, value);
+    const auto face = fact ? mating_face_vector(*fact) : unlisted_face;
     for (double rot : {0., 90., 180., 270.}) {
-        auto v = turn_point(x ? 1 : 0, x ? 0 : 1, rot);
+        auto v = turn_point(face.first, face.second, rot);
         if (component(v.first) == d->first && component(v.second) == d->second)
             return rot;
     }
     return 0;
 }
 } // namespace
-double connector_rotation(const std::string &value, const std::string &edge) {
-    return connector_rotation_impl(value, edge, nullptr);
+double connector_rotation(const ConnectorFacts &facts, const std::string &value, const std::string &edge) {
+    return connector_rotation_impl(facts, value, edge, nullptr);
 }
-double connector_rotation(const std::string &value, const std::string &edge,
+double connector_rotation(const ConnectorFacts &facts, const std::string &value, const std::string &edge,
                           QuantizationCounts& counts) {
-    return connector_rotation_impl(value, edge, &counts);
+    return connector_rotation_impl(facts, value, edge, &counts);
 }
-double connector_rotation(const PcbCheckFootprint &fp, const std::string &edge,
+double connector_rotation(const ConnectorFacts &facts, const PcbCheckFootprint &fp, const std::string &edge,
                           QuantizationCounts& counts) {
-    return connector_rotation(std::filesystem::path(fp.source).stem().string(), edge, counts);
+    return connector_rotation(facts, std::filesystem::path(fp.source).stem().string(), edge, counts);
 }
-double connector_rotation(const PcbCheckFootprint &fp, const std::string &edge) {
-    return connector_rotation(std::filesystem::path(fp.source).stem().string(), edge);
+double connector_rotation(const ConnectorFacts &facts, const PcbCheckFootprint &fp, const std::string &edge) {
+    return connector_rotation(facts, std::filesystem::path(fp.source).stem().string(), edge);
 }
 double need(int pins) { return pins <= 2 ? .2 : pins <= 8 ? 1.5 : 2.; }
 bool passive(const std::string &ref, int pins) {

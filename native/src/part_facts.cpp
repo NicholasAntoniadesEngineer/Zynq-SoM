@@ -17,7 +17,7 @@
 namespace schgen {
 namespace {
 
-const char* const facts_schema = "schgen.part_facts/1";
+const char* const facts_schema = "schgen.part_facts/2";
 const char* const vrml_extension = ".wrl";
 const char* const step_extension = ".step";
 const std::string_view vrml_points = "point";
@@ -32,6 +32,10 @@ const std::string_view catalog_models = "${KIPRJMOD}/../parts/";
 const std::string_view blanks = " \t\r\n";
 const std::string_view separators = " \t\r\n,";
 constexpr std::size_t axis_count = 3;
+const char* const facts_file_name = "part_facts.json";
+const std::string_view face_signs = "+-";
+const std::string_view face_axes = "XY";
+constexpr std::size_t face_length = 2;
 
 const std::pair<PartClass, std::string_view> class_names[] = {
     {PartClass::resistor, "resistor"},
@@ -261,10 +265,81 @@ const PartHeight& part_height_of(const PcbCheckInstance& instance) {
     return *instance.height;
 }
 
+namespace {
+
+bool flag_of(const JsonNode& entry, const std::string& key, const std::string& where) {
+    const JsonNode* value = object_field(entry, key);
+    if (!value || value->kind != JsonKind::Bool) refuse(where + " needs a true or false value named " + key);
+    return value->bool_value;
+}
+
+std::optional<std::string> text_of(const JsonNode& entry, const std::string& key, const std::string& where) {
+    const JsonNode* value = object_field(entry, key);
+    if (!value) return std::nullopt;
+    if (value->kind != JsonKind::String || value->string_value.empty())
+        refuse(where + ": " + key + " must be a non-empty string");
+    return value->string_value;
+}
+
+ConnectorFacts connectors_from(const JsonNode& section, const std::map<std::string, PartClass>& classes,
+                               const std::string& file) {
+    ConnectorFacts out;
+    for (const auto& [name, entry] : section.object_value) {
+        const std::string where = file + " connectors " + name;
+        if (entry.kind != JsonKind::Object) refuse(where + " must be an object");
+        reject_unknown_keys(entry, {"mating_face", "edge_pinned", "overmold", "pad_row_face_check", "description",
+                                    "numbered_label", "pair_label"}, where);
+        ConnectorFact fact;
+        fact.mating_face = require_string(entry, "mating_face", false, where);
+        if (fact.mating_face.size() != face_length || face_signs.find(fact.mating_face.front()) == std::string_view::npos ||
+            face_axes.find(fact.mating_face.back()) == std::string_view::npos)
+            refuse(where + ": mating_face must be one of +X, -X, +Y, -Y");
+        fact.edge_pinned = flag_of(entry, "edge_pinned", where);
+        fact.overmold = flag_of(entry, "overmold", where);
+        fact.pad_row_face_check = flag_of(entry, "pad_row_face_check", where);
+        fact.description = text_of(entry, "description", where);
+        fact.numbered_label = text_of(entry, "numbered_label", where);
+        fact.pair_label = text_of(entry, "pair_label", where);
+        if (fact.edge_pinned && !fact.description) refuse(where + ": an edge-pinned connector needs a description");
+        const auto symbol = classes.find(name + ":" + name);
+        if (symbol == classes.end() || symbol->second != PartClass::connector)
+            refuse(where + " must name a symbol of class connector in classes");
+        out.emplace(name, std::move(fact));
+    }
+    for (const auto& [symbol, part_class] : classes) {
+        if (part_class != PartClass::connector) continue;
+        const std::string name = symbol.substr(symbol.find(':') + 1);
+        if (!out.count(name)) refuse(file + " gives " + symbol + " the class connector but no connectors entry");
+    }
+    return out;
+}
+
+}
+
+const ConnectorFact* connector_fact(const ConnectorFacts& facts, const std::string& name) {
+    const auto found = facts.find(name);
+    return found == facts.end() ? nullptr : &found->second;
+}
+
+const ConnectorFact& connector_fact_of(const ConnectorFacts& facts, const std::string& name) {
+    const ConnectorFact* fact = connector_fact(facts, name);
+    if (!fact) refuse(name + " has no connectors entry in the part facts");
+    return *fact;
+}
+
+std::pair<int, int> mating_face_vector(const ConnectorFact& fact) {
+    const int sign = fact.mating_face.front() == face_signs.front() ? 1 : -1;
+    return fact.mating_face.back() == face_axes.front() ? std::pair<int, int>{sign, 0} : std::pair<int, int>{0, sign};
+}
+
+ConnectorFacts load_connector_facts(const std::filesystem::path& parts_directory) {
+    return load_part_facts(parts_directory / facts_file_name).connectors;
+}
+
 PartFacts load_part_facts(const std::filesystem::path& file) {
     if (!std::filesystem::is_regular_file(file)) refuse("the part facts file is missing: " + file.string());
     const JsonNode root = parse_json_file(file.string());
-    reject_unknown_keys(root, {"schema", "classes", "stated_heights"}, file.string());
+    reject_unknown_keys(root, {"schema", "classes", "stated_heights", "connectors"}, file.string());
     if (require_string(root, "schema", false, "part facts") != facts_schema)
         refuse(file.string() + " schema must be " + facts_schema);
     PartFacts facts;
@@ -291,6 +366,9 @@ PartFacts load_part_facts(const std::filesystem::path& file) {
                  .second)
             refuse(file.string() + " states the height of " + footprint + " twice");
     }
+    const JsonNode* connectors = object_field(root, "connectors");
+    if (!connectors || connectors->kind != JsonKind::Object) refuse(file.string() + " needs an object named connectors");
+    facts.connectors = connectors_from(*connectors, facts.classes, file.string());
     return facts;
 }
 

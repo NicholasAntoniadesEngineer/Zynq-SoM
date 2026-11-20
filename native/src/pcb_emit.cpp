@@ -11,10 +11,6 @@ const PcbEmitPolicy &default_pcb_emit_policy() {
         PcbEmitPolicy p;
         p.footprint_aliases = {
             {"Capacitor_SMD:C_1206_3225Metric", "Capacitor_SMD:C_1206_3216Metric"}};
-        p.connector_mating_faces = {
-            {"TYPE-C-31-M-12", "+Y"}, {"HDMI-019S", "+Y"},    {"AFC07-S40FCA-00", "+Y"},
-            {"KH-5224-8P8C-D", "+Y"}, {"TF-01A", "+Y"},       {"SFW15R-1STE1LF", "+Y"},
-            {"ZX-SH1.0-4PWT", "+Y"},  {"DS1024-2x6R2", "+Y"}, {"XT60PW-M", "+X"}};
         p.connector_descriptions = {{"pd_input", "PWR"},
                                     {"usbc_otg", "USB OTG"},
                                     {"usb_jtag_connector", "JTAG"},
@@ -98,6 +94,7 @@ PcbEmitPolicy pcb_emit_policy(const ProjectConfig &c) {
     p.interface_reference_labels_only = true;
     p.labels = c.labels;
     p.board_stem = c.file_stem;
+    p.connectors = c.connectors;
     p.header_descriptions = c.header_desc;
     p.switch_descriptions = c.switch_desc;
     p.model_overrides = project_pcb_model_overrides();
