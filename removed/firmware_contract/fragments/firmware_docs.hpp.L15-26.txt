@@ -1,0 +1,12 @@
+// All generation below is pure: caller-owned sheets, live U9 extraction, and
+// provenance are authoritative. No cwd, environment, cache, Python, or writes.
+struct FirmwareDocsInput {
+    std::vector<ProjectCircuit> sheets;
+    Stm32PinMap stm32;
+    std::vector<std::string> firmware_sources;
+};
+// Explicit filesystem boundary; live extraction is never replaced by a cache.
+FirmwareDocsInput load_firmware_docs_input(const ProjectPaths&,
+    const SomExtractOptions& = {});
+std::vector<std::string> firmware_sources(const ProjectPaths&);
+std::vector<std::string> firmware_absent_inputs(const FirmwareDocsInput&);

@@ -298,7 +298,6 @@ void failed_inputs(const fs::path& root){
     for(std::size_t i=0;i<policy_result.gates.size();++i){auto mutation=policy_result;mutation.gates[i].status=BoardGateStatus::failed;mutation.gates[i].mandatory=false;
         require(!mutation.ok(),"mandatory status cannot be downgraded by caller bool: "+mutation.gates[i].name);
         mutation=policy_result;mutation.gates.erase(mutation.gates.begin()+static_cast<std::ptrdiff_t>(i));require(!mutation.ok(),"missing mandatory stage fails");}
-    for(const auto* name:{"manual","scfw"}){auto mutation=policy_result;for(auto& g:mutation.gates)if(g.name==name)g.status=BoardGateStatus::skipped;require(mutation.ok(),"only explicit absent-input document skips allowed");}
     auto advisory=policy_result;advisory.gates.push_back({"return_path",false,BoardGateStatus::failed,"fixed SoM interface"});require(advisory.ok(),"legacy v1 return-path remains advisory");
     advisory.gates.push_back({"golden",false,BoardGateStatus::unavailable,"native capability missing"});require(advisory.ok()&&!advisory.complete(),"missing advisory remains explicit, not a fake PASS");
     advisory.gates.push_back(advisory.gates.front());require(!advisory.ok(),"duplicate result cannot mask gate");

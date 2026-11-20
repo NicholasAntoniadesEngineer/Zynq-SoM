@@ -41,7 +41,7 @@ Context::Context(const ProjectPaths& p,const BoardPipelineOptions& o):paths(p),o
     out(o.output_root.empty()?p.project_root:fs::absolute(o.output_root)),reports(out/"reports"),docs(out/"docs"),
     renders(out/"renders"),manufacturing(out/"manufacturing"),library(p.repository_root),inbox(quantizations,fallbacks) {
     result.output_root=out;
-    for(const auto& d:{out,reports,docs,renders,manufacturing,out/"fpga",out/"firmware"})fs::create_directories(d);
+    for(const auto& d:{out,reports,docs,renders,manufacturing,out/"fpga"})fs::create_directories(d);
     register_native_quantizations(quantizations);register_native_fallbacks(fallbacks);
 }
 void Context::status(const std::string& name,BoardGateStatus s,const std::string& value){
@@ -77,7 +77,7 @@ void publish_final_reports(Context& c) {
 namespace schgen {
 namespace {
 const char* status_name(BoardGateStatus s){switch(s){case BoardGateStatus::passed:return "PASS";case BoardGateStatus::failed:return "FAIL";case BoardGateStatus::skipped:return "SKIP";case BoardGateStatus::unavailable:return "UNAVAILABLE";}throw ProjectError("invalid board gate status");}
-const std::vector<std::string> required={"inputs","authoring_purity","subsystem_structure","carrier_structure","sheet_gates","cc","symbol_law","link","board_schematic","constraints","diagram","bom_footprints","power_tree","rail_ampacity","testpoints","design_rules","part_rules","bom_values","footprint_pads","spice","pcb","pcb_drc","pcb_geometry","assembly","thermal","copper_debt","fab_profile","xdc","vivado","firmware","manual","testplan","gallery","devicetree","scfw","power_sequence","floorplan","quantize_census","fallbacks","stage_movement","pipeline_doc","model3d","si","manifest","ledger","placement_requirements"};
+const std::vector<std::string> required={"inputs","authoring_purity","subsystem_structure","carrier_structure","sheet_gates","cc","symbol_law","link","board_schematic","constraints","diagram","bom_footprints","power_tree","rail_ampacity","testpoints","design_rules","part_rules","bom_values","footprint_pads","spice","pcb","pcb_drc","pcb_geometry","assembly","thermal","copper_debt","fab_profile","xdc","gallery","power_sequence","floorplan","quantize_census","fallbacks","stage_movement","pipeline_doc","model3d","si","manifest","ledger","placement_requirements"};
 }
 bool board_pipeline_gate_mandatory(const std::string& name){
     static const std::set<std::string> advisory={"pin_completeness","contract_coverage","contract_coverage_lint","floorplan_composition","return_path","cpl","render3d","golden","sheet_render","root_erc","ratsnest_images"};
@@ -90,7 +90,7 @@ bool BoardPipelineResult::complete() const {
 bool BoardPipelineResult::ok() const {
     std::set<std::string> seen;
     for(const auto& g:gates){if(!seen.insert(g.name).second)return false;
-        if((g.mandatory||board_pipeline_gate_mandatory(g.name)) && g.status!=BoardGateStatus::passed && !(g.status==BoardGateStatus::skipped&&(g.name=="manual"||g.name=="scfw")))return false;}
+        if((g.mandatory||board_pipeline_gate_mandatory(g.name)) && g.status!=BoardGateStatus::passed)return false;}
     for(const auto& name:required)if(!seen.count(name))return false;
     return sheets>0;
 }

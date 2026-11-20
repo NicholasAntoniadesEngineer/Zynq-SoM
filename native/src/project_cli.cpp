@@ -29,13 +29,11 @@
 #include "schgen/symbol_law.hpp"
 #include "schgen/spice.hpp"
 #include "schgen/firmware_docs.hpp"
-#include "schgen/devicetree.hpp"
 #include "schgen/design_rules.hpp"
 #include "schgen/link.hpp"
 #include "schgen/project.hpp"
 #include "schgen/project_outputs.hpp"
 #include "schgen/som_interface.hpp"
-#include "schgen/vivado.hpp"
 #include "schgen/validation.hpp"
 #include "schgen/selftest_full.hpp"
 #include "schgen/process.hpp"
@@ -58,7 +56,7 @@ namespace {
 namespace fs = std::filesystem;
 struct Options {
     std::string command, refs = "J1,J2,J3", kicad_cli = "kicad-cli";
-    fs::path repository = fs::current_path(), som, contract, output, xdc, pcb, run_config;
+    fs::path repository = fs::current_path(), som, contract, output, pcb, run_config;
     std::optional<fs::path> project;
     std::vector<std::string> subsystems;
     bool allow_missing = false, qualified_refs = false, no_ngspice = false, keep = false;
@@ -89,7 +87,7 @@ struct Options {
     std::set<std::string> help_options;
     long long quantity = 1, minimum_stock = 50;
 };
-const std::set<std::string> commands{"selftest", "project-check", "circuit-check", "som-interface", "xdc", "vivado", "fpga", "bom", "link", "devicetree", "design-rules", "testpoints", "board-schematic", "pcb-stage", "pcb-drc", "subsystem-new", "render3d", "board-step", "model3d-check", "assembly", "ratsnest", "gallery", "diagram", "si-constraints", "fab-profile", "manifest", "preflight", "constraints", "powertree", "thermal", "part-rules", "bom-values", "footprint-pads", "pin-completeness", "symbol-law", "spice", "firmware", "manual", "scfw", "testplan", "power-sequence"};
+const std::set<std::string> commands{"selftest", "project-check", "circuit-check", "som-interface", "xdc", "bom", "link", "design-rules", "testpoints", "board-schematic", "pcb-stage", "pcb-drc", "subsystem-new", "render3d", "board-step", "model3d-check", "assembly", "ratsnest", "gallery", "diagram", "si-constraints", "fab-profile", "manifest", "preflight", "constraints", "powertree", "thermal", "part-rules", "bom-values", "footprint-pads", "pin-completeness", "symbol-law", "spice", "power-sequence"};
 bool experiment_command(const std::string& name){
     return name=="chir-rung"||name=="w11-sweep"||name=="w12-bound"||name=="w12-stageprobe"||name=="dump-circuits";
 }
@@ -237,7 +235,7 @@ Options parse(int argc, char** argv) {
         }
         if (arg == "--repo" || arg == "--project" || arg == "--som" ||
             arg == "--contract" || arg == "--output" || arg == "-o" ||
-            arg == "--xdc" || arg == "--refs" || arg == "--kicad-cli" || arg == "--pcb" ||
+            arg == "--refs" || arg == "--kicad-cli" || arg == "--pcb" ||
             arg == "--subsystem" || arg == "--qty" || arg == "--min-stock" || arg == "--initial-outline-mm" ||
             arg == "--floorplan-spec" || arg == "--interior-order" || arg == "--run-config") {
             if (++i == argc) throw std::runtime_error("missing value for " + arg);
@@ -251,7 +249,6 @@ Options parse(int argc, char** argv) {
             else if (arg == "--som") out.som = value;
             else if (arg == "--contract") out.contract = value;
             else if (arg == "--output" || arg == "-o") out.output = value;
-            else if (arg == "--xdc") out.xdc = value;
             else if (arg == "--pcb") out.pcb = value;
             else if (arg == "--refs") out.refs = value;
             else if (arg == "--floorplan-spec") out.floorplan_spec = value;
@@ -353,9 +350,9 @@ Options parse(int argc, char** argv) {
         if (out.command == "thermal") allowed.insert("--pcb");
     } else if (out.command == "spice") {
         allowed.insert("--no-ngspice");
-    } else if (out.command == "firmware" || out.command == "manual" || out.command == "scfw" || out.command == "manifest") {
+    } else if (out.command == "manifest") {
         allowed.insert("--kicad-cli");
-    } else if (out.command == "testplan" || out.command == "power-sequence" || out.command == "si-constraints" || out.command == "fab-profile") {
+    } else if (out.command == "power-sequence" || out.command == "si-constraints" || out.command == "fab-profile") {
         // Pure document stages use the selected circuits.
     } else if (out.command == "bom-values" || out.command == "footprint-pads" ||
                out.command == "pin-completeness" || out.command == "symbol-law") {
@@ -363,7 +360,6 @@ Options parse(int argc, char** argv) {
     } else if (!check_only && out.command != "design-rules" && out.command != "testpoints" && out.command != "constraints") {
         allowed.insert("--som"); allowed.insert("--refs"); allowed.insert("--kicad-cli");
         if (out.command != "som-interface") allowed.insert("--contract");
-        if (out.command == "vivado" || out.command == "fpga") allowed.insert("--xdc");
     }
     for (const auto& key : seen) {
         if (!allowed.count(key)) throw std::runtime_error(key + " is not valid for " + out.command);
@@ -650,19 +646,6 @@ std::optional<int> run_project_command(int argc, char** argv) {
         std::cout << write_som_interface(som, options.refs, output, {options.kicad_cli});
         return 0;
     }
-    if (options.command == "devicetree") {
-        if (!options.subsystems.empty()) throw std::runtime_error("devicetree takes no subsystem names");
-        const auto jrefs = refs(options.refs);
-        const auto live = extract_som_zynq(som, "U2", jrefs, {options.kicad_cli});
-        const auto input = load_devicetree_input(paths.repository_root, paths.project_root,
-                                                live, board_file_name(paths.file_stem, BoardFileKind::PinConstraints), options.contract, jrefs);
-        const auto result = generate_devicetree(input);
-        const auto output = options.output.empty() ? paths.project_root / "firmware/carrier_pl.dtsi"
-                                                   : options.output;
-        publish_text(output, result.text);
-        std::cout << "DEVICETREE: " << output.string() << " (" << result.mio_rows.size() << " MIO rows)\n";
-        return 0;
-    }
     if (options.command == "selftest") {
         std::vector<SelftestSheetInput> inputs;
         if (options.subsystems.empty()) inputs.push_back({selftest_rc_fixture(), "m1_rc", "m1_rc"});
@@ -772,41 +755,10 @@ std::optional<int> run_project_command(int argc, char** argv) {
         std::cout << result.verdict.summary() << '\n';
         return result.verdict.ok ? 0 : 1;
     }
-    if(options.command=="firmware" || options.command=="manual" || options.command=="scfw" ||
-       options.command=="testplan" || options.command=="power-sequence") {
-        FirmwareDocsInput in;in.sheets=circuits;in.firmware_sources=firmware_sources(paths);
-        std::vector<std::string> missing;
-        if(options.command=="manual")missing=manual_missing_requirements(in);
-        if(options.command=="scfw")missing=scfw_missing_requirements(in);
-        if(!missing.empty()) {
-            std::cout<<options.command<<": SKIP — project missing";
-            for(const auto& name:missing)std::cout<<' '<<name;
-            std::cout<<'\n';return 1;
-        }
-        if(options.command=="firmware" || options.command=="manual" || options.command=="scfw")
-            in.stm32=stm32_pin_map(extract_som_zynq(paths.som_schematic,"U9",{"J1","J2","J3"},{options.kicad_cli}),
-                                  load_som_interface(paths.som_interface_file));
-        if(options.command=="scfw") {
-            const auto artifacts=render_scfw(in);
-            const auto directory=options.output.empty()?paths.project_root/"firmware/sc":options.output;
-            for(const auto& artifact:artifacts)publish_text(directory/artifact.path,artifact.text);
-            std::cout<<"SCFW SCAFFOLD: "<<directory.string()<<" ("<<artifacts.size()<<" files)\n";return 0;
-        }
-        std::string text;fs::path default_path;
-        if(options.command=="firmware") {text=render_firmware_contract(in);default_path="firmware/zynq_carrier_contract.h";}
-        else if(options.command=="manual") {text=render_bringup_manual(in);default_path="docs/BRINGUP.md";}
-        else if(options.command=="power-sequence") {
-            const auto power=analyze_power(circuits);
-            text=render_power_sequence_svg(build_power_sequence(circuits,power),power.ok());default_path="docs/power_sequence.svg";
-        } else {
-            ProjectStrings probes;
-            for(const auto& [net,locations]:check_testpoint_coverage(sheets).have) {
-                std::string value;for(const auto& location:locations){if(!value.empty())value+=", ";value+=location;}
-                probes.emplace_back(net,value);
-            }
-            text=render_test_plan(in,extract_spice_checks(circuits),probes);default_path="docs/TEST_PLAN.md";
-        }
-        const auto output=options.output.empty()?paths.project_root/default_path:options.output;
+    if(options.command=="power-sequence") {
+        const auto power=analyze_power(circuits);
+        const auto text=render_power_sequence_svg(build_power_sequence(circuits,power),power.ok());
+        const auto output=options.output.empty()?paths.project_root/"docs/power_sequence.svg":options.output;
         publish_text(output,text);std::cout<<options.command<<": "<<output.string()<<'\n';return 0;
     }
     if (options.command == "bom-values" || options.command == "footprint-pads" ||
@@ -967,26 +919,10 @@ std::optional<int> run_project_command(int argc, char** argv) {
     const auto input = load_project_xdc_input(paths.repository_root, paths.project_root,
         sheets, std::move(live_input), som, options.contract);
     const auto xdc = generate_xdc(input);
-    const auto fpga_dir = options.command == "fpga" && !options.output.empty()
-                        ? options.output : paths.fpga_dir;
-    const auto xdc_path = options.command == "xdc" && !options.output.empty() ? options.output
-                        : !options.xdc.empty() ? options.xdc : fpga_dir / input.pins_file;
-    const auto vivado_path = options.command == "vivado" && !options.output.empty() ? options.output
-                           : fpga_dir / "create_project.tcl";
-    std::string vivado;
-    if (options.command != "xdc") {
-        const auto relative = fs::weakly_canonical(xdc_path).lexically_relative(
-            fs::weakly_canonical(vivado_path.parent_path()));
-        vivado = render_vivado(xdc, input.device, input.zynq_ref,
-                               relative.generic_string(), input.refs);
-    }
-    // Finish every validation/render before publishing any member of the batch.
-    if (options.command != "vivado") publish_text(xdc_path, xdc.text);
-    if (options.command != "xdc") publish_text(vivado_path, vivado);
+    const auto xdc_path = !options.output.empty() ? options.output : paths.fpga_dir / input.pins_file;
+    publish_text(xdc_path, xdc.text);
     for (const auto& check : xdc.checks) std::cout << "  check: " << check << '\n';
-    if (options.command != "vivado")
-        std::cout << "XDC: " << xdc_path.string() << " (" << xdc.entries.size() << " pins)\n";
-    if (options.command != "xdc") std::cout << "VIVADO: " << vivado_path.string() << "\n";
+    std::cout << "XDC: " << xdc_path.string() << " (" << xdc.entries.size() << " pins)\n";
     return 0;
 }
 }

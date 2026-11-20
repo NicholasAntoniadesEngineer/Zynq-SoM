@@ -1,0 +1,20 @@
+std::vector<ModuleGate> module_gates(const CircuitSheetIr& c) {
+    Index ix(c);std::vector<ModuleGate> out;
+    for(const auto& ref:ix.matching("SY6280")) {
+        auto en=ix.named(ref,"EN").value_or("?");auto rail=ix.named(ref,"OUT").value_or("?");auto iset=ix.named(ref,"ISET");
+        std::optional<int> ilim;std::optional<std::string> led;
+        for(const auto& n:c.nets) {
+            if(iset&&n.name==*iset)for(const auto& p:n.pins)if(starts(p.ref,"R")) {auto ohms=bringup_parse_value_ohms(ix.part(p.ref).value);if(ohms&&*ohms)ilim=static_cast<int>(rounded(6800/ *ohms*1000));}
+            if(n.name==rail)for(const auto& p:n.pins)if(starts(p.ref,"D"))led=p.ref;
+        }
+        out.push_back({ref,remove_prefix(en,"EN_"),ix.named(ref,"IN").value_or("?"),rail,en,ilim,led});
+    }std::stable_sort(out.begin(),out.end(),[](const auto& a,const auto& b){return ref_key(a.ref)<ref_key(b.ref);});return out;
+}
+std::optional<int> bringup_shunt_mohm(const CircuitSheetIr& c,const std::string& inp,const std::string& inn) {
+    Index ix(c);std::set<std::string> ps,ns;
+    for(const auto& n:c.nets)if(n.name==inp||n.name==inn)for(const auto& p:n.pins)if(starts(p.ref,"RS")) {
+        if(n.name==inp)ps.insert(p.ref);if(n.name==inn)ns.insert(p.ref);
+    }
+    for(const auto& ref:ps)if(ns.count(ref)) {auto v=bringup_parse_value_ohms(ix.part(ref).value);if(v)return static_cast<int>(rounded(*v*1000));}
+    return std::nullopt;
+}

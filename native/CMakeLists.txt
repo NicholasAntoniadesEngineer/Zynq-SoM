@@ -27,9 +27,9 @@ add_library(schgen_core STATIC
     src/pack_anchor.cpp src/place_search.cpp src/cc.cpp src/embed_fp.cpp
     src/pack_edges.cpp src/pcb_scan.cpp src/pack_refine.cpp src/place_geom.cpp
     src/catalog.cpp src/part_facts.cpp src/json.cpp src/circuit.cpp src/circuit_layout.cpp src/reorder.cpp src/atomic_file.cpp
-    src/ratsnest.cpp src/footprint_library.cpp src/xdc.cpp src/vivado.cpp
+    src/ratsnest.cpp src/footprint_library.cpp src/xdc.cpp
     src/bom.cpp src/project.cpp src/project_catalog.cpp src/project_outputs.cpp src/som_interface.cpp
-    src/link.cpp src/devicetree.cpp src/symbols.cpp src/validation.cpp
+    src/link.cpp src/symbols.cpp src/validation.cpp
     src/schematic.cpp src/schematic_route.cpp src/netlist_gate.cpp src/design_rules.cpp
     src/schematic_place_core.cpp src/schematic_place_fanout.cpp
     src/schematic_place_templates.cpp src/schematic_place_chain.cpp src/schematic_place_pages.cpp
@@ -37,8 +37,7 @@ add_library(schgen_core STATIC
     src/power_checks.cpp src/thermal_checks.cpp src/part_checks.cpp
     src/bom_values.cpp src/footprint_pads.cpp src/pin_completeness.cpp src/symbol_law.cpp
     src/spice.cpp src/spice_process.cpp src/process.cpp
-    src/bringup_facts.cpp src/firmware_docs.cpp src/firmware_docs_manual.cpp src/firmware_provenance.cpp
-    src/firmware_docs_testplan.cpp src/firmware_docs_scfw.cpp src/firmware_docs_power_sequence.cpp
+    src/bringup_facts.cpp src/firmware_docs_power_sequence.cpp
     src/pcb_checks_model.cpp src/pcb_checks_connectors.cpp src/pcb_checks_placement.cpp
     src/pcb_checks_return_path.cpp src/pcb_checks_ampacity.cpp src/pcb_checks_escape.cpp src/pcb_checks_stitch.cpp)
 target_compile_definitions(schgen_core PRIVATE SCHGEN_STACKUP_CATALOG="${CMAKE_CURRENT_SOURCE_DIR}/stackups.json")
@@ -77,7 +76,6 @@ target_sources(schgen_core PRIVATE src/pcb_drc.cpp)
 target_sources(schgen_core PRIVATE src/subsystem_build.cpp)
 target_sources(schgen_core PRIVATE src/example_devkit.cpp src/example_devkit_build.cpp)
 target_sources(schgen_core PRIVATE src/net_contract.cpp)
-target_sources(schgen_core PRIVATE src/doc_consistency.cpp)
 target_sources(schgen_core PRIVATE src/regression_cli.cpp)
 target_sources(schgen_core PRIVATE src/measure_board.cpp src/measure_metrics.cpp src/measure_report.cpp src/measure_cli.cpp)
 target_sources(schgen_core PRIVATE src/json_text.cpp src/layout_geometry.cpp src/layout_problem.cpp src/layout_kernel.cpp
@@ -106,8 +104,6 @@ set_source_files_properties(src/geometry_cli.cpp src/audit_ast_projection.cpp
 set_source_files_properties(src/regression_cli.cpp
     PROPERTIES COMPILE_OPTIONS "-Wall;-Wextra;-Wpedantic;-Werror;-ffp-contract=off")
 set_source_files_properties(src/precision_ops.cpp
-    PROPERTIES COMPILE_OPTIONS "-Wall;-Wextra;-Wpedantic;-Werror;-ffp-contract=off")
-set_source_files_properties(src/doc_consistency.cpp
     PROPERTIES COMPILE_OPTIONS "-Wall;-Wextra;-Wpedantic;-Werror;-ffp-contract=off")
 set_source_files_properties(src/net_contract.cpp src/example_devkit.cpp src/example_devkit_build.cpp
     PROPERTIES COMPILE_OPTIONS "-Wall;-Wextra;-Wpedantic;-Werror;-ffp-contract=off")
@@ -499,6 +495,12 @@ if(BUILD_TESTING)
     add_test(NAME native_python_free_tree_contracts COMMAND schgen_python_free_tree_contracts
         "${CMAKE_CURRENT_SOURCE_DIR}/..")
     set_tests_properties(native_python_free_tree_contracts PROPERTIES TIMEOUT 120)
+    add_executable(schgen_removed_archive_contracts tests/removed_archive_contracts.cpp)
+    target_compile_options(schgen_removed_archive_contracts PRIVATE
+        -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME native_removed_archive_contracts COMMAND schgen_removed_archive_contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/..")
+    set_tests_properties(native_removed_archive_contracts PROPERTIES TIMEOUT 120)
     foreach(compose_test compose_repair compose_kernel)
         add_executable(schgen_${compose_test}_contracts tests/${compose_test}_contracts.cpp)
         target_include_directories(schgen_${compose_test}_contracts PRIVATE src)
@@ -733,7 +735,6 @@ if(BUILD_TESTING)
     target_link_libraries(schgen_pcb_checks_contracts PRIVATE schgen_core)
     target_compile_options(schgen_pcb_checks_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
     add_test(NAME native_pcb_checks_contracts COMMAND schgen_pcb_checks_contracts "${CMAKE_CURRENT_SOURCE_DIR}/..")
-    add_executable(schgen_firmware_docs_contracts tests/firmware_docs_contracts.cpp)
     add_executable(schgen_process_contracts tests/process_contracts.cpp)
     # Frozen pre-pipe implementation is a local, independent parity oracle;
     # never fetch repository history or compile the candidate twice as baseline.
@@ -778,7 +779,6 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_SOURCE_DIR}/tests/data/part_gen" "$<TARGET_FILE:schgen>")
     add_executable(schgen_board_pipeline_contracts tests/board_pipeline_contracts.cpp)
     add_executable(schgen_net_contract_contracts tests/net_contract_contracts.cpp)
-    add_executable(schgen_doc_consistency_contracts tests/doc_consistency_contracts.cpp)
     add_executable(schgen_geometry_cli_contracts tests/geometry_cli_contracts.cpp)
     target_link_libraries(schgen_geometry_cli_contracts PRIVATE schgen_core)
     target_compile_options(schgen_geometry_cli_contracts PRIVATE
@@ -1094,9 +1094,6 @@ if(BUILD_TESTING)
     add_test(NAME native_regression_rc_smoke
         COMMAND schgen_regression_rc_smoke_contracts "${CMAKE_CURRENT_SOURCE_DIR}/..")
     set_tests_properties(native_regression_rc_smoke PROPERTIES TIMEOUT 120 LABELS "live-kicad")
-    target_link_libraries(schgen_doc_consistency_contracts PRIVATE schgen_core)
-    target_compile_options(schgen_doc_consistency_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
-    add_test(NAME native_doc_consistency_contracts COMMAND schgen_doc_consistency_contracts "${CMAKE_CURRENT_SOURCE_DIR}/.." "${CMAKE_CURRENT_BINARY_DIR}/doc-consistency-contract-output")
     target_link_libraries(schgen_net_contract_contracts PRIVATE schgen_core)
     target_compile_options(schgen_net_contract_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
     add_test(NAME native_net_contract_contracts COMMAND schgen_net_contract_contracts "${CMAKE_CURRENT_SOURCE_DIR}/.." "${CMAKE_CURRENT_BINARY_DIR}/net-contract-contract-output")
@@ -1147,15 +1144,17 @@ if(BUILD_TESTING)
         -o "${CMAKE_CURRENT_BINARY_DIR}/single-sheet-live")
     set_tests_properties(native_board_pipeline_live_contracts native_single_sheet_live
         PROPERTIES LABELS "live-kicad")
-    add_executable(schgen_firmware_provenance_contracts tests/firmware_provenance_contracts.cpp)
-    target_link_libraries(schgen_firmware_provenance_contracts PRIVATE schgen_core)
-    target_compile_options(schgen_firmware_provenance_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
-    add_test(NAME native_firmware_provenance_contracts COMMAND schgen_firmware_provenance_contracts
+    add_executable(schgen_power_sequence_contracts tests/power_sequence_contracts.cpp)
+    target_link_libraries(schgen_power_sequence_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_power_sequence_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME native_power_sequence_contracts COMMAND schgen_power_sequence_contracts
         "${CMAKE_CURRENT_SOURCE_DIR}/..")
-    target_link_libraries(schgen_firmware_docs_contracts PRIVATE schgen_core)
-    target_compile_options(schgen_firmware_docs_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
-    add_test(NAME native_firmware_docs_contracts COMMAND schgen_firmware_docs_contracts
-        "${CMAKE_CURRENT_SOURCE_DIR}/.." "${CMAKE_CURRENT_BINARY_DIR}/firmware-docs-contract-output")
+    add_executable(schgen_i2c_collision_contracts tests/i2c_collision_contracts.cpp)
+    target_include_directories(schgen_i2c_collision_contracts PRIVATE src)
+    target_link_libraries(schgen_i2c_collision_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_i2c_collision_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME native_i2c_collision_contracts COMMAND schgen_i2c_collision_contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/..")
     foreach(family verification spice)
         add_executable(schgen_${family}_contracts tests/${family}_contracts.cpp)
         target_link_libraries(schgen_${family}_contracts PRIVATE schgen_core)
@@ -1308,11 +1307,6 @@ if(BUILD_TESTING)
     target_compile_options(schgen_project_outputs_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
     add_test(NAME native_project_outputs_contracts COMMAND schgen_project_outputs_contracts
         "${CMAKE_CURRENT_SOURCE_DIR}/..")
-    add_executable(schgen_devicetree_contracts tests/devicetree_contracts.cpp)
-    target_link_libraries(schgen_devicetree_contracts PRIVATE schgen_core)
-    target_compile_options(schgen_devicetree_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
-    add_test(NAME native_devicetree_contracts COMMAND schgen_devicetree_contracts
-        "${CMAKE_CURRENT_SOURCE_DIR}/tests/data" "${CMAKE_CURRENT_SOURCE_DIR}/..")
     add_executable(schgen_link_contracts tests/link_contracts.cpp)
     target_link_libraries(schgen_link_contracts PRIVATE schgen_core)
     target_compile_options(schgen_link_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
@@ -1332,11 +1326,6 @@ if(BUILD_TESTING)
     target_compile_options(schgen_project_catalog_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
     add_test(NAME native_project_catalog_contracts COMMAND schgen_project_catalog_contracts
         "${CMAKE_CURRENT_SOURCE_DIR}/..")
-    add_executable(schgen_vivado_contracts tests/vivado_contracts.cpp)
-    target_link_libraries(schgen_vivado_contracts PRIVATE schgen_core)
-    target_compile_options(schgen_vivado_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
-    add_test(NAME native_vivado_contracts COMMAND schgen_vivado_contracts
-        "${CMAKE_CURRENT_SOURCE_DIR}/tests/data/vivado_golden.tcl")
     add_executable(schgen_bom_contracts tests/bom_contracts.cpp)
     target_link_libraries(schgen_bom_contracts PRIVATE schgen_core)
     target_compile_options(schgen_bom_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
@@ -1390,11 +1379,11 @@ if(BUILD_TESTING)
     add_test(NAME native_carrier_check_cli COMMAND schgen carrier-check --project carrier --repo "${CMAKE_CURRENT_SOURCE_DIR}/..")
     add_test(NAME native_devkit_check_cli COMMAND schgen carrier-check --project devkit_mini --repo "${CMAKE_CURRENT_SOURCE_DIR}/..")
     foreach(command board build devkit nets chir-rung w11-sweep w12-bound w12-stageprobe dump-circuits
-            selftest project-check circuit-check som-interface xdc vivado fpga bom link devicetree
+            selftest project-check circuit-check som-interface xdc bom link
             design-rules testpoints board-schematic pcb-stage pcb-drc subsystem-new render3d board-step
             model3d-check assembly ratsnest gallery diagram si-constraints fab-profile manifest preflight
             constraints powertree thermal part-rules bom-values footprint-pads pin-completeness symbol-law
-            spice firmware manual scfw testplan power-sequence subsystem-check carrier-check check floorplan compose)
+            spice power-sequence subsystem-check carrier-check check floorplan compose)
         add_test(NAME native_${command}_help COMMAND schgen ${command} --help --repo /nonexistent/schgen-help-must-not-read)
     endforeach()
     add_test(NAME native_part_import_help COMMAND schgen part-import --help
