@@ -3,6 +3,8 @@
   "name": "fmc",
   "title": "SoM bank-35 IO breakout (2x20 2.54mm header, VADJ 2.5V)",
   "interface": ["FMC_CLK0_M2C_P", "FMC_CLK0_M2C_N", "FMC_CLK1_M2C_P", "FMC_CLK1_M2C_N", "FMC_LA00_CC_P", "FMC_LA00_CC_N", "FMC_LA01_CC_P", "FMC_LA01_CC_N", "FMC_LA02_P", "FMC_LA02_N", "FMC_LA03_P", "FMC_LA03_N", "FMC_LA04_P", "FMC_LA04_N", "FMC_LA05_P", "FMC_LA05_N", "FMC_LA06_P", "FMC_LA06_N", "FMC_LA07_P", "FMC_LA07_N", "FMC_LA08_P", "FMC_LA08_N", "FMC_LA09_P", "FMC_LA09_N", "FMC_LA10_P", "FMC_LA10_N", "FMC_LA11_P", "FMC_LA11_N", "+3V3", "+2V5_VADJ", "GND"],
+  "placement": {"region": "board", "silk_label": null, "far_guard_mm": null, "escape_basis": null, "escape_escalates": false, "reserves_edge": false},
+  "checks": {"dividers": [], "divider_sources": [], "iset_window_ma": null},
   "parts": [
     {"ref": "J1", "symbol": "Connector_Generic:Conn_02x20_Odd_Even", "value": "Header_2x20_2.54mm", "footprint": "Connector_PinHeader_2.54mm:PinHeader_2x20_P2.54mm_Vertical"},
     {"ref": "U1", "part": "TLV75725PDYDR", "footprint": "TLV75725PDYDR:TLV75725PDYDR"},

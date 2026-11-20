@@ -3,6 +3,8 @@
   "name": "bringup_en_modules",
   "title": "Bring-up EN cells: 11x SN74LVC1G08 module DIP-AND-override",
   "interface": ["BU_DIP_HDMI_TX", "GND", "BU_OVR_HDMI_TX", "+3V3_SC", "EN_HDMI_TX", "BU_DIP_HDMI_RX", "BU_OVR_HDMI_RX", "EN_HDMI_RX", "BU_DIP_LCD", "BU_OVR_LCD", "EN_LCD", "BU_DIP_CAM", "BU_OVR_CAM", "EN_CAM", "BU_DIP_SD", "BU_OVR_SD", "EN_SD", "BU_DIP_USB", "BU_OVR_USB", "EN_USB", "BU_DIP_PMOD", "BU_OVR_PMOD", "EN_PMOD", "BU_DIP_USER_LED", "BU_OVR_USER_LED", "EN_USER_LED", "BU_DIP_SPARE", "BU_OVR_LCD_BL", "EN_LCD_BL", "BU_DIP_HDMI_TX_5V", "BU_OVR_HDMI_TX_5V", "EN_HDMI_TX_5V", "BU_DIP_LCD_5V", "BU_OVR_LCD_5V", "EN_LCD_5V"],
+  "placement": {"region": "board", "silk_label": null, "far_guard_mm": null, "escape_basis": null, "escape_escalates": false, "reserves_edge": false},
+  "checks": {"dividers": [], "divider_sources": [], "iset_window_ma": null},
   "parts": [
     {
       "ref": "U1",

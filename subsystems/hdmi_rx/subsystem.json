@@ -3,6 +3,8 @@
   "name": "hdmi_rx",
   "title": "HDMI RX: HDMI-A sink + EDID EEPROM",
   "interface": ["+VDD_LOGIC", "GND", "CHASSIS_GND", "TMDS_RX_D2_P", "TMDS_RX_D2_N", "TMDS_RX_D1_P", "TMDS_RX_D1_N", "TMDS_RX_D0_P", "TMDS_RX_D0_N", "TMDS_RX_CLK_P", "TMDS_RX_CLK_N", "HDMI_5V_DET", "CEC"],
+  "placement": {"region": "board", "silk_label": null, "far_guard_mm": null, "escape_basis": null, "escape_escalates": false, "reserves_edge": false},
+  "checks": {"dividers": [], "divider_sources": [], "iset_window_ma": null},
   "parts": [
     {"ref": "J1", "part": "HDMI-019S"},
     {"ref": "U1", "part": "M24C02-WMN6TP", "symbol": "Memory_EEPROM:M24C02-WMN"},

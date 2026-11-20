@@ -3,6 +3,8 @@
   "name": "usb_pd",
   "title": "USB-PD: FUSB302B Type-C controller",
   "interface": ["+VDD_LOGIC", "+VBUS_SENSE", "GND", "CC1", "CC2", "I2C_SDA", "I2C_SCL", "INT_N"],
+  "placement": {"region": "board", "silk_label": null, "far_guard_mm": null, "escape_basis": null, "escape_escalates": false, "reserves_edge": false},
+  "checks": {"dividers": [], "divider_sources": [], "iset_window_ma": null},
   "parts": [
     {"ref": "U1", "part": "FUSB302BMPX", "symbol": "Interface_USB:FUSB302BMPX", "footprint": "Package_DFN_QFN:WQFN-14-1EP_2.5x2.5mm_P0.5mm_EP1.45x1.45mm"},
     {

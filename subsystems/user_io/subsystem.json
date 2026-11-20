@@ -3,6 +3,8 @@
   "name": "user_io",
   "title": "User IO: 4 LEDs (gated rail) + 4 buttons, bank 13",
   "interface": ["IO_25_13", "IO_L6_P_13", "IO_L24_P_13", "IO_L24_N_13", "+3V3_USER_LED", "GND", "IO_L15_P_13", "+3V3", "IO_L19_P_13", "IO_L21_P_13", "IO_L22_P_13"],
+  "placement": {"region": "board", "silk_label": null, "far_guard_mm": null, "escape_basis": null, "escape_escalates": false, "reserves_edge": false},
+  "checks": {"dividers": [], "divider_sources": [], "iset_window_ma": null},
   "parts": [
     {
       "ref": "D1",

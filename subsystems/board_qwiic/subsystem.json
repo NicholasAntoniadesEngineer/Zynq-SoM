@@ -3,6 +3,8 @@
   "name": "board_qwiic",
   "title": "QWIIC / STEMMA-QT expansion connector + USBLC6 ESD array",
   "interface": ["GND", "+3V3_AUX", "AUX_I2C_SDA", "AUX_I2C_SCL", "+3V3"],
+  "placement": {"region": "board", "silk_label": null, "far_guard_mm": null, "escape_basis": null, "escape_escalates": false, "reserves_edge": false},
+  "checks": {"dividers": [], "divider_sources": [], "iset_window_ma": null},
   "parts": [
     {"ref": "J1", "part": "ZX-SH1.0-4PWT"},
     {"ref": "U1", "part": "USBLC6-2SC6"}

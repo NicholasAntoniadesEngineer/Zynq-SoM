@@ -3,6 +3,8 @@
   "name": "mechanical",
   "title": "Mechanical: M3 mounts + chassis-GND bond (fiducials are PCB-only, emitted by the placer)",
   "interface": ["CHASSIS_GND"],
+  "placement": {"region": "board", "silk_label": null, "far_guard_mm": null, "escape_basis": null, "escape_escalates": false, "reserves_edge": false},
+  "checks": {"dividers": [], "divider_sources": [], "iset_window_ma": null},
   "parts": [
     {
       "ref": "H1",

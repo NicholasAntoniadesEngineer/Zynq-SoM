@@ -16,7 +16,7 @@ endif()
 # Compile one engine shared by the standalone CLI and native contracts.
 include(cmake/AuthoringPurity.cmake)
 add_library(schgen_core STATIC
-    src/occupancy.cpp src/occupancy_precision.cpp src/seat.cpp src/sexpr.cpp src/route.cpp src/emit.cpp src/stackup.cpp src/run_config.cpp src/study.cpp src/board_definition.cpp src/board_files.cpp
+    src/occupancy.cpp src/occupancy_precision.cpp src/seat.cpp src/sexpr.cpp src/route.cpp src/emit.cpp src/stackup.cpp src/run_config.cpp src/study.cpp src/board_definition.cpp src/sheet_roles.cpp src/board_files.cpp
     src/legalize.cpp src/quantize.cpp src/precision_ops.cpp src/turn.cpp src/pack.cpp
     src/legalize_precision.cpp src/stage_precision.cpp
     src/placement_precision.cpp src/output_precision.cpp src/pack_precision.cpp
@@ -1184,6 +1184,11 @@ if(BUILD_TESTING)
     target_link_libraries(schgen_board_definition_contracts PRIVATE schgen_core)
     target_compile_options(schgen_board_definition_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
     add_test(NAME native_board_definition_contracts COMMAND schgen_board_definition_contracts "${CMAKE_CURRENT_SOURCE_DIR}/..")
+    add_executable(schgen_sheet_roles_contracts tests/sheet_roles_contracts.cpp)
+    target_link_libraries(schgen_sheet_roles_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_sheet_roles_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME native_sheet_roles_contracts COMMAND schgen_sheet_roles_contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/.." "${CMAKE_CURRENT_SOURCE_DIR}/catalog.bin")
     add_executable(schgen_part_ratings_contracts tests/part_ratings_contracts.cpp)
     target_link_libraries(schgen_part_ratings_contracts PRIVATE schgen_core)
     target_compile_options(schgen_part_ratings_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)

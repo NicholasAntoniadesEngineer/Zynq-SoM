@@ -18,6 +18,8 @@ This file is `subsystems/i2c_esd/subsystem.json`. It uses every top-level key, b
   "name": "i2c_esd",
   "title": "ESD-protected I2C pair with pull-ups",
   "interface": ["+VDD", "GND", "SCL", "SDA"],
+  "placement": {"region": "board", "silk_label": null, "far_guard_mm": null, "escape_basis": null, "escape_escalates": false, "reserves_edge": false},
+  "checks": {"dividers": [], "divider_sources": [], "iset_window_ma": null},
   "parts": [
     {"ref": "U1", "part": "TPD4E02B04DQAR", "fields": {"NOTE": "ESD array"}},
     {
@@ -77,7 +79,7 @@ The loader reads the sections in the order shown. "Required" means the loader fa
 
 ### 3.1 Top level
 
-Every key in the table is required, except that `interface` is read only when the subsystem is registered or listed (`subsystem_data_definition`), not by `author_subsystem_data`. Any other top-level key fails with `unknown key 'K' in <where>`. The key check runs before everything else.
+Every key in the table is required, except that `interface` is read only when the subsystem is registered or listed (`subsystem_data_definition`), not by `author_subsystem_data`. `placement` and `checks` are read by both (`subsystem_data_facts`), so a file without them fails when it is authored and when the library is listed. They are not part of the circuit: the generated `circuit.json` and `layout.json` do not carry them. Any other top-level key fails with `unknown key 'K' in <where>`. The key check runs before everything else.
 
 | Key | Type | Meaning and errors |
 |---|---|---|
@@ -85,6 +87,8 @@ Every key in the table is required, except that `interface` is read only when th
 | `name` | name | The subsystem name and circuit name. Must equal the folder name: `name X differs from its folder` (library listing, prefixed by the file path) or `its name differs from its folder X` (lookup by name). |
 | `title` | name | Sheet title. An empty title fails with `field 'title' is empty`. |
 | `interface` | array of names | The external names of the block: every non-signal net (power, ground, port). Read by `subsystem_data_definition`, not by `author_subsystem_data`; a bad entry fails with `'interface' holds a value that is not a name`. Its content is checked by the structure gate (section 6). |
+| `placement` | object | Facts about where the subsystem's sheet is placed; section 3.11. Missing or not an object: `field 'placement' is missing or has the wrong type`. |
+| `checks` | object | Facts the electrical checks read; section 3.12. Missing or not an object: `field 'checks' is missing or has the wrong type`. |
 | `parts`, `nets`, `unconnected`, `ports`, `hints`, `draws`, `waivers`, `purpose`, `free` | array | Each must be present and an array (`field 'K' is missing or has the wrong type`); each entry of all but `unconnected` must be an object (`'K' holds a value that is not an object`). An empty array is accepted. |
 
 ### 3.2 `parts`
@@ -198,6 +202,33 @@ See section 5. Entry keys `part`, `role`, `pin`, `net`, `module_net`.
 
 Entry keys `part` and `reason`, both required names. Calls `CircuitAuthor::free`: `unknown part 'P'` for an unknown part. A part may appear once across `purpose` and `free` together. This and a blank reason are checked by `finish` after the file is read, with the prefix `layout intent of <name>: ` (`serves(P): the part already has a declaration`, `free(P): the part already has a declaration`, `free(P): a reason is required`).
 
+### 3.11 `placement`
+
+An object. Accepted keys: `region`, `silk_label`, `far_guard_mm`, `escape_basis`, `escape_escalates`, `reserves_edge`; any other fails with `unknown key 'K' in <name> placement`. Every key is required. Errors below carry the prefix `subsystem file <name> placement: `. Read by `subsystem_data_facts`; a sheet's region is read by `sheet_roles` (`native/include/schgen/sheet_roles.hpp`) through `load_subsystem_facts`.
+
+| Key | Type | Meaning and errors |
+|---|---|---|
+| `region` | name | `board` or `under_module`: where the sheet's parts are placed. Another name fails with `field 'region' is 'X', not board or under_module`; empty: `field 'region' is empty`; not text: `field 'region' is missing or has the wrong type`. |
+| `silk_label` | name or `null` | Text of the connector label on the silkscreen. `null` states that there is none. An empty string or a value of another type fails with `field 'silk_label' is neither null nor a name`. |
+| `far_guard_mm` | number above zero or `null` | Guard distance in millimetres. `null` states that there is none. Else `field 'far_guard_mm' is neither null nor a number above zero`. |
+| `escape_basis` | name or `null` | Reason a bottom-side part may stay in the escape region. `null` states that there is none. Else `field 'escape_basis' is neither null nor a name`. |
+| `escape_escalates` | boolean | Else `field 'escape_escalates' is missing or has the wrong type`. |
+| `reserves_edge` | boolean | Else `field 'reserves_edge' is missing or has the wrong type`. |
+
+An absent key fails with `field 'K' is missing`; an explicit `null` or `false` is the statement that the fact does not apply. Of these keys, only `region` is read by `sheet_roles` so far; the others are loaded and validated and are not yet read by any other code.
+
+### 3.12 `checks`
+
+An object. Accepted keys: `dividers`, `divider_sources`, `iset_window_ma`; any other fails with `unknown key 'K' in <name> checks`. Every key is required. Errors below carry the prefix `subsystem file <name> checks: `.
+
+| Key | Type | Meaning and errors |
+|---|---|---|
+| `dividers` | array of objects | Named divider limits. An empty array is accepted. A value that is not an object fails with `'dividers' holds a value that is not an object`. |
+| `divider_sources` | array of names | Nets treated as divider sources. An empty array is accepted. Else `'divider_sources' holds a value that is not a name`. |
+| `iset_window_ma` | `[low, high]` or `null` | The allowed current window in milliamps. `null` states that there is none. Anything other than two numbers with `0 < low < high` fails with `field 'iset_window_ma' is neither null nor [low, high]` or `field 'iset_window_ma' is not 0 < low < high`. |
+
+A `dividers` entry accepts the keys `net`, `source`, `limits`, `why`; any other fails with `unknown key 'K' in <name> checks divider`. `net`, `source` and `why` are required names. `limits` is a required array of objects and must not be empty (`divider N states no limits`). A `limits` entry accepts `volts`, `lo`, `hi`, `tag` (other keys fail with `unknown key 'K' in <name> checks divider limit`). `volts` is a required number, `tag` a required name, `lo` and `hi` optional numbers (`field 'K' is not a number`). At least one of them must be present (`a limit of divider N states neither lo nor hi`), and when both are present `lo` must be below `hi` (`a limit of divider N has lo not below hi`). The loader stores these values; no check reads them yet.
+
 ## 4. Per-board settings
 
 A board supplies a `SubsystemMeta` (`native/src/authoring.cpp`): a JSON object, or null for none, with only the keys `bind`, `expects`, `buses`, `notes` (else `unknown subsystem meta key(s) ['K'] — legal keys are ['bind', 'expects', 'buses', 'notes']`). Each section is an object or null (`subsystem meta['K'] must be a dict`); each value must be a string (`subsystem meta['K']['k'] must be a string`), except that `expects` values may also be null (message ends `or null`). A value in the file can come from the board in exactly three places.
@@ -271,7 +302,7 @@ Roles are listed in one place, `native/src/roles.cpp`; reach values are in `nati
 ## 6. How to add a subsystem
 
 1. Create `subsystems/<name>/` at the repository root. The structure gate skips folders whose names start with `.` or `_` and names ending in a space and digits (such as `name 2`). It checks every other folder under `subsystems/` as a package, so a folder without `subsystem.json` fails it (`native authoring factory unavailable: <name>`).
-2. Write `subsystems/<name>/subsystem.json` with `"name": "<name>"`. Parts named by `part` must exist in the part catalogue (`parts/<MPN>/part.json`; the build compiles `parts/` into `native/catalog.bin`, so a new catalogue part needs a build).
+2. Write `subsystems/<name>/subsystem.json` with `"name": "<name>"`. Give it `placement` and `checks` with the neutral values of the example in section 2 unless a fact applies. Parts named by `part` must exist in the part catalogue (`parts/<MPN>/part.json`; the build compiles `parts/` into `native/catalog.bin`, so a new catalogue part needs a build).
 3. Add the other files the structure gate requires. For a library package (`AuthoringPackageMode::native_assets`, the mode used by the board pipeline and by the `subsystem-check` command) `check_subsystem_package` requires two regular files in the folder: `README.md` and `<name>.cir`. A missing file is reported as missing. Nothing else is required; for example `placement_contract.json` is not checked by this gate. If the folder also holds `circuit.json`, it must match the built circuit, and then `layout.json` must exist and match too (`circuit.json differs from the native authoring factory`, `layout.json is missing beside circuit.json`, `layout.json differs from the native authoring factory`).
 4. Make `interface` match the circuit. The gate builds the circuit with empty board settings and requires: a non-empty `interface`, no duplicate names (`duplicate name in native INTERFACE`), every non-signal net listed (`net 'X' is an external but not in the declared INTERFACE`), and no listed name that is not such a net (`INTERFACE name 'X' is not an external net of the built circuit`). A build failure is reported as `circuit() build failed: <message>`.
 5. Run the application. No rebuild is needed: the file is read when the subsystem is requested. A board uses it by name with its own `SubsystemMeta` (section 4).
@@ -314,3 +345,19 @@ Every board names the folder of the module it carries in `board.json`, under `mo
 | `do_not_load_straps` | Module pin nets that must stay unmapped in every board's `som_mapping.json`. |
 
 `som_interface.json` is written by `schgen som-interface` into the module folder. A board's `som_mapping.json` and `escape_triage.json` hold only the board's own decisions; `do_not_load_straps` in `som_mapping.json` is rejected.
+
+## 9. Sheet roles
+
+`sheet_roles` (`native/include/schgen/sheet_roles.hpp`) builds one table for a board: for each sheet of `board.json`, the module connector it carries (empty for an ordinary sheet) and its region. The module connector comes from the sheet's `module_connector` in `board.json`. The region of an ordinary sheet comes from `placement.region` of its `subsystem.json` in the library (`load_subsystem_facts`); a missing file fails with `unknown subsystem N`. A module connector sheet has no subsystem file and its region is `board`. `sheet_role` returns the entry for a sheet and throws `sheet roles: no role for sheet N` for a sheet the table lacks.
+
+The table is built from the board definition, the library, the module interface (`som_interface.json` of the module folder), the authored circuits and the part facts, and it throws, naming the board and the sheet, when the data disagree:
+
+| Check | Message |
+|---|---|
+| A module connector sheet has no authored circuit. | `board B sheet S: the module connector sheet has no circuit` |
+| The sheet holds other than one part. | `board B sheet S: a module connector sheet holds exactly one part, this one holds N` |
+| The part's reference differs from the sheet's `module_connector`. | `board B sheet S: its part is R but board.json states module_connector C` |
+| The part's class (from the part facts) is not `module_connector`. | `board B sheet S: its part R has class K, not module_connector` |
+| Two sheets carry the same connector. | `board B sheet S: module connector C is also carried by sheet T` |
+| A sheet names a connector the module interface lacks. | `board B sheet S: module connector C is not a connector of the module interface F` |
+| The module interface has a connector that no sheet carries. | `board B: no sheet carries module connector C of the module interface F` |
