@@ -1,7 +1,7 @@
 {
   "schema": "schgen.subsystem/1",
   "name": "esc_power",
-  "title": "ESC power path: XT60 inlet to outlet — fuse, reverse/inrush/overcurrent protection, INA237",
+  "title": "ESC power path: XT60 inlet to outlet | fuse, reverse/inrush/overcurrent protection, INA237",
   "interface": [
     "+VBAT_RAW",
     "+VBAT_F",
