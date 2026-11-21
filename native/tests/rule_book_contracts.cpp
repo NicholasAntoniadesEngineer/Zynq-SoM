@@ -410,6 +410,25 @@ void roles_live_in_one_place(const std::filesystem::path& repository) {
     }
 }
 
+void provenance_names_the_step() {
+    const auto gate = std::find_if(rule_book().begin(), rule_book().end(),
+                                   [](const RuleEntry& entry) { return entry.rule.enforcement == Enforcement::gate; });
+    const auto measured = std::find_if(rule_book().begin(), rule_book().end(),
+                                       [](const RuleEntry& entry) { return entry.rule.enforcement == Enforcement::measured; });
+    require(gate != rule_book().end() && measured != rule_book().end(), "the book has gate and measured rules");
+    PlacementIntegrityResult entry, final;
+    entry.rules.push_back({&gate->rule, 1, {{"C1 (sheet)", "before"}}, {}});
+    final.rules.push_back({&gate->rule, 2, {{"C1 (sheet)", "after"}, {"C2 (sheet)", "after"}}, {}});
+    final.rules.push_back({&measured->rule, 1, {{"C3 (sheet)", "measured"}}, {}});
+    const auto lines = breach_provenance(entry, final, "the placer", "the layout stage");
+    const std::string id(gate->rule.id);
+    require(lines == std::vector<std::string>{id + ": C1 (sheet) already breached when the placer handed over the placement",
+                                             id + ": C2 (sheet) introduced by the layout stage"},
+            "every gate breach left after the last step is attributed to the step that introduced it");
+    require(breach_provenance(final, final, "the placer", "the layout stage").size() == 2, "an inherited breach is still listed");
+    require(breach_provenance(entry, PlacementIntegrityResult{}, "the placer", "the layout stage").empty(), "a clean final board lists nothing");
+}
+
 int main(int argc, char** argv) {
     try {
         if (argc != 2) throw std::runtime_error("usage: rule_book_contracts REPOSITORY");
@@ -418,6 +437,7 @@ int main(int argc, char** argv) {
         roles_live_in_one_place(repository);
         rules_judge(repository);
         runner_gates(repository);
+        provenance_names_the_step();
         std::cout << "rule book contracts ok\n";
         return 0;
     } catch (const std::exception& error) {

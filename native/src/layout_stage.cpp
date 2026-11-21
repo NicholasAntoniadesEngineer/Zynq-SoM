@@ -323,7 +323,15 @@ StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model
         text << "TOP FACE courtyard area by reason (rear holds " << rear << " mm2):\n";
         for (const auto& [why, area] : top) text << "    " << area << " mm2 " << why << "\n";
     }
-    text << check_placement_integrity(PcbCheckInput(result.model), result.model, options.intent).summary(rules::Stage::layout);
+    const PlacementIntegrityResult final_rules = check_placement_integrity(PcbCheckInput(result.model), result.model, options.intent);
+    text << final_rules.summary(rules::Stage::layout);
+    const std::vector<std::string> provenance =
+        breach_provenance(check_placement_integrity(PcbCheckInput(model), model, options.intent), final_rules,
+                          "the placer", "the layout stage");
+    if (!provenance.empty()) {
+        text << "BREACH PROVENANCE (gate rules breached after the last step):\n";
+        for (const std::string& line : provenance) text << "    " << line << "\n";
+    }
     result.report = text.str();
     return result;
 }

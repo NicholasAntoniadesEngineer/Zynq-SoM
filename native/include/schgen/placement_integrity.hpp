@@ -16,6 +16,8 @@ struct PlacementIntegrityResult {
 std::string controlled_net(const PcbCheckInstance& instance, const PcbModel& model);
 bool drilled_part(const PcbCheckInstance& instance);
 bool module_clearance_exempt(const PcbCheckInstance& instance);
+std::vector<std::string> breach_provenance(const PlacementIntegrityResult& entry, const PlacementIntegrityResult& final,
+                                           const std::string& earlier_step, const std::string& this_step);
 PlacementIntegrityResult check_placement_integrity(const PcbCheckInput& input, const PcbModel& model,
                                                    const layout::AuthoredIntent& intent);
 
