@@ -100,10 +100,9 @@ std::vector<Sexpr> descriptors(const PcbModel &m, const PcbEmitPolicy &p, const 
     for (const auto &i : m.insts) {
         if (!connector_fact(p.connectors, i.value))
             continue;
-        auto text = lookup(p.connector_descriptions, i.sheet);
-        if (!text)
+        if (!i.silk_label)
             continue;
-        std::string desc = *text;
+        std::string desc = *i.silk_label;
         if (ordinal.count(i.ref))
             desc = ordinal.at(i.ref);
         auto b = courtyard(i);

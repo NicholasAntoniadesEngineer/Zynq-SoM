@@ -42,6 +42,8 @@ struct PcbCheckInstance {
     bool at_module = false;
     std::string module_connector;
     bool under_module = false;
+    std::optional<std::string> silk_label, escape_basis;
+    bool escape_escalates = false;
 };
 PartClass part_class_of(const PcbCheckInstance& instance);
 const PartHeight& part_height_of(const PcbCheckInstance& instance);

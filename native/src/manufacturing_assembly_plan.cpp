@@ -15,7 +15,7 @@ std::vector<std::string> polarity(const PcbModel& m,const Indices& ids) {
 }
 std::string description(const PcbCheckInstance& i,const PcbEmitPolicy& p) {
     for(const auto& [k,v]:p.header_descriptions)if(k==i.ref)return v;
-    return lookup(p.connector_descriptions,i.sheet);
+    return i.silk_label.value_or(std::string());
 }
 std::vector<std::string> connector_notes(const PcbModel& m,Indices ids,const PcbEmitPolicy& p) {
     sort_indices(ids,m);std::vector<std::string> out,som;std::map<std::string,Indices> pairs;

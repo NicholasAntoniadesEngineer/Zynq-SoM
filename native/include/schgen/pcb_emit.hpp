@@ -25,7 +25,7 @@ struct PcbEmitPolicy {
     bool interface_reference_labels_only = false, labels = true;
     FootprintAliasFacts footprint_aliases;
     ConnectorFacts connectors;
-    ProjectStrings connector_descriptions, header_descriptions, switch_descriptions;
+    ProjectStrings header_descriptions, switch_descriptions;
     ThermalCopperFacts thermal_copper;
     RegulatorFacts regulators;
     std::vector<ThermalPourNeed> thermal_credit_needs;
