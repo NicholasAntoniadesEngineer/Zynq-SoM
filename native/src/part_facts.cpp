@@ -473,6 +473,38 @@ ModelOverrideFact model_override_from(const JsonNode& entry, const std::string& 
     return fact;
 }
 
+LandFact land_from(const JsonNode& entry, const std::string& where) {
+    reject_unknown_keys(entry, {"footprint", "pad_gap_mm", "tolerance_mm", "cite"}, where);
+    LandFact fact;
+    fact.footprint = text_required(entry, "footprint", where);
+    fact.pad_gap_mm = number_of(entry, "pad_gap_mm", where, true);
+    fact.tolerance_mm = number_of(entry, "tolerance_mm", where, true);
+    fact.cite = text_required(entry, "cite", where);
+    return fact;
+}
+
+ElectricalSpacingFact electrical_spacing_from(const JsonNode& root, const std::filesystem::path& file) {
+    const std::string where = file.string() + " electrical_spacing";
+    const JsonNode* node = object_field(root, "electrical_spacing");
+    if (!node || node->kind != JsonKind::Object) refuse(file.string() + " needs an object named electrical_spacing");
+    reject_unknown_keys(*node, {"source", "column", "basis", "rows"}, where);
+    ElectricalSpacingFact fact;
+    fact.source = text_required(*node, "source", where);
+    fact.column = text_required(*node, "column", where);
+    fact.basis = text_required(*node, "basis", where);
+    const JsonNode* rows = object_field(*node, "rows");
+    if (!rows || rows->kind != JsonKind::Array || rows->array_value.empty()) refuse(where + ": rows must be a non-empty array");
+    for (const auto& row : rows->array_value) {
+        if (row.kind != JsonKind::Object) refuse(where + ": a row must be an object");
+        reject_unknown_keys(row, {"max_volts", "spacing_mm"}, where + " row");
+        const ElectricalSpacingRow parsed{number_of(row, "max_volts", where + " row", true), number_of(row, "spacing_mm", where + " row", true)};
+        if (!fact.rows.empty() && parsed.max_volts <= fact.rows.back().max_volts)
+            refuse(where + ": rows must rise in max_volts");
+        fact.rows.push_back(parsed);
+    }
+    return fact;
+}
+
 FootprintAliasFact footprint_alias_from(const JsonNode& entry, const std::string& where) {
     reject_unknown_keys(entry, {"footprint"}, where);
     return FootprintAliasFact{text_required(entry, "footprint", where)};
@@ -556,7 +588,7 @@ ConnectorFacts load_connector_facts(const std::filesystem::path& parts_directory
 PartFacts load_part_facts(const std::filesystem::path& file) {
     if (!std::filesystem::is_regular_file(file)) refuse("the part facts file is missing: " + file.string());
     const JsonNode root = parse_json_file(file.string());
-    reject_unknown_keys(root, {"schema", "classes", "stated_heights", "connectors", "thermal", "thermal_copper", "ep_vias", "isolation", "regulators", "zeners", "reference_pins", "control_grid", "model_overrides", "footprint_aliases"}, file.string());
+    reject_unknown_keys(root, {"schema", "classes", "stated_heights", "connectors", "thermal", "thermal_copper", "ep_vias", "isolation", "regulators", "zeners", "reference_pins", "control_grid", "model_overrides", "footprint_aliases", "lands", "electrical_spacing"}, file.string());
     if (require_string(root, "schema", false, "part facts") != facts_schema)
         refuse(file.string() + " schema must be " + facts_schema);
     PartFacts facts;
@@ -596,6 +628,8 @@ PartFacts load_part_facts(const std::filesystem::path& file) {
     facts.control_grid = section_from<ControlGridFact>(root, file, "control_grid", true, control_grid_from);
     facts.model_overrides = section_from<ModelOverrideFact>(root, file, "model_overrides", true, model_override_from);
     facts.footprint_aliases = section_from<FootprintAliasFact>(root, file, "footprint_aliases", false, footprint_alias_from);
+    facts.lands = section_from<LandFact>(root, file, "lands", true, land_from);
+    facts.electrical_spacing = electrical_spacing_from(root, file);
     return facts;
 }
 

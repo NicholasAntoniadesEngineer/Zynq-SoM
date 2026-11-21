@@ -147,6 +147,20 @@ struct FootprintAliasFact {
     std::string footprint;
 };
 
+struct LandFact {
+    std::string footprint, cite;
+    double pad_gap_mm = 0, tolerance_mm = 0;
+};
+
+struct ElectricalSpacingRow {
+    double max_volts = 0, spacing_mm = 0;
+};
+
+struct ElectricalSpacingFact {
+    std::string source, column, basis;
+    std::vector<ElectricalSpacingRow> rows;
+};
+
 using ThermalFacts = std::map<std::string, ThermalFact>;
 using ThermalCopperFacts = std::map<std::string, ThermalCopperFact>;
 using EpViaFacts = std::map<std::string, EpViaFact>;
@@ -157,6 +171,7 @@ using ReferencePinFacts = std::map<std::string, ReferencePinFact>;
 using ControlGridFacts = std::map<std::string, ControlGridFact>;
 using ModelOverrideFacts = std::map<std::string, ModelOverrideFact>;
 using FootprintAliasFacts = std::map<std::string, FootprintAliasFact>;
+using LandFacts = std::map<std::string, LandFact>;
 
 template <typename Fact>
 const Fact* part_fact(const std::map<std::string, Fact>& section, const std::string& name) {
@@ -186,6 +201,8 @@ struct PartFacts {
     ControlGridFacts control_grid;
     ModelOverrideFacts model_overrides;
     FootprintAliasFacts footprint_aliases;
+    LandFacts lands;
+    ElectricalSpacingFact electrical_spacing;
 };
 
 struct ModelRoots {

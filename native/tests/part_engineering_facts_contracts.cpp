@@ -13,8 +13,13 @@ namespace {
 using namespace schgen;
 
 namespace fixture {
-const std::array<std::string, 10> sections{"thermal", "thermal_copper", "ep_vias", "isolation", "regulators",
-                                           "zeners", "reference_pins", "control_grid", "model_overrides", "footprint_aliases"};
+const std::array<std::string, 11> sections{"thermal", "thermal_copper", "ep_vias", "isolation", "regulators",
+                                           "zeners", "reference_pins", "control_grid", "model_overrides", "footprint_aliases",
+                                           "lands"};
+const std::string spacing =
+    "{\"source\": \"fixture\", \"column\": \"B2\", \"basis\": \"fixture\", \"rows\": [{\"max_volts\": 15, \"spacing_mm\": 0.1}, "
+    "{\"max_volts\": 30, \"spacing_mm\": 0.1}]}";
+const std::string land_row = "{\"footprint\": \"Lib:Land\", \"pad_gap_mm\": 0.17, \"tolerance_mm\": 0.02, \"cite\": \"fixture\"}";
 const std::string part = "P1";
 const std::string thermal_row =
     "{\"rth_ja\": 118.9, \"tj_max\": 125.0, \"rds_on\": 0.0, \"eff\": 0.85, \"package\": \"SOT-23-THIN-6\", \"cite\": \"fixture\", "
@@ -67,6 +72,8 @@ std::filesystem::path write_facts(const std::filesystem::path& scratch, const st
         if (name == section && leave_out) continue;
         out << ", \"" << name << "\": " << (name == section ? body : std::string("{}"));
     }
+    if (!(section == "electrical_spacing" && leave_out))
+        out << ", \"electrical_spacing\": " << (section == "electrical_spacing" ? body : fixture::spacing);
     out << "}";
     return file;
 }
@@ -255,11 +262,25 @@ void alias_facts(const std::filesystem::path& scratch) {
             "footprint_aliases: an absent section is refused");
 }
 
+void land_facts(const std::filesystem::path& scratch) {
+    const PartFacts good = facts_from(scratch, "lands", rows(fixture::land_row));
+    require(part_fact_of(good.lands, fixture::part, "lands").pad_gap_mm == 0.17 && good.electrical_spacing.rows.size() == 2,
+            "lands: a full row and the electrical spacing table load");
+    refused_everywhere(scratch, "lands", fixture::land_row);
+    refuses([&] { facts_from(scratch, "electrical_spacing", "{\"source\": \"f\", \"column\": \"B2\", \"basis\": \"f\", \"rows\": "
+                                                          "[{\"max_volts\": 30, \"spacing_mm\": 0.1}, {\"max_volts\": 15, \"spacing_mm\": 0.1}]}"); },
+            "electrical_spacing", "electrical_spacing: rows that do not rise in voltage are refused");
+    refuses([&] { load_part_facts(write_facts(scratch, "electrical_spacing", "{}", true)); }, "electrical_spacing",
+            "electrical_spacing: an absent table is refused");
+}
+
 void repository_sections_are_empty(const std::filesystem::path& repository) {
     const PartFacts facts = load_part_facts(repository / "parts" / "part_facts.json");
     require(facts.thermal.empty() && facts.thermal_copper.empty() && facts.ep_vias.empty() && facts.isolation.empty() &&
                 facts.regulators.empty() && facts.zeners.empty() && facts.reference_pins.empty() && facts.control_grid.empty() &&
-                facts.footprint_aliases.empty(),
+                facts.footprint_aliases.empty() && facts.lands.size() == 1 &&
+                facts.lands.at("DF40C-100DP-0.4V_51").footprint == "Mylibrary:HRS_DF40C-100DP-0.4V_51_" &&
+                facts.lands.at("DF40C-100DP-0.4V_51").pad_gap_mm == 0.17 && facts.electrical_spacing.column == "B2",
             "the repository file carries every engineering section, empty apart from the model overrides");
     require(facts.model_overrides.size() == 1 && facts.model_overrides.count("DF40C-100DP-0.4V_51") &&
                 facts.model_overrides.at("DF40C-100DP-0.4V_51").footprint == "Mylibrary:HRS_DF40C-100DP-0.4V_51_" &&
@@ -282,6 +303,7 @@ int main(int argc, char** argv) {
         small_facts(scratch);
         regulator_facts(scratch);
         alias_facts(scratch);
+        land_facts(scratch);
         repository_sections_are_empty(std::filesystem::absolute(argv[1]));
         std::cout << "part engineering facts contracts ok\n";
         return 0;

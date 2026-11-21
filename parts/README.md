@@ -108,6 +108,15 @@ hand-kept file in this folder. It holds what the generator cannot know:
   `rotation_z_deg` of the 3D model that replaces the footprint's own.
 - `footprint_aliases` — keyed by footprint id: `footprint`, the footprint id
   that stands in for it.
+- `lands` — keyed by part number: `footprint` (the land pattern the board
+  emits for the part), `pad_gap_mm` (the land's own smallest pad-to-pad gap),
+  `tolerance_mm` (how far the measured gap may differ) and `cite` (the
+  manufacturer's recommended land it comes from). A footprint whose own pad gap
+  is below its net-class clearance must have a row here.
+- `electrical_spacing` — one object, not keyed by part: `source`, `column`,
+  `basis` and `rows`, each row `max_volts` and `spacing_mm`, rising in
+  `max_volts`. The land-spacing rule takes the minimum electrical spacing for a
+  pair of nets from the first row that covers the voltage between them.
 
 Each of these sections must be present; an empty one is `{}`. A key naming a
 part must be the name of a folder in this folder. An unknown key, a value of

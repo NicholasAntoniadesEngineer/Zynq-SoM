@@ -103,6 +103,8 @@
   "control_grid": {},
   "model_overrides": {"DF40C-100DP-0.4V_51": {"footprint": "Mylibrary:HRS_DF40C-100DP-0.4V_51_", "path": "${KIPRJMOD}/../parts/DF40C-100DP-0.4V_51/DF40C-100DP-0.4V_51.wrl", "rotation_z_deg": 0}},
   "footprint_aliases": {},
+  "lands": {"DF40C-100DP-0.4V_51": {"footprint": "Mylibrary:HRS_DF40C-100DP-0.4V_51_", "pad_gap_mm": 0.17, "tolerance_mm": 0.02, "cite": "Hirose DF40 catalogue (2013.11) p.10, DF40C-xxDP header recommended PCB layout: pad 0.23+-0.02 on pitch 0.4+-0.02, end pads 0.35+-0.02"}},
+  "electrical_spacing": {"source": "IPC-2221B Table 6-1, electrical conductor spacing", "column": "B2", "basis": "B2 is the bare-board external conductor, uncoated, sea level to 3050 m column: every pair in the land-spacing scope has at least one land pad, which is an opening in the solder mask, so the coated column B4 does not apply to it", "rows": [{"max_volts": 15, "spacing_mm": 0.1}, {"max_volts": 30, "spacing_mm": 0.1}, {"max_volts": 50, "spacing_mm": 0.6}]},
   "stated_heights": {
     "Fiducial:Fiducial_1mm_Mask2mm": {
       "mm": 0,
