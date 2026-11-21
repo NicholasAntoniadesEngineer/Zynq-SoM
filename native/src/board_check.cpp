@@ -213,7 +213,7 @@ BoardDefinitionCheck check_board_definition(const fs::path& repository, const fs
                 circuits.push_back({sheet.name, board_root / "subsystems" / sheet.name / "circuit.json",
                                     author_project_subsystem(board->name, sheet.name, input)});
             }) && authored;
-            for (const std::string& asset : carrier_authored_files(sheet.name, !sheet.from_module()))
+            for (const std::string& asset : local_package_authored_files(sheet.name, !sheet.from_module()))
                 rows.file(board_root / "subsystems" / sheet.name / asset, "subsystems/" + sheet.name + "/" + asset, true);
         }
     } else rows.add(board_file, "sheets.*", true, RequirementStatus::blocked);

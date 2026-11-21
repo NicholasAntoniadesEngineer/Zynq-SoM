@@ -8,12 +8,15 @@ int main() {
     using namespace schgen;
     try {
         BoardPipelineResult result;result.sheets=1;
-        for(const auto* name:{"inputs","authoring_purity","subsystem_structure","carrier_structure","sheet_gates","cc","symbol_law","link","board_schematic","constraints","diagram","bom_footprints","power_tree","rail_ampacity","testpoints","design_rules","part_rules","bom_values","footprint_pads","spice","pcb","pcb_drc","pcb_geometry","testpoint_map","decoupling_report","assembly","thermal","copper_debt","fab_profile","xdc","gallery","power_sequence","floorplan","quantize_census","fallbacks","stage_movement","pipeline_doc","model3d","si","i2c_bus_map","module_pin_map","connector_pinout","bom_ratings","manifest","ledger","placement_requirements"})
+        for(const auto* name:{"inputs","board_definition","authoring_purity","subsystem_structure","carrier_structure","sheet_gates","cc","symbol_law","link","board_schematic","constraints","diagram","bom_footprints","power_tree","rail_ampacity","testpoints","design_rules","part_rules","bom_values","footprint_pads","spice","pcb","pcb_drc","pcb_geometry","testpoint_map","decoupling_report","assembly","thermal","copper_debt","fab_profile","xdc","gallery","power_sequence","floorplan","quantize_census","fallbacks","stage_movement","pipeline_doc","model3d","si","i2c_bus_map","module_pin_map","connector_pinout","bom_ratings","manifest","ledger","placement_requirements"})
             result.gates.push_back({name,true,BoardGateStatus::passed,"aggregation fixture"});
         if(!result.ok()||!result.complete())throw std::runtime_error("baseline must contain all required gates");
         auto omitted=result;
         omitted.gates.erase(std::remove_if(omitted.gates.begin(),omitted.gates.end(),[](const auto& g){return g.name=="placement_requirements";}),omitted.gates.end());
         if(omitted.ok()||omitted.complete())throw std::runtime_error("missing placement_requirements escaped required-vector closure");
+        auto undefined=result;
+        undefined.gates.erase(std::remove_if(undefined.gates.begin(),undefined.gates.end(),[](const auto& g){return g.name=="board_definition";}),undefined.gates.end());
+        if(undefined.ok()||undefined.complete())throw std::runtime_error("missing board_definition escaped required-vector closure");
         for(const auto status:{BoardGateStatus::failed,BoardGateStatus::skipped,BoardGateStatus::unavailable}) {
             auto bad=result;bad.gates.back().status=status;bad.gates.back().mandatory=false;
             if(bad.ok())throw std::runtime_error("placement requirement status/mandatory downgrade escaped");
