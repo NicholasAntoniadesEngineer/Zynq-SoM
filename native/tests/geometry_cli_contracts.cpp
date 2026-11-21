@@ -247,7 +247,7 @@ void live(const fs::path& repo, const fs::path& work, const JsonNode& reference,
         const auto& gates = field(verdict, "gates");
         require(field(field(gates, failure), "status").string_value == "FAIL" && field(field(gates, failure), "mandatory").bool_value, "deliberately mutated mandatory gate is not waived");
         if(std::string(failure)=="fallbacks")
-            require(field(field(gates,failure),"report").string_value.find("board fallback baseline missing or invalid")!=std::string::npos,
+            require(field(field(gates,failure),"report").string_value.find("board fallback baseline invalid")!=std::string::npos,
                     "invalid required fallback evidence causes the rejection, not search effort");
         require(field(field(gates, "native_policy"), "status").string_value == "PASS", "apply ran reviewed native policy");
         const auto& audit = field(gates, "quantize_census");

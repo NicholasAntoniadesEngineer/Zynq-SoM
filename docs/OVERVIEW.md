@@ -92,6 +92,37 @@ builds twice and byte-compares for determinism.
 native/bin/schgen selftest
 ```
 
+## Adding a board
+
+A board is a folder of data; the compiled application builds it unchanged. Write these, in the order
+`schgen board-check` checks them (its rows name each file and key):
+
+1. `<board>/board.json`: `schema`, `name` (= the folder name), `files.stem`, `root_readme`, `owned_groups`,
+   `module.folder`/`pairs`/`loads`, `power.sources`/`rails`/`inlet`, and `sheets` (library subsystems by
+   name with `settings`/`additions`, or module-connector sheets with `module_connector` and `title`).
+2. The module folder named by `module.folder` (`som/` today: `module.json`, `som_interface.json`); shared,
+   written once per module.
+3. `<board>/project.json`: `name`, `placement` (five keys), `placement_requirements`, `fpga.bank_rails`;
+   optional `silk_labels`, `escape.genuine_pairs`. Unknown keys fail.
+4. `schgen.json`: the board in `boards`, a `stackup` entry from `native/stackups.json`, an
+   `overmold_parts` entry.
+5. `<board>/som_mapping.json` (`schema`, `function_map`, `pudc_straps`, `vcco_rail_map`,
+   `rebound_som_rails`, `isolated_som_rails`; optional `rail_aliases`).
+6. `<board>/escape_triage.json`.
+7. `<board>/subsystems/<sheet>/README.md` and `<sheet>.cir` for every module-connector sheet.
+8. `<board>/research/si_spec.json` when any sheet declares a pair; optional `floorplan.json` and
+   `sheet_index.json`.
+9. `<board>/component_basis.json` covering every sheet and value of the board.
+10. `parts/part_facts.json` rows (class, I2C devices) for any new part; power homes come from `power` in
+    `board.json` and the netlist.
+
+Then `native/bin/schgen board-check --project <board>` (non-zero until every row is present) and
+`native/bin/schgen run <board>`. A first build needs no earlier output: stored ratchet baselines are
+absent (fan-out held to 0, every non-search fallback to zero firings) until a person promotes the
+published `reports/fanout_baseline.json` and `reports/fallback_baseline.json` into the board folder, and
+the derived GENUINE pair count is printed in `reports/escape_lanes.txt` until `escape.genuine_pairs`
+states it. `schgen basis-check` audits the component basis of every board folder together.
+
 ## Process + where to read more
 
 - The working rules and process contract (the immutable LAWs, the gate stack,

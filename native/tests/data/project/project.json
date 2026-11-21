@@ -7,5 +7,5 @@
     "module_face_anchors": {"zeta": "E", "alpha": "S"},
     "reg_band_prefixes": ["power", "bringup"]
   },
-  "extension": {"keep": [false, null, 7]}
+  "fpga": {"bank_rails": {}}
 }

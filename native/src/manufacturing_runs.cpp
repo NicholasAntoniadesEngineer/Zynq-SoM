@@ -53,7 +53,7 @@ JsonNode run_assembly_documents(const PcbModel& model,const PowerCheckResult& po
 std::pair<std::filesystem::path,bool> run_manufacturing_pipeline(const ManufacturingPipelineInput& input,const std::filesystem::path& output) {
     auto text=render_manufacturing_pipeline(input);if(std::filesystem::exists(output)&&read(output)==text)return {output,false};publish(output,text);return {output,true};
 }
-std::pair<std::filesystem::path,bool> run_manufacturing_pipeline(ManufacturingPipelineInput input,const std::filesystem::path& root,const std::filesystem::path& output) {
-    input.baselines=manufacturing_pipeline_baselines(root);return run_manufacturing_pipeline(input,output);
+std::pair<std::filesystem::path,bool> run_manufacturing_pipeline(ManufacturingPipelineInput input,const std::string& board,const std::filesystem::path& baseline,const std::filesystem::path& output) {
+    input.baselines={{board,manufacturing_board_baseline(baseline)}};return run_manufacturing_pipeline(input,output);
 }
 } // namespace schgen

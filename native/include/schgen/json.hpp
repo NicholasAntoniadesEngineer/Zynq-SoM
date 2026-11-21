@@ -35,4 +35,11 @@ void reject_unknown_keys(const JsonNode& node,
                          const std::set<std::string>& allowed,
                          const std::string& where);
 
+struct DocumentKey {
+    std::string path;
+    bool required = true;
+};
+std::set<std::string> document_keys_at(const std::vector<DocumentKey>& keys, const std::string& parent);
+const JsonNode* document_member(const JsonNode& document, const std::string& path);
+
 }  // namespace schgen

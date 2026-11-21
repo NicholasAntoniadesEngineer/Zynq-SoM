@@ -1,4 +1,8 @@
 #include "schgen/project_cli.hpp"
+#include "schgen/copper_debt.hpp"
+#include "schgen/board_check.hpp"
+#include "schgen/project_catalog.hpp"
+#include "schgen/run_config.hpp"
 #include "schgen/board_files.hpp"
 #include "schgen/native_authoring_guard.hpp"
 
@@ -92,7 +96,7 @@ bool experiment_command(const std::string& name){
     return name=="chir-rung"||name=="w11-sweep"||name=="w12-bound"||name=="w12-stageprobe"||name=="dump-circuits";
 }
 bool project_command(const std::string& name){
-    return commands.count(name)||experiment_command(name)||name=="board"||name=="build"||name=="nets"||name=="subsystem-check"||name=="carrier-check";
+    return commands.count(name)||experiment_command(name)||name=="board"||name=="build"||name=="nets"||name=="subsystem-check"||name=="carrier-check"||name=="basis-check"||name=="board-check";
 }
 Options parse(int argc, char** argv) {
     Options out;
@@ -323,6 +327,10 @@ Options parse(int argc, char** argv) {
         allowed.insert("--no-render"); allowed.insert("--kicad-cli");
     } else if (out.command == "subsystem-check" || out.command == "carrier-check") {
         allowed.erase("--output");
+    } else if (out.command == "board-check") {
+        allowed.insert("--run-config");
+    } else if (out.command == "basis-check") {
+        allowed.erase("--output"); allowed.erase("--project"); allowed.insert("--run-config");
     } else if (out.command == "nets") {
         // Explicit selected-project net header; no SoM extraction overrides.
     } else if (out.command == "preflight") {
@@ -451,6 +459,40 @@ std::optional<int> run_project_command(int argc, char** argv) {
         if (options.subsystems.size() != 1) throw ProjectError("subsystem-new requires exactly one package name");
         const auto result = scaffold_subsystem(fs::absolute(options.repository) / "subsystems", options.subsystems.front());
         std::cout << subsystem_scaffold_summary(result);
+        return 0;
+    }
+    if(options.command=="board-check"){
+        if(!options.subsystems.empty())throw ProjectError("board-check takes no subsystem selection");
+        if(!options.project)throw ProjectError("board-check requires --project BOARD");
+        const auto repository=fs::weakly_canonical(fs::absolute(options.repository));
+        const auto board=fs::weakly_canonical(options.project->is_absolute()?*options.project:repository/ *options.project);
+        const auto catalogue=project_catalog_paths(repository,board);
+        if(!compile_part_catalog(catalogue.parts_dir.string(),catalogue.part_catalog.string()))throw ProjectError("the part catalogue could not be compiled from "+catalogue.parts_dir.string());
+        if(!open_part_catalog(catalogue.part_catalog.string()))throw ProjectError("cannot open native part catalog");
+        const auto result=check_board_definition(repository,board,options.run_config.empty()?repository/run_config_file:fs::absolute(options.run_config));
+        const auto text=result.text();
+        if(!options.output.empty())publish_text(options.output,text);
+        std::cout<<text;
+        return result.ok()?0:1;
+    }
+    if(options.command=="basis-check"){
+        if(!options.subsystems.empty())throw ProjectError("basis-check takes no subsystem selection");
+        const auto repository=fs::absolute(options.repository);
+        if(!open_part_catalog((repository/"native/catalog.bin").string()))throw ProjectError("cannot open native part catalog");
+        const auto config=options.run_config.empty()?repository/run_config_file:fs::absolute(options.run_config);
+        bool audited_once=false;
+        for(const auto& board:board_folders(repository)){
+            apply_run_config(config,load_board(board,load_module(module_root_in(repository,board))).name);
+            const auto sources=author_copper_debt_sources(repository);
+            if(!audited_once){
+                const auto audited=audit_component_basis(sources.circuits,sources.basis_scopes,sources.basis);
+                std::cout<<component_basis_report(audited)<<'\n';
+                if(!audited.ok())return 1;
+                audited_once=true;
+            }
+            verify_copper_debt_sources(sources);
+            std::cout<<"COPPER CLAIMS: PASS — "<<sources.claims.claims.size()<<" claims verified on every board folder and the library under the stack-up of "<<board.filename().string()<<'\n';
+        }
         return 0;
     }
     auto paths = resolve_project_paths(options.repository, options.project);

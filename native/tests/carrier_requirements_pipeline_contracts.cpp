@@ -119,7 +119,10 @@ void tests(const fs::path& repo) {
         const auto r=f.run(name,[](Context& c){c.pcb.reset();c.schematic.reset();c.circuits.clear();});
         require(r.gates.front().status==BoardGateStatus::failed&&r.gates.front().report.find(why)!=std::string::npos,"requirements scope rejected: "+name+": "+r.gates.front().report);
     };
-    scope_fail("scope-missing-key","\"unrelated_key\": 1","'placement_requirements' is missing");
+    {auto text=carrier_settings;text.erase(text.find(scope_text),scope_text.size()+1);f.paths.project_file=f.scratch.root/"scope-missing-key.json";publish_text(f.paths.project_file,text);
+        const auto r=f.run("scope-missing-key",[](Context& c){c.pcb.reset();c.schematic.reset();c.circuits.clear();});
+        require(r.gates.front().status==BoardGateStatus::failed&&r.gates.front().report.find("'placement_requirements' is missing")!=std::string::npos,"requirements scope rejected: scope-missing-key: "+r.gates.front().report);}
+    scope_fail("scope-unknown-top-key","\"unrelated_key\": 1","unknown key 'unrelated_key'");
     scope_fail("scope-not-object","\"placement_requirements\": 1","'placement_requirements' is missing");
     scope_fail("scope-no-applicable","\"placement_requirements\": {}","needs 'applicable'");
     scope_fail("scope-unknown-key","\"placement_requirements\": {\"applicable\": true, \"note\": \"x\"}","note");

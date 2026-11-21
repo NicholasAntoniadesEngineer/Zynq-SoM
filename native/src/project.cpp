@@ -171,10 +171,47 @@ ProjectPaths resolve_project_paths(const fs::path& repository_root,
     });
 }
 
+const std::vector<DocumentKey>& project_document_keys() {
+    static const std::vector<DocumentKey> keys{
+        {"name", true}, {"placement", true}, {"placement.wired_sheets", true}, {"placement.pilot_prox_sheets", true},
+        {"placement.module_offset", true}, {"placement.module_face_anchors", true}, {"placement.reg_band_prefixes", true},
+        {"placement_requirements", true}, {"placement_requirements.applicable", true}, {"placement_requirements.statement", false},
+        {"fpga", true}, {"fpga.bank_rails", true}, {"silk_labels", false}, {"silk_labels.headers", false},
+        {"silk_labels.switches", false}, {"escape", false}, {"escape.genuine_pairs", false}};
+    return keys;
+}
+
+namespace {
+void reject_unknown_project_keys(const JsonNode& node, const std::string& parent) {
+    reject_unknown_keys(node, document_keys_at(project_document_keys(), parent), parent.empty() ? "project.json" : "project.json " + parent);
+}
+}
+
+PlacementRequirementsScope placement_requirements_scope(const JsonNode& project, const std::string& file) {
+    const auto refuse = [&](const std::string& what) -> PlacementRequirementsScope { throw ProjectError(file + ": 'placement_requirements' " + what); };
+    const auto* node = object_field(project, "placement_requirements");
+    if (!node || node->kind != JsonKind::Object) return refuse("is missing or is not an object");
+    reject_unknown_keys(*node, document_keys_at(project_document_keys(), "placement_requirements"), file + " 'placement_requirements'");
+    const auto* applicable = object_field(*node, "applicable");
+    if (!applicable || applicable->kind != JsonKind::Bool) return refuse("needs 'applicable' as true or false");
+    const auto* statement = object_field(*node, "statement");
+    PlacementRequirementsScope scope;
+    scope.applicable = applicable->bool_value;
+    if (scope.applicable) {
+        if (statement) return refuse("holds a 'statement' although it is applicable");
+        return scope;
+    }
+    if (!statement || statement->kind != JsonKind::String || statement->string_value.empty())
+        return refuse("is not applicable and needs a non-empty 'statement'");
+    scope.statement = statement->string_value;
+    return scope;
+}
+
 ProjectConfig load_project_config(const ProjectPaths& paths) {
     return contextual(paths.project_file, [&] {
         ProjectConfig out;
         out.raw = parse_json_file(paths.project_file.string());
+        reject_unknown_project_keys(out.raw, "");
         out.name = string_field(out.raw, "name");
         out.file_stem = paths.file_stem;
         const RunConfig run = apply_run_config(paths.run_config ? *paths.run_config : paths.repository_root / run_config_file, out.name);
@@ -182,6 +219,7 @@ ProjectConfig load_project_config(const ProjectPaths& paths) {
         out.labels = run.labels;
         out.arrange = run.arrange;
         const auto& placement = field(out.raw, "placement");
+        reject_unknown_project_keys(placement, "placement");
         out.wired_sheets = strings(field(placement, "wired_sheets"), "placement.wired_sheets");
         out.pilot_prox_sheets = strings(field(placement, "pilot_prox_sheets"), "placement.pilot_prox_sheets");
         const auto& offset = field(placement, "module_offset");
@@ -190,11 +228,16 @@ ProjectConfig load_project_config(const ProjectPaths& paths) {
         for (std::size_t i = 0; i < 2; ++i) out.module_offset[i] = number(offset.array_value[i], "placement.module_offset");
         out.module_face_anchors = mapping(field(placement, "module_face_anchors"), "placement.module_face_anchors");
         out.reg_band_prefixes = strings(field(placement, "reg_band_prefixes"), "placement.reg_band_prefixes");
-        out.bank_rails = mapping(optional_object(optional_object(out.raw, "fpga"), "bank_rails"), "fpga.bank_rails");
+        const auto& fpga = field(out.raw, "fpga");
+        reject_unknown_project_keys(fpga, "fpga");
+        out.bank_rails = mapping(field(fpga, "bank_rails"), "fpga.bank_rails");
         const auto labels = optional_object(out.raw, "silk_labels");
+        reject_unknown_project_keys(labels, "silk_labels");
         out.header_desc = mapping(optional_object(labels, "headers"), "silk_labels.headers");
         out.switch_desc = mapping(optional_object(labels, "switches"), "silk_labels.switches");
         out.escape = optional_object(out.raw, "escape");
+        if (object_field(out.escape, "netted_contacts")) fail("escape.netted_contacts", "belongs to the module's module.json escape_population");
+        reject_unknown_project_keys(out.escape, "escape");
         out.module = paths.module;
         return out;
     });

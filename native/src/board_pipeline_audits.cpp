@@ -90,7 +90,7 @@ void record_pipeline_after(Context& c,const fs::path& baseline){
     const auto& r=c.geometry->ratsnest;const auto& f=c.geometry->fanout;const auto& m=c.pcb->placement.model;
     c.ledger.open_step("gates");c.ledger.calc("law5_airwire_measured",number(py_round(r.cross_mm,1)),{{"cross_mm",number(py_round(r.cross_mm,1))},{"budget_mm",number(py_round(r.cross_budget_mm,1))},{"headroom_mm",number(py_round(r.cross_budget_mm-r.cross_mm,1))},{"n_cross",number(r.n_cross)},{"n_subsystems",number(r.n_subsystems)},{"board_w",number(m.board_w)},{"board_h",number(m.board_h)}});
     c.ledger.calc("fanout_d13_gate",number(f.n_subjects),{{"n_subjects",number(f.n_subjects)},{"n_starved",number(f.n_starved)},{"baseline",number(f.baseline.value_or(-1))}});c.ledger.close_step("gates");
-    const auto q=c.quantizations.engagements(),fb=c.fallbacks.census();const auto ceiling=load_fallback_baseline(baseline);
+    const auto q=c.quantizations.engagements(),fb=c.fallbacks.census();const auto ceiling=fs::exists(baseline)?load_fallback_baseline(baseline):std::optional<AuditCounts>(AuditCounts{});
     std::map<std::string,NativeQuantizationDeclaration> qdefs;for(const auto& d:c.quantizations.declarations())qdefs.emplace(d.name,d);
     std::map<std::string,std::string> stages;for(const auto& d:c.options.pipeline_metadata.fallbacks)stages.emplace(d.name,d.stage);
     std::size_t nq=0,nf=0;c.ledger.open_step("census");
@@ -123,6 +123,6 @@ void audit_stages(Context& c){
     c.attempt("pipeline_doc",[&]{auto meta=c.options.pipeline_metadata;
         if(meta.stages.empty()||meta.fallbacks.empty())throw ProjectError("native stage/fallback metadata manifest is required for pipeline documentation");
         meta.quantization.clear();for(const auto& q:c.quantizations.declarations())meta.quantization.push_back({q.name,q.value,q.proof_class,q.basis});
-        const auto r=run_manufacturing_pipeline(meta,c.paths.repository_root,c.docs/"GEOMETRY_PIPELINE.md");c.gate("pipeline_doc",true,r.second?"updated":"unchanged");});
+        const auto r=run_manufacturing_pipeline(meta,c.paths.project_root.filename().string(),fb,c.docs/"GEOMETRY_PIPELINE.md");c.gate("pipeline_doc",true,r.second?"updated":"unchanged");});
 }
 }

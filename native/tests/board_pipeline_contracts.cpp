@@ -230,7 +230,15 @@ void board_search_accounting(){
     require(!check_board_fallbacks(census,source,output).ok,"unresolved corridor obstruction remains mandatory");
     census.erase("corridor_stray_unmovable");census["legalize_joint_state"]=-1;
     rejects([&]{check_board_fallbacks(census,source,output);},"negative search accounting rejected");
-    rejects([&]{check_board_fallbacks({},tmp.path/"missing",output);},"no automatic board acceptance baseline pinning");
+    const auto first=tmp.path/"first.json";
+    result=check_board_fallbacks({{"thermal_via_lattice",0},{"interior_reseat_retry",9}},tmp.path/"missing",first);
+    require(result.ok&&result.unstored&&!result.pinned&&result.summary().find("no stored baseline")!=std::string::npos,
+            "a first build without a stored baseline is reported and holds every non-search path to zero");
+    require(load_fallback_baseline(first)&&load_fallback_baseline(first)->empty(),"no census is pinned as a ceiling on a first build");
+    require(!check_board_fallbacks({{"thermal_via_lattice",1}},tmp.path/"missing",first).ok,
+            "a missing baseline cannot accept a firing non-search path");
+    publish_text(tmp.path/"corrupt.json","{\"counts\": 3}");
+    rejects([&]{check_board_fallbacks({},tmp.path/"corrupt.json",output);},"an invalid stored baseline fails loudly");
 }
 void final_manifest(const fs::path& root){
     Temp tmp;ProjectPaths p;p.repository_root=root;p.project_root=tmp.path/"source";

@@ -230,8 +230,9 @@ Include `schgen/assembly_documents.hpp`, `schgen/manufacturing_exports.hpp` and
   names, and monotonic reductions. A regression does not write the baseline.
 - Pipeline document: populate `ManufacturingPipelineInput` from the owning
   native stage/quantization/fallback registries, then call
-  `run_manufacturing_pipeline(input, repository_root, output_path)`. That
-  overload reads current per-project fallback baselines. The two-argument
+  `run_manufacturing_pipeline(input, board, baseline_path, output_path)`. That
+  overload reads the built board's own stored fallback baseline (absent means
+  no stored ceilings, every name held to zero; invalid fails). The two-argument
   overload uses an explicitly prepared baseline snapshot. Both preserve the
   existing file's timestamp when bytes are unchanged. Registry fixtures in
   this directory are test inputs, not a production registry provider.

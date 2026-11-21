@@ -92,11 +92,11 @@ struct ManufacturingPipelineInput {
 };
 // Registries are caller-owned live metadata, never parsed from Python source.
 ManufacturingPipelineInput manufacturing_pipeline_from_json(const JsonNode&);
-ManufacturingBaselines manufacturing_pipeline_baselines(const std::filesystem::path& repository_root);
+ManufacturingCounts manufacturing_board_baseline(const std::filesystem::path& baseline);
 std::string render_manufacturing_pipeline(const ManufacturingPipelineInput&);
 std::pair<std::filesystem::path,bool> run_manufacturing_pipeline(
     const ManufacturingPipelineInput&, const std::filesystem::path& output);
 std::pair<std::filesystem::path,bool> run_manufacturing_pipeline(
-    ManufacturingPipelineInput, const std::filesystem::path& repository_root,
+    ManufacturingPipelineInput, const std::string& board, const std::filesystem::path& baseline,
     const std::filesystem::path& output);
 } // namespace schgen

@@ -74,6 +74,8 @@ struct CopperDebtResult {
 CopperClaims parse_copper_claims(const JsonNode& document, const std::string& file);
 CopperClaims load_copper_claims(const std::filesystem::path& repository);
 CopperDebtSources author_copper_debt_sources(const std::filesystem::path& repository);
+CopperDebtSources author_copper_debt_sources(const std::filesystem::path& repository, const ComponentBasisBoards& boards);
+void verify_copper_debt_sources(const CopperDebtSources&);
 // Hard-fails missing or inconsistent claim provenance even without a PCB.
 // Copper debt itself remains report-only; thermal credit is a separate gate.
 CopperDebtResult analyze_copper_debt(const ThermalCopper*, const CopperDebtSources&);

@@ -188,12 +188,16 @@ bool is_board_search_effort(std::string_view name){
         "corridor_evict_moved","punch_free_plan_rejected","interior_reseat_retry"};
     return names.count(name)!=0;
 }
+std::optional<AuditCounts> stored_board_fallback_baseline(const std::filesystem::path& path){
+    if(!std::filesystem::exists(path))return std::nullopt;
+    auto counts=load_fallback_baseline(path);
+    if(!counts)throw std::invalid_argument("board fallback baseline invalid: "+path.string());
+    return counts;
+}
 FallbackAuditResult check_board_fallbacks(const AuditCounts& census,const std::filesystem::path& baseline,
                                         const std::filesystem::path& output){
-    // Unlike first-run baseline discovery, board acceptance requires reviewed
-    // evidence for non-search paths. Missing evidence cannot pin a failure PASS.
-    auto ceilings=load_fallback_baseline(baseline);
-    if(!ceilings)throw std::invalid_argument("board fallback baseline missing or invalid");
+    const auto stored=stored_board_fallback_baseline(baseline);
+    std::optional<AuditCounts> ceilings=stored?*stored:AuditCounts{};
     for(auto it=ceilings->begin();it!=ceilings->end();){
         if(is_board_search_effort(it->first))it=ceilings->erase(it);else ++it;
     }
@@ -203,11 +207,13 @@ FallbackAuditResult check_board_fallbacks(const AuditCounts& census,const std::f
         (is_board_search_effort(name)?search:mandatory).emplace(name,count);
     }
     auto result=check_fallback_counts(mandatory,ceilings,baseline,output);
+    result.unstored=!stored;
     result.search_effort=std::move(search);
     return result;
 }
 std::string FallbackAuditResult::summary()const{
     std::vector<std::string> lines={"FALLBACK RATCHET: "+std::string(ok?"PASS":"FAIL")+" — "+std::to_string(n_names)+" registered paths, "+std::to_string(n_fired)+" firing"+(pinned?" (baseline PINNED this build)":"")};
+    if(unstored)lines.push_back("  no stored baseline: every non-search path held to zero firings, the strictest ceiling");
     for(const auto& r:regressions)lines.push_back("  REGRESSION: "+r);
     if(!search_effort.empty()){
         lines.push_back("SEARCH EFFORT: observational, no acceptance ceiling; counts include rejected work. Exhaustion is not proof of infeasibility. Hardware gates remain independent.");

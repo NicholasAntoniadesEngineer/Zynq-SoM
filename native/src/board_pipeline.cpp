@@ -1,4 +1,6 @@
 #include "board_pipeline_internal.hpp"
+#include "schgen/board_check.hpp"
+#include "schgen/run_config.hpp"
 #include <cmath>
 #include <iomanip>
 #include <set>
@@ -77,7 +79,7 @@ void publish_final_reports(Context& c) {
 namespace schgen {
 namespace {
 const char* status_name(BoardGateStatus s){switch(s){case BoardGateStatus::passed:return "PASS";case BoardGateStatus::failed:return "FAIL";case BoardGateStatus::skipped:return "SKIP";case BoardGateStatus::unavailable:return "UNAVAILABLE";}throw ProjectError("invalid board gate status");}
-const std::vector<std::string> required={"inputs","authoring_purity","subsystem_structure","carrier_structure","sheet_gates","cc","symbol_law","link","board_schematic","constraints","diagram","bom_footprints","power_tree","rail_ampacity","testpoints","design_rules","part_rules","bom_values","footprint_pads","spice","pcb","pcb_drc","pcb_geometry","testpoint_map","decoupling_report","assembly","thermal","copper_debt","fab_profile","xdc","gallery","power_sequence","floorplan","quantize_census","fallbacks","stage_movement","pipeline_doc","model3d","si","i2c_bus_map","module_pin_map","connector_pinout","bom_ratings","manifest","ledger","placement_requirements"};
+const std::vector<std::string> required={"inputs","board_definition","authoring_purity","subsystem_structure","carrier_structure","sheet_gates","cc","symbol_law","link","board_schematic","constraints","diagram","bom_footprints","power_tree","rail_ampacity","testpoints","design_rules","part_rules","bom_values","footprint_pads","spice","pcb","pcb_drc","pcb_geometry","testpoint_map","decoupling_report","assembly","thermal","copper_debt","fab_profile","xdc","gallery","power_sequence","floorplan","quantize_census","fallbacks","stage_movement","pipeline_doc","model3d","si","i2c_bus_map","module_pin_map","connector_pinout","bom_ratings","manifest","ledger","placement_requirements"};
 }
 bool board_pipeline_gate_mandatory(const std::string& name){
     static const std::set<std::string> advisory={"pin_completeness","contract_coverage","contract_coverage_lint","floorplan_composition","return_path","cpl","render3d","golden","sheet_render","root_erc","ratsnest_images"};
@@ -155,6 +157,8 @@ BoardPipelineResult run_board_pipeline(const ProjectPaths& p,const BoardPipeline
         std::vector<std::string> names;for(const auto& sc:c.circuits){c.sheets.push_back(sc.circuit);names.push_back(sc.name);}
         c.index=extend_sheet_index(load_sheet_index(p),names).index;c.result.sheets=c.sheets.size();c.loaded=true;c.gate("inputs",true,"live C++ factories authored once; canonical snapshots published; actual IR retained");
         const auto intent=check_layout_intent(c.sheets);c.report("layout_intent.txt",intent.summary());c.gate("layout_intent",intent.ok,intent.summary());});
+    c.attempt("board_definition",[&]{const auto r=check_board_definition(p.repository_root,p.project_root,p.run_config?*p.run_config:p.repository_root/run_config_file);
+        const auto text=r.text();c.report("board_definition.txt",text);c.gate("board_definition",r.ok(),text.substr(0,text.find('\n')));});
     if(c.loaded){schematic_stage(c);electrical_stages(c);pcb_stages(c);document_stages(c);audit_stages(c);}
     for(const auto& name:required)if(std::none_of(c.result.gates.begin(),c.result.gates.end(),[&](const auto& g){return g.name==name;}))c.gate(name,false,"stage did not run; prerequisite unavailable");
     c.result.quantization=c.quantizations.engagements();c.result.fallbacks=c.fallbacks.census();c.result.ledger=c.ledger.render();
