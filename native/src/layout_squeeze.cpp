@@ -108,6 +108,18 @@ public:
         return take_step(attempt);
     }
 
+    bool open(Side side, Nm by) {
+        Attempt attempt;
+        attempt.side = side;
+        attempt.step = -by;
+        const Board board = shrunk(kernel_.board(), attempt.side, attempt.step);
+        const Snapshot before = kernel_.snapshot();
+        kernel_.set_board(board);
+        if (carry_edge(attempt)) return true;
+        kernel_.restore(before);
+        return false;
+    }
+
 private:
     bool take_step(Attempt& attempt) {
         const Board board = shrunk(kernel_.board(), attempt.side, attempt.step);
@@ -576,6 +588,10 @@ SqueezeReport squeeze(Kernel& kernel, const SqueezeOptions& options) { return Sq
 
 bool widen(Kernel& kernel, const SqueezeOptions& options, Side side, Nm by) {
     return Squeezer(kernel, options).widen(side, by);
+}
+
+bool open_side(Kernel& kernel, const SqueezeOptions& options, Side side, Nm by) {
+    return Squeezer(kernel, options).open(side, by);
 }
 
 SqueezeReport squeeze_best(Kernel& kernel, const SqueezeOptions& options) {

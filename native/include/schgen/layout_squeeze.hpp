@@ -81,6 +81,7 @@ struct SqueezeReport {
 
 SqueezeReport squeeze(Kernel& kernel, const SqueezeOptions& options);
 bool widen(Kernel& kernel, const SqueezeOptions& options, Side side, Nm by);
+bool open_side(Kernel& kernel, const SqueezeOptions& options, Side side, Nm by);
 SqueezeReport squeeze_best(Kernel& kernel, const SqueezeOptions& options);
 
 }
