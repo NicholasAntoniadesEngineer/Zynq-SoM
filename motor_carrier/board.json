@@ -505,5 +505,99 @@
         }
       }
     }
-  ]
+  ],
+  "layout": {
+    "access": [
+      {
+        "handling": "grip_sides",
+        "side_mm": 25.0,
+        "front_mm": 0.0,
+        "basis": "MIL-STD-1472H (15 Sep 2020) para 5.9.14.7.2 Bare finger operation: spacing between adjacent connectors not less than 25 mm, measured from the outermost portion of the connector (para 5.9.14.7.4); front: the standard gives spacing between connectors only"
+      },
+      {
+        "handling": "latch",
+        "side_mm": 25.0,
+        "front_mm": 0.0,
+        "basis": "MIL-STD-1472H (15 Sep 2020) para 5.9.14.7.2 Bare finger operation: spacing between adjacent connectors not less than 25 mm, measured from the outermost portion of the connector (para 5.9.14.7.4); the paragraph covers every bare-finger connector, latched plugs included; front: none given"
+      },
+      {
+        "handling": "card",
+        "side_mm": 25.0,
+        "front_mm": 0.0,
+        "basis": "borrowed from the nearest sourced class: MIL-STD-1472H (15 Sep 2020) para 5.9.14.7.2 Bare finger operation: spacing between adjacent connectors not less than 25 mm, measured from the outermost portion of the connector (para 5.9.14.7.4); no source gives a figure for a push-push card"
+      }
+    ],
+    "functions": [
+      {
+        "part": "esc_power.J1",
+        "serves": "ESC battery inlet, 3S to 6S pack, 30 A",
+        "basis": "motor-carrier design 1b"
+      },
+      {
+        "part": "esc_power.J2",
+        "serves": "protected battery outlet to the ESCs",
+        "basis": "motor-carrier design 1b"
+      },
+      {
+        "part": "esc_io.J1",
+        "serves": "signal, 5 V and ground for eight ESCs",
+        "basis": "motor-carrier design 1a"
+      },
+      {
+        "part": "esc_io.J2",
+        "serves": "ESC telemetry input",
+        "basis": "motor-carrier design 1a"
+      },
+      {
+        "part": "can_bus.J1",
+        "serves": "CAN bus in",
+        "basis": "motor-carrier design 1a"
+      },
+      {
+        "part": "can_bus.J2",
+        "serves": "CAN bus out to the next node",
+        "basis": "motor-carrier design 1a"
+      },
+      {
+        "part": "board_control.J1",
+        "serves": "fan with tachometer",
+        "basis": "motor-carrier design, board_control"
+      },
+      {
+        "part": "vbat_supply.J1",
+        "serves": "logic supply selector: USB-C PD or battery",
+        "basis": "motor-carrier design 1c"
+      },
+      {
+        "part": "pd_input.J1",
+        "serves": "USB-C PD logic supply",
+        "basis": "motor-carrier design 1c"
+      },
+      {
+        "part": "usb_uart_connector.J1",
+        "serves": "USB-C receptacle: USB full-speed data pair and VBUS to the USB-to-UART bridge for the serial console",
+        "basis": "stated from the circuit by the integrator 2026-11-21 (no design document covers it)"
+      },
+      {
+        "part": "rj45_connector.J1",
+        "serves": "RJ45 jack: the four Ethernet MDI pairs to the magnetics of the ethernet sheet, and the two jack LEDs",
+        "basis": "stated from the circuit by the integrator 2026-11-21 (no design document covers it)"
+      },
+      {
+        "part": "microsd.J1",
+        "serves": "microSD socket: SD clock, command and four data lines, card detect and the switched card supply, to the module",
+        "basis": "stated from the circuit by the integrator 2026-11-21 (no design document covers it)"
+      },
+      {
+        "part": "debug_boot.J1",
+        "serves": "JTAG header (TMS, TCK, TDO, TDI, 3V3, GND) to the Zynq on the module",
+        "basis": "stated from the circuit by the integrator 2026-11-21 (no design document covers it)"
+      },
+      {
+        "part": "debug_boot.J2",
+        "serves": "debug header: reset and two GPIOs of the module's STM32 controller, 3V3_SC and GND",
+        "basis": "stated from the circuit by the integrator 2026-11-21 (no design document covers it)"
+      }
+    ]
+  }
 }
