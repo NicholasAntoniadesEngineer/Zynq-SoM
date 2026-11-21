@@ -447,6 +447,11 @@ if(BUILD_TESTING)
     target_compile_options(schgen_carrier_surface_requirements_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
     add_test(NAME native_carrier_surface_requirements_contracts COMMAND schgen_carrier_surface_requirements_contracts
         "${CMAKE_CURRENT_SOURCE_DIR}/.." "${CMAKE_CURRENT_SOURCE_DIR}/catalog.bin")
+    add_executable(schgen_ownership_declaration_contracts tests/ownership_declaration_contracts.cpp)
+    target_link_libraries(schgen_ownership_declaration_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_ownership_declaration_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
+    add_test(NAME native_ownership_declaration_contracts COMMAND schgen_ownership_declaration_contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/.." carrier)
     add_executable(schgen_carrier_requirements_pipeline_contracts tests/carrier_requirements_pipeline_contracts.cpp)
     target_include_directories(schgen_carrier_requirements_pipeline_contracts PRIVATE src)
     target_link_libraries(schgen_carrier_requirements_pipeline_contracts PRIVATE schgen_core)

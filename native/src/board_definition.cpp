@@ -199,7 +199,9 @@ BoardHeader board_header_of(const JsonNode& document, const std::string& file) {
     BoardHeader header;
     header.files = files_of(member(document, "files", JsonKind::Object, source), source);
     header.flags.root_readme = member(document, "root_readme", JsonKind::Bool, source).bool_value;
-    header.flags.owned_groups = member(document, "owned_groups", JsonKind::Bool, source).bool_value;
+    header.flags.owned_groups = names(document, "owned_groups", source);
+    if (std::set<std::string>(header.flags.owned_groups.begin(), header.flags.owned_groups.end()).size() != header.flags.owned_groups.size())
+        fail(source, "'owned_groups' lists a sheet twice");
     header.module_folder = folder_name(member(document, "module", JsonKind::Object, source), "folder", source + " module");
     return header;
 }
@@ -296,6 +298,8 @@ BoardDefinition parse_board(const JsonNode& document, const std::string& file, M
         if (!seen.insert(board.sheets.back().name).second) fail(source, "sheet " + board.sheets.back().name + " is listed twice");
     }
     if (board.sheets.empty()) fail(source, "the board lists no sheets");
+    for (const std::string& owned : board.flags.owned_groups)
+        if (!seen.count(owned)) fail(source, "'owned_groups' names sheet " + owned + " which the board does not list");
     return board;
 }
 

@@ -3,7 +3,7 @@
   "name": "carrier",
   "files": {"stem": "Zynq_Carrier"},
   "root_readme": true,
-  "owned_groups": true,
+  "owned_groups": ["board_aux", "bringup_rails"],
   "module": {
     "folder": "som",
     "pairs": [

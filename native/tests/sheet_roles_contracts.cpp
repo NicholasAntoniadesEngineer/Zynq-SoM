@@ -44,7 +44,7 @@ const char* const bench_board = R"json({
   "name": "bench",
   "files": {"stem": "Bench_Board"},
   "root_readme": false,
-  "owned_groups": false,
+  "owned_groups": [],
   "module": {"folder": "bench_module", "pairs": [], "loads": []},
   "power": {"sources": [], "rails": [], "inlet": null},
   "sheets": [

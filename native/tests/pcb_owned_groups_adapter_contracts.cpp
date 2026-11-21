@@ -4,6 +4,7 @@
 #include "schgen/board_schematic.hpp"
 #include "schgen/netlist_gate.hpp"
 #include "../src/pcb_placement_internal.hpp"
+#include "reviewed_ownership.hpp"
 #include <fstream>
 #include <cstdlib>
 #include <unistd.h>
@@ -19,6 +20,13 @@ template<class F> void rejects(F f, const std::string& message) {
     bool threw = false;
     try { f(); } catch (const std::exception&) { threw = true; }
     require(threw, message);
+}
+void resolve_reviewed(const ProjectPaths& paths, const std::vector<ProjectCircuit>& circuits, const PcbPlacementInput& in) {
+    (void)resolve_owned_group_inputs(paths, circuits, in);
+    for (const auto& sheet : paths.owned_groups) {
+        const auto problem = reviewed_ownership::mismatch(parse_placement_requirements(parse_json_file((paths.subsystems_dir / sheet / "placement_requirements.json").string())));
+        if (!problem.empty()) throw std::runtime_error(problem);
+    }
 }
 bool same(const FloorplanZoneShape& a, const FloorplanZoneShape& b) {
     return a.w == b.w && a.h == b.h && a.top_off == b.top_off && a.bot_off == b.bot_off &&
@@ -147,7 +155,7 @@ int main(int argc, char** argv) {
             "reference filter must use its explicit VREF2 owner and pin-local placement policy");
         auto disabled = in; disabled.floorplan.compact_search = false;
         require(resolve_owned_group_inputs(paths, {}, disabled).empty(), "default resolver must be a no-op");
-        auto unrelated = paths; unrelated.owned_groups = false;
+        auto unrelated = paths; unrelated.owned_groups.clear();
         require(resolve_owned_group_inputs(unrelated, {}, in).empty(), "no carrier policy injected into other project");
 
         auto bad = in; bad.floorplan.sheet_index.push_back(bad.floorplan.sheet_index.front());
@@ -191,22 +199,22 @@ int main(int argc, char** argv) {
         std::ifstream read(manifest); const std::string original((std::istreambuf_iterator<char>(read)), {}); read.close();
         auto changed = original; changed.replace(changed.find("input_bypass"), std::string("input_bypass").size(), "unknown_role");
         { std::ofstream file(manifest); file << changed; }
-        rejects([&] { resolve_owned_group_inputs(private_paths, circuits, in); }, "unknown manifest role accepted");
+        rejects([&] { resolve_reviewed(private_paths, circuits, in); }, "unknown manifest role accepted");
         changed = original;
         changed.replace(changed.find("reference_filter"), std::string("reference_filter").size(), "supply_bypass");
         { std::ofstream file(manifest); file << changed; }
-        rejects([&] { resolve_owned_group_inputs(private_paths, circuits, in); },
+        rejects([&] { resolve_reviewed(private_paths, circuits, in); },
             "reference filter electrical role conflated with its placement category");
         changed = original;
         const auto first = changed.find('{', changed.find("\"ownership\""));
         const auto last = changed.find('}', first);
         changed.erase(first, changed.find(',', last) - first + 1);
         { std::ofstream file(manifest); file << changed; }
-        rejects([&] { resolve_owned_group_inputs(private_paths, circuits, in); }, "omitted reviewed ownership accepted");
+        rejects([&] { resolve_reviewed(private_paths, circuits, in); }, "omitted reviewed ownership accepted");
         changed = original;
         changed.replace(changed.find("\"SW1\""), 5, "\"SW99\"");
         { std::ofstream file(manifest); file << changed; }
-        rejects([&] { resolve_owned_group_inputs(private_paths, circuits, in); }, "wrong top access declaration accepted");
+        rejects([&] { resolve_reviewed(private_paths, circuits, in); }, "wrong top access declaration accepted");
         { std::ofstream file(manifest); file << original; }
         require(resolve_owned_group_inputs(private_paths, circuits, in).size() == 2, "private manifest recovery");
 

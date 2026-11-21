@@ -21,7 +21,7 @@ namespace {
 namespace fs = std::filesystem;
 using namespace schgen;
 
-const std::string board_text = R"({"files": {"stem": "Fixture_Board"}, "root_readme": false, "owned_groups": false, "module": {"folder": "som"}})";
+const std::string board_text = R"({"files": {"stem": "Fixture_Board"}, "root_readme": false, "owned_groups": [], "module": {"folder": "som"}})";
 
 void require(bool value, const std::string& message) {
     if (!value) throw std::runtime_error(message);  // Also active under NDEBUG.
@@ -439,9 +439,9 @@ void repository_contracts(Suite& suite, const fs::path& repo) {
         require(carrier.part_catalog_file == repo / "native/catalog.bin" && carrier.fpga_dir == repo / "carrier/fpga", "downstream paths wrong");
         const auto catalogs = project_catalog_paths(repo, "carrier");
         require(carrier.part_catalog_file == catalogs.part_catalog && carrier.circuit_catalog_file == catalogs.circuit_catalog, "catalog paths diverged");
-        require(carrier.root_readme && carrier.owned_groups, "carrier states its gallery and owned-group flags");
+        require(carrier.root_readme && carrier.owned_groups == std::vector<std::string>{"board_aux", "bringup_rails"}, "carrier states its gallery and owned-group flags");
         const auto devkit = resolve_project_paths(repo, "devkit_mini");
-        require(!devkit.root_readme && !devkit.owned_groups, "devkit_mini states its gallery and owned-group flags");
+        require(!devkit.root_readme && devkit.owned_groups.empty(), "devkit_mini states its gallery and owned-group flags");
         require(carrier.file_stem == "Zynq_Carrier" && devkit.file_stem == "Zynq_Carrier", "board file stem is read from board.json");
         {
             TempDir bare;
@@ -449,9 +449,11 @@ void repository_contracts(Suite& suite, const fs::path& repo) {
             rejects([&] { resolve_project_paths(repo, bare.path); }, {"board.json", "is missing"});
             write(bare.path / "board.json", R"({"files": {"stem": "Fixture_Board"}, "root_readme": false})");
             rejects([&] { resolve_project_paths(repo, bare.path); }, {"board.json", "field 'owned_groups' is missing"});
-            write(bare.path / "board.json", R"({"files": {"stem": "Fixture_Board"}, "root_readme": false, "owned_groups": false})");
+            write(bare.path / "board.json", R"({"files": {"stem": "Fixture_Board"}, "root_readme": false, "owned_groups": true})");
+            rejects([&] { resolve_project_paths(repo, bare.path); }, {"board.json", "field 'owned_groups' is missing or has the wrong type"});
+            write(bare.path / "board.json", R"({"files": {"stem": "Fixture_Board"}, "root_readme": false, "owned_groups": []})");
             rejects([&] { resolve_project_paths(repo, bare.path); }, {"board.json", "field 'module' is missing"});
-            write(bare.path / "board.json", R"({"files": {"stem": "Fixture_Board"}, "root_readme": false, "owned_groups": false, "module": {"folder": "absent_module"}})");
+            write(bare.path / "board.json", R"({"files": {"stem": "Fixture_Board"}, "root_readme": false, "owned_groups": [], "module": {"folder": "absent_module"}})");
             rejects([&] { resolve_project_paths(repo, bare.path); }, {"absent_module", "module.json", "is missing"});
         }
         rejects([&] { resolve_project_paths(repo, "missing-project"); }, {"missing-project"});

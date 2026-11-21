@@ -8,6 +8,7 @@
 #include "schgen/pin_completeness.hpp"
 #include "schgen/footprint_pads.hpp"
 #include "schgen/placement_requirements.hpp"
+#include "reviewed_ownership.hpp"
 #include "schgen/component_basis.hpp"
 #include "schgen/design_rules.hpp"
 #include <iostream>
@@ -159,7 +160,7 @@ int main(int argc,char**argv){try{
     FootprintResolutionOptions fp;fp.parts_dir=root/"parts";fp.library_tables={root/"som/fp-lib-table"};fp.kicad_footprint_root="/Applications/KiCad/KiCad.app/Contents/SharedSupport/footprints";
     require(check_footprint_pads(one,lib,fp).ok,"footprint coverage");
     const auto req=parse_placement_requirements(parse_json_file((assets/"carrier/subsystems/board_aux/placement_requirements.json").string()));
-    require(req.ownership==carrier_surface_requirement_declaration("board_aux").required.ownership,"compiled declaration");
+    require(req.ownership==reviewed_ownership::reviewed("board_aux").ownership,"compiled declaration");
     std::cout<<"PASS C1 and reference-bias correction: independent historical identity plus exact reviewed rewiring; connectivity/feature and capacitor mutations rejected; C1-C5 exact value/package/BOM identities; live/derived parity, ERM, power, part rules, BOM values, pins, footprints, compiled manifest. Original reference defect remains rejected; transient isolation not certified.\n";
     return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
