@@ -873,6 +873,12 @@ void Engine::_build_trunk(Trunk& trunk) {
         }
     }
     struct Job { std::string kind; Point pt; int sign; std::string far; Refs legs; };
+    std::vector<TrunkTap> taps;
+    const auto planned = [&] {
+        const auto found = std::find_if(pl.plans.begin(), pl.plans.end(), [&](const auto& e) { return e.first == trunk.net; });
+        require(found != pl.plans.end() && !found->second.empty(), "trunk " + trunk.net + ": tap was not planned");
+        return found->second.size() - 1;
+    };
     std::vector<Job> jobs;
     for (const auto& d : trunk.direct) {
         if (d.side == "top" || d.side == "bottom") {
@@ -882,6 +888,7 @@ void Engine::_build_trunk(Trunk& trunk) {
                 const auto way = _escape_path(1, d.pin_pt, ty, trunk.net);
                 pl.plan(trunk.net, way); nodes.push_back(way.back().first);
             }
+            taps.push_back({planned(), nodes.back(), d.pin_pt, d.side});
         } else jobs.push_back({"direct", d.pin_pt, d.side == "left" ? -1 : 1, {}, {}});
     }
     for (const auto& r : trunk.rungs) {
@@ -907,6 +914,7 @@ void Engine::_build_trunk(Trunk& trunk) {
     for (const auto& j : jobs) {
         if (j.kind == "direct") {
             const auto way = _escape_path(j.sign, j.pt, ty, trunk.net); pl.plan(trunk.net, way); nodes.push_back(way.back().first);
+            taps.push_back({planned(), nodes.back(), j.pt, j.sign < 0 ? "left" : "right"});
         } else if (j.kind == "ladder") {
             const auto cols = _side_ladder_rung(trunk, j.far, j.pt, j.sign, j.legs, ty);
             nodes.insert(nodes.end(), cols.begin(), cols.end());
@@ -923,6 +931,7 @@ void Engine::_build_trunk(Trunk& trunk) {
             pl.plan(trunk.net, {pt, {fx, ty}}); nodes.push_back(fx);
         }
     }
+    const bool stubbed = _stub_enclosing_taps(trunk, taps, nodes);
     const auto port_tail = [&](const ChainPtr& chain) {
         require(bool(chain), "null trunk chain");
         return !chain->legs.empty() && net(chain->legs.back().b).net_class == "port";
@@ -960,6 +969,10 @@ void Engine::_build_trunk(Trunk& trunk) {
     for (const double x : nodes) unique.insert(py_round(x, 3));
     if (unique.size() == 1) for (const double x : _trunk_leg_taps(trunk, *unique.begin())) unique.insert(py_round(x, 3));
     nodes.assign(unique.begin(), unique.end());
+    if (stubbed && nodes.size() < 2) {
+        if (!nodes.empty()) llabel(trunk.net, nodes.front(), ty, 0);
+        return;
+    }
     require(nodes.size() >= 2, "trunk " + trunk.net + ": fewer than 2 taps after build");
     if (_needs_flag(trunk.net)) {
         std::size_t widest = 1;
@@ -990,6 +1003,40 @@ void Engine::_build_trunk(Trunk& trunk) {
     llabel(trunk.net, nodes.back(), ty, 0);
 }
 
+bool Engine::_stub_enclosing_taps(const Trunk& trunk, const std::vector<TrunkTap>& taps, std::vector<double>& nodes) {
+    if (taps.empty() || net(trunk.net).net_class != "signal") return false;
+    const auto entry = std::find_if(pl.plans.begin(), pl.plans.end(), [&](const auto& e) { return e.first == trunk.net; });
+    require(entry != pl.plans.end(), "trunk " + trunk.net + ": taps without plans");
+    Box4 reach{taps.front().pin.first, taps.front().pin.second, taps.front().pin.first, taps.front().pin.second};
+    for (const auto& tap : taps) for (const auto& p : entry->second.at(tap.path))
+        reach = {std::min(reach.x0, p.first), std::min(reach.y0, p.second), std::max(reach.x1, p.first), std::max(reach.y1, p.second)};
+    std::set<std::string> own;
+    for (const auto& p : net(trunk.net).pins) own.insert(p.ref);
+    const auto enclosed = std::count_if(pl.boxes.begin(), pl.boxes.end(), [&](const VisualBox& box) {
+        return box.kind == "body" && !box.owner.empty() && box.owner.front() != '#' && !own.count(box.owner)
+            && box.x0 > reach.x0 && box.x1 < reach.x1 && box.y0 > reach.y0 && box.y1 < reach.y1;
+    });
+    if (enclosed <= TRUNK_ENCLOSED_LIMIT) return false;
+    std::vector<std::size_t> paths;
+    for (const auto& tap : taps) {
+        paths.push_back(tap.path);
+        const auto node = std::find_if(nodes.begin(), nodes.end(), [&](double x) { return std::fabs(x - tap.node) < 1e-6; });
+        require(node != nodes.end(), "trunk " + trunk.net + ": tap column is missing");
+        nodes.erase(node);
+    }
+    std::sort(paths.rbegin(), paths.rend());
+    for (const auto index : paths) entry->second.erase(entry->second.begin() + static_cast<std::ptrdiff_t>(index));
+    for (const auto& tap : taps) {
+        const bool side = tap.side == "left" || tap.side == "right";
+        const int sign = tap.side == "left" || tap.side == "top" ? -1 : 1;
+        const Point end = side ? Point{py_round(tap.pin.first + sign * sp.port_run, 3), tap.pin.second}
+                               : Point{tap.pin.first, py_round(tap.pin.second + sign * sp.port_run, 3)};
+        pl.plan(trunk.net, {tap.pin, end});
+        llabel(trunk.net, end.first, end.second, tap.side == "left" ? 180 : 0);
+    }
+    _bridge(trunk.net);
+    return true;
+}
 double Engine::_trunk_chain_column(const FloatChain& chain, const std::vector<double>& nodes, double ty, double outside) {
     if (!sp.compact || nodes.empty()) return outside;
     auto [left, right] = _chain_band(chain, -1);

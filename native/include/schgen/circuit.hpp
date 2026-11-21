@@ -110,6 +110,11 @@ struct CircuitSheetIr {
     CircuitLayoutIr layout;
 };
 
+inline constexpr std::size_t kTitleFieldGlyphs = 40, kTitleContinuationGlyphs = 55, kTitleRowLimit = 2;
+inline constexpr unsigned char kUtf8LeadMask = 0xc0, kUtf8ContinuationTag = 0x80;
+std::vector<std::string> title_block_rows(const std::string& title);
+void require_title_fits(const std::string& sheet, const std::string& title);
+
 const std::vector<std::string>& circuit_service_roles();
 void validate_circuit_layout(const CircuitSheetIr& sheet);
 JsonNode circuit_layout_json(const CircuitSheetIr& sheet);
