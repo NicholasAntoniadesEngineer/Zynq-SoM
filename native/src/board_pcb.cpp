@@ -26,7 +26,7 @@ void validate_board_input_connectivity(const std::vector<ProjectCircuit>& circui
         if(!sheets.insert(sheet.name).second||!bands.count(sheet.name))
             fail("duplicate or unindexed sheet "+sheet.name);
         for(const auto& net:sheet.circuit.nets) {
-            const bool shared=net.net_class=="power"||net.net_class=="ground"||net.net_class=="port";
+            const bool shared=board_shared_net(net);
             const Net key{shared?"":sheet.name,net.name};
             for(const auto& pin:net.pins) {
                 const Pin renamed{board_renamed_ref(pin.ref,bands.at(sheet.name),sheet.name),pin.pin};
@@ -56,6 +56,8 @@ void validate_board_input_connectivity(const std::vector<ProjectCircuit>& circui
         if(!inserted&&f->second!=name)fail("split authored net "+key.first+":"+key.second);
         const auto [r,new_net]=reverse.emplace(name,key);
         if(!new_net&&r->second!=key)fail("shorted authored nets on "+name);
+        if(!key.first.empty()&&name!=board_net_name(key.first,CircuitNetIr{key.second,"signal",{}}))
+            fail("sheet-local net identity changed: "+key.first+":"+key.second+" -> "+name);
         if(key.first.empty()&&normalize_netlist_name(name)!=key.second)
             fail("public net identity changed: "+key.second+" -> "+name);
     }

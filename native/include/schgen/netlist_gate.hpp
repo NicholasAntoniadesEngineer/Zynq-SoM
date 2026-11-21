@@ -35,6 +35,8 @@ ExtractedNetlist extract_netlist(const std::filesystem::path& schematic,
                                 const NetlistExtractOptions& options = {});
 
 std::string normalize_netlist_name(std::string_view name);
+bool board_shared_net(const CircuitNetIr& net);
+std::string board_net_name(const std::string& sheet, const CircuitNetIr& net);
 std::vector<std::string> dead_two_terminal(const CircuitSheetIr& circuit);
 // Embedded symbol geometry is authoritative here, not IR metadata or a library
 // reloaded from disk. Recurses through all symbol units/styles, then applies the
