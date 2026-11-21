@@ -67,6 +67,7 @@ struct LinkResult {
 // Pure adapters: callers own file loading. The contract has connectors.*.pins;
 // mapping requires all six policy fields (empty maps/array are explicit policy).
 LinkSomNets link_som_nets_from_json(const JsonNode& contract);
+const std::vector<DocumentKey>& som_mapping_document_keys();
 LinkMapping link_mapping_from_json(const JsonNode& mapping, const std::vector<std::string>& do_not_load_straps);
 JsonNode link_result_json(const LinkResult& result);
 

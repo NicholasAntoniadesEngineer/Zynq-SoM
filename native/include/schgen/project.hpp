@@ -107,6 +107,11 @@ ProjectPaths resolve_project_paths(
     const std::filesystem::path& repository_root,
     const std::optional<std::filesystem::path>& project = std::nullopt);
 const std::vector<DocumentKey>& project_document_keys();
+struct PlacementRequirementsScope {
+    bool applicable = false;
+    std::string statement;
+};
+PlacementRequirementsScope placement_requirements_scope(const JsonNode& project, const std::string& file);
 ProjectConfig load_project_config(const ProjectPaths& paths);
 ProjectManifest load_project_manifest(const ProjectPaths& paths);
 

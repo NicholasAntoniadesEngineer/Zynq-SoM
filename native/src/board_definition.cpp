@@ -82,7 +82,7 @@ int whole(const JsonNode& node, const std::string& key, const std::string& where
 }
 
 BoardModule module_of(const JsonNode& node, const std::string& where) {
-    reject_unknown_keys(node, {"folder", "pairs", "loads"}, where + " module");
+    reject_unknown_keys(node, document_keys_at(board_document_keys(), "module"), where + " module");
     BoardModule module;
     module.folder = folder_name(node, "folder", where);
     module.pairs = pairs_of(node, where);
@@ -152,7 +152,7 @@ BoardRail rail_of(const JsonNode& row, const std::string& where) {
 }
 
 BoardFiles files_of(const JsonNode& node, const std::string& where) {
-    reject_unknown_keys(node, {"stem"}, where + " files");
+    reject_unknown_keys(node, document_keys_at(board_document_keys(), "files"), where + " files");
     BoardFiles files;
     files.stem = text(node, "stem", where + " files");
     if (files.stem.find_first_of("/\\") != std::string::npos) fail(where, "files.stem '" + files.stem + "' holds a path separator");
@@ -161,9 +161,17 @@ BoardFiles files_of(const JsonNode& node, const std::string& where) {
 
 }
 
+const std::vector<DocumentKey>& board_document_keys() {
+    static const std::vector<DocumentKey> keys{
+        {"schema", true}, {"name", true}, {"files", true}, {"files.stem", true}, {"root_readme", true}, {"owned_groups", true},
+        {"module", true}, {"module.folder", true}, {"module.pairs", true}, {"module.loads", true},
+        {"power", true}, {"power.sources", true}, {"power.rails", true}, {"power.inlet", true}, {"sheets", true}};
+    return keys;
+}
+
 BoardPower parse_board_power(const JsonNode& node, const std::string& where) {
     if (node.kind != JsonKind::Object) fail(where, "field 'power' is not an object");
-    reject_unknown_keys(node, {"sources", "rails", "inlet"}, where + " power");
+    reject_unknown_keys(node, document_keys_at(board_document_keys(), "power"), where + " power");
     BoardPower power;
     std::set<std::string> seen;
     const auto once = [&](const std::string& rail) {
@@ -280,7 +288,7 @@ ModuleDefinition load_board_module(const std::filesystem::path& board_root) {
 BoardDefinition parse_board(const JsonNode& document, const std::string& file, ModuleDefinition module_definition) {
     const std::string source = "board file " + file;
     if (document.kind != JsonKind::Object) fail(source, "the document is not an object");
-    reject_unknown_keys(document, {"schema", "name", "files", "root_readme", "owned_groups", "module", "power", "sheets"}, source);
+    reject_unknown_keys(document, document_keys_at(board_document_keys(), ""), source);
     if (text(document, "schema", source) != board_schema) fail(source, std::string("schema is not ") + board_schema);
     BoardDefinition board;
     board.name = text(document, "name", source);

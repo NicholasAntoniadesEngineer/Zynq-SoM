@@ -187,6 +187,26 @@ void reject_unknown_project_keys(const JsonNode& node, const std::string& parent
 }
 }
 
+PlacementRequirementsScope placement_requirements_scope(const JsonNode& project, const std::string& file) {
+    const auto refuse = [&](const std::string& what) -> PlacementRequirementsScope { throw ProjectError(file + ": 'placement_requirements' " + what); };
+    const auto* node = object_field(project, "placement_requirements");
+    if (!node || node->kind != JsonKind::Object) return refuse("is missing or is not an object");
+    reject_unknown_keys(*node, document_keys_at(project_document_keys(), "placement_requirements"), file + " 'placement_requirements'");
+    const auto* applicable = object_field(*node, "applicable");
+    if (!applicable || applicable->kind != JsonKind::Bool) return refuse("needs 'applicable' as true or false");
+    const auto* statement = object_field(*node, "statement");
+    PlacementRequirementsScope scope;
+    scope.applicable = applicable->bool_value;
+    if (scope.applicable) {
+        if (statement) return refuse("holds a 'statement' although it is applicable");
+        return scope;
+    }
+    if (!statement || statement->kind != JsonKind::String || statement->string_value.empty())
+        return refuse("is not applicable and needs a non-empty 'statement'");
+    scope.statement = statement->string_value;
+    return scope;
+}
+
 ProjectConfig load_project_config(const ProjectPaths& paths) {
     return contextual(paths.project_file, [&] {
         ProjectConfig out;

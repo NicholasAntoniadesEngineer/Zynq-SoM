@@ -33,20 +33,6 @@ FanoutCeiling fanout_ceiling(const fs::path& p){if(!fs::exists(p))return {};cons
     if(!n||n->kind!=JsonKind::Number||!std::isfinite(n->number_value)||n->number_value<0||n->number_value>INT_MAX||std::floor(n->number_value)!=n->number_value)
         throw ProjectError(p.string()+": 'starved_baseline' is missing or is not a whole number of at least zero");
     return {static_cast<int>(n->number_value),true};}
-struct RequirementsScope{bool applicable=false;std::string statement;};
-RequirementsScope requirements_scope(const JsonNode& project,const std::string& file){
-    const auto fail=[&](const std::string& what)->RequirementsScope{throw ProjectError(file+": 'placement_requirements' "+what);};
-    const auto* node=object_field(project,"placement_requirements");
-    if(!node||node->kind!=JsonKind::Object)return fail("is missing or is not an object");
-    reject_unknown_keys(*node,{"applicable","statement"},file+" 'placement_requirements'");
-    const auto* applicable=object_field(*node,"applicable");
-    if(!applicable||applicable->kind!=JsonKind::Bool)return fail("needs 'applicable' as true or false");
-    const auto* statement=object_field(*node,"statement");
-    RequirementsScope scope;scope.applicable=applicable->bool_value;
-    if(scope.applicable){if(statement)return fail("holds a 'statement' although it is applicable");return scope;}
-    if(!statement||statement->kind!=JsonKind::String||statement->string_value.empty())return fail("is not applicable and needs a non-empty 'statement'");
-    scope.statement=statement->string_value;return scope;
-}
 PcbDrcResult drc(const fs::path& pcb,const std::string& executable,bool warnings){
     auto pattern=(fs::temp_directory_path()/"schgen_pipeline_drc_XXXXXX").string();if(!::mkdtemp(pattern.data()))throw ProjectError("cannot create DRC scratch");
     struct Cleanup{fs::path p;~Cleanup(){std::error_code e;fs::remove_all(p,e);}}cleanup{pattern};
@@ -60,7 +46,7 @@ void carrier_surface_requirements_stage(Context& c) {
     const std::string gate_name="placement_requirements";
     c.attempt(gate_name,[&]{
         c.report("placement_requirements_unverified.txt","UNVERIFIED: current invocation requirement checks have not completed; no prior measurements may be reused.");
-        const auto scope=requirements_scope(load_project_config(c.paths).raw,c.paths.project_file.string());
+        const auto scope=placement_requirements_scope(load_project_config(c.paths).raw,c.paths.project_file.string());
         if(!scope.applicable) {
             const std::string& applicability=scope.statement;
             c.report("placement_requirements_unverified.txt",applicability);

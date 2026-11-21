@@ -392,6 +392,13 @@ LinkSomNets link_som_nets_from_json(const JsonNode& contract) {
     return result;
 }
 
+const std::vector<DocumentKey>& som_mapping_document_keys() {
+    static const std::vector<DocumentKey> keys{
+        {"schema", true}, {"function_map", true}, {"pudc_straps", true}, {"vcco_rail_map", true},
+        {"rebound_som_rails", true}, {"isolated_som_rails", true}, {"rail_aliases", false}};
+    return keys;
+}
+
 LinkMapping link_mapping_from_json(const JsonNode& node, const std::vector<std::string>& do_not_load_straps) {
     LinkMapping mapping;
     if (field(node, "schema", JsonKind::String, "mapping").string_value != "schgen.som_mapping.v1")
@@ -403,6 +410,7 @@ LinkMapping link_mapping_from_json(const JsonNode& node, const std::vector<std::
     mapping.isolated_som_rails = string_map(node, "isolated_som_rails");
     if (object_field(node, "do_not_load_straps"))
         throw std::runtime_error("link: mapping.do_not_load_straps belongs to the module's module.json");
+    reject_unknown_keys(node, document_keys_at(som_mapping_document_keys(), ""), "link: mapping");
     mapping.do_not_load_straps.insert(do_not_load_straps.begin(), do_not_load_straps.end());
     if (object_field(node, "rail_aliases")) mapping.rail_aliases = string_map(node, "rail_aliases");
     validate_mapping(mapping);

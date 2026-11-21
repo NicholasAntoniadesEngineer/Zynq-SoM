@@ -34,7 +34,7 @@ add_library(schgen_core STATIC
     src/schematic_place_core.cpp src/schematic_place_fanout.cpp
     src/schematic_place_templates.cpp src/schematic_place_chain.cpp src/schematic_place_pages.cpp
     src/selftest.cpp src/board_schematic.cpp src/mirror.cpp src/constraints.cpp
-    src/power_checks.cpp src/board_power.cpp src/thermal_checks.cpp src/part_checks.cpp
+    src/power_checks.cpp src/board_power.cpp src/board_check.cpp src/thermal_checks.cpp src/part_checks.cpp
     src/bom_values.cpp src/footprint_pads.cpp src/pin_completeness.cpp src/symbol_law.cpp
     src/spice.cpp src/spice_process.cpp src/process.cpp
     src/bringup_facts.cpp src/firmware_docs_power_sequence.cpp
@@ -1217,6 +1217,11 @@ if(BUILD_TESTING)
     target_link_libraries(schgen_sheet_roles_contracts PRIVATE schgen_core)
     target_compile_options(schgen_sheet_roles_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
     add_test(NAME native_sheet_roles_contracts COMMAND schgen_sheet_roles_contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/.." "${CMAKE_CURRENT_SOURCE_DIR}/catalog.bin")
+    add_executable(schgen_board_check_contracts tests/board_check_contracts.cpp)
+    target_link_libraries(schgen_board_check_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_board_check_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME native_board_check_contracts COMMAND schgen_board_check_contracts
         "${CMAKE_CURRENT_SOURCE_DIR}/.." "${CMAKE_CURRENT_SOURCE_DIR}/catalog.bin")
     add_executable(schgen_part_ratings_contracts tests/part_ratings_contracts.cpp)
     target_link_libraries(schgen_part_ratings_contracts PRIVATE schgen_core)

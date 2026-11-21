@@ -118,6 +118,7 @@ struct BoardDefinition {
     const BoardSheet& sheet(const std::string& name) const;
 };
 
+const std::vector<DocumentKey>& board_document_keys();
 BoardHeader board_header_of(const JsonNode& document, const std::string& source);
 BoardHeader load_board_header(const std::filesystem::path& board_root);
 std::filesystem::path module_root_in(const std::filesystem::path& repository, const std::filesystem::path& board_root);
