@@ -1,6 +1,7 @@
 #pragma once
 
 #include "schgen/link.hpp"
+#include "schgen/power_checks.hpp"
 #include "schgen/part_facts.hpp"
 #include "schgen/execution_accounting.hpp"
 #include "schgen/pcb_scan.hpp"
@@ -301,6 +302,6 @@ struct RailAmpacityResult {
     std::string report() const;
 };
 RailAmpacityResult analyze_rail_ampacity(const std::vector<ProjectCircuit>&, const SheetRoles&,
-    const SomInterface&, const LinkMapping&);
+    const SomInterface&, const LinkMapping&, const PowerPolicy&);
 
 } // namespace schgen

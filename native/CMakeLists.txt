@@ -34,7 +34,7 @@ add_library(schgen_core STATIC
     src/schematic_place_core.cpp src/schematic_place_fanout.cpp
     src/schematic_place_templates.cpp src/schematic_place_chain.cpp src/schematic_place_pages.cpp
     src/selftest.cpp src/board_schematic.cpp src/mirror.cpp src/constraints.cpp
-    src/power_checks.cpp src/thermal_checks.cpp src/part_checks.cpp
+    src/power_checks.cpp src/board_power.cpp src/thermal_checks.cpp src/part_checks.cpp
     src/bom_values.cpp src/footprint_pads.cpp src/pin_completeness.cpp src/symbol_law.cpp
     src/spice.cpp src/spice_process.cpp src/process.cpp
     src/bringup_facts.cpp src/firmware_docs_power_sequence.cpp
@@ -179,7 +179,7 @@ set_source_files_properties(src/turn.cpp src/pack_anchor.cpp src/symbols.cpp
                             src/schematic_route.cpp src/schematic_place_core.cpp
                             src/schematic_place_fanout.cpp src/schematic_place_templates.cpp
                             src/schematic_place_chain.cpp src/schematic_place_pages.cpp src/board_schematic.cpp
-                            src/pack_edges.cpp src/power_checks.cpp src/thermal_checks.cpp src/part_checks.cpp
+                            src/pack_edges.cpp src/power_checks.cpp src/board_power.cpp src/thermal_checks.cpp src/part_checks.cpp
                             src/bom_values.cpp src/spice.cpp src/spice_process.cpp
                             src/pcb_checks_model.cpp src/pcb_checks_connectors.cpp src/pcb_checks_placement.cpp
                             src/pcb_checks_return_path.cpp src/pcb_checks_ampacity.cpp src/pcb_checks_escape.cpp src/pcb_checks_stitch.cpp src/placement_integrity.cpp PROPERTIES
@@ -1207,6 +1207,10 @@ if(BUILD_TESTING)
     target_link_libraries(schgen_part_ratings_contracts PRIVATE schgen_core)
     target_compile_options(schgen_part_ratings_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
     add_test(NAME native_part_ratings_contracts COMMAND schgen_part_ratings_contracts)
+    add_executable(schgen_board_power_contracts tests/board_power_contracts.cpp)
+    target_link_libraries(schgen_board_power_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_board_power_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME native_board_power_contracts COMMAND schgen_board_power_contracts "${CMAKE_CURRENT_SOURCE_DIR}/..")
     add_executable(schgen_part_connector_facts_contracts tests/part_connector_facts_contracts.cpp)
     target_link_libraries(schgen_part_connector_facts_contracts PRIVATE schgen_core)
     target_compile_options(schgen_part_connector_facts_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)

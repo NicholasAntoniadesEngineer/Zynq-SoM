@@ -42,15 +42,17 @@ void sidecar_independence(const schgen::ProjectPaths& paths,
     // Keep explicit source paths (including libraries and contracts) unchanged.
     // Only project-root-relative reads need links; never link generated output.
     auto isolated = paths;
-    isolated.project_root = overlay.path;
-    for (const auto* name : {"floorplan.json", "som_mapping.json", "escape_triage.json", "research/si_spec.json"}) {
+    isolated.project_root = overlay.path / paths.project_root.filename();
+    const auto module_folder = load_board_header(paths.project_root).module_folder;
+    fs::create_symlink(paths.project_root.parent_path() / module_folder, overlay.path / module_folder);
+    for (const auto* name : {"board.json", "floorplan.json", "som_mapping.json", "escape_triage.json", "research/si_spec.json"}) {
         const auto source = paths.project_root / name;
         if (!fs::exists(source)) continue;
-        const auto destination = overlay.path / name;
+        const auto destination = isolated.project_root / name;
         fs::create_directories(destination.parent_path());
         fs::create_symlink(source, destination);
     }
-    const auto sidecar = overlay.path / "escape_block.json";
+    const auto sidecar = isolated.project_root / "escape_block.json";
     require(!fs::exists(sidecar), "overlay starts without generated sidecar");
     const auto baseline = load_board_inputs(isolated, circuits, schgen::load_sheet_roles(paths, circuits), link, nets);
     require(baseline.floorplan.compose.corridors.empty(), "missing sidecar leaves raw corridors empty");

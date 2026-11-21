@@ -1,6 +1,7 @@
 #include "schgen/spice.hpp"
 #include "schgen/process.hpp"
 #include "spice_historical_precision.hpp"
+#include "legacy_power_policy.hpp"
 #include <chrono>
 #include <cmath>
 #include <cstdlib>
@@ -17,6 +18,7 @@
 namespace {
 using namespace schgen;
 std::size_t checks=0;
+PowerPolicy legacy;
 void require(bool v,const std::string& message){++checks;if(!v)throw std::runtime_error(message);}
 const JsonNode& field(const JsonNode& n,const std::string& key){auto p=object_field(n,key);if(!p)throw std::runtime_error("missing "+key);return *p;}
 void same(const JsonNode& a,const JsonNode& b,const std::string& path) {
@@ -44,7 +46,7 @@ std::string coverage_report(std::string historical){
     return historical;
 }
 void empty_coverage(){
-    auto empty=extract_spice_checks({});
+    auto empty=extract_spice_checks({},legacy);
     require(empty.checks.empty()&&!empty.ok()&&empty.errors()==std::vector<std::string>{no_coverage},"empty extraction was accepted");
     empty.notes.push_back("informational note is not a check");
     require(!empty.ok(),"notes supplied nonexistent check coverage");
@@ -88,16 +90,16 @@ std::vector<ProjectCircuit> fixture_sheets(const std::filesystem::path& path){
 }
 void rejects_divider(const std::vector<ProjectCircuit>& sheets,const std::string& expected){
     bool rejected=false;
-    try{(void)extract_spice_checks(sheets);}catch(const ModelCheckError& error){
+    try{(void)extract_spice_checks(sheets,legacy);}catch(const ModelCheckError& error){
         require(error.what()==expected,"extraction diagnostic mismatch: "+std::string(error.what()));rejected=true;
     }
     require(rejected,"extraction silently accepted unsupported topology/source/model");
 }
 void required_divider_coverage(const std::filesystem::path& dir){
     auto unrelated=fixture_sheets(dir/"015_INFORMATIONAL_10k_10k.json");
-    require(extract_spice_checks(unrelated).ok(),"unrelated coverage fixture must pass alone");
+    require(extract_spice_checks(unrelated,legacy).ok(),"unrelated coverage fixture must pass alone");
     for(auto& net:unrelated[0].circuit.nets)if(net.name=="INFORMATIONAL")net.name="HDMI_RX_5V_DET_suffix";
-    require(extract_spice_checks(unrelated).ok(),"prefix-lookalike generic divider must remain independently valid");
+    require(extract_spice_checks(unrelated,legacy).ok(),"prefix-lookalike generic divider must remain independently valid");
     auto broken=fixture_sheets(dir/"022_named_not_extracted.json");
     auto combined=broken;combined.insert(combined.end(),unrelated.begin(),unrelated.end());
     rejects_divider(combined,"required divider HDMI_RX_5V_DET: topology could not be extracted");
@@ -124,7 +126,7 @@ void incomplete_model_coverage(const std::filesystem::path& dir){
         std::reverse(combined.begin(),combined.end());rejects_divider(combined,message);
     }
     // A custom detection policy does not supply a voltage-reference model.
-    auto policy=default_power_policy();
+    auto policy=legacy;
     const auto* known=part_fact(policy.regulators,"TPS54302DDCR");
     require(known&&known->kind=="buck","custom buck fixture needs the known buck pin mapping");
     auto spec=*known;spec.fb_vref.reset();
@@ -147,7 +149,7 @@ void divider_threshold_precision(const std::filesystem::path& dir){
         const double limit=upper?3.465:2.,source=upper?5.25:4.75,target=limit+delta;
         auto sheets=fixture_sheets(dir/"003_HDMI_RX_5V_DET_10k_10k.json");
         for(auto& part:sheets[0].circuit.parts)part.value=decimal((part.ref=="R1"?source-target:target)*10000);
-        const auto result=extract_spice_checks(sheets);
+        const auto result=extract_spice_checks(sheets,legacy);
         const auto check=std::find_if(result.checks.begin(),result.checks.end(),[&](const auto& c){
             return upper?(c.hi&&*c.hi==limit):(c.lo&&*c.lo==limit);
         });
@@ -174,7 +176,7 @@ void direct_enable_topology(const std::filesystem::path& dir){
         if(net.name=="+VIN_SYS")net.pins.push_back({"U4","7"});
     }
     candidate.circuit.nets.erase(std::remove_if(candidate.circuit.nets.begin(),candidate.circuit.nets.end(),[](const auto& net){return net.pins.empty();}),candidate.circuit.nets.end());
-    const auto valid=extract_spice_checks({candidate});
+    const auto valid=extract_spice_checks({candidate},legacy);
     require(valid.ok()&&valid.unverified.empty(),"documented direct VIN enable topology was not recognized");
     require(std::count_if(valid.checks.begin(),valid.checks.end(),[](const auto& c){return c.kind=="enable_topology"&&c.value==1&&c.unit=="match"&&c.engine=="netlist topology"&&c.detail.find("connectivity only")!=std::string::npos;})==1,"missing scoped topology evidence");
     const auto unrelated=fixture_sheets(dir/"015_INFORMATIONAL_10k_10k.json");
@@ -186,7 +188,7 @@ void direct_enable_topology(const std::filesystem::path& dir){
         if(mutation>=3)for(auto& net:broken.circuit.nets)if(net.net_class=="ground")net.pins.push_back({"U4",pin});
         for(bool reverse:{false,true}){
             auto combined=unrelated;combined.push_back(broken);if(reverse)std::reverse(combined.begin(),combined.end());
-            const auto result=extract_spice_checks(combined);
+            const auto result=extract_spice_checks(combined,legacy);
             require(!result.ok()&&!result.unverified.empty(),"positive checks hid missing/miswired/duplicate enable or VIN pin, mutation "+std::to_string(mutation));
             require(std::none_of(result.checks.begin(),result.checks.end(),[](const auto& c){return c.kind=="enable_topology";}),"invalid connectivity retained topology PASS");
         }
@@ -194,9 +196,9 @@ void direct_enable_topology(const std::filesystem::path& dir){
     auto missing_resistor=*found;
     missing_resistor.circuit.parts.erase(std::remove_if(missing_resistor.circuit.parts.begin(),missing_resistor.circuit.parts.end(),[](const auto& p){return p.ref=="R12";}),missing_resistor.circuit.parts.end());
     auto combined=unrelated;combined.push_back(missing_resistor);
-    require(!extract_spice_checks(combined).ok(),"deleting the series resistor concealed the unsupported always-on enable network");
+    require(!extract_spice_checks(combined,legacy).ok(),"deleting the series resistor concealed the unsupported always-on enable network");
     auto reordered=candidate;std::reverse(reordered.circuit.nets.begin(),reordered.circuit.nets.end());
-    require(extract_spice_checks({reordered}).ok(),"valid topology depends on net ordering");
+    require(extract_spice_checks({reordered},legacy).ok(),"valid topology depends on net ordering");
     for(int mutation=0;mutation<3;++mutation){
         auto broken=candidate;
         if(mutation==0)for(auto& part:broken.circuit.parts)if(part.ref=="U4"){part.value="LM61460_UNREVIEWED_PACKAGE";part.lib_id=part.value+":"+part.value;}
@@ -205,7 +207,7 @@ void direct_enable_topology(const std::filesystem::path& dir){
             for(auto& net:broken.circuit.nets)net.pins.erase(std::remove_if(net.pins.begin(),net.pins.end(),[](const auto& p){return p.ref=="U4"&&p.pin=="7";}),net.pins.end());
             broken.circuit.nets.push_back({"+VIN_SYS","power",{{"U4","7"}}});
         }
-        auto witness=unrelated;witness.push_back(broken);const auto result=extract_spice_checks(witness);
+        auto witness=unrelated;witness.push_back(broken);const auto result=extract_spice_checks(witness,legacy);
         require(!result.ok()&&!result.unverified.empty(),"unreviewed package, non-power source or same-name distinct net supplied topology proof");
     }
 }
@@ -256,7 +258,7 @@ void remaining_threshold_precision(const std::filesystem::path& dir){
         auto sheets=fixture_sheets(dir/test.file);std::ostringstream value;value<<std::setprecision(17)<<resistance;
         bool changed=false;for(auto& part:sheets[0].circuit.parts)if(part.ref==test.ref){part.value=value.str();changed=true;}
         require(changed,"threshold fixture resistor missing");
-        const auto result=extract_spice_checks(sheets);
+        const auto result=extract_spice_checks(sheets,legacy);
         const auto found=std::find_if(result.checks.begin(),result.checks.end(),[&](const auto& c){return c.name.rfind(test.prefix,0)==0;});
         require(found!=result.checks.end(),"threshold extraction missing "+std::string(test.prefix));
         const bool inside=test.upper?delta<=0:delta>=0;
@@ -313,7 +315,7 @@ int main(int argc,char** argv) {
         std::cout<<"no measurement\n";return 3;
     }
     try {
-        require(argc==2,"usage: spice_contracts <fixture-directory>");const std::filesystem::path dir(argv[1]);
+        require(argc==2,"usage: spice_contracts <fixture-directory>");const std::filesystem::path dir(argv[1]);legacy=legacy_power_policy((dir/"../../../..").lexically_normal());
         numeric_safety();empty_coverage();required_divider_coverage(dir);incomplete_model_coverage(dir);divider_threshold_precision(dir);remaining_threshold_precision(dir);direct_enable_topology(dir);
         const auto manifest=parse_json_file((dir/"manifest.json").string());std::size_t passed=0,live=0;
         const auto ngspice=ngspice_available();std::size_t corrected_empty=0,corrected_required=0,corrected_models=0,corrected_device=0;
@@ -332,7 +334,7 @@ int main(int argc,char** argv) {
                 ++corrected_required;++passed;continue;
             }
             const auto* error=object_field(row,"error");std::optional<SpiceResult> result;
-            try{result=extract_spice_checks(sheets);}
+            try{result=extract_spice_checks(sheets,legacy);}
             catch(const ModelCheckError& e){require(error!=nullptr,file.string_value+": unexpected error "+e.what());require(field(*error,"message").string_value==e.what(),file.string_value+": diagnostic differs "+e.what());}
             require(bool(result)==!bool(error),file.string_value+": expected error presence differs");
             if(result){

@@ -285,6 +285,7 @@ struct FloorplanInput {
     SheetRoles roles;
     LinkResult link;
     std::vector<FloorplanRegulator> regulators;
+    PowerPolicy power;
     // Researched per-net SI data for Markdown reporting. No per-kind fallback.
     std::vector<FloorplanSiPair> si_pairs;
     std::string si_source;

@@ -17,18 +17,9 @@ std::string catalogue_part_number(const CircuitPartIr& part) {
 }
 
 const PowerPolicy& default_power_policy() {
-    static const PowerPolicy policy{
-        {{"^\\+VBUS_IN$", 20.0}, {"^\\+VIN_SYS$", 20.0}, {"^\\+VIN", 20.0}, {"^\\+5V_SOM$", 4.65}, {"^\\+5V_REG$", 5.0}, {"^\\+5V", 5.0}, {"^USB_VBUS$", 5.0}, {"^USB_UART_VBUS$", 5.0}, {"^HDMI_RX_5V$", 5.0}, {"^HDMI_TX_CON_5V0$", 5.0}, {"^LCD_VLED_P$", 30.0}, {"^\\+3V3_REG$", 3.3}, {"^\\+3V3", 3.3}, {"^\\+1V8_REG$", 1.8}, {"^\\+1V8", 1.8}, {"^\\+2V5", 2.5}, {"^\\+VCCO_35$", 2.5}, {"^\\+VCCO_", 3.3}, {"^VBUS$", 5.0}},
-        default_part_facts().regulators,
-        default_part_facts().zeners,
-        default_part_facts().reference_pins,
-        {
-        {"+VBUS_IN", {20.0, 3.0, "USB-C PD sink contract 20 V / 3 A at the receptacle (pd_input J1; +VIN sits behind the TPS26631 eFuse, round 5)"}},
-        {"+3V3_SC", {3.3, 0.3, "SoM TPS7A20 always-on SC LDO U13 (J1.37); 300 mA class — the SoM power_architecture sheet says '3V3 (300mA)'. Envelope shared with the SoM-side SC (STM32G431 ~50 mA); carrier tally only here"}},
-        {"+5V_DBG", {5.0, 0.5, "debug USB-C VBUS (usb_jtag_connector J1) — host-supplied 5 V / 0.5 A USB2 default; feeds the usb_jtag AP2112K-3.3 debug-island LDO; isolated from carrier +5V"}}
-    },
-        {}
-    };
+    static const PowerPolicy policy=[] {
+        PowerPolicy out;out.regulators=default_part_facts().regulators;out.zeners=default_part_facts().zeners;out.reference_pins=default_part_facts().reference_pins;return out;
+    }();
     return policy;
 }
 
@@ -59,25 +50,29 @@ std::optional<double> parse_si_value(const std::string& text) {
 }
 
 std::optional<double> rail_volts(const std::string& name,const PowerPolicy& policy) {
-    // Match patterns, not policy object identity: binding callers pass copies,
-    // and may override voltages while retaining the standard rail expressions.
-    static const std::vector<std::pair<std::string,std::regex>> compiled=[] {
-        std::vector<std::pair<std::string,std::regex>> out;
-        for(const auto& [pattern,v]:default_power_policy().voltage_patterns) {
-            (void)v;out.emplace_back(pattern,std::regex(pattern));
-        }
-        return out;
-    }();
-    const auto matches=[&](const std::regex& re) {
-        if(std::regex_search(name,re,std::regex_constants::match_continuous))return true;
-        // Python '$' also matches immediately before one terminal newline.
-        return ends(name,"\n")&&std::regex_search(name.begin(),name.end()-1,re,std::regex_constants::match_continuous);
-    };
-    for(const auto& [pattern,v]:policy.voltage_patterns) {
-        if(const auto* re=find(compiled,pattern)) {if(matches(*re))return v;}
-        else if(matches(std::regex(pattern)))return v;
+    const auto* rail=find(policy.rails,name);return rail?rail->volts:std::nullopt;
+}
+
+std::optional<FeedbackDivider> feedback_divider(const CircuitSheetIr& circuit,const std::string& ref,const std::string& vout,double vref) {
+    ModelSheetIndex idx(circuit);
+    struct Leg {std::string ref;double ohms;const CircuitNetIr* other;};
+    std::map<std::string,std::vector<Leg>> legs;
+    for(const auto& [r,p]:idx.parts) {
+        if(!ends(p->lib_id,":R"))continue;
+        const auto a=idx.net(r,"1"),b=idx.net(r,"2");if(!a||!b)continue;
+        const auto ohms=parse_si_value(p->value);if(!ohms)continue;
+        legs[a->name].push_back({r,*ohms,b});if(a->name!=b->name)legs[b->name].push_back({r,*ohms,a});
     }
-    return {};
+    for(const auto& net:circuit.nets) {
+        if(net.net_class!="signal"||std::none_of(net.pins.begin(),net.pins.end(),[&](const auto& p){return p.ref==ref;}))continue;
+        const auto found=legs.find(net.name);if(found==legs.end())continue;
+        const Leg* top=nullptr;const Leg* bottom=nullptr;
+        for(const auto& leg:found->second){if(!top&&leg.other->name==vout)top=&leg;if(!bottom&&leg.other->net_class=="ground")bottom=&leg;}
+        if(!top||!bottom)continue;
+        if(bottom->ohms==0)throw ModelCheckError("division by zero");
+        return FeedbackDivider{top->ref,bottom->ref,top->ohms,bottom->ohms,vref*(1+top->ohms/bottom->ohms)};
+    }
+    return std::nullopt;
 }
 
 namespace {
@@ -140,8 +135,8 @@ std::vector<Cap> caps_on(const std::vector<ProjectCircuit>& sheets,const std::st
 }
 double cap_sum(const std::vector<Cap>& caps){FloatSum sum;for(const auto& c:caps)sum.add(c.farads);return sum.value()*1e6;}
 std::string cap_detail(const std::vector<Cap>& caps){std::vector<std::string> rows;for(const auto& c:caps)rows.push_back(c.sheet+":"+c.ref+"="+c.value);return join(rows," + ");}
-void precontract(const std::vector<ProjectCircuit>& sheets,PowerCheckResult& res) {
-    const std::string inlet="+VBUS_IN";auto ci=caps_on(sheets,inlet),cb=caps_on(sheets,"+VIN");
+void precontract(const std::vector<ProjectCircuit>& sheets,const PowerInlet& power_inlet,PowerCheckResult& res) {
+    const std::string inlet=power_inlet.rail;auto ci=caps_on(sheets,inlet),cb=caps_on(sheets,power_inlet.bulk);
     double iu=cap_sum(ci),bu=cap_sum(cb);std::vector<const PowerReg*> efuses;
     for(const auto& r:res.regs)if(r.kind=="efuse"&&r.vin==inlet)efuses.push_back(&r);
     if(efuses.empty()) {
@@ -227,12 +222,13 @@ PowerCheckResult analyze_power(const std::vector<ProjectCircuit>& sheets,const P
         auto ds=find(res.draws,rail);auto def=find(policy.known_deferred,rail);
         if((!ds||ds->empty())&&!by_vin.count(rail)&&def)res.warnings.push_back("shunt-bridge rail "+rail+" feeds nothing — "+*def);
     }
-    precontract(sheets,res);
-    std::set<std::string> jrails,outs;
-    for(const auto& s:sheets)if(starts(s.name,"som_j"))for(const auto& n:s.circuit.nets)if(n.net_class=="power"&&(n.name=="+3V3"||n.name=="+1V8"))jrails.insert(n.name);
+    if(policy.inlet)precontract(sheets,*policy.inlet,res);
+    std::set<std::string> jrails,outs,module_rails(policy.module_rails.begin(),policy.module_rails.end());
+    for(const auto& s:sheets)if(std::find(policy.module_sheets.begin(),policy.module_sheets.end(),s.name)!=policy.module_sheets.end())
+        for(const auto& n:s.circuit.nets)if(n.net_class=="power"&&module_rails.count(n.name))jrails.insert(n.name);
     for(const auto& r:res.regs)outs.insert(r.vout);
     std::vector<std::string> clash;std::set_intersection(jrails.begin(),jrails.end(),outs.begin(),outs.end(),std::back_inserter(clash));
-    if(!clash.empty())res.findings.push_back("PARALLEL-SOURCE QUESTION on "+join(clash,", ")+": these rails are OUTPUTS of carrier regulators (power.py LM61460/AP2112K) AND appear on SoM J1 contract pins (+3V3: J1.24-27, +1V8: J1.56/58/60) while the SoM's own Power sheet regulates same-named rails on-module (MPM3834 stages with 3V3_EN/PG + 1V8_EN/PG). If the SoM exports its rails on those pins, linking them to the carrier's bucks puts two regulators in parallel on one net — needs an explicit decision (rename one side, sense-only pins, or drop one source) before layout. Facts from som_interface.json + som/schematic/Power.kicad_sch; nothing changed here.");
+    if(!clash.empty())res.findings.push_back("PARALLEL-SOURCE QUESTION on "+join(clash,", ")+": "+policy.module_rails_basis);
     return res;
 }
 

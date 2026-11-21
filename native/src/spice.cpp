@@ -25,7 +25,7 @@ const std::vector<NamedDivider>& named_dividers() {
     };return data;
 }
 bool source_override(const std::string& name){return name=="USB_UART_VBUS"||name=="HDMI_RX_5V";}
-double volts(const std::string& name,const PowerPolicy& p){return source_override(name)?5.0:rail_volts(name,p).value_or(0);}
+double volts(const std::string& name,const PowerPolicy& p){return rail_volts(name,p).value_or(0);}
 double divide(double a,double b){if(b==0)throw ModelCheckError("division by zero");return a/b;}
 struct Passive {std::string ref;double value;const CircuitNetIr* other;};
 struct SpiceIndex {
@@ -121,15 +121,10 @@ void buck_fb(const std::string& sheet,const SpiceIndex& idx,const std::vector<Po
         if(reg.kind!="buck")continue;
         const auto* fact=regulator_fact(idx,reg.ref,policy);const auto vref=fact?fact->fb_vref:std::nullopt;
         if(!vref)throw ModelCheckError("SPICE unverified: "+sheet+":"+reg.ref+" ("+reg.value+") has no FB_VREF entry — FB divider unchecked");
-        const CircuitNetIr* fb=nullptr;std::vector<Passive> tops,bots;
-        for(const auto& net:idx.c.nets) {
-            if(net.net_class!="signal"||std::none_of(net.pins.begin(),net.pins.end(),[&](const auto& p){return p.ref==reg.ref;}))continue;
-            auto t=select(idx.on(net.name),[&](const auto& other){return other.name==reg.vout;});auto b=select(idx.on(net.name),ground);
-            if(!t.empty()&&!b.empty()){fb=&net;tops=std::move(t);bots=std::move(b);break;}
-        }
-        if(!fb)throw ModelCheckError("SPICE unverified: "+sheet+":"+reg.ref+" FB divider not found");
-        const auto& t=tops[0];const auto& b=bots[0];const double value=*vref*(1+divide(t.value,b.value)),nominal=rail_volts(reg.vout,policy).value_or(0);
-        out.checks.push_back({reg.value+" FB ("+reg.vout+")",sheet,"fb_divider","Vout = "+(*vref==1?"1.0":g(*vref))+" * (1 + "+t.ref+"/"+b.ref+" = "+g(t.value)+"/"+g(b.value)+") vs nominal "+g(nominal)+" V +/-3%",
+        const auto divider=feedback_divider(idx.c,reg.ref,reg.vout,*vref);
+        if(!divider)throw ModelCheckError("SPICE unverified: "+sheet+":"+reg.ref+" FB divider not found");
+        const double value=divider->volts,nominal=rail_volts(reg.vout,policy).value_or(0);
+        out.checks.push_back({reg.value+" FB ("+reg.vout+")",sheet,"fb_divider","Vout = "+(*vref==1?"1.0":g(*vref))+" * (1 + "+divider->top_ref+"/"+divider->bottom_ref+" = "+g(divider->top_ohms)+"/"+g(divider->bottom_ohms)+") vs nominal "+g(nominal)+" V +/-3%",
             value,"V",nominal*0.97,nominal*1.03,"analytic",{}});
     }
 }

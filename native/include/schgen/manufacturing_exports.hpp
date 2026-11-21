@@ -51,11 +51,11 @@ std::vector<ProjectArtifact> manufacturing_artifacts(const std::filesystem::path
     const std::filesystem::path& output_path, const std::string& file_stem);
 std::optional<std::string> manufacturing_xdc_device(const std::filesystem::path&);
 JsonNode manufacturing_manifest(const ManufacturingManifestInput&,
-    const PowerPolicy& = default_power_policy());
+    const PowerPolicy&);
 // Text rendering preserves all signed 64-bit extended counts. The JsonNode
 // API rejects extended values that would lose precision in its double storage.
 std::string render_manufacturing_manifest(const ManufacturingManifestInput&,
-    const PowerPolicy& = default_power_policy());
+    const PowerPolicy&);
 struct ManufacturingSiRun {
     std::filesystem::path dru, md;
     SiConstraintsModel model;
@@ -68,14 +68,13 @@ ManufacturingSiRun run_si_constraints(const std::vector<ProjectCircuit>&,
 // publication time and the manifest excludes its own destination.
 std::filesystem::path run_manufacturing_manifest(ManufacturingManifestInput,
     const std::filesystem::path& project_root, const std::filesystem::path& output,
-    const PowerPolicy& = default_power_policy());
+    const PowerPolicy&);
 // Complete native analysis wrapper: no caller-precomputed power/coverage needed.
 ManufacturingManifestInput prepare_manufacturing_manifest(
-    std::vector<ProjectCircuit>, Stm32PinMap,
+    std::vector<ProjectCircuit>, Stm32PinMap, const PowerPolicy&,
     std::optional<ManufacturingXdc> xdc = std::nullopt,
     std::optional<std::string> device = std::nullopt,
-    ManufacturingPreflight preflight = {},
-    const PowerPolicy& = default_power_policy());
+    ManufacturingPreflight preflight = {});
 
 struct ManufacturingPipelineStage {
     std::string name, domain, validated_by, desc;

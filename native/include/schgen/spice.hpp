@@ -25,7 +25,7 @@ struct SpiceResult {
     bool ok() const;
 };
 SpiceResult extract_spice_checks(const std::vector<ProjectCircuit>&,
-    const PowerPolicy& = default_power_policy());
+    const PowerPolicy&);
 std::optional<std::filesystem::path> ngspice_available();
 struct SpiceRunOptions {
     bool allow_ngspice = true;
@@ -36,7 +36,6 @@ struct SpiceRunOptions {
 void run_ngspice_crosschecks(SpiceResult&, const SpiceRunOptions& = {});
 std::string spice_report(const SpiceResult&, bool ngspice_present);
 SpiceResult run_spice_checks(const std::vector<ProjectCircuit>&,
-    const std::filesystem::path& report_dir, const SpiceRunOptions& = {},
-    const PowerPolicy& = default_power_policy());
+    const std::filesystem::path& report_dir, const PowerPolicy&, const SpiceRunOptions& = {});
 JsonNode spice_result_json(const SpiceResult&);
 }  // namespace schgen

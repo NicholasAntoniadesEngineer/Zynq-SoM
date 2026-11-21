@@ -2,6 +2,13 @@
 
 namespace schgen {
 namespace {
+constexpr double fixture_input_volts=20.0,fixture_logic_volts=3.3,fixture_enable_volts=5.0,fixture_cable_volts=5.0;
+PowerPolicy fixture_power() {
+    PowerPolicy policy=default_power_policy();
+    policy.rails={{"+VIN",{fixture_input_volts,"selftest buck input"}},{"+3V3",{fixture_logic_volts,"selftest buck output target"}},
+        {"+5V_EN",{fixture_enable_volts,"selftest buck enable strap rail"}},{"HDMI_RX_5V",{fixture_cable_volts,"selftest cable 5 V on the capacitor fixture"}}};
+    return policy;
+}
 CircuitSheetIr fixture_design_rules() {
     CircuitSheetIr c;
     c.schema="schgen.circuit/1";c.name="selftest_dr";c.title="selftest design-rule fixture";
@@ -65,6 +72,7 @@ SelftestModelFixtures selftest_model_fixtures(PcbCheckFootprintPtr footprint) {
     f.testpoints=fixture_testpoints();f.mounting_hole=fixture_mounting_hole();
     f.rail_cap=selftest_rail_decoupling_fixture();f.esd_clamp=selftest_esd_clamp_fixture();
     f.board={fixture_board_0(),fixture_board_1()};
+    f.power=fixture_power();
     f.cap_voltage.schema="schgen.circuit/1";f.cap_voltage.name="selftest_capv";f.cap_voltage.title="selftest cap-voltage fixture";
     f.cap_voltage.parts={{"C1","Device:C","10u","Capacitor_SMD:C_0805_2012Metric",{{"LCSC","C15850"}},{},{}}};
     f.cap_voltage.nets={{"HDMI_RX_5V","power",{{"C1","1"}}},{"GND","ground",{{"C1","2"}}}};

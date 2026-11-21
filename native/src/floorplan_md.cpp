@@ -100,7 +100,7 @@ std::string render_floorplan_md(const FloorplanPlan& plan,const std::vector<Floo
     line();line("## Power and thermal (worst-case declared draws — powertree analysis)");line();
     line("| regulator | sheet | rail | I out (A) | est dissipation |");line("|---|---|---|---|---|");
     for(const auto& r:input.regulators){
-        const double vo=rail_volts(r.vout).value_or(0),vi=rail_volts(r.vin).value_or(0);double power=0;
+        const double vo=rail_volts(r.vout,input.power).value_or(0),vi=rail_volts(r.vin,input.power).value_or(0);double power=0;
         if(r.kind=="buck"){if(r.eff==0)throw FloorplanError("floorplan: zero regulator efficiency for "+r.ref);power=(1/r.eff-1)*vo*r.i_out;}
         else if(r.kind=="ldo")power=std::max(0.0,vi-vo)*r.i_out;
         const auto ptxt=power>=.05 ? "~"+number(power,2)+" W":"negligible";

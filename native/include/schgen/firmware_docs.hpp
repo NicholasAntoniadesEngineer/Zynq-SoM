@@ -22,8 +22,8 @@ struct PowerSequence {
     std::vector<PowerSequenceRow> chain, modules;
 };
 PowerSequence build_power_sequence(const std::vector<ProjectCircuit>&,
-    const PowerCheckResult&, const PowerPolicy& = default_power_policy());
-std::string render_power_sequence_svg(const PowerSequence&, bool ok = true,
-    const PowerPolicy& = default_power_policy());
+    const PowerCheckResult&, const PowerPolicy&);
+std::string render_power_sequence_svg(const PowerSequence&, bool ok,
+    const PowerPolicy&);
 
 } // namespace schgen

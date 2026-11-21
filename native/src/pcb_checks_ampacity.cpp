@@ -10,7 +10,7 @@ std::string resolve(const std::string& net,const LinkMapping& m){for(auto p:{&m.
 bool power(const std::string& net){return starts(net,"+")||net=="VBUS"||starts(net,"VDD")||starts(net,"VCC");}
 }
 double PcbRailAmpacity::util()const{return capacity_a()>0?current_a/capacity_a():std::numeric_limits<double>::infinity();}
-RailAmpacityResult analyze_rail_ampacity(const std::vector<ProjectCircuit>& sheets,const SheetRoles& roles,const SomInterface& iface,const LinkMapping& mapping){
+RailAmpacityResult analyze_rail_ampacity(const std::vector<ProjectCircuit>& sheets,const SheetRoles& roles,const SomInterface& iface,const LinkMapping& mapping,const PowerPolicy& policy){
     RailAmpacityResult res;std::map<std::string,std::map<std::string,int>> counts;for(const auto& [ref,c]:iface.connectors)for(const auto& [pad,net]:c.pins){(void)pad;if(mapping.isolated_som_rails.count(net))continue;auto rail=resolve(net,mapping);if(power(rail))++counts[rail][ref];}
     std::map<std::string,double> delivered;for(const auto& sc:sheets)if(module_connector_sheet(roles,sc.name)){
         // Sum each sheet's rail entries before adding to the project total,
@@ -19,7 +19,7 @@ RailAmpacityResult analyze_rail_ampacity(const std::vector<ProjectCircuit>& shee
         for(const auto& load:sc.circuit.loads){auto it=std::find_if(per_sheet.begin(),per_sheet.end(),[&](const auto& v){return v.first==load.rail;});if(it==per_sheet.end())per_sheet.emplace_back(load.rail,load.amps);else it->second+=load.amps;}
         for(const auto& [rail,amps]:per_sheet)delivered[rail]+=amps;
     }
-    for(const auto& [name,conns]:counts){int n=0;for(const auto& [ref,count]:conns){(void)ref;n+=count;}PcbRailAmpacity r{name,n,py_round(delivered[name],4),rail_volts(name),conns};res.rails.push_back(r);
+    for(const auto& [name,conns]:counts){int n=0;for(const auto& [ref,count]:conns){(void)ref;n+=count;}PcbRailAmpacity r{name,n,py_round(delivered[name],4),rail_volts(name,policy),conns};res.rails.push_back(r);
         if(r.over())res.errors.push_back("UNDER-CONTACTED: "+name+" carries "+f(r.current_a,3)+" A across "+std::to_string(n)+" DF40 contact(s) but the deratied capacity is only "+f(r.capacity_a(),3)+" A ("+std::to_string(n)+" x 0.3 A x 0.8 derate) — margin "+sign(r.margin_a(),3)+" A; add contacts or reduce the rail current ["+rating_basis+"]");
         if(r.current_a==0)res.findings.push_back(name+": "+std::to_string(n)+" DF40 contact(s) assigned but no SoM-side draw declared on the som_j* sheets — capacity proven, load unbooked (no ampacity risk until a draw is declared)");
     }
