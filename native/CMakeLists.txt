@@ -28,7 +28,7 @@ add_library(schgen_core STATIC
     src/pack_edges.cpp src/pcb_scan.cpp src/module_mating.cpp src/module_symbols.cpp src/ladder_stub_rule.cpp src/land_spacing.cpp src/pack_refine.cpp src/place_geom.cpp
     src/catalog.cpp src/part_facts.cpp src/json.cpp src/circuit.cpp src/circuit_layout.cpp src/reorder.cpp src/atomic_file.cpp
     src/ratsnest.cpp src/footprint_library.cpp src/xdc.cpp
-    src/bom.cpp src/project.cpp src/project_catalog.cpp src/project_outputs.cpp src/som_interface.cpp
+    src/bom.cpp src/fabricator.cpp src/assembly_facts.cpp src/assembly_refresh.cpp src/assembly_refresh_cli.cpp src/assembly_parts.cpp src/order_files.cpp src/project.cpp src/project_catalog.cpp src/project_outputs.cpp src/som_interface.cpp
     src/link.cpp src/symbols.cpp src/validation.cpp
     src/schematic.cpp src/schematic_route.cpp src/netlist_gate.cpp src/design_rules.cpp
     src/schematic_place_core.cpp src/schematic_place_fanout.cpp
@@ -41,6 +41,7 @@ add_library(schgen_core STATIC
     src/pcb_checks_model.cpp src/pcb_checks_connectors.cpp src/pcb_checks_placement.cpp
     src/pcb_checks_return_path.cpp src/pcb_checks_ampacity.cpp src/pcb_checks_escape.cpp src/pcb_checks_stitch.cpp)
 target_compile_definitions(schgen_core PRIVATE SCHGEN_STACKUP_CATALOG="${CMAKE_CURRENT_SOURCE_DIR}/stackups.json")
+target_compile_definitions(schgen_core PRIVATE SCHGEN_FABRICATOR_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../fabricators")
 target_compile_definitions(schgen_core PRIVATE SCHGEN_PART_RATINGS="${CMAKE_CURRENT_SOURCE_DIR}/../parts/part_ratings.json")
 target_compile_definitions(schgen_core PRIVATE SCHGEN_PART_FACTS="${CMAKE_CURRENT_SOURCE_DIR}/../parts/part_facts.json")
 set(SCHGEN_FLOORPLAN_SOURCES
@@ -1225,6 +1226,18 @@ if(BUILD_TESTING)
     target_compile_options(schgen_board_check_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
     add_test(NAME native_board_check_contracts COMMAND schgen_board_check_contracts
         "${CMAKE_CURRENT_SOURCE_DIR}/.." "${CMAKE_CURRENT_SOURCE_DIR}/catalog.bin")
+    add_executable(schgen_fabricator_contracts tests/fabricator_contracts.cpp)
+    target_link_libraries(schgen_fabricator_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_fabricator_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME native_fabricator_contracts COMMAND schgen_fabricator_contracts "${CMAKE_CURRENT_SOURCE_DIR}/..")
+    add_executable(schgen_order_files_contracts tests/order_files_contracts.cpp)
+    target_link_libraries(schgen_order_files_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_order_files_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME native_order_files_contracts COMMAND schgen_order_files_contracts "${CMAKE_CURRENT_SOURCE_DIR}/..")
+    add_executable(schgen_assembly_contracts tests/assembly_contracts.cpp)
+    target_link_libraries(schgen_assembly_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_assembly_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME native_assembly_contracts COMMAND schgen_assembly_contracts "${CMAKE_CURRENT_SOURCE_DIR}/..")
     add_executable(schgen_part_ratings_contracts tests/part_ratings_contracts.cpp)
     target_link_libraries(schgen_part_ratings_contracts PRIVATE schgen_core)
     target_compile_options(schgen_part_ratings_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)

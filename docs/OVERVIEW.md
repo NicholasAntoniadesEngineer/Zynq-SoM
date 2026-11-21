@@ -104,7 +104,9 @@ A board is a folder of data; the compiled application builds it unchanged. Write
 3. `<board>/project.json`: `name`, `placement` (five keys), `placement_requirements`, `fpga.bank_rails`;
    optional `silk_labels`, `escape.genuine_pairs`. Unknown keys fail.
 4. `schgen.json`: the board in `boards`, a `stackup` entry from `native/stackups.json`, an
-   `overmold_parts` entry.
+   `overmold_parts` entry, and a `fabrication` entry (`fabricator`, `copper.outer_oz`/`inner_oz` equal to
+   what the stack-up was published for, `finish`, `assembly_service`, `build_count`); see
+   [FABRICATION.md](FABRICATION.md).
 5. `<board>/som_mapping.json` (`schema`, `function_map`, `pudc_straps`, `vcco_rail_map`,
    `rebound_som_rails`, `isolated_som_rails`; optional `rail_aliases`).
 6. `<board>/escape_triage.json`.

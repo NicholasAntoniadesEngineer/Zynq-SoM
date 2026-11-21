@@ -41,6 +41,7 @@ nothing needs recompiling. A misspelt or unknown key stops the run with an error
 | `audit_projections` | `2` | Source audits run side by side (1 or 2) |
 | `stackup` | `JLC06161H-3313` per board | Layer build-up, by name from the catalogue below |
 | `overmold_parts` | `["HDMI-019S"]` on the carrier | Connectors whose cable overmould needs side clearance |
+| `fabrication` | per board: `fabricator`, `copper`, `finish`, `assembly_service`, `build_count` | Which fabricator profile (`fabricators/<name>.json`) judges the board and orders it; see [docs/FABRICATION.md](docs/FABRICATION.md) |
 | `study` | four builds, one per layer count | Optional: `stackups` lists the builds `study layers` compares |
 
 ## Layer build-ups

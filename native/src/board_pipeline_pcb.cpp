@@ -13,6 +13,8 @@
 #include "schgen/label_seats.hpp"
 #include "schgen/decoupling_report.hpp"
 #include "schgen/testpoint_map.hpp"
+#include "schgen/order_files.hpp"
+#include "schgen/assembly_parts.hpp"
 #include "schgen/stackup.hpp"
 #include <cmath>
 #include <climits>
@@ -218,11 +220,13 @@ void pcb_stages(Context& c){
         if(c.pcb)sources.emission=pcb_emit_policy(c.pcb->inputs.floorplan.project);
         std::optional<ThermalCopper> copper;if(c.pcb_published)copper=scan_thermal_copper(pcb_path);
         const auto r=analyze_copper_debt(copper?&*copper:nullptr,sources);c.report("copper_debt.txt",copper_debt_report(r));c.gate("copper_debt",true,copper_debt_report(r));});
-    c.attempt("cpl",[&]{if(!c.pcb_published)throw ProjectError("PCB unavailable");const auto destination=c.manufacturing/board_file_name(c.paths.file_stem,BoardFileKind::Placements);
-        const auto temporary=c.manufacturing/board_file_name(c.paths.file_stem,BoardFileKind::PlacementsScratch);
-        if(fs::exists(temporary))throw ProjectError("CPL temporary destination already exists");
-        const auto r=run_process({c.options.extraction.kicad_cli,"pcb","export","pos","--format","csv","--units","mm","--side","both","--output",temporary.string(),pcb_path.string()},std::chrono::seconds{120});
-        if(r.exit_code!=0)throw ProjectError("CPL export failed: "+r.stderr_text);const auto bytes=read(temporary);publish_text(destination,bytes);fs::remove(temporary);c.gate("cpl",true,destination.string());});
+    c.attempt("order_files",[&]{if(!c.pcb||!c.pcb_published)throw ProjectError("PCB unavailable");
+        const auto& selection=board_fabrication();const auto facts=load_assembly_facts_in(c.paths.parts_dir);
+        const auto files=build_order_files(c.sheets,c.index,c.pcb->placement.model,selection.profile,facts);
+        publish_text(c.manufacturing/board_file_name(c.paths.file_stem,BoardFileKind::OrderBom),files.bom);publish_text(c.manufacturing/board_file_name(c.paths.file_stem,BoardFileKind::Placements),files.cpl);
+        const auto verdict=check_order_files(files.bom,files.cpl,files.unplaced,selection.profile);c.report("order_files.txt",verdict.report());c.gate("order_files",verdict.ok(),verdict.summary());
+        const auto parts=check_assembly_parts(c.sheets,files,facts,default_part_facts(),selection.config.build_count);
+        c.report("assembly_parts.txt",parts.report());c.gate("assembly_parts",parts.ok(),parts.summary());});
     c.attempt("fab_profile",[&]{if(!c.pcb_published)throw ProjectError("PCB unavailable");const auto r=run_manufacturing_fab(c.reports,pcb_path,c.manufacturing/board_file_name(c.paths.file_stem,BoardFileKind::DesignRules),c.out/board_file_name(c.paths.file_stem,BoardFileKind::Project));c.gate("fab_profile",r.ok,r.report());});
     c.attempt("stage_movement",[&]{if(!c.pcb)throw ProjectError("tracker did not run");const auto& moves=c.pcb->placement.model.stage_moves;
         for(const auto* name:{"l4_pull","edge_seat","breathe","refit_facing","reorder","corridor_eviction","instantiate","escape_copper"})if(!moves.count(name))throw ProjectError(std::string("tracker missing stage ")+name);
