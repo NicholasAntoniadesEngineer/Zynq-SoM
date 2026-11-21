@@ -92,15 +92,15 @@
     "ZX-SH1.0-4PWT:ZX-SH1.0-4PWT": "connector"
   },
   "connectors": {
-    "AFC07-S40FCA-00": {"mating_face": "+Y", "edge_pinned": true, "overmold": false, "pad_row_face_check": false, "description": "FFC 40-pin 0.5mm (LCD)"},
-    "DS1024-2x6R2": {"mating_face": "+Y", "edge_pinned": true, "overmold": false, "pad_row_face_check": false, "description": "PMOD 2x6 socket", "numbered_label": "PMOD"},
-    "HDMI-019S": {"mating_face": "+Y", "edge_pinned": true, "overmold": true, "pad_row_face_check": true, "description": "HDMI receptacle"},
-    "KH-5224-8P8C-D": {"mating_face": "+Y", "edge_pinned": false, "overmold": false, "pad_row_face_check": false},
-    "SFW15R-1STE1LF": {"mating_face": "+Y", "edge_pinned": true, "overmold": false, "pad_row_face_check": false, "description": "FFC 15-pin 1mm (camera)"},
-    "TF-01A": {"mating_face": "+Y", "edge_pinned": true, "overmold": false, "pad_row_face_check": false, "description": "microSD push-pull"},
-    "TYPE-C-31-M-12": {"mating_face": "+Y", "edge_pinned": true, "overmold": false, "pad_row_face_check": true, "description": "USB-C receptacle"},
-    "XT60PW-M": {"mating_face": "+X", "edge_pinned": true, "overmold": false, "pad_row_face_check": false, "description": "XT60 ESC power inlet (horizontal)", "pair_label": "XT60"},
-    "ZX-SH1.0-4PWT": {"mating_face": "+Y", "edge_pinned": false, "overmold": false, "pad_row_face_check": false}
+    "AFC07-S40FCA-00": {"handling": "flat_cable", "mating_face": "+Y", "edge_pinned": true, "overmold": false, "pad_row_face_check": false, "description": "FFC 40-pin 0.5mm (LCD)"},
+    "DS1024-2x6R2": {"handling": "pins", "mating_face": "+Y", "edge_pinned": true, "overmold": false, "pad_row_face_check": false, "description": "PMOD 2x6 socket", "numbered_label": "PMOD"},
+    "HDMI-019S": {"handling": "grip_sides", "mating_face": "+Y", "edge_pinned": true, "overmold": true, "pad_row_face_check": true, "description": "HDMI receptacle"},
+    "KH-5224-8P8C-D": {"handling": "latch", "mating_face": "+Y", "edge_pinned": false, "overmold": false, "pad_row_face_check": false},
+    "SFW15R-1STE1LF": {"handling": "flat_cable", "mating_face": "+Y", "edge_pinned": true, "overmold": false, "pad_row_face_check": false, "description": "FFC 15-pin 1mm (camera)"},
+    "TF-01A": {"handling": "card", "mating_face": "+Y", "edge_pinned": true, "overmold": false, "pad_row_face_check": false, "description": "microSD push-pull"},
+    "TYPE-C-31-M-12": {"handling": "grip_sides", "mating_face": "+Y", "edge_pinned": true, "overmold": false, "pad_row_face_check": true, "description": "USB-C receptacle"},
+    "XT60PW-M": {"handling": "grip_sides", "mating_face": "+X", "edge_pinned": true, "overmold": false, "pad_row_face_check": false, "description": "XT60 ESC power inlet (horizontal)", "pair_label": "XT60", "mating": {"plug_width_mm": 15.5, "plug_depth_mm": null, "plug_height_mm": null, "cite": "AMASS XT60PW-M30.G.Y.T Product Specification, version 2025V0, section 2 Mating Dimension: mated pair 27.60 x 15.50 mm (LCSC C98732 pdfUrl); plug depth beyond the mouth and plug height are not given"}},
+    "ZX-SH1.0-4PWT": {"handling": "latch", "mating_face": "+Y", "edge_pinned": false, "overmold": false, "pad_row_face_check": false}
   },
   "thermal": {
     "AP2112K-1.8TRG1": {"rth_ja": 250.0, "tj_max": 125.0, "rds_on": 0.0, "eff": 0.85, "package": "SOT-23-5", "cite": "Diodes AP2112 DS (SOT-23-5 RthJA ~250 C/W; Tj_max 125 C)"},
