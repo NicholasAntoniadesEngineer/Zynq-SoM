@@ -1,5 +1,6 @@
 // Standalone gates over real symbol libraries and canonical circuits. No
 // Python, emitter, process-global catalogs, or repository output writes.
+#include "schgen/module_symbols.hpp"
 #include "schgen/validation.hpp"
 
 #include <algorithm>
@@ -305,9 +306,9 @@ void visual_contracts(Suite& suite, const fs::path& fixtures) {
 }
 
 void repository_contracts(Suite& suite, const fs::path& repo) {
-    SymbolLibrary library(repo);
     for (const std::string project : {"carrier", "devkit_mini"}) {
         suite.run("real electrical census " + project, [&] {
+            SymbolLibrary library = project_symbol_library(resolve_project_paths(repo, project));
             const auto circuits = load_project_circuits(resolve_project_paths(repo, project));
             require(circuits.size() == (project == "carrier" ? 37u : 12u), "real circuit count changed");
             std::size_t parts = 0, pins = 0, assigned = 0, nc = 0;
@@ -342,6 +343,7 @@ void repository_contracts(Suite& suite, const fs::path& repo) {
                       << " symbol pins = " << assigned << " assigned + " << nc << " explicit NC; inputs driven\n";
         });
         suite.run("real inline-symbol missing pin cannot pass " + project, [&] {
+            SymbolLibrary library = project_symbol_library(resolve_project_paths(repo, project));
             auto c = load_project_circuit(resolve_project_paths(repo, project), "power").circuit;
             std::optional<CircuitPinRefIr> victim;
             for (const auto& part : c.parts) {
