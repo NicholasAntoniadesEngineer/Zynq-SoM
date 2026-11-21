@@ -46,6 +46,7 @@ const char* const bench_board = R"json({
   "root_readme": false,
   "owned_groups": false,
   "module": {"folder": "bench_module", "pairs": [], "loads": []},
+  "power": {"sources": [], "rails": [], "inlet": null},
   "sheets": [
     {"name": "mod_a", "module_connector": "J1", "title": "Module connector one"},
     {"name": "power"},
@@ -67,7 +68,9 @@ const char* const bench_module = R"json({
     "return_path": {"n_pairs": 1, "n_pair_contacts": 1, "n_fail": 0, "worst_distance": 1}
   },
   "escape_triage": [{"pattern": "X", "class": "GENUINE", "note": "x"}],
-  "do_not_load_straps": []
+  "do_not_load_straps": [],
+  "supplies": [],
+  "regulated_rails": {"rails": [], "basis": "the bench module regulates no rail of its own"}
 })json";
 
 const char* const quiet_placement =

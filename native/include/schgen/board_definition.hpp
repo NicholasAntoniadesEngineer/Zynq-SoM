@@ -37,6 +37,35 @@ struct ModuleReturnPath {
     int n_pairs = 0, n_pair_contacts = 0, n_fail = 0, worst_distance = 0;
 };
 
+struct PowerSupply {
+    std::string rail;
+    double volts = 0.0, amps = 0.0;
+    std::string basis;
+};
+
+struct BoardSource {
+    std::string rail;
+    bool from_module = false;
+    double volts = 0.0, amps = 0.0;
+    std::string basis;
+};
+
+struct BoardRail {
+    std::string rail;
+    std::optional<double> volts;
+    std::string basis;
+};
+
+struct BoardInlet {
+    std::string rail, bulk;
+};
+
+struct BoardPower {
+    std::vector<BoardSource> sources;
+    std::vector<BoardRail> rails;
+    std::optional<BoardInlet> inlet;
+};
+
 struct ModuleTriageRule {
     std::string pattern, klass, note;
 };
@@ -51,6 +80,9 @@ struct ModuleDefinition {
     ModuleReturnPath return_path;
     std::vector<ModuleTriageRule> escape_triage;
     std::vector<std::string> do_not_load_straps;
+    std::vector<PowerSupply> supplies;
+    std::vector<std::string> regulated_rails;
+    std::string regulated_rails_basis;
 };
 
 struct BoardSheet {
@@ -81,6 +113,7 @@ struct BoardDefinition {
     BoardFlags flags;
     BoardModule module;
     ModuleDefinition module_definition;
+    BoardPower power;
     std::vector<BoardSheet> sheets;
     const BoardSheet& sheet(const std::string& name) const;
 };
@@ -92,6 +125,7 @@ std::filesystem::path module_root_of(const std::filesystem::path& board_root);
 ModuleDefinition parse_module(const JsonNode& document, const std::string& source);
 ModuleDefinition load_module(const std::filesystem::path& module_root);
 ModuleDefinition load_board_module(const std::filesystem::path& board_root);
+BoardPower parse_board_power(const JsonNode& node, const std::string& source);
 BoardDefinition parse_board(const JsonNode& document, const std::string& source, ModuleDefinition module_definition);
 BoardDefinition load_board(const std::filesystem::path& board_root);
 
