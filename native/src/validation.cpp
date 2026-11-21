@@ -255,6 +255,18 @@ std::string VisualResult::summary() const {
     return out;
 }
 
+namespace {
+bool wire_box_over_text(const VisualBox& wb, const std::string& net, const VisualBox& box) {
+    if (box.kind == "body" && box.owner.find("net:") != std::string::npos) return false;
+    const double pad = box.kind == "label" && box.owner == "label:" + net ? -0.14 : 0.0;
+    return is_text(box.kind) && wb.intersects(box, pad);
+}
+}  // namespace
+
+bool wire_over_text(const VisualSegment& wire, const VisualBox& box) {
+    return wire_box_over_text(segment_box(wire), wire.net, box);
+}
+
 VisualResult check_visual_geometry(const SheetGeometry& geo, double clearance_mm) {
     valid_geometry(geo, clearance_mm);
     VisualResult out;
@@ -273,9 +285,7 @@ VisualResult check_visual_geometry(const SheetGeometry& geo, double clearance_mm
     for (const auto& wire : geo.wires) {
         const auto wb = segment_box(wire);
         for (const auto& box : geo.boxes) {
-            if (box.kind == "body" && box.owner.find("net:") != std::string::npos) continue;
-            const double pad = box.kind == "label" && box.owner == "label:" + wire.net ? -0.14 : 0.0;
-            if (is_text(box.kind) && wb.intersects(box, pad)) finding("wire(" + wire.net + ") over " + box.kind + "(" + box.owner + ")");
+            if (wire_box_over_text(wb, wire.net, box)) finding("wire(" + wire.net + ") over " + box.kind + "(" + box.owner + ")");
         }
     }
     for (std::size_t i = 0; i < geo.wires.size(); ++i) {

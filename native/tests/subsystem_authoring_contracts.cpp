@@ -86,7 +86,7 @@ int main(int argc,char** argv) {
         context.pins=[&](const auto& lib)->std::optional<std::set<std::string>>{try{return symbols.pin_numbers(lib);}catch(const SymbolError&){return std::nullopt;}};
         context.library=root/subsystem_library_folder;
         const auto library=subsystem_library(context);
-        constexpr std::size_t library_count=34,oracle_count=17;
+        constexpr std::size_t library_count=39,oracle_count=17;
         require(library.size()==library_count,"library coverage");
         std::size_t cases=0,oracles=0;
         for(const auto& def:library) {

@@ -1,5 +1,7 @@
 #include "schgen/placement_integrity.hpp"
 
+#include <algorithm>
+
 #include "schgen/pcb_scan.hpp"
 #include "schgen/stackup.hpp"
 
@@ -48,6 +50,25 @@ const rules::RuleResult& PlacementIntegrityResult::of(std::string_view id) const
     for (const auto& judged : rules)
         if (judged.rule->id == id) return judged;
     throw std::out_of_range("placement integrity: no rule named " + std::string(id));
+}
+
+std::vector<std::string> breach_provenance(const PlacementIntegrityResult& entry, const PlacementIntegrityResult& final,
+                                           const std::string& earlier_step, const std::string& this_step) {
+    std::vector<std::string> lines;
+    for (const auto& judged : final.rules) {
+        if (judged.rule->enforcement != rules::Enforcement::gate) continue;
+        const auto before = std::find_if(entry.rules.begin(), entry.rules.end(),
+                                         [&](const rules::RuleResult& row) { return row.rule == judged.rule; });
+        for (const auto& finding : judged.findings) {
+            const bool inherited = before != entry.rules.end() &&
+                std::any_of(before->findings.begin(), before->findings.end(),
+                            [&](const rules::Finding& row) { return row.subject == finding.subject; });
+            lines.push_back(std::string(judged.rule->id) + ": " + finding.subject + " " +
+                            (inherited ? "already breached when " + earlier_step + " handed over the placement"
+                                       : "introduced by " + this_step));
+        }
+    }
+    return lines;
 }
 
 std::string PlacementIntegrityResult::summary(rules::Stage reached) const {

@@ -1,0 +1,13 @@
+* som_j3.cir - SPICE subckt of the som_j3 sheet.
+*
+* Module connector J3 (FPGA bank 33/34/35 IO + VCCO rails): a pass-through plug with no on-sheet passive network.
+* The subckt declares the sheet's power and ground rails as its pins and models
+* each rail as a 1G tie to the last pin so no node floats in .op; the signal
+* ports carry no two-rail passive and are not pins.
+*
+* Port order: V3V3 GND
+
+.subckt som_j3 V3V3 GND
+RV3V3 V3V3 GND 1G
+.ends som_j3
+.end

@@ -54,6 +54,23 @@ void add_weight(std::vector<std::pair<std::string,double>>& rows,const std::stri
 }
 }  // namespace
 
+std::string Engine::rejection_text() const {
+    std::vector<std::pair<std::size_t,std::string>> rows;
+    for (const auto& [reason,count]:rejection_reasons) rows.emplace_back(count,reason);
+    std::stable_sort(rows.begin(),rows.end(),[](const auto& a,const auto& b){return a.first>b.first;});
+    std::string text;
+    std::map<std::string,std::vector<std::string>> by_edge;
+    for (const auto& [sheet,edge]:edge_of) by_edge[edge].push_back(sheet);
+    text+="\n  edge assignment:";
+    for (const auto& [edge,names]:by_edge) {
+        text+=" "+edge;
+        for (const auto& name:names) text+=" "+name;
+        text+=";";
+    }
+    for (const auto& [count,reason]:rows) text+="\n  rejected "+std::to_string(count)+"x at "+reason;
+    return text;
+}
+
 std::set<std::string> deferred_connector_names(const std::string& expectation,const std::set<std::string>& reserving) {
     // These are literal identifiers, not a user-supplied pattern. Match the
     // previous ECMAScript word boundaries without instantiating a regex engine
@@ -118,7 +135,7 @@ void Engine::initialize() {
     std::map<std::string,std::string> j_edges;
     for (const auto& row:j_edge_map(jack_rows,plan.som.w,plan.som.h)) j_edges.emplace(row);
     const FloorplanSpec spec=in.spec.value_or(FloorplanSpec{});
-    const auto spec_edges=spec.edge_of(); const auto spec_order=spec.edge_order();
+    const auto spec_order=spec.edge_order();
     std::set<std::string> regs;
     for (const auto& r:in.regulators) regs.insert(r.sheet);
     const std::set<std::string> reserving_sheets=sheets_reserving_edge(in.roles);
@@ -127,6 +144,7 @@ void Engine::initialize() {
         zone_refs[sc.name].insert(p->ref);
         const auto wh=part_dims(p->footprint); raw_area+=wh.first*wh.second;
     }
+    const auto sheet_edges=floorplan_sheet_edges(in);
     for (const auto& [name,sc]:sheets) {
         auto parts=zone_parts(*sc);
         if ((module_connector_sheet(in.roles,name) || under_module_sheet(in.roles,name)) && parts.empty()) continue;
@@ -141,15 +159,14 @@ void Engine::initialize() {
             reserved.insert(names.begin(),names.end());
         }
         b.reserved.assign(reserved.begin(),reserved.end());
-        const bool is_edge=spec_edges.count(name) || ((!b.conns.empty() || !b.reserved.empty()) && !spec.interior.count(name));
+        const auto assigned=sheet_edges.find(name);
+        const bool is_edge=assigned!=sheet_edges.end();
         b.kind=is_edge ? "edge":"interior";
         if (is_edge) {
-            if (spec_edges.count(name)) {
-                edge_of[name]=spec_edges.at(name); b.pinned=true;
+            edge_of[name]=assigned->second.edge;
+            if (assigned->second.stated) {
+                b.pinned=true;
                 if (spec_order.count(name)) b.order_hint=spec_order.at(name);
-            } else {
-                const auto j=dominant_j(b.j_aff);
-                edge_of[name]=j && j_edges.count(*j) ? j_edges.at(*j):"N";
             }
             plan.edge_blocks.push_back(std::move(b));
         } else plan.interior_blocks.push_back(std::move(b));
@@ -183,6 +200,20 @@ void Engine::initialize() {
             if (sv=="top" || sv=="bottom" || sv=="either") { b.layer_pref=sv; sv="E"; }
             if (a.layer) b.layer_pref=*a.layer;
             b.zone=a.near ? "@"+*a.near:sv; continue;
+        }
+        std::optional<std::string> seat;
+        for (const auto& t:in.compose.index.hard) {
+            if (t.kind!="near_max" || !t.bound) continue;
+            const std::string other=t.subject==b.name ? t.target() : t.target()==b.name ? t.subject : std::string{};
+            if (other.empty() || !std::any_of(plan.edge_blocks.begin(),plan.edge_blocks.end(),[&](const auto& e){return e.name==other;})) continue;
+            if (seat && *seat!=other) throw FloorplanError("floorplan: "+b.name+" is held within reach of two edge blocks, "+*seat+" and "+other+"; state its seat in floorplan.json");
+            seat=other;
+        }
+        if (seat) {
+            FloorplanPull pull; pull.to=*seat; pull.weight=edge_seat_pull_weight; pull.face="inboard"; pull.exclusive=true;
+            pull.face_present=pull.exclusive_present=true;
+            pull.basis="derived: hard near_max term between "+b.name+" and the edge block "+*seat;
+            b.pull=pull; b.zone="@"+*seat; continue;
         }
         bool reg=regs.count(b.name)!=0;
         for (const auto& p:in.project.reg_band_prefixes) reg |= starts(b.name,p);
@@ -324,7 +355,7 @@ FloorplanPlan Engine::run() {
         catch (const FloorplanReservationExcluded&) {}
         if(!conservative_estimate&&!free_est)
             throw FloorplanPackingInfeasible("floorplan: bounded placement search found no valid layout for the requested fixed outline "+
-                outline_text(plan.board_w,plan.board_h)+" under either reservation policy; this does not prove geometric infeasibility.",rejected_subjects);
+                outline_text(plan.board_w,plan.board_h)+" under either reservation policy; this does not prove geometric infeasibility."+rejection_text(),rejected_subjects);
         double estimate_real=free_est.value_or(0.0);
         if(conservative_estimate&&(!free_est||*free_est>=*conservative_estimate-1e-6)) {
             estimate_real=*conservative_estimate;
@@ -448,7 +479,7 @@ FloorplanPlan Engine::run() {
     }
     catch (const FloorplanReservationExcluded&) {}
     if(!conservative_best&&!free_best)
-        throw FloorplanPackingInfeasible("floorplan: automatic sizing found no accepted layout under either reservation policy; bounded search exhaustion is not proof of geometric infeasibility",rejected_subjects);
+        throw FloorplanPackingInfeasible("floorplan: automatic sizing found no accepted layout under either reservation policy; bounded search exhaustion is not proof of geometric infeasibility"+rejection_text(),rejected_subjects);
     Winner best=conservative_best?*conservative_best:*free_best; std::string choice="conservative";
     if (free_best && (!conservative_best || prefer_outline(*free_best,best))) {
         best=*free_best; choice="free";
@@ -479,6 +510,61 @@ FloorplanPlan Engine::run() {
 }  // namespace schgen::floorplan_detail
 
 namespace schgen {
+std::map<std::string, FloorplanSheetEdge> floorplan_sheet_edges(const FloorplanInput& in) {
+    static const std::vector<std::string> board_edges{"N","E","S","W"};
+    const FloorplanSpec spec=in.spec.value_or(FloorplanSpec{});
+    const auto stated=spec.edge_of();
+    std::vector<std::string> names;
+    std::vector<std::tuple<std::string,bool,std::string,std::vector<std::string>>> bindings;
+    for (const auto& sc:in.sheets) names.push_back(sc.name);
+    for (const auto& b:in.link.bindings) {
+        const bool deferred=b.status=="deferred" && !b.ptype.expect.empty();
+        bindings.emplace_back(b.sheet,deferred,deferred ? b.ptype.expect : "",b.targets);
+    }
+    std::map<std::string,std::vector<std::pair<std::string,int>>> aff;
+    for (const auto& row:j_affinity(names,bindings,in.roles)) aff.emplace(row);
+    std::vector<std::tuple<std::string,double,double>> jack_rows;
+    for (const auto& j:in.som.js) jack_rows.emplace_back(j.ref,j.x,j.y);
+    std::map<std::string,std::string> j_edges;
+    for (const auto& row:j_edge_map(jack_rows,in.som.w,in.som.h)) j_edges.emplace(row);
+    const std::set<std::string> reserving=sheets_reserving_edge(in.roles);
+    std::map<std::string,FloorplanSheetEdge> out;
+    for (const auto& sc:in.sheets) {
+        const auto& role=sheet_role(in.roles,sc.name);
+        bool parts=false,connector=false;
+        if (role.region!=SheetRegion::under_module)
+            for (const auto& p:sc.parts) if (p.ref!=role.module_connector) {
+                parts=true;
+                const auto* fact=connector_fact(in.project.connectors,p.value);
+                connector|=fact && fact->edge_pinned;
+            }
+        if ((module_connector_sheet(in.roles,sc.name) || under_module_sheet(in.roles,sc.name)) && !parts) continue;
+        const bool reserved=reserving.count(sc.name)!=0;
+        FloorplanSheetEdge row;
+        if (stated.count(sc.name)) {
+            row.edge=stated.at(sc.name); row.stated=true; row.candidates={row.edge};
+            out.emplace(sc.name,std::move(row)); continue;
+        }
+        if (!(connector || reserved) || spec.interior.count(sc.name)) continue;
+        auto ranked=aff[sc.name];
+        std::stable_sort(ranked.begin(),ranked.end(),[](const auto& a,const auto& b){
+            return a.second!=b.second ? a.second>b.second : a.first<b.first;});
+        for (const auto& [jack,count]:ranked) {
+            (void)count;
+            const auto found=j_edges.find(jack);
+            if (found==j_edges.end()) throw FloorplanError("floorplan: affinity references missing SoM connector "+jack);
+            if (std::find(row.candidates.begin(),row.candidates.end(),found->second)==row.candidates.end()) row.candidates.push_back(found->second);
+        }
+        for (const auto& e:board_edges)
+            if (std::find(row.candidates.begin(),row.candidates.end(),e)==row.candidates.end()) row.candidates.push_back(e);
+        const auto choice=in.edge_choice.find(sc.name);
+        const std::size_t pick=choice==in.edge_choice.end() ? 0 : choice->second%row.candidates.size();
+        row.edge=row.candidates[pick];
+        out.emplace(sc.name,std::move(row));
+    }
+    return out;
+}
+
 FloorplanPlan build_floorplan(const FloorplanInput& input, ExecutionFailureReceipt* failure) {
     std::optional<floorplan_detail::Engine> engine;
     try { engine.emplace(input);return engine->run(); }

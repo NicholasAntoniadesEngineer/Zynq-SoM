@@ -1,0 +1,603 @@
+{
+  "schema": "schgen.board/1",
+  "name": "motor_carrier",
+  "files": {
+    "stem": "Zynq_Motor_Carrier"
+  },
+  "root_readme": false,
+  "owned_groups": [],
+  "module": {
+    "folder": "som",
+    "pairs": [],
+    "loads": [
+      {
+        "connector": "J2",
+        "rail": "+3V3",
+        "amps": 0.03,
+        "note": "Zynq banks 13+33 VCCO: 12 LVCMOS33 outputs to high-impedance CMOS inputs (8 ESC PWM, #OE, idle select, CAN TX, UART RTS) + on-SoM BMI323 VDDIO rider; estimate, the devkit_mini figure plus half"
+      },
+      {
+        "connector": "J3",
+        "rail": "+3V3",
+        "amps": 0.03,
+        "note": "Zynq banks 34+35 VCCO: bank 34 drives the 32 expansion-header pins when a daughter card is fitted, bank 35 unused; estimate"
+      }
+    ]
+  },
+  "power": {
+    "sources": [
+      {
+        "rail": "+VBUS_IN",
+        "volts": 20.0,
+        "amps": 3.0,
+        "basis": "USB-C PD sink contract 20 V / 3 A at the receptacle (pd_input J1; +VIN sits behind the TPS26631 eFuse, round 5)"
+      },
+      {
+        "rail": "+3V3_SC",
+        "supplier": "module"
+      },
+      {
+        "rail": "+VESC_IN",
+        "volts": 25.2,
+        "amps": 30.0,
+        "basis": "ESC battery at the XT60 inlet (esc_power J1): 6S pack at 4.2 V per cell = 25.2 V, the highest supported pack. 30 A continuous is the board design current: the 40 A fuse F1 derated 25 % for continuous operation (Littelfuse 456 series sheet, revised 11/22/19) and inside the XT60PW-M rated current of 35 A at 85 K rise (AMASS product specification XT60PW-M30.G.Y.T, version 2025V0)"
+      }
+    ],
+    "rails": [
+      {
+        "rail": "+5V_REG",
+        "volts": 5.0,
+        "basis": "LM61460 power:U1 set-point target; its FB divider R1/R2 = 40k2/10k sets 1.0 V x (1 + 40200/10000) = 5.02 V, checked against this target by the spice fb_divider gate (+/-3 %)"
+      },
+      {
+        "rail": "+3V3_REG",
+        "volts": 3.3,
+        "basis": "LM61460 power:U2 set-point target; its FB divider R4/R5 = 23k2/10k sets 1.0 V x (1 + 23200/10000) = 3.32 V, checked against this target by the spice fb_divider gate (+/-3 %)"
+      },
+      {
+        "rail": "+5V_SOM",
+        "volts": 4.65,
+        "basis": "LM61460 power_som:U4 set-point target: the regulated 4.65 V SoM input (P0 rebind); its FB divider R14/R15 = 47k5/13k sets 1.0 V x (1 + 47500/13000) = 4.654 V, checked against this target by the spice fb_divider gate (+/-3 %)"
+      },
+      {
+        "rail": "USB_UART_VBUS",
+        "volts": 5.0,
+        "basis": "host-supplied USB VBUS of the UART USB-C receptacle (usb_uart_connector J1); feeds the CP2102N VBUS-sense divider on uart_bridge"
+      },
+      {
+        "rail": "+VPRE",
+        "volts": 8.0,
+        "basis": "LM61460 vbat_supply:U2 set-point target, the battery-derived logic feed; its FB divider R8/R9 = 47k5/6k8 sets 1.0 V x (1 + 47500/6800) = 7.985 V, checked against this target by the spice fb_divider gate (+/-3 %). 8 V stays in regulation down to the 9.15 V eFuse turn-on and keeps +VIN below the 20 V the reused chain is rated for"
+      },
+      {
+        "rail": "+VESC_MID",
+        "volts": 25.2,
+        "basis": "common-source node of the two protection FETs esc_power:Q1/Q2, at the inlet voltage when the path is on; a transistor is not a part the tool passes a voltage through"
+      },
+      {
+        "rail": "+VESC_P",
+        "volts": 25.2,
+        "basis": "output of the ideal-diode FET esc_power:Q2 (LM74930 C pin), the protected ESC rail ahead of the shunt; same reason as +VESC_MID"
+      },
+      {
+        "rail": "+VBAT_D",
+        "volts": 25.2,
+        "basis": "battery logic feed behind the reverse-blocking Schottky vbat_supply:D2 (SS54, VF at most 0.55 V at 5 A, MDD SS52-SS5200 sheet Rev 2024A4); stated at the inlet voltage, the worst case for ratings; a diode is not a part the tool passes a voltage through"
+      },
+      {
+        "rail": "+VIN",
+        "volts": 20.0,
+        "basis": "common pin of the supply selector vbat_supply:J1, fed by exactly one of +VIN_PD (20 V USB-C PD contract behind the pd_input eFuse) or +VPRE (8 V); 20 V is the higher of the two and is the value every rating on +VIN and +VIN_SYS is checked at. A header is not a part the tool can pass a voltage through"
+      }
+    ],
+    "inlet": {
+      "rail": "+VBUS_IN",
+      "bulk": "+VIN_PD"
+    }
+  },
+  "sheets": [
+    {
+      "name": "board_control",
+      "settings": {
+        "bind": {
+          "+3V3_SC": "+3V3_SC",
+          "+3V3": "+3V3",
+          "GND": "GND",
+          "I2C_SCL": "STM32_I2C2_SCL",
+          "I2C_SDA": "STM32_I2C2_SDA",
+          "INT_N": "SC_INT_N",
+          "DIP_5V0": "BU_DIP_5V0",
+          "DIP_3V3": "BU_DIP_3V3",
+          "DIP_1V8": "BU_DIP_1V8",
+          "FLT_PD_N": "PD_FLT_N",
+          "ALERT_PMON_N": "PMON_ALERT_N",
+          "FLT_BAT_N": "VBAT_FLT_N",
+          "ALERT_ESC_N": "ESC_FAULT_N",
+          "OE_SENSE_N": "ESC_BUF_OE_SENSE_N",
+          "PUDC": "PUDC_34",
+          "PWR_REQ": "ESC_PWR_REQ",
+          "PWR_FLT_N": "ESC_PWR_FLT_N",
+          "+5V": "+5V",
+          "+5V_FAN": "+5V_FAN",
+          "FAN_PWM": "FAN_PWM",
+          "FAN_TACH": "FAN_TACH"
+        },
+        "expects": {
+          "I2C_SCL": "som_j1_connector",
+          "I2C_SDA": "som_j1_connector",
+          "INT_N": "som_j1_connector (STM32_GPIO4)",
+          "DIP_5V0": "bringup_en",
+          "DIP_3V3": "bringup_en",
+          "DIP_1V8": "bringup_en",
+          "FLT_PD_N": "pd_input (TPS26631 FLT)",
+          "ALERT_PMON_N": "power_mon (INA3221 alerts)",
+          "FLT_BAT_N": "vbat_supply (TPS26631 FLT)",
+          "ALERT_ESC_N": "esc_power (INA237 ALERT)",
+          "OE_SENSE_N": "esc_io (driver #OE read-back)",
+          "PUDC": "som_j3_connector (IO_L3P_PUDC_34)",
+          "PWR_REQ": "esc_io (ESC POWER switch)",
+          "PWR_FLT_N": "esc_power (LM74930 FLT)",
+          "FAN_PWM": "som_j2_connector (bank 33 PL)",
+          "FAN_TACH": "som_j2_connector (bank 33 PL)"
+        },
+        "buses": {
+          "i2c": "STM32_I2C2"
+        }
+      }
+    },
+    {
+      "name": "bringup_en"
+    },
+    {
+      "name": "can_bus",
+      "settings": {
+        "bind": {
+          "+5V": "+5V",
+          "+3V3": "+3V3",
+          "GND": "GND",
+          "GND_BUS": "GND_MOTOR",
+          "CAN_TX": "CAN_TX",
+          "CAN_RX": "CAN_RX"
+        },
+        "expects": {
+          "CAN_TX": "som_j2_connector (bank 33 PL)",
+          "CAN_RX": "som_j2_connector (bank 33 PL)"
+        }
+      }
+    },
+    {
+      "name": "debug_boot",
+      "additions": {
+        "parts": [
+          {
+            "ref": "TP1",
+            "symbol": "Connector:TestPoint",
+            "value": "VBUS_OUT_EN",
+            "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+            "fields": {
+              "BOM": "exclude"
+            }
+          }
+        ],
+        "nets": [
+          {
+            "name": "VBUS_OUT_EN",
+            "class": "port",
+            "pins": [
+              "TP1.1"
+            ]
+          }
+        ],
+        "ports": [
+          {
+            "net": "VBUS_OUT_EN",
+            "kind": "single",
+            "expect": "som_j1_connector",
+            "explicit": true
+          }
+        ],
+        "free": [
+          {
+            "part": "TP1",
+            "reason": "probe point; it follows its net"
+          }
+        ]
+      }
+    },
+    {
+      "name": "esc_io",
+      "settings": {
+        "bind": {
+          "+5V": "+5V",
+          "+3V3": "+3V3",
+          "GND": "GND",
+          "GND_ESC": "GND_MOTOR",
+          "+5V_SERVO": "+5V_MOTOR_IO",
+          "OE_N": "ESC_BUF_OE_N",
+          "OE_SENSE_N": "ESC_BUF_OE_SENSE_N",
+          "IDLE_SEL": "ESC_IDLE_SEL",
+          "TLM_RX": "ESC_TLM_RX",
+          "PWR_REQ": "ESC_PWR_REQ",
+          "PWR_EN": "ESC_PWR_EN",
+          "PWM_IN0": "ESC_PWM_IN0",
+          "FB0": "ESC_FB0",
+          "PWM_IN1": "ESC_PWM_IN1",
+          "FB1": "ESC_FB1",
+          "PWM_IN2": "ESC_PWM_IN2",
+          "FB2": "ESC_FB2",
+          "PWM_IN3": "ESC_PWM_IN3",
+          "FB3": "ESC_FB3",
+          "PWM_IN4": "ESC_PWM_IN4",
+          "FB4": "ESC_FB4",
+          "PWM_IN5": "ESC_PWM_IN5",
+          "FB5": "ESC_FB5",
+          "PWM_IN6": "ESC_PWM_IN6",
+          "FB6": "ESC_FB6",
+          "PWM_IN7": "ESC_PWM_IN7",
+          "FB7": "ESC_FB7"
+        },
+        "expects": {
+          "OE_N": "som_j2_connector (bank 13 PL)",
+          "OE_SENSE_N": "board_control (TCA9535 P04)",
+          "IDLE_SEL": "som_j2_connector (bank 33 PL)",
+          "TLM_RX": "som_j2_connector (bank 33 PL)",
+          "PWR_REQ": "board_control (TCA9535 P14)",
+          "PWR_EN": "esc_power (LM74930 EN)",
+          "PWM_IN0": "som_j2_connector (bank 33 PL)",
+          "FB0": "som_j2_connector (bank 33 PL)",
+          "PWM_IN1": "som_j2_connector (bank 33 PL)",
+          "FB1": "som_j2_connector (bank 33 PL)",
+          "PWM_IN2": "som_j2_connector (bank 33 PL)",
+          "FB2": "som_j2_connector (bank 33 PL)",
+          "PWM_IN3": "som_j2_connector (bank 33 PL)",
+          "FB3": "som_j2_connector (bank 33 PL)",
+          "PWM_IN4": "som_j3_connector (bank 33 PL)",
+          "FB4": "som_j2_connector (bank 33 PL)",
+          "PWM_IN5": "som_j3_connector (bank 33 PL)",
+          "FB5": "som_j2_connector (bank 33 PL)",
+          "PWM_IN6": "som_j3_connector (bank 33 PL)",
+          "FB6": "som_j2_connector (bank 33 PL)",
+          "PWM_IN7": "som_j3_connector (bank 33 PL)",
+          "FB7": "som_j2_connector (bank 33 PL)"
+        }
+      }
+    },
+    {
+      "name": "esc_power",
+      "settings": {
+        "bind": {
+          "+VBAT_RAW": "+VESC_IN",
+          "+VBAT_F": "+VESC_F",
+          "+VBAT_MID": "+VESC_MID",
+          "+VBAT_P": "+VESC_P",
+          "+VBAT_OUT": "+VESC",
+          "GND_PWR": "GND_MOTOR",
+          "GND": "GND",
+          "+VDD_MON": "+3V3_SC",
+          "I2C_SDA": "STM32_I2C2_SDA",
+          "I2C_SCL": "STM32_I2C2_SCL",
+          "ALERT_N": "ESC_FAULT_N",
+          "IMON": "ESC_IMON",
+          "VBAT_SENSE": "ESC_VBAT_SENSE",
+          "PWR_EN": "ESC_PWR_EN",
+          "PWR_FLT_N": "ESC_PWR_FLT_N"
+        },
+        "expects": {
+          "I2C_SDA": "som_j1_connector",
+          "I2C_SCL": "som_j1_connector",
+          "ALERT_N": "som_j2_connector (bank 13 PL) and board_control (TCA9535 P03)",
+          "IMON": "som_j1_connector (bank 35 pin, tester ADC)",
+          "VBAT_SENSE": "som_j1_connector (bank 35 pin, tester ADC)",
+          "PWR_EN": "esc_io (ESC POWER switch)",
+          "PWR_FLT_N": "board_control (TCA9535 P15)"
+        },
+        "buses": {
+          "i2c": "STM32_I2C2"
+        }
+      }
+    },
+    {
+      "name": "ethernet",
+      "settings": {
+        "bind": {
+          "GND": "GND",
+          "CHASSIS_GND": "CHASSIS_GND",
+          "MDI0_P": "ETH_PHY_MDI0_P",
+          "MDI0_N": "ETH_PHY_MDI0_N",
+          "MDI1_P": "ETH_PHY_MDI1_P",
+          "MDI1_N": "ETH_PHY_MDI1_N",
+          "MDI2_P": "ETH_PHY_MDI2_P",
+          "MDI2_N": "ETH_PHY_MDI2_N",
+          "MDI3_P": "ETH_PHY_MDI3_P",
+          "MDI3_N": "ETH_PHY_MDI3_N",
+          "MX0_P": "ETH_LINE_MDI_0_P",
+          "MX0_N": "ETH_LINE_MDI_0_N",
+          "MX1_P": "ETH_LINE_MDI_1_P",
+          "MX1_N": "ETH_LINE_MDI_1_N",
+          "MX2_P": "ETH_LINE_MDI_2_P",
+          "MX2_N": "ETH_LINE_MDI_2_N",
+          "MX3_P": "ETH_LINE_MDI_3_P",
+          "MX3_N": "ETH_LINE_MDI_3_N"
+        },
+        "expects": {
+          "MX0_P": "rj45_connector",
+          "MX1_P": "rj45_connector",
+          "MX2_P": "rj45_connector",
+          "MX3_P": "rj45_connector"
+        }
+      }
+    },
+    {
+      "name": "mechanical"
+    },
+    {
+      "name": "microsd",
+      "settings": {
+        "bind": {
+          "+VDD_HOST": "+1V8",
+          "+VDD_CARD": "+3V3",
+          "GND": "GND",
+          "SD_CLK": "SDIO_CLK",
+          "SD_CMD": "SDIO_CMD",
+          "SD_D0": "SDIO_D0",
+          "SD_D1": "SDIO_D1",
+          "SD_D2": "SDIO_D2",
+          "SD_D3": "SDIO_D3",
+          "CD_N": "SD_CARD_DETECT"
+        },
+        "expects": {
+          "CD_N": "som_j2_connector (bank 13 PL)"
+        },
+        "notes": {
+          "draws_card": "SD card write burst ~200 mA + pull-ups + TXS02612 VCCB",
+          "draws_host": "TXS02612 VCCA (SoM-side level)"
+        }
+      }
+    },
+    {
+      "name": "pd_input",
+      "settings": {
+        "bind": {
+          "+VBUS_CONN": "+VBUS_IN",
+          "+VBUS_OUT": "+VIN_PD",
+          "+VDD_LOGIC": "+3V3_SC",
+          "GND": "GND",
+          "CHASSIS_GND": "CHASSIS_GND",
+          "CC1": "STM32_USB_CC1",
+          "CC2": "STM32_USB_CC2",
+          "USB_D_P": "STM32_USB_D_P",
+          "USB_D_N": "STM32_USB_D_N",
+          "FLT_N": "PD_FLT_N"
+        },
+        "expects": {
+          "FLT_N": "board_control (TCA9535 P00)"
+        }
+      }
+    },
+    {
+      "name": "power",
+      "settings": {
+        "bind": {
+          "+VIN": "+VIN_SYS",
+          "+VOUT_5V_REG": "+5V_REG",
+          "+VOUT_3V3_REG": "+3V3_REG",
+          "+VOUT_1V8_REG": "+1V8_REG",
+          "+VOUT_5V": "+5V",
+          "+VOUT_3V3": "+3V3",
+          "+VOUT_1V8": "+1V8",
+          "GND": "GND",
+          "EN_VOUT_5V": "EN_5V0",
+          "EN_VOUT_3V3": "EN_3V3",
+          "EN_VOUT_1V8": "EN_1V8"
+        },
+        "expects": {
+          "EN_VOUT_5V": "bringup_en (rail-enable cells)",
+          "EN_VOUT_3V3": "bringup_en (rail-enable cells)",
+          "EN_VOUT_1V8": "bringup_en (rail-enable cells)"
+        },
+        "notes": {
+          "draws_5v": "PG LED (KT-0603R + 1k, ~3 mA) + FB divider 60 uA",
+          "draws_3v3": "PG LED (330R ~3.9 mA) + 1V8 PG sense LED chain (330R ~3.9 mA) + FB divider 27 uA",
+          "draws_1v8": "PG FET gate divider 10k+100k (16 uA), rounded up"
+        }
+      }
+    },
+    {
+      "name": "power_mon"
+    },
+    {
+      "name": "power_som"
+    },
+    {
+      "name": "rj45_connector",
+      "settings": {
+        "bind": {
+          "+VLED": "+3V3",
+          "GND": "GND",
+          "CHASSIS_GND": "CHASSIS_GND",
+          "RJ45_MDI0_P": "ETH_LINE_MDI_0_P",
+          "RJ45_MDI0_N": "ETH_LINE_MDI_0_N",
+          "RJ45_MDI1_P": "ETH_LINE_MDI_1_P",
+          "RJ45_MDI1_N": "ETH_LINE_MDI_1_N",
+          "RJ45_MDI2_P": "ETH_LINE_MDI_2_P",
+          "RJ45_MDI2_N": "ETH_LINE_MDI_2_N",
+          "RJ45_MDI3_P": "ETH_LINE_MDI_3_P",
+          "RJ45_MDI3_N": "ETH_LINE_MDI_3_N"
+        },
+        "notes": {
+          "draws": "RJ45 housing LEDs (2x 330R port-present indicator)"
+        }
+      }
+    },
+    {
+      "name": "som_decoupling"
+    },
+    {
+      "name": "som_j1",
+      "module_connector": "J1",
+      "title": "SoM J1: power / USB / STM32 / JTAG / SDIO / ETH MDI"
+    },
+    {
+      "name": "som_j2",
+      "module_connector": "J2",
+      "title": "SoM J2: FPGA bank 13/33 IO + VCCO rails"
+    },
+    {
+      "name": "som_j3",
+      "module_connector": "J3",
+      "title": "SoM J3: FPGA bank 33/34/35 IO + VCCO rails"
+    },
+    {
+      "name": "uart_bridge",
+      "settings": {
+        "bind": {
+          "+VDD_IO": "+3V3",
+          "GND": "GND",
+          "USB_VBUS": "USB_UART_VBUS",
+          "USB_DP": "USB_UART_DP",
+          "USB_DM": "USB_UART_DM",
+          "UART_TXD": "ZYNQ_PS_UART0_RXD",
+          "UART_RXD": "ZYNQ_PS_UART0_TXD",
+          "UART_RTS_N": "ZYNQ_PS_UART0_CTS_N",
+          "UART_CTS_N": "ZYNQ_PS_UART0_RTS_N"
+        },
+        "expects": {
+          "USB_VBUS": "usb_uart_connector",
+          "USB_DP": "usb_uart_connector",
+          "UART_TXD": "som_j1_connector",
+          "UART_RXD": "som_j1_connector",
+          "UART_RTS_N": "som_j1_connector",
+          "UART_CTS_N": "som_j1_connector"
+        },
+        "notes": {
+          "draws": "CP2102N active ~14 mA typ + RST 1k pull-up"
+        }
+      }
+    },
+    {
+      "name": "usb_uart_connector",
+      "settings": {
+        "bind": {
+          "GND": "GND",
+          "CHASSIS_GND": "CHASSIS_GND",
+          "VBUS": "USB_UART_VBUS",
+          "USB_DP": "USB_UART_DP",
+          "USB_DM": "USB_UART_DM"
+        }
+      }
+    },
+    {
+      "name": "vbat_supply",
+      "settings": {
+        "bind": {
+          "+VBAT": "+VESC_F",
+          "+VBAT_D": "+VBAT_D",
+          "+VBAT_SW": "+VBAT_SW",
+          "+VPRE": "+VPRE",
+          "+VIN_USB": "+VIN_PD",
+          "+VIN": "+VIN",
+          "GND": "GND",
+          "+VDD_LOGIC": "+3V3_SC",
+          "FLT_N": "VBAT_FLT_N"
+        },
+        "expects": {
+          "FLT_N": "board_control (TCA9535 P02)"
+        }
+      }
+    }
+  ],
+  "layout": {
+    "access": [
+      {
+        "handling": "grip_sides",
+        "side_mm": 25.0,
+        "front_mm": 0.0,
+        "basis": "MIL-STD-1472H (15 Sep 2020) para 5.9.14.7.2 Bare finger operation: spacing between adjacent connectors not less than 25 mm, measured from the outermost portion of the connector (para 5.9.14.7.4); front: the standard gives spacing between connectors only"
+      },
+      {
+        "handling": "latch",
+        "side_mm": 25.0,
+        "front_mm": 0.0,
+        "basis": "MIL-STD-1472H (15 Sep 2020) para 5.9.14.7.2 Bare finger operation: spacing between adjacent connectors not less than 25 mm, measured from the outermost portion of the connector (para 5.9.14.7.4); the paragraph covers every bare-finger connector, latched plugs included; front: none given"
+      },
+      {
+        "handling": "card",
+        "side_mm": 25.0,
+        "front_mm": 0.0,
+        "basis": "borrowed from the nearest sourced class: MIL-STD-1472H (15 Sep 2020) para 5.9.14.7.2 Bare finger operation: spacing between adjacent connectors not less than 25 mm, measured from the outermost portion of the connector (para 5.9.14.7.4); no source gives a figure for a push-push card"
+      }
+    ],
+    "functions": [
+      {
+        "part": "esc_power.J1",
+        "serves": "ESC battery inlet, 3S to 6S pack, 30 A",
+        "basis": "motor-carrier design 1b"
+      },
+      {
+        "part": "esc_power.J2",
+        "serves": "protected battery outlet to the ESCs",
+        "basis": "motor-carrier design 1b"
+      },
+      {
+        "part": "esc_io.J1",
+        "serves": "signal, 5 V and ground for eight ESCs",
+        "basis": "motor-carrier design 1a"
+      },
+      {
+        "part": "esc_io.J2",
+        "serves": "ESC telemetry input",
+        "basis": "motor-carrier design 1a"
+      },
+      {
+        "part": "can_bus.J1",
+        "serves": "CAN bus in",
+        "basis": "motor-carrier design 1a"
+      },
+      {
+        "part": "can_bus.J2",
+        "serves": "CAN bus out to the next node",
+        "basis": "motor-carrier design 1a"
+      },
+      {
+        "part": "board_control.J1",
+        "serves": "fan with tachometer",
+        "basis": "motor-carrier design, board_control"
+      },
+      {
+        "part": "vbat_supply.J1",
+        "serves": "logic supply selector: USB-C PD or battery",
+        "basis": "motor-carrier design 1c"
+      },
+      {
+        "part": "pd_input.J1",
+        "serves": "USB-C PD logic supply",
+        "basis": "motor-carrier design 1c"
+      },
+      {
+        "part": "usb_uart_connector.J1",
+        "serves": "USB-C receptacle: USB full-speed data pair and VBUS to the USB-to-UART bridge for the serial console",
+        "basis": "stated from the circuit by the integrator 2026-11-21 (no design document covers it)"
+      },
+      {
+        "part": "rj45_connector.J1",
+        "serves": "RJ45 jack: the four Ethernet MDI pairs to the magnetics of the ethernet sheet, and the two jack LEDs",
+        "basis": "stated from the circuit by the integrator 2026-11-21 (no design document covers it)"
+      },
+      {
+        "part": "microsd.J1",
+        "serves": "microSD socket: SD clock, command and four data lines, card detect and the switched card supply, to the module",
+        "basis": "stated from the circuit by the integrator 2026-11-21 (no design document covers it)"
+      },
+      {
+        "part": "debug_boot.J1",
+        "serves": "JTAG header (TMS, TCK, TDO, TDI, 3V3, GND) to the Zynq on the module",
+        "basis": "stated from the circuit by the integrator 2026-11-21 (no design document covers it)"
+      },
+      {
+        "part": "debug_boot.J2",
+        "serves": "debug header: reset and two GPIOs of the module's STM32 controller, 3V3_SC and GND",
+        "basis": "stated from the circuit by the integrator 2026-11-21 (no design document covers it)"
+      }
+    ]
+  }
+}

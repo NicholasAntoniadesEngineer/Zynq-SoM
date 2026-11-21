@@ -171,6 +171,14 @@ std::string normalize_netlist_name(std::string_view name) {
     return start == std::string_view::npos ? std::string{} : std::string(name.substr(start));
 }
 
+bool board_shared_net(const CircuitNetIr& net) {
+    return net.net_class == "power" || net.net_class == "ground" || net.net_class == "port";
+}
+
+std::string board_net_name(const std::string& sheet, const CircuitNetIr& net) {
+    return board_shared_net(net) ? net.name : "/" + sheet + "/" + net.name;
+}
+
 std::vector<std::string> dead_two_terminal(const CircuitSheetIr& circuit) {
     std::map<std::string, std::set<std::string>> pins, nets;
     for (const auto& net : circuit.nets) for (const auto& pin : net.pins) {

@@ -55,13 +55,16 @@ std::string resistor_description(const Passive& p){return p.ref+"="+g(p.value)+"
 void auto_dividers(const std::string& sheet,const SpiceIndex& idx,SpiceResult& out,const PowerPolicy& policy,
                    const SubsystemChecks& stated,std::set<std::string>& extracted_named) {
     for(const auto& net:idx.c.nets) {
-        if(!signal(net))continue;const auto& rs=idx.on(net.name);if(rs.size()!=2)continue;
+        if(!signal(net))continue;const auto& rs=idx.on(net.name);
         const auto tops=select(rs,[&](const auto& n){return power(n)||source_override(stated,n.name);});const auto bots=select(rs,ground);
         if(tops.size()!=1||bots.size()!=1)continue;
+        const auto* named=stated_divider(stated,net.name);
+        const auto legs=select(rs,[&](const auto& n){return signal(n)&&!source_override(stated,n.name)&&n.name!=net.name&&idx.on(n.name).size()==1;});
+        if(rs.size()!=2&&(!named||legs.size()+2!=rs.size()))continue;
         const auto& top=tops[0];const auto& bot=bots[0];const auto& src=*top.other;
         const double ratio=divide(bot.value,top.value+bot.value);
-        const auto* named=stated_divider(stated,net.name);
-        const auto prefix=src.name+" -["+resistor_description(top)+"]- "+net.name+" -["+resistor_description(bot)+"]- GND @ ";
+        std::string unloaded;for(const auto& leg:legs)unloaded+=" ("+resistor_description(leg)+" to "+leg.other->name+", whose only resistor it is, carries no divider current)";
+        const auto prefix=src.name+" -["+resistor_description(top)+"]- "+net.name+" -["+resistor_description(bot)+"]- GND"+unloaded+" @ ";
         if(!named) {
             const double v=volts(src.name,policy);if(v==0)continue;
             out.checks.push_back({"divider "+net.name,sheet,"divider",prefix+g(v)+" V (informational, no named threshold)",v*ratio,"V",{}, {},"analytic",{}});continue;

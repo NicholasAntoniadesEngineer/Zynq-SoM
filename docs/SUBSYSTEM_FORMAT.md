@@ -176,7 +176,9 @@ For a pair kind, the complement net is typed automatically with the same kind, `
 
 ### 3.6 `hints`
 
-Entry keys `net` (name, required) and `style` (name, required). Calls `CircuitAuthor::hint`. The only style is `trunk`: `hint('N'): unknown style 'S' (known: ['trunk'])`. The net must exist: `hint('N'): not a declared net`. A second hint for a net replaces the first.
+Entry keys `net` (name, required) and `style` (name, required). Calls `CircuitAuthor::hint`. The styles are `trunk` and `path`: `hint('N'): unknown style 'S' (known: ['trunk', 'path'])`. The net must exist: `hint('N'): not a declared net`. A second hint for a net replaces the first.
+
+`trunk` draws a signal net as one bar that its pins tap. `path` marks a power rail as a segment of the sheet's power path: the hinted rails must form one chain joined by series elements (a two-pin part, or a part whose power pins sit on exactly two of the hinted rails), and the schematic draws that chain as one left-to-right row at the top of the sheet, from the connector on the first rail to the connector on the last, with each rail's capacitors and rail-to-ground chains hanging below it. A `path` hint on a net that is not a power rail fails with `power path: hinted net N is not a power rail`; rails that do not form one chain fail with `power path: the hinted rails are not one chain of series elements`.
 
 ### 3.7 `draws`
 

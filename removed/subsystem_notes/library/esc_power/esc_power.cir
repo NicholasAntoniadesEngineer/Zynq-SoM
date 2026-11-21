@@ -1,0 +1,19 @@
+* esc_power.cir - SPICE subckt of the esc_power sheet.
+*
+* ESC power path: XT60 in/out, fuse, reverse/inrush/over-current protection, shunt, INA237 (0x44), star tie
+* The subckt declares the sheet's power and ground rails as its pins and models
+* each rail as a 1G tie to the last pin so no node floats in .op; the signal
+* ports carry no two-rail passive and are not pins.
+*
+* Port order: VVBAT_RAW VVBAT_F VVBAT_MID VVBAT_P VVBAT_OUT VVDD_MON GND_PWR GND
+
+.subckt esc_power VVBAT_RAW VVBAT_F VVBAT_MID VVBAT_P VVBAT_OUT VVDD_MON GND_PWR GND
+RVVBAT_RAW VVBAT_RAW GND 1G
+RVVBAT_F VVBAT_F GND 1G
+RVVBAT_MID VVBAT_MID GND 1G
+RVVBAT_P VVBAT_P GND 1G
+RVVBAT_OUT VVBAT_OUT GND 1G
+RVVDD_MON VVDD_MON GND 1G
+RGND_PWR GND_PWR GND 1G
+.ends esc_power
+.end

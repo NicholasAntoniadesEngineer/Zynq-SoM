@@ -1,0 +1,36 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "IPT007N06N",
+  "safe_name": "IPT007N06N",
+  "lcsc": "C122552",
+  "description": "IPT007N06N (HSOF-8_IPT007N06N)",
+  "manufacturer": "Infineon(英飞凌)",
+  "package": "HSOF-8_IPT007N06N",
+  "jlc_class": "Extended Part",
+  "prefix": "Q",
+  "datasheet": "https://www.lcsc.com/datasheet/C122552.pdf",
+  "product_url": "https://lcsc.com/product-detail/MOSFET_Infineon_IPT007N06N_IPT007N06N_C122552.html",
+  "lib_id": "IPT007N06N:IPT007N06N",
+  "footprint": "IPT007N06N:IPT007N06N",
+  "models_3d": [
+    "IPT007N06N.wrl",
+    "IPT007N06N.step"
+  ],
+  "pins": [
+    {
+      "num": "1",
+      "name": "G",
+      "etype": "passive"
+    },
+    {
+      "num": "3",
+      "name": "D",
+      "etype": "passive"
+    },
+    {
+      "num": "2",
+      "name": "S",
+      "etype": "passive"
+    }
+  ]
+}

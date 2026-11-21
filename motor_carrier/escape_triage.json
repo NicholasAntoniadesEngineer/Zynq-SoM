@@ -1,0 +1,45 @@
+{
+  "schema": "schgen.escape_triage/1",
+  "rules": [
+    {
+      "pattern": "ZYNQ_PS_UART0_(RXD|TXD|CTS_N|RTS_N)",
+      "class": "LOW",
+      "note": "PS UART + flow control"
+    },
+    {
+      "pattern": "ESC_(PWM_IN\\d|FB\\d)",
+      "class": "LOW",
+      "note": "ESC PWM / DShot drive and read-back, at most 1.2 Mbit/s (DShot1200), single-ended, buffered on the board"
+    },
+    {
+      "pattern": "ESC_(BUF_OE_N|IDLE_SEL|FAULT_N|TLM_RX)",
+      "class": "LOW",
+      "note": "ESC buffer control, over-current alert, 115200 Bd telemetry"
+    },
+    {
+      "pattern": "CAN_(TX|RX)",
+      "class": "LOW",
+      "note": "CAN transceiver logic side, at most 1 Mbit/s"
+    },
+    {
+      "pattern": "FAN_(PWM|TACH)",
+      "class": "LOW",
+      "note": "fan PWM (25 kHz class) and tachometer"
+    },
+    {
+      "pattern": "ESC_(VBAT_SENSE|IMON)",
+      "class": "LOW",
+      "note": "slow analogue levels for a tester ADC, 10 k source"
+    },
+    {
+      "pattern": "SD_CARD_DETECT",
+      "class": "LOW",
+      "note": "card-detect level"
+    },
+    {
+      "pattern": "(SC_INT_N|PUDC_\\d+)",
+      "class": "LOW",
+      "note": "supervisor interrupt / pull-up-during-config strap"
+    }
+  ]
+}

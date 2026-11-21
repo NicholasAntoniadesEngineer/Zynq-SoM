@@ -58,6 +58,7 @@ inline constexpr double som_pad = 1.5, som_seat_band = 6, dec_inset = 6;
 inline constexpr double mh_inset = 5, edge_pad_clear = .4;
 inline constexpr int occ_top = 1, occ_bottom = 2, occ_punch = 3;
 inline constexpr int min_subject_pins = 3;
+inline constexpr double edge_seat_pull_weight = 60;
 inline constexpr double occ_step = 1.0, frontier_half = .05 + 1e-9;
 inline constexpr double anchor_zone_weight = .25, anchor_som_weight = 7, anchor_affinity_power = 1.6;
 inline constexpr double affinity_floor = .05;
@@ -124,6 +125,8 @@ public:
     FloorplanPlan plan;
     // Search history must survive restoration of a candidate layout.
     std::set<std::string> rejected_subjects;
+    std::map<std::string,std::size_t> rejection_reasons;
+    std::string rejection_text() const;
     std::map<std::string, const CircuitSheetIr*> sheets;
     std::map<std::string, std::string> module_sheet_of;
     const std::string& module_sheet(const std::string& connector) const {

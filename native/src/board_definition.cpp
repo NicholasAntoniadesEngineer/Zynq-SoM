@@ -165,7 +165,8 @@ const std::vector<DocumentKey>& board_document_keys() {
     static const std::vector<DocumentKey> keys{
         {"schema", true}, {"name", true}, {"files", true}, {"files.stem", true}, {"root_readme", true}, {"owned_groups", true},
         {"module", true}, {"module.folder", true}, {"module.pairs", true}, {"module.loads", true},
-        {"power", true}, {"power.sources", true}, {"power.rails", true}, {"power.inlet", true}, {"sheets", true}};
+        {"power", true}, {"power.sources", true}, {"power.rails", true}, {"power.inlet", true}, {"sheets", true},
+        {"layout", false}, {"layout.access", false}, {"layout.functions", false}};
     return keys;
 }
 
@@ -303,6 +304,46 @@ ModuleDefinition load_board_module(const std::filesystem::path& board_root) {
     return load_module(module_root_of(board_root));
 }
 
+BoardLayout layout_of(const JsonNode& document, const std::string& source) {
+    BoardLayout out;
+    const JsonNode* node = object_field(document, "layout");
+    if (!node) return out;
+    const std::string where = source + " layout";
+    if (node->kind != JsonKind::Object) fail(where, "is not an object");
+    reject_unknown_keys(*node, document_keys_at(board_document_keys(), "layout"), where);
+    out.stated = true;
+    std::set<std::string> classes;
+    for (const JsonNode& row : rows(*node, "access", where)) {
+        reject_unknown_keys(row, {"handling", "side_mm", "front_mm", "basis"}, where + " access");
+        BoardAccess access;
+        access.handling = text(row, "handling", where + " access");
+        const auto& known = connector_handling_classes();
+        if (std::find(known.begin(), known.end(), access.handling) == known.end())
+            fail(where + " access", "handling " + access.handling + " is not one of grip_sides, latch, card, flat_cable, pins, none");
+        if (!classes.insert(access.handling).second) fail(where + " access", "handling " + access.handling + " is stated twice");
+        for (const auto* key : {"side_mm", "front_mm"}) {
+            const double value = member(row, key, JsonKind::Number, where + " access").number_value;
+            if (!std::isfinite(value) || value < 0) fail(where + " access", std::string("field '") + key + "' is negative");
+        }
+        access.side_mm = member(row, "side_mm", JsonKind::Number, where).number_value;
+        access.front_mm = member(row, "front_mm", JsonKind::Number, where).number_value;
+        access.basis = text(row, "basis", where + " access");
+        out.access.push_back(std::move(access));
+    }
+    std::set<std::string> parts;
+    for (const JsonNode& row : rows(*node, "functions", where)) {
+        reject_unknown_keys(row, {"part", "serves", "basis"}, where + " functions");
+        const std::string part = text(row, "part", where + " functions");
+        const auto dot = part.find('.');
+        if (dot == std::string::npos || dot == 0 || dot + 1 == part.size())
+            fail(where + " functions", "part " + part + " is not written sheet.REF");
+        if (!parts.insert(part).second) fail(where + " functions", "part " + part + " is stated twice");
+        out.functions.push_back({part.substr(0, dot), part.substr(dot + 1), text(row, "serves", where + " functions"),
+                                 text(row, "basis", where + " functions")});
+    }
+    return out;
+}
+
 BoardDefinition parse_board(const JsonNode& document, const std::string& file, ModuleDefinition module_definition) {
     const std::string source = "board file " + file;
     if (document.kind != JsonKind::Object) fail(source, "the document is not an object");
@@ -316,12 +357,15 @@ BoardDefinition parse_board(const JsonNode& document, const std::string& file, M
     board.module = module_of(member(document, "module", JsonKind::Object, source), source);
     board.module_definition = std::move(module_definition);
     board.power = parse_board_power(member(document, "power", JsonKind::Object, source), source);
+    board.layout = layout_of(document, source);
     std::set<std::string> seen;
     for (const JsonNode& row : rows(document, "sheets", source)) {
         board.sheets.push_back(sheet_of(row, source));
         if (!seen.insert(board.sheets.back().name).second) fail(source, "sheet " + board.sheets.back().name + " is listed twice");
     }
     if (board.sheets.empty()) fail(source, "the board lists no sheets");
+    for (const BoardFunction& function : board.layout.functions)
+        if (!seen.count(function.sheet)) fail(source, "layout.functions names sheet " + function.sheet + " which the board does not list");
     for (const std::string& owned : board.flags.owned_groups)
         if (!seen.count(owned)) fail(source, "'owned_groups' names sheet " + owned + " which the board does not list");
     return board;

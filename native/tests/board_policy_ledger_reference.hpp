@@ -47,7 +47,7 @@ inline schgen::JsonNode migrate(schgen::JsonNode expected,const std::filesystem:
             for(auto& n:value.array_value)if(calculations.count(name(n)))n=calculations.at(name(n));
         }
     }
-    if(removed!=remove||inserted!=2||changed!=2||exposed!=27)throw std::runtime_error("historical ledger provenance precondition changed");
+    if(removed!=remove||inserted!=2||changed!=2||exposed!=28)throw std::runtime_error("historical ledger provenance precondition changed");
     return expected;
 }
 }

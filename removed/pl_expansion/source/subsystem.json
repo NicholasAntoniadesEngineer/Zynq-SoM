@@ -1,0 +1,635 @@
+{
+  "schema": "schgen.subsystem/1",
+  "name": "pl_expansion",
+  "title": "PL expansion header: 32 spare bank IO on 2x20 2.54 mm, current-limited 3.3 V",
+  "interface": [
+    "+3V3",
+    "+3V3_XIO",
+    "GND",
+    "XIO1",
+    "XIO2",
+    "XIO3",
+    "XIO4",
+    "XIO5",
+    "XIO6",
+    "XIO7",
+    "XIO8",
+    "XIO9",
+    "XIO10",
+    "XIO11",
+    "XIO12",
+    "XIO13",
+    "XIO14",
+    "XIO15",
+    "XIO16",
+    "XIO17",
+    "XIO18",
+    "XIO19",
+    "XIO20",
+    "XIO21",
+    "XIO22",
+    "XIO23",
+    "XIO24",
+    "XIO25",
+    "XIO26",
+    "XIO27",
+    "XIO28",
+    "XIO29",
+    "XIO30",
+    "XIO31",
+    "XIO32"
+  ],
+  "placement": {
+    "region": "board",
+    "silk_label": null,
+    "far_guard_mm": null,
+    "escape_basis": null,
+    "escape_escalates": false,
+    "reserves_edge": false
+  },
+  "checks": {
+    "dividers": [],
+    "divider_sources": [],
+    "iset_window_ma": null,
+    "iset_basis": null
+  },
+  "parts": [
+    {
+      "ref": "J1",
+      "symbol": "Connector_Generic:Conn_02x20_Odd_Even",
+      "value": "HX PZ2.54-2x20P ZZ",
+      "footprint": "Connector_PinHeader_2.54mm:PinHeader_2x20_P2.54mm_Vertical",
+      "fields": {
+        "LCSC": "C42372528"
+      }
+    },
+    {
+      "ref": "U1",
+      "part": "SY6280AAC"
+    },
+    {
+      "ref": "R1",
+      "symbol": "Device:R",
+      "value": "13k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C22797"
+      }
+    },
+    {
+      "ref": "C1",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      }
+    },
+    {
+      "ref": "C2",
+      "symbol": "Device:C",
+      "value": "10u",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "fields": {
+        "LCSC": "C15850"
+      }
+    },
+    {
+      "ref": "TP1",
+      "symbol": "Connector:TestPoint",
+      "value": "+3V3_XIO",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      }
+    }
+  ],
+  "nets": [
+    {
+      "name": "+3V3",
+      "pins": [
+        "U1.5",
+        "U1.4",
+        "C1.1"
+      ]
+    },
+    {
+      "name": "+3V3_XIO",
+      "pins": [
+        "U1.1",
+        "C2.1",
+        "J1.1",
+        "J1.2",
+        "TP1.1"
+      ]
+    },
+    {
+      "name": "GND",
+      "pins": [
+        "U1.2",
+        "R1.2",
+        "C1.2",
+        "C2.2",
+        "J1.19",
+        "J1.20",
+        "J1.37",
+        "J1.38",
+        "J1.39",
+        "J1.40"
+      ]
+    },
+    {
+      "name": "XIO_ISET",
+      "pins": [
+        "U1.3",
+        "R1.1"
+      ]
+    },
+    {
+      "name": "XIO1",
+      "class": "port",
+      "pins": [
+        "J1.3"
+      ]
+    },
+    {
+      "name": "XIO2",
+      "class": "port",
+      "pins": [
+        "J1.4"
+      ]
+    },
+    {
+      "name": "XIO3",
+      "class": "port",
+      "pins": [
+        "J1.5"
+      ]
+    },
+    {
+      "name": "XIO4",
+      "class": "port",
+      "pins": [
+        "J1.6"
+      ]
+    },
+    {
+      "name": "XIO5",
+      "class": "port",
+      "pins": [
+        "J1.7"
+      ]
+    },
+    {
+      "name": "XIO6",
+      "class": "port",
+      "pins": [
+        "J1.8"
+      ]
+    },
+    {
+      "name": "XIO7",
+      "class": "port",
+      "pins": [
+        "J1.9"
+      ]
+    },
+    {
+      "name": "XIO8",
+      "class": "port",
+      "pins": [
+        "J1.10"
+      ]
+    },
+    {
+      "name": "XIO9",
+      "class": "port",
+      "pins": [
+        "J1.11"
+      ]
+    },
+    {
+      "name": "XIO10",
+      "class": "port",
+      "pins": [
+        "J1.12"
+      ]
+    },
+    {
+      "name": "XIO11",
+      "class": "port",
+      "pins": [
+        "J1.13"
+      ]
+    },
+    {
+      "name": "XIO12",
+      "class": "port",
+      "pins": [
+        "J1.14"
+      ]
+    },
+    {
+      "name": "XIO13",
+      "class": "port",
+      "pins": [
+        "J1.15"
+      ]
+    },
+    {
+      "name": "XIO14",
+      "class": "port",
+      "pins": [
+        "J1.16"
+      ]
+    },
+    {
+      "name": "XIO15",
+      "class": "port",
+      "pins": [
+        "J1.17"
+      ]
+    },
+    {
+      "name": "XIO16",
+      "class": "port",
+      "pins": [
+        "J1.18"
+      ]
+    },
+    {
+      "name": "XIO17",
+      "class": "port",
+      "pins": [
+        "J1.21"
+      ]
+    },
+    {
+      "name": "XIO18",
+      "class": "port",
+      "pins": [
+        "J1.22"
+      ]
+    },
+    {
+      "name": "XIO19",
+      "class": "port",
+      "pins": [
+        "J1.23"
+      ]
+    },
+    {
+      "name": "XIO20",
+      "class": "port",
+      "pins": [
+        "J1.24"
+      ]
+    },
+    {
+      "name": "XIO21",
+      "class": "port",
+      "pins": [
+        "J1.25"
+      ]
+    },
+    {
+      "name": "XIO22",
+      "class": "port",
+      "pins": [
+        "J1.26"
+      ]
+    },
+    {
+      "name": "XIO23",
+      "class": "port",
+      "pins": [
+        "J1.27"
+      ]
+    },
+    {
+      "name": "XIO24",
+      "class": "port",
+      "pins": [
+        "J1.28"
+      ]
+    },
+    {
+      "name": "XIO25",
+      "class": "port",
+      "pins": [
+        "J1.29"
+      ]
+    },
+    {
+      "name": "XIO26",
+      "class": "port",
+      "pins": [
+        "J1.30"
+      ]
+    },
+    {
+      "name": "XIO27",
+      "class": "port",
+      "pins": [
+        "J1.31"
+      ]
+    },
+    {
+      "name": "XIO28",
+      "class": "port",
+      "pins": [
+        "J1.32"
+      ]
+    },
+    {
+      "name": "XIO29",
+      "class": "port",
+      "pins": [
+        "J1.33"
+      ]
+    },
+    {
+      "name": "XIO30",
+      "class": "port",
+      "pins": [
+        "J1.34"
+      ]
+    },
+    {
+      "name": "XIO31",
+      "class": "port",
+      "pins": [
+        "J1.35"
+      ]
+    },
+    {
+      "name": "XIO32",
+      "class": "port",
+      "pins": [
+        "J1.36"
+      ]
+    }
+  ],
+  "unconnected": [],
+  "ports": [
+    {
+      "net": "XIO1",
+      "kind": "single",
+      "expect": {
+        "instance": "non_empty"
+      }
+    },
+    {
+      "net": "XIO2",
+      "kind": "single",
+      "expect": {
+        "instance": "non_empty"
+      }
+    },
+    {
+      "net": "XIO3",
+      "kind": "single",
+      "expect": {
+        "instance": "non_empty"
+      }
+    },
+    {
+      "net": "XIO4",
+      "kind": "single",
+      "expect": {
+        "instance": "non_empty"
+      }
+    },
+    {
+      "net": "XIO5",
+      "kind": "single",
+      "expect": {
+        "instance": "non_empty"
+      }
+    },
+    {
+      "net": "XIO6",
+      "kind": "single",
+      "expect": {
+        "instance": "non_empty"
+      }
+    },
+    {
+      "net": "XIO7",
+      "kind": "single",
+      "expect": {
+        "instance": "non_empty"
+      }
+    },
+    {
+      "net": "XIO8",
+      "kind": "single",
+      "expect": {
+        "instance": "non_empty"
+      }
+    },
+    {
+      "net": "XIO9",
+      "kind": "single",
+      "expect": {
+        "instance": "non_empty"
+      }
+    },
+    {
+      "net": "XIO10",
+      "kind": "single",
+      "expect": {
+        "instance": "non_empty"
+      }
+    },
+    {
+      "net": "XIO11",
+      "kind": "single",
+      "expect": {
+        "instance": "non_empty"
+      }
+    },
+    {
+      "net": "XIO12",
+      "kind": "single",
+      "expect": {
+        "instance": "non_empty"
+      }
+    },
+    {
+      "net": "XIO13",
+      "kind": "single",
+      "expect": {
+        "instance": "non_empty"
+      }
+    },
+    {
+      "net": "XIO14",
+      "kind": "single",
+      "expect": {
+        "instance": "non_empty"
+      }
+    },
+    {
+      "net": "XIO15",
+      "kind": "single",
+      "expect": {
+        "instance": "non_empty"
+      }
+    },
+    {
+      "net": "XIO16",
+      "kind": "single",
+      "expect": {
+        "instance": "non_empty"
+      }
+    },
+    {
+      "net": "XIO17",
+      "kind": "single",
+      "expect": {
+        "instance": "non_empty"
+      }
+    },
+    {
+      "net": "XIO18",
+      "kind": "single",
+      "expect": {
+        "instance": "non_empty"
+      }
+    },
+    {
+      "net": "XIO19",
+      "kind": "single",
+      "expect": {
+        "instance": "non_empty"
+      }
+    },
+    {
+      "net": "XIO20",
+      "kind": "single",
+      "expect": {
+        "instance": "non_empty"
+      }
+    },
+    {
+      "net": "XIO21",
+      "kind": "single",
+      "expect": {
+        "instance": "non_empty"
+      }
+    },
+    {
+      "net": "XIO22",
+      "kind": "single",
+      "expect": {
+        "instance": "non_empty"
+      }
+    },
+    {
+      "net": "XIO23",
+      "kind": "single",
+      "expect": {
+        "instance": "non_empty"
+      }
+    },
+    {
+      "net": "XIO24",
+      "kind": "single",
+      "expect": {
+        "instance": "non_empty"
+      }
+    },
+    {
+      "net": "XIO25",
+      "kind": "single",
+      "expect": {
+        "instance": "non_empty"
+      }
+    },
+    {
+      "net": "XIO26",
+      "kind": "single",
+      "expect": {
+        "instance": "non_empty"
+      }
+    },
+    {
+      "net": "XIO27",
+      "kind": "single",
+      "expect": {
+        "instance": "non_empty"
+      }
+    },
+    {
+      "net": "XIO28",
+      "kind": "single",
+      "expect": {
+        "instance": "non_empty"
+      }
+    },
+    {
+      "net": "XIO29",
+      "kind": "single",
+      "expect": {
+        "instance": "non_empty"
+      }
+    },
+    {
+      "net": "XIO30",
+      "kind": "single",
+      "expect": {
+        "instance": "non_empty"
+      }
+    },
+    {
+      "net": "XIO31",
+      "kind": "single",
+      "expect": {
+        "instance": "non_empty"
+      }
+    },
+    {
+      "net": "XIO32",
+      "kind": "single",
+      "expect": {
+        "instance": "non_empty"
+      }
+    }
+  ],
+  "hints": [],
+  "draws": [
+    {
+      "rail": "+3V3_XIO",
+      "amps": 0.1,
+      "note": {
+        "instance": "draws",
+        "default": "expansion load allowance (ILIM 523 mA)"
+      }
+    }
+  ],
+  "waivers": [],
+  "purpose": [
+    {
+      "part": "C1",
+      "role": "bypass",
+      "pin": "U1.5"
+    },
+    {
+      "part": "C2",
+      "role": "reservoir",
+      "pin": "U1.1"
+    },
+    {
+      "part": "R1",
+      "role": "set",
+      "pin": "U1.3"
+    }
+  ],
+  "free": [
+    {
+      "part": "TP1",
+      "reason": "probe point; it follows its net"
+    }
+  ]
+}

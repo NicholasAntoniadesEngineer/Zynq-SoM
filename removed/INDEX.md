@@ -28,6 +28,7 @@ Rules the tool relies on (enforced by `native_removed_archive_contracts`):
 | `floorplan_prose/` | typed per-sheet placement notes and framing text of docs/FLOORPLAN.md and FLOORPLAN.svg | `9301deeda9d6c31cc06fc5f9230519033cd464c9` | `d6f1a6a4a9814aebb8fbf515e2494d38190bc922` |
 | `drawing_titles/` | typed titles, headings and always-on rail names of docs/power_sequence.svg and docs/power_tree.svg | `d6f1a6a4a9814aebb8fbf515e2494d38190bc922` | `8409f27ff7892b01c336bc42ea0828f7a2d12957` |
 | `subsystem_notes/` | READMEs and SPICE `.cir` files of the subsystem library and the board module sheets, the index READMEs, the SPICE identity test | `63c8ebf32d5f19e3dda76b4f0ada25ca66af032d` | `31f53061af1bd02339cbb345d89a98a83868f8cd` |
+| `pl_expansion/` | the motor-carrier 32-pin PL expansion header subsystem | `3255981b2c4122daf2ad7c1390d4d46bbd046d00` | (this commit) |
 
 ## Files
 
@@ -334,3 +335,26 @@ Original path, then archive path.
 - `docs/WORKING_GUIDELINES.txt:308-311` -> `removed/subsystem_notes/fragments/WORKING_GUIDELINES.txt.L308-311.txt`
 - `native/README.md:95-96` -> `removed/subsystem_notes/fragments/README.md.L95-96.txt`
 - `native/tests/data/subsystem_scaffold/python_reference.json` key `widget_cir` -> `removed/subsystem_notes/tests/data/subsystem_scaffold/python_reference_widget_cir.json`
+- `subsystems/board_control/README.md` -> `removed/subsystem_notes/library/board_control/README.md`
+- `subsystems/board_control/board_control.cir` -> `removed/subsystem_notes/library/board_control/board_control.cir`
+- `subsystems/can_bus/README.md` -> `removed/subsystem_notes/library/can_bus/README.md`
+- `subsystems/can_bus/can_bus.cir` -> `removed/subsystem_notes/library/can_bus/can_bus.cir`
+- `subsystems/esc_io/README.md` -> `removed/subsystem_notes/library/esc_io/README.md`
+- `subsystems/esc_io/esc_io.cir` -> `removed/subsystem_notes/library/esc_io/esc_io.cir`
+- `subsystems/esc_power/README.md` -> `removed/subsystem_notes/library/esc_power/README.md`
+- `subsystems/esc_power/esc_power.cir` -> `removed/subsystem_notes/library/esc_power/esc_power.cir`
+- `subsystems/pl_expansion/README.md` -> `removed/subsystem_notes/library/pl_expansion/README.md`
+- `subsystems/pl_expansion/pl_expansion.cir` -> `removed/subsystem_notes/library/pl_expansion/pl_expansion.cir`
+- `subsystems/vbat_supply/README.md` -> `removed/subsystem_notes/library/vbat_supply/README.md`
+- `subsystems/vbat_supply/vbat_supply.cir` -> `removed/subsystem_notes/library/vbat_supply/vbat_supply.cir`
+- `motor_carrier/subsystems/som_j1/README.md` -> `removed/subsystem_notes/motor_carrier/som_j1/README.md`
+- `motor_carrier/subsystems/som_j1/som_j1.cir` -> `removed/subsystem_notes/motor_carrier/som_j1/som_j1.cir`
+- `motor_carrier/subsystems/som_j2/README.md` -> `removed/subsystem_notes/motor_carrier/som_j2/README.md`
+- `motor_carrier/subsystems/som_j2/som_j2.cir` -> `removed/subsystem_notes/motor_carrier/som_j2/som_j2.cir`
+- `motor_carrier/subsystems/som_j3/README.md` -> `removed/subsystem_notes/motor_carrier/som_j3/README.md`
+- `motor_carrier/subsystems/som_j3/som_j3.cir` -> `removed/subsystem_notes/motor_carrier/som_j3/som_j3.cir`
+
+### pl_expansion
+
+- `subsystems/pl_expansion/subsystem.json` -> `removed/pl_expansion/source/subsystem.json`
+- `subsystems/component_basis.json:297-299` -> `removed/pl_expansion/fragments/component_basis.json.L297-299.txt`

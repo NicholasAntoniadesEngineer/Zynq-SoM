@@ -48,6 +48,12 @@
       "depth": 1,
       "name": "page_origin",
       "text": "  ASSUME page_origin                    = 25            mm         [policy] quantization_policy.kPageOriginMm — page offset of the board origin; the frame the placement grid snaps in"
+    },
+    {
+      "kind": "ASSUME",
+      "depth": 1,
+      "name": "edge_seat_pull_weight",
+      "text": "  ASSUME edge_seat_pull_weight          = 60            1          [policy] floorplan.EDGE_SEAT_PULL_WEIGHT — seat weight holding a block within hard near_max reach of its edge block"
     }
   ]
 }

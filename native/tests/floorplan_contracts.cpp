@@ -1268,6 +1268,17 @@ void frozen(const std::filesystem::path& dir,const std::string& name,bool geomet
     for(const auto& row:field(expected,"ledger").array_value)replay_expected+=str(row,"text")+"\n";
     require(render_floorplan_ledger(replay.plan)==replay_expected,name+": frozen decision ledger replay");
     Engine e(in);e.initialize();e.prepare_geometry();e.prepare_cross();
+    if(in.spec)for(const auto& entry:in.spec->interior) {const std::string block=entry.first;const auto& anchor=entry.second;
+        if(!anchor.pull||!anchor.pull->exclusive)continue;
+        auto bare=in;bare.spec->interior.erase(block);
+        Engine derived(bare);derived.initialize();
+        const auto all=derived.blocks();
+        const auto it=std::find_if(all.begin(),all.end(),[&](const FloorplanBlock* b){return b->name==block;});
+        require(it!=all.end()&&(*it)->kind=="interior",name+": "+block+" stays an interior block without its spec entry");
+        const FloorplanBlock* found=*it;
+        require(found->zone=="@"+anchor.pull->to&&found->pull&&found->pull->exclusive&&found->pull->face=="inboard"&&found->pull->to==anchor.pull->to,
+                name+": "+block+" is seated at "+anchor.pull->to+" from its hard reach term alone, without floorplan.json");
+    }
     for(const auto& jack:e.plan.som.js) {
         FloorplanBlock block;block.name="near_som_probe";block.zone="@som_j"+jack.ref.substr(1);
         const auto anchor=e.anchor_row(block,{});

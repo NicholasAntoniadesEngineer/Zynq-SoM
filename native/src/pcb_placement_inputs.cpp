@@ -112,9 +112,11 @@ PcbStageInput Context::stage_input(const std::string &sheet, const Geometry &g) 
                             net.net_class == "ground")
                             s.inter_nets[pin.ref][net.name].push_back(pin.pin);
                     }
-    if (in.floorplan.spec) {
-        const auto &spec = *in.floorplan.spec;
-        auto edges = spec.edge_of();
+    {
+        const FloorplanSpec spec = in.floorplan.spec.value_or(FloorplanSpec{});
+        std::map<std::string, std::string> edges;
+        for (const auto &[name, row] : floorplan_sheet_edges(in.floorplan))
+            edges.emplace(name, row.edge);
         auto e = edges.find(sheet);
         if (e != edges.end())
             s.outer_dir = e->second;

@@ -4,6 +4,7 @@
 #pragma clang fp contract(off)
 #endif
 
+#include "schgen/authoring.hpp"
 #include "schgen/occupancy.hpp"
 #include "schgen/turn.hpp"
 
@@ -23,6 +24,8 @@ namespace fs = std::filesystem;
 using FileKey = std::tuple<std::string, fs::file_time_type, std::uintmax_t>;
 std::map<FileKey, std::shared_ptr<const Sexpr>> file_cache;
 std::mutex file_cache_mutex;
+const char* const rail_template = "+5V_USB";
+const char* const ground_template = "GROUND_TEMPLATE";
 
 const SexprList& items(const Sexpr& node, const std::string& where) {
     const auto* result = std::get_if<SexprList>(&node.v);
@@ -342,18 +345,23 @@ Sexpr SymbolLibrary::resolve(const std::string& lib, const std::string& name,
             break;
         }
     }
-    if (!block && lib == "schgen" && !name.empty() && name.front() == '+') {
-        for (const auto& value : items(root, lib)) {
-            if (tag(value) == "symbol" && items(value, lib).size() > 1
-                && atom(at(value, 1, lib), lib) == "+5V_USB") {
-                ancestry.push_back(name);
-                auto out = resolve(lib, "+5V_USB", ancestry);
-                ancestry.pop_back();
-                replace_strings(out, "+5V_USB", name);
-                return out;
+    if (!block && lib == "schgen" && !name.empty()) {
+        const bool ground = CircuitAuthor::classify(name) == "ground";
+        if (name.front() == '+' || ground) {
+            const std::string pattern = ground ? ground_template : rail_template;
+            for (const auto& value : items(root, lib)) {
+                if (tag(value) == "symbol" && items(value, lib).size() > 1
+                    && atom(at(value, 1, lib), lib) == pattern) {
+                    ancestry.push_back(name);
+                    auto out = resolve(lib, pattern, ancestry);
+                    ancestry.pop_back();
+                    replace_strings(out, pattern, name);
+                    return out;
+                }
             }
+            throw SymbolError(std::string(ground ? "ground" : "rail") + " template '" + pattern
+                              + "' missing from schgen lib");
         }
-        throw SymbolError("rail template '+5V_USB' missing from schgen lib");
     }
     if (!block) throw SymbolError("symbol '" + name + "' not in " + lib);
     const auto* base = find(*block, "extends");

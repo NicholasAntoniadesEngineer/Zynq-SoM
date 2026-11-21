@@ -685,6 +685,32 @@ bool Kernel::connectors_met(std::size_t part, const Shape& shape, std::size_t ot
     const Nm cross_x = std::min(a.x1, b.x1) - std::max(a.x0, b.x0);
     const Nm cross_y = std::min(a.y1, b.y1) - std::max(a.y0, b.y0);
     if (cross_x > rules.overlap_slack && cross_y > rules.overlap_slack) return false;
+    const Part& first = problem_.parts[part];
+    const Part& second = problem_.parts[other];
+    if (first.access || second.access || first.plug_width || second.plug_width) {
+        const auto envelope = [](const Part& item, const Box& gate) {
+            Box box = gate;
+            if (!item.plug_width) return box;
+            const bool along_x = !item.edge || item.edge->mouth.y != 0;
+            const bool along_y = !item.edge || item.edge->mouth.x != 0;
+            if (along_x && *item.plug_width > box.width()) {
+                const Nm grow = (*item.plug_width - box.width() + 1) / 2;
+                box.x0 -= grow;
+                box.x1 += grow;
+            }
+            if (along_y && *item.plug_width > box.height()) {
+                const Nm grow = (*item.plug_width - box.height() + 1) / 2;
+                box.y0 -= grow;
+                box.y1 += grow;
+            }
+            return box;
+        };
+        const Box first_box = envelope(first, shape.gate), second_box = envelope(second, other_shape.gate);
+        const Nm gap = std::max(std::max(first_box.x0, second_box.x0) - std::min(first_box.x1, second_box.x1),
+                                std::max(first_box.y0, second_box.y0) - std::min(first_box.y1, second_box.y1));
+        const Nm need = std::max(first.access.value_or(0), second.access.value_or(0));
+        if (gap < need + guard || (need == 0 && gap < 0)) return false;
+    }
     const bool first_boot = problem_.parts[part].overmold, second_boot = problem_.parts[other].overmold;
     if (!first_boot && !second_boot) return true;
     const Nm width = std::min(a.width(), b.width()), height = std::min(a.height(), b.height());

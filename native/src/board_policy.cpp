@@ -22,7 +22,7 @@ const std::vector<Binding> floor_bindings{
     {"perimeter_keepout","perimeter"},
     {"som_halo","som_halo"},{"pack_efficiency","fill"},
     {"occ_top_mask","occ_top"},{"occ_bottom_mask","occ_bottom"},
-    {"som_seat_band","som_seat_band"},{"som_occ_pad","som_pad"},
+    {"som_seat_band","som_seat_band"},{"som_occ_pad","som_pad"},{"edge_seat_pull_weight","edge_seat_pull_weight"},
     {"som_decoupling_inset","dec_inset"},{"d13_min_subject_pins","min_subject_pins"},
     {"edge_depth_cap","edge_depth_cap"},{"edge_band_relief","edge_band_relief"},
     {"overmold_plug_width","overmold_plug_width"},{"overmold_copper_half_width","overmold_copper_half_width"},

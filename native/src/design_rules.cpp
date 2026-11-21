@@ -1,4 +1,5 @@
 #include "schgen/design_rules.hpp"
+#include "schgen/netlist_gate.hpp"
 
 #include <algorithm>
 #include <cstdint>
@@ -740,7 +741,7 @@ TestpointCoverage check_testpoint_coverage(const std::vector<CircuitSheetIr>& sh
         std::unordered_map<std::string, std::string> port_types, first_net;
         for (const auto& pt : sc.port_types) port_types[pt.net] = pt.kind;
         for (const auto& net : sc.nets) {
-            for (const auto& pr : net.pins) first_net.emplace(pr.ref, net.name);
+            for (const auto& pr : net.pins) first_net.emplace(pr.ref, board_net_name(sc.name, net));
             std::string kind;
             if (net.net_class == "power" || net.net_class == "ground") kind = "rail";
             else if (net.net_class == "port") {

@@ -35,8 +35,9 @@ PcbZoneResult pcb_placement::build_zones_for_search(const PcbPlacementInput &in,
     std::map<std::string, std::string> connector_class;
     std::map<std::string, Rotations> conn_rot;
     std::map<std::string, std::string> sheet_outer;
-    auto sheet_edges =
-        in.floorplan.spec ? in.floorplan.spec->edge_of() : std::map<std::string, std::string>{};
+    std::map<std::string, std::string> sheet_edges;
+    for (const auto &[sheet, row] : floorplan_sheet_edges(in.floorplan))
+        sheet_edges.emplace(sheet, row.edge);
     auto layers =
         in.floorplan.spec ? in.floorplan.spec->layer_of() : std::map<std::string, std::string>{};
     std::map<std::string, std::set<std::string>> decoupling;

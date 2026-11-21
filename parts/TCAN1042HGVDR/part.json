@@ -1,0 +1,61 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "TCAN1042HGVDR",
+  "safe_name": "TCAN1042HGVDR",
+  "lcsc": "C124014",
+  "description": "TCAN1042HGVDR (SOIC-8_L4.9-W3.9-P1.27-LS6.0-BL)",
+  "manufacturer": "TI(德州仪器)",
+  "package": "SOIC-8_L4.9-W3.9-P1.27-LS6.0-BL",
+  "jlc_class": "Extended Part",
+  "prefix": "U",
+  "datasheet": "https://www.lcsc.com/datasheet/C124014.pdf",
+  "product_url": "https://lcsc.com/product-detail/CAN_TI_TCAN1042HGVDR_TCAN1042HGVDR_C124014.html",
+  "lib_id": "TCAN1042HGVDR:TCAN1042HGVDR",
+  "footprint": "TCAN1042HGVDR:TCAN1042HGVDR",
+  "models_3d": [
+    "TCAN1042HGVDR.wrl",
+    "TCAN1042HGVDR.step"
+  ],
+  "pins": [
+    {
+      "num": "1",
+      "name": "TXD",
+      "etype": "passive"
+    },
+    {
+      "num": "2",
+      "name": "GND",
+      "etype": "passive"
+    },
+    {
+      "num": "3",
+      "name": "VCC",
+      "etype": "passive"
+    },
+    {
+      "num": "4",
+      "name": "RXD",
+      "etype": "passive"
+    },
+    {
+      "num": "5",
+      "name": "VIO",
+      "etype": "passive"
+    },
+    {
+      "num": "6",
+      "name": "CANL",
+      "etype": "passive"
+    },
+    {
+      "num": "7",
+      "name": "CANH",
+      "etype": "passive"
+    },
+    {
+      "num": "8",
+      "name": "STB",
+      "etype": "passive"
+    }
+  ]
+}

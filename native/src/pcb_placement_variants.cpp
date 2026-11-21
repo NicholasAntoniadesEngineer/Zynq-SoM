@@ -88,7 +88,7 @@ bool connector_anchor(const Context& ctx,const Geometry& g,const std::string& re
 bool orientation_eligible(const Context& ctx, const Geometry& g, const std::string& sheet,
                           bool board_checked_external=false) {
     if (!ctx.in.floorplan.compact_search) return false;
-    if (ctx.in.floorplan.spec && ctx.in.floorplan.spec->edge_of().count(sheet)) return false;
+    if (floorplan_sheet_edges(ctx.in.floorplan).count(sheet)) return false;
     // External direction/near/flow targets require board-level reasoning.
     // Do not invent a local proxy or weaken those authored constraints.
     auto contract = ctx.in.contracts.find(sheet);

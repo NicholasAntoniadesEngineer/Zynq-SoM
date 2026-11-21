@@ -259,6 +259,45 @@ BoardDefinitionCheck check_board_definition(const fs::path& repository, const fs
         (void)board_power_policy(board->power, board->module_definition, mapping->rebound_som_rails, module_sheets, circuits, *facts);
     });
 
+    if (board && !board->layout.stated)
+        rows.add(board_file, "intent.layout", false, RequirementStatus::absent,
+                 "the board states no layout object: connector access and function statements are not judged");
+    if (board && board->layout.stated && facts_ready && roles) {
+        std::set<std::pair<std::string, std::string>> stated, known;
+        for (const BoardFunction& function : board->layout.functions) stated.insert({function.sheet, function.reference});
+        std::vector<std::tuple<std::string, std::string, const ConnectorFact*>> connectors;
+        for (const ProjectCircuit& circuit : circuits) {
+            const std::string module_part = sheet_role(*roles, circuit.name).module_connector;
+            for (const CircuitPartIr& part : circuit.circuit.parts) {
+                known.insert({circuit.name, part.ref});
+                if (part.ref == module_part) continue;
+                const PartClass kind = symbol_class(*facts, part.lib_id, part.ref + " (" + circuit.name + ")");
+                if (kind != PartClass::connector && kind != PartClass::header && kind != PartClass::battery_holder) continue;
+                const std::string subject = circuit.name + "." + part.ref;
+                rows.add(board_file, "intent.function." + subject, true,
+                         stated.count({circuit.name, part.ref}) ? RequirementStatus::present : RequirementStatus::missing,
+                         stated.count({circuit.name, part.ref}) ? "" : "state what " + subject + " is for in layout.functions");
+                if (const ConnectorFact* fact = connector_fact(facts->connectors, part.value); fact && fact->handling != "none")
+                    connectors.emplace_back(subject, fact->handling, fact);
+            }
+        }
+        for (const BoardFunction& function : board->layout.functions)
+            if (!known.count({function.sheet, function.reference}))
+                rows.add(board_file, "intent.function." + function.sheet + "." + function.reference, true, RequirementStatus::invalid,
+                         "layout.functions names a part the sheet does not hold");
+        for (const auto& row_of : connectors) {
+            const std::string& subject = std::get<0>(row_of);
+            const std::string handling = std::get<1>(row_of);
+            const ConnectorFact* fact = std::get<2>(row_of);
+            const bool by_board = std::any_of(board->layout.access.begin(), board->layout.access.end(),
+                                              [&](const BoardAccess& row) { return row.handling == handling; });
+            const bool alone = connectors.size() < 2;
+            rows.add(board_file, "intent.access." + subject, !alone,
+                     fact->access || by_board ? RequirementStatus::present : alone ? RequirementStatus::absent : RequirementStatus::missing,
+                     fact->access || by_board ? "" : alone ? "no other connector can be its neighbour"
+                                                           : "state layout.access for handling " + handling + " or connectors access in part data");
+        }
+    }
     result.rows = std::move(rows.list);
     return result;
 }

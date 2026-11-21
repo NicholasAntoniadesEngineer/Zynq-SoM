@@ -12,7 +12,7 @@
 
 namespace schgen::schematic_place {
 namespace {
-constexpr double TALL_SHEET_MM = 244.0, GROUND_CELL_LIFT = 2 * U;
+constexpr double TALL_SHEET_MM = 244.0, GROUND_CELL_LIFT = 2 * U, A3_FIT_W = 390.0, A3_FIT_H = 265.0;
 bool auxiliary(const CircuitPartIr& p) {
     return p.lib_id == "Connector:TestPoint" || p.lib_id == "Mechanical:MountingHole_Pad";
 }
@@ -134,7 +134,16 @@ void add_probe_row(Engine& eng, const CircuitSheetIr& c, const Refs& refs) {
             if (n.net_class == "port" && !exported) {
                 // A local label alone disconnects probe-only PORTs in hierarchy.
                 eng.label(n.name, fx, row_y, 0); stub = 4 * U;
-            } else eng.llabel(n.name, fx, row_y, 0);
+            } else {
+                const bool labelled = std::any_of(pl.llabels.begin(), pl.llabels.end(),
+                    [&](const auto& l) { return l.name == n.name; });
+                eng.llabel(n.name, fx, row_y, 0);
+                if (eng.sp.compact && labelled && n.net_class == "signal") eng._bridge(n.name);
+                if (eng.sp.refine && !labelled && n.net_class == "signal" && std::any_of(eng._open_stubs.begin(), eng._open_stubs.end(),
+                        [&](const auto& stub) { return stub.net == n.name; })) {
+                    eng._bridge(n.name); eng._label_open_stubs();
+                }
+            }
             pl.plan(n.name, {{fx, row_y}, {fx, row_y + stub}});
             tp = {fx, row_y + stub}; rotation = 180;
         }
@@ -312,13 +321,16 @@ SchematicPlacedPage place_and_route_with(const CircuitSheetIr& c, SymbolLibrary&
         catch (const SchematicPlaceError& e) { last = "route: " + std::string(e.what()); spacing = spacing.expanded(counts); continue; }
         auto geometry = schematic_route_geometry(pl, routed);
         const auto result = ops.check_visual(geometry);
+        Bounds b; b.boxes(pl.boxes);
+        for (const auto& s : routed.segs) { b.add(s.x0, s.y0); b.add(s.x1, s.y1); }
+        if (!b.present) throw SchematicPlaceError("cannot size placement without boxes or routed segments");
+        const double w = b.x1 - b.x0, h = b.y1 - b.y0;
+        if (!spacing.compact && (w > A3_FIT_W || h > A3_FIT_H)) {
+            last = oversized(w, h); spacing.compact = true; continue;
+        }
         if (result.ok) {
-            Bounds b; b.boxes(pl.boxes);
-            for (const auto& s : routed.segs) { b.add(s.x0, s.y0); b.add(s.x1, s.y1); }
-            if (!b.present) throw SchematicPlaceError("cannot size placement without boxes or routed segments");
-            const double w = b.x1 - b.x0, h = b.y1 - b.y0;
             if (w <= 272.0 && h <= 180.0) return {c, std::move(pl), std::move(routed), std::move(geometry)};
-            if (w <= 390.0 && h <= 265.0) {
+            if (w <= A3_FIT_W && h <= A3_FIT_H) {
                 const double dx = gsnap(A3_CENTER.first - A4_CENTER.first, counts), dy = gsnap(A3_CENTER.second - A4_CENTER.second, counts);
                 translate(pl, dx, dy); translate_route(routed, dx, dy);
                 geometry = schematic_route_geometry(pl, routed); pl.paper = "A3";
@@ -381,7 +393,12 @@ SchematicPlacedPage place_and_route_schematic(const CircuitSheetIr& c, SymbolLib
         const SchematicSpacing& spacing, int attempts, QuantizationCounts* counts) {
     QuantizationCounts owned_counts;
     if (!counts) counts = &owned_counts;
-    return schematic_place::place_and_route_with(c, lib, spacing, attempts, native_page_operations(counts), counts);
+    try { return schematic_place::place_and_route_with(c, lib, spacing, attempts, native_page_operations(counts), counts); }
+    catch (const SchematicPlaceError&) {
+        if (spacing.refine) throw;
+        auto refined = spacing; refined.refine = true;
+        return schematic_place::place_and_route_with(c, lib, refined, attempts, native_page_operations(counts), counts);
+    }
 }
 std::vector<SchematicPlacedPage> paginate_and_route_schematic(const CircuitSheetIr& c, SymbolLibrary& lib,
         const SchematicSpacing& spacing, int attempts, QuantizationCounts* counts) {

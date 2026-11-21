@@ -1,6 +1,8 @@
 #include "schgen/run_config.hpp"
 #include "placement_report_fixture.hpp"
 #include "schgen/testpoint_map.hpp"
+#include "schgen/design_rules.hpp"
+#include "schgen/netlist_gate.hpp"
 #include <iostream>
 #include <set>
 
@@ -71,12 +73,37 @@ void board(const std::filesystem::path &root, const std::string &project) {
         require(rejected(reworded, sheets, index, model, coverage), project + " mutation: changed waiver reason");
     }
 }
+void sheet_local_names() {
+    const auto sheet = [](const std::string &name) {
+        CircuitSheetIr circuit;
+        circuit.name = name;
+        circuit.parts.push_back({"TP1", "Connector:TestPoint", "SENSE", "TestPoint:TestPoint_Pad_D1.5mm", {}, {}, {}});
+        circuit.parts.push_back({"TP2", "Connector:TestPoint", "+3V3", "TestPoint:TestPoint_Pad_D1.5mm", {}, {}, {}});
+        circuit.nets.push_back({"SENSE", "signal", {{"TP1", "1"}}});
+        circuit.nets.push_back({"+3V3", "power", {{"TP2", "1"}}});
+        return circuit;
+    };
+    const auto coverage = check_testpoint_coverage({sheet("alpha"), sheet("beta")});
+    const auto refs = [&](const std::string &net) -> std::vector<std::string> {
+        for (const auto &[name, keys] : coverage.have)
+            if (name == net) return keys;
+        return {};
+    };
+    require(refs("/alpha/SENSE") == std::vector<std::string>{"alpha:TP1"} && refs("/beta/SENSE") == std::vector<std::string>{"beta:TP1"},
+            "a sheet-local net keeps its sheet in the coverage result, as on the board");
+    require(refs("SENSE").empty(), "two sheet-local nets of one name are not merged into one board net");
+    require(refs("+3V3") == std::vector<std::string>{"alpha:TP2", "beta:TP2"}, "a shared rail keeps its board-wide name");
+    require(board_net_name("alpha", sheet("alpha").nets.front()) == "/alpha/SENSE" &&
+                board_net_name("alpha", sheet("alpha").nets.back()) == "+3V3",
+            "one naming function for board nets");
+}
 } // namespace
 int main(int argc, char **argv) {
     try {
         if (argc != 2)
             throw std::runtime_error("repo root required");
         schgen::apply_run_config(std::filesystem::path(argv[1]) / schgen::run_config_file, "carrier");
+        sheet_local_names();
         board(argv[1], "carrier");
         board(argv[1], "devkit_mini");
         std::cout << "test-point map: " << checks << " assertions passed\n";

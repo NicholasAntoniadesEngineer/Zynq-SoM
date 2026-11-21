@@ -1,6 +1,6 @@
 {
   "schema": "schgen.run/1",
-  "boards": ["carrier", "devkit_mini"],
+  "boards": ["carrier", "devkit_mini", "motor_carrier"],
   "output": "out",
   "squeeze": true,
   "arrange": true,
@@ -11,11 +11,23 @@
   "audit_projections": 2,
   "stackup": {
     "carrier": "JLC06161H-3313",
-    "devkit_mini": "JLC06161H-3313"
+    "devkit_mini": "JLC06161H-3313",
+    "motor_carrier": "JLC06161H-3313"
   },
   "overmold_parts": {
     "carrier": ["HDMI-019S"],
-    "devkit_mini": []
+    "devkit_mini": [],
+    "motor_carrier": []
+  },
+  "search": {
+    "mode": "quick",
+    "seeds": [0, 1, 2, 3, 4, 5, 6, 7],
+    "promote": 3,
+    "threads": 4,
+    "objective": ["area", "airwire"],
+    "max_minutes": null,
+    "max_outline_mm": null,
+    "reliability": {"pass_rate": 0.8, "area_spread": 0.05, "basis": "integrator's decision 2026-11-21; revisit after the first sweeps on three boards"}
   },
   "study": {
     "stackups": ["JLC04161H-3313", "JLC06161H-3313", "JLC08161H-3313", "JLC10161H-2116"]
