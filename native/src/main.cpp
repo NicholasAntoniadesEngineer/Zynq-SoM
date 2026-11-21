@@ -46,6 +46,7 @@ int main(int argc, char** argv) {
                          "  dump-circuits [--project NAME] (publish live native-authored IR)\n"
                          "  nets [--project NAME] --output HEADER (C++ net-name contract)\n"
                          "  subsystem-check | carrier-check [--project NAME] (strict native package gates)\n"
+                         "  basis-check [--repo ROOT] (component basis and copper claims over every board folder)\n"
                          "  chir-rung TAG | w11-sweep MM [SHEET ...] [--project NAME] (writes board; restores inputs)\n"
                          "  w12-bound TAG | w12-stageprobe TAG [SHEET ...] [--project NAME] [--cons-only] (private probes)\n"
                          "  pcb-stage [--project NAME] [--kicad-cli PATH] [--compact-placement] -o DIRECTORY (construction only)\n"

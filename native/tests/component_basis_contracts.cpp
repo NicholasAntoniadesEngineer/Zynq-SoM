@@ -62,6 +62,12 @@ int main(int argc, char** argv) {
         const auto policy = load_component_basis_policy(root);
         const auto scopes = component_basis_scopes(root);
         const auto live = author_component_basis_inputs(root,policy);
+        for(const auto* board : {"carrier","devkit_mini"}) {
+            const auto one = single_basis_board(root / board);
+            const auto board_policy = load_component_basis_policy(root, one);
+            const auto board_result = audit_component_basis(author_component_basis_inputs(root, one, board_policy), component_basis_scopes(one), board_policy);
+            require(board_result.ok(), std::string("a single-board audit passes for ") + board + ": " + component_basis_report(board_result));
+        }
         const auto fixture = parse_json_file((root/"native/tests/data/component_basis/python_basis.json").string());
         require(live.size() == 66 && policy.sheets.size() == 66,"complete live coverage");
         require(policy.declarations.size() == 212 && policy.uses.size() == 681,"expectation coverage");
@@ -265,6 +271,16 @@ int main(int argc, char** argv) {
             require(small.declarations[0].site == lib + ":d.one","loader site");
             require(small.uses[0].scope == "library" && small.uses[1].scope == loader_board && small.sheets[1].scope == loader_board,"loader scopes");
             require(component_basis_scopes(scratch) == std::set<std::string>{"library",loader_board},"scope set");
+            put_file(scratch / "broken_board" / "board.json", "{}");
+            put_file(scratch / "broken_board" / loader_file, "{\"schema\": \"schgen.component_basis/2\"}");
+            bool every_board_fails = false;
+            try { (void)load_component_basis_policy(scratch); }
+            catch(const std::runtime_error& error) { every_board_fails = std::string(error.what()).find("broken_board") != std::string::npos; }
+            require(every_board_fails,"the every-board audit judges every board folder");
+            const auto alone = load_component_basis_policy(scratch, single_basis_board(scratch / loader_board));
+            require(!alone.every_board && alone.sheets.size() == 2 && component_basis_scopes(single_basis_board(scratch / loader_board)) == std::set<std::string>{"library",loader_board},
+                    "a board's audit reads only the library and that board, so another board's mistake cannot fail it");
+            std::filesystem::remove_all(scratch / "broken_board");
             for(const auto& declaration : policy.declarations)
                 require(declaration.site == "subsystems/component_basis.json:" + declaration.name,"production site form");
             std::filesystem::remove(scratch / "subsystems" / loader_file);

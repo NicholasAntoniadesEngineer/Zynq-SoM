@@ -276,6 +276,7 @@ void verify_part(const std::string& id,const CopperCheck& k,const CircuitSheetIr
 }
 void verify_sheet_check(const CopperDebtSources& sources,const std::string& id,const CopperCheck& k) {
     for(const auto& scope:k.scopes) {
+        if(!sources.basis.every_board && !sources.basis_scopes.count(scope)) continue;
         claim(sources.basis_scopes.count(scope)==1,id,"scope "+scope+" is neither the library nor a board folder");
         const auto& sh=sheet(sources,scope,k.sheet);
         if(k.kind=="part_count") { claim(static_cast<int>(sh.parts.size())==k.count,id,scope+"/"+k.sheet+" membership changed"); continue; }
@@ -459,10 +460,13 @@ CopperClaims load_copper_claims(const std::filesystem::path& repository) {
     return parse_copper_claims(parse_json_file(path.string()),path.string());
 }
 CopperDebtSources author_copper_debt_sources(const std::filesystem::path& repository) {
+    return author_copper_debt_sources(repository,repository_basis_boards(repository));
+}
+CopperDebtSources author_copper_debt_sources(const std::filesystem::path& repository,const ComponentBasisBoards& boards) {
     CopperDebtSources s;
     s.claims=load_copper_claims(repository);
-    s.basis=load_component_basis_policy(repository); s.basis_scopes=component_basis_scopes(repository);
-    s.circuits=author_component_basis_inputs(repository,s.basis);
+    s.basis=load_component_basis_policy(repository,boards); s.basis_scopes=component_basis_scopes(boards);
+    s.circuits=author_component_basis_inputs(repository,boards,s.basis);
     s.thermal=default_thermal_policy(); s.emission=default_pcb_emit_policy();
     const PartFacts facts=load_part_facts_in(repository/"parts");
     s.emission.isolation=facts.isolation; s.emission.thermal_copper=facts.thermal_copper; s.emission.regulators=facts.regulators;
@@ -474,6 +478,9 @@ CopperDebtSources author_copper_debt_sources(const std::filesystem::path& reposi
         s.geometry.push_back(*g);
     }
     return s;
+}
+void verify_copper_debt_sources(const CopperDebtSources& s) {
+    verify_sources(s);
 }
 CopperDebtResult analyze_copper_debt(const ThermalCopper* c,const CopperDebtSources& s) {
     verify_sources(s);
