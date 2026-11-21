@@ -1,4 +1,5 @@
 #pragma once
+#include "schgen/placement_precision.hpp"
 #include "experiment_metric_contracts.hpp"
 #include "schgen/pcb_emit.hpp"
 #include "schgen/pcb_placement_gates.hpp"
@@ -65,9 +66,12 @@ void structure(const PcbPlacementInput& input,const PcbZoneResult& zones,
         fixed[zones.geometry.mh_refs[i]]={corner==1||corner==2?plan.board_w-5:5,
             corner>=2?plan.board_h-5:5,0,""};
     }
+    std::set<std::string> module_connectors;
     for(const auto& part:model.insts) if(part.ref.rfind("J",0)==0&&part.sheet.rfind("som_j",0)==0)
-        for(const auto& jack:input.floorplan.som.js) if(jack.ref=="J"+part.sheet.substr(5))
-            fixed[part.ref]={plan.som_x+jack.x,plan.som_y+jack.y,jack.w<jack.h?90.:0.,""};
+        for(const auto& jack:input.floorplan.som.js) if(jack.ref=="J"+part.sheet.substr(5)) {
+            fixed[part.ref]={plan.som_x+jack.x,plan.som_y+jack.y,jack.turn,""};
+            module_connectors.insert(part.ref);
+        }
     require(!fixed.empty(),"fixed mounting/module witnesses exist");
     for(std::size_t i=0;i<stages.size();++i) {
         const auto& poses=result.stages.at(stages[i]);
@@ -81,8 +85,12 @@ void structure(const PcbPlacementInput& input,const PcbZoneResult& zones,
         require(refs==(page?final_refs:board_refs),"complete checkpoint population: "+stages[i]);
         for(const auto& [ref,expected]:fixed) {
             const auto& actual=poses.at(ref);
-            require(std::get<0>(actual)==(page?fixed_part_grid(model.origin_x+std::get<0>(expected)):std::get<0>(expected))&&
-                    std::get<1>(actual)==(page?fixed_part_grid(model.origin_y+std::get<1>(expected)):std::get<1>(expected))&&
+            const bool module_connector=module_connectors.count(ref)!=0;
+            const auto emitted=[module_connector](double value){
+                return module_connector?placement_emission_pose_precision4dp(value):fixed_part_grid(value);
+            };
+            require(std::get<0>(actual)==(page?emitted(model.origin_x+std::get<0>(expected)):std::get<0>(expected))&&
+                    std::get<1>(actual)==(page?emitted(model.origin_y+std::get<1>(expected)):std::get<1>(expected))&&
                     std::get<2>(actual)==std::get<2>(expected)&&
                     std::get<3>(actual)==(page?"top":""),"source-fixed placement: "+stages[i]+" "+ref);
         }

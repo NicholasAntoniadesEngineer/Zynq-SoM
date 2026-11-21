@@ -13,9 +13,13 @@ namespace {
 using namespace schgen;
 
 namespace fixture {
-const std::array<std::string, 12> sections{"thermal", "thermal_copper", "ep_vias", "isolation", "regulators",
+const std::array<std::string, 13> sections{"thermal", "thermal_copper", "ep_vias", "isolation", "regulators",
                                            "zeners", "reference_pins", "control_grid", "model_overrides", "footprint_aliases",
-                                           "i2c_devices", "i2c_bridges"};
+                                           "i2c_devices", "i2c_bridges", "lands"};
+const std::string spacing =
+    "{\"source\": \"fixture\", \"column\": \"B2\", \"basis\": \"fixture\", \"rows\": [{\"max_volts\": 15, \"spacing_mm\": 0.1}, "
+    "{\"max_volts\": 30, \"spacing_mm\": 0.1}]}";
+const std::string land_row = "{\"footprint\": \"Lib:Land\", \"pad_gap_mm\": 0.17, \"tolerance_mm\": 0.02, \"cite\": \"fixture\"}";
 const std::string part = "P1";
 const std::string thermal_row =
     "{\"rth_ja\": 118.9, \"tj_max\": 125.0, \"rds_on\": 0.0, \"eff\": 0.85, \"package\": \"SOT-23-THIN-6\", \"cite\": \"fixture\", "
@@ -73,11 +77,13 @@ std::filesystem::path write_facts(const std::filesystem::path& scratch, const st
     std::filesystem::create_directories(scratch / fixture::part);
     const auto file = scratch / "facts.json";
     std::ofstream out(file, std::ios::binary);
-    out << "{\"schema\": \"schgen.part_facts/4\", \"classes\": {\"Device:R\": \"resistor\"}, \"connectors\": {}, \"stated_heights\": {}";
+    out << "{\"schema\": \"schgen.part_facts/5\", \"classes\": {\"Device:R\": \"resistor\"}, \"connectors\": {}, \"stated_heights\": {}";
     for (const std::string& name : fixture::sections) {
         if (name == section && leave_out) continue;
         out << ", \"" << name << "\": " << (name == section ? body : std::string("{}"));
     }
+    if (!(section == "electrical_spacing" && leave_out))
+        out << ", \"electrical_spacing\": " << (section == "electrical_spacing" ? body : fixture::spacing);
     out << "}";
     return file;
 }
@@ -299,6 +305,18 @@ void alias_facts(const std::filesystem::path& scratch) {
             "footprint_aliases: an absent section is refused");
 }
 
+void land_facts(const std::filesystem::path& scratch) {
+    const PartFacts good = facts_from(scratch, "lands", rows(fixture::land_row));
+    require(part_fact_of(good.lands, fixture::part, "lands").pad_gap_mm == 0.17 && good.electrical_spacing.rows.size() == 2,
+            "lands: a full row and the electrical spacing table load");
+    refused_everywhere(scratch, "lands", fixture::land_row);
+    refuses([&] { facts_from(scratch, "electrical_spacing", "{\"source\": \"f\", \"column\": \"B2\", \"basis\": \"f\", \"rows\": "
+                                                          "[{\"max_volts\": 30, \"spacing_mm\": 0.1}, {\"max_volts\": 15, \"spacing_mm\": 0.1}]}"); },
+            "electrical_spacing", "electrical_spacing: rows that do not rise in voltage are refused");
+    refuses([&] { load_part_facts(write_facts(scratch, "electrical_spacing", "{}", true)); }, "electrical_spacing",
+            "electrical_spacing: an absent table is refused");
+}
+
 void i2c_facts(const std::filesystem::path& scratch) {
     std::filesystem::create_directories(scratch / fixture::part);
     {
@@ -376,8 +394,16 @@ void repository_sections_load(const std::filesystem::path& repository) {
             "the repository isolation rows");
     require(facts.control_grid.size() == 1 && part_fact_of(facts.control_grid, "TS-1187A-B-A-B", "control_grid").button_gap_mm == 2,
             "the repository control grid row");
-    require(facts.model_overrides.size() == 1 && part_fact_of(facts.model_overrides, "FUSB302BMPX", "model_overrides").rotation_z_deg == 90,
-            "the repository model override row");
+    require(facts.model_overrides.size() == 2 && part_fact_of(facts.model_overrides, "FUSB302BMPX", "model_overrides").rotation_z_deg == 90,
+            "the repository model override rows");
+    const ModelOverrideFact& mate = part_fact_of(facts.model_overrides, "DF40C-100DP-0.4V_51", "model_overrides");
+    require(mate.footprint == "Mylibrary:HRS_DF40C-100DP-0.4V_51_" &&
+                mate.path == "${KIPRJMOD}/../parts/DF40C-100DP-0.4V_51/DF40C-100DP-0.4V_51.wrl" && mate.rotation_z_deg == 0,
+            "the repository model override binds the module connector's own model to the module mate land pattern");
+    require(facts.lands.size() == 1 &&
+                part_fact_of(facts.lands, "DF40C-100DP-0.4V_51", "lands").footprint == "Mylibrary:HRS_DF40C-100DP-0.4V_51_" &&
+                part_fact_of(facts.lands, "DF40C-100DP-0.4V_51", "lands").pad_gap_mm == 0.17 && facts.electrical_spacing.column == "B2",
+            "the repository land row and electrical spacing table");
     require(facts.footprint_aliases.size() == 1 &&
                 part_fact_of(facts.footprint_aliases, "Capacitor_SMD:C_1206_3225Metric", "footprint_aliases").footprint ==
                     "Capacitor_SMD:C_1206_3216Metric",
@@ -404,6 +430,7 @@ int main(int argc, char** argv) {
         zener_facts(scratch);
         regulator_facts(scratch);
         alias_facts(scratch);
+        land_facts(scratch);
         i2c_facts(scratch);
         repository_sections_load(std::filesystem::absolute(argv[1]));
         std::cout << "part engineering facts contracts ok\n";

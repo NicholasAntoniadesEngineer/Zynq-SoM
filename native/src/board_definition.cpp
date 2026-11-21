@@ -224,7 +224,8 @@ ModuleDefinition parse_module(const JsonNode& document, const std::string& file)
     const std::string source = "module file " + file;
     if (document.kind != JsonKind::Object) fail(source, "the document is not an object");
     reject_unknown_keys(document, {"schema", "schematic", "pcb", "connector_part", "controller_ref", "fpga_ref", "draw", "sdio_level_v", "sd_bus", "pairs",
-                                   "escape_population", "escape_triage", "do_not_load_straps", "supplies", "regulated_rails"}, source);
+                                   "escape_population", "escape_triage", "do_not_load_straps", "supplies", "regulated_rails",
+                                   "mate_symbol", "mate_pad_names"}, source);
     if (text(document, "schema", source) != module_schema) fail(source, std::string("schema is not ") + module_schema);
     ModuleDefinition module;
     module.schematic = folder_name(document, "schematic", source);
@@ -257,6 +258,21 @@ ModuleDefinition parse_module(const JsonNode& document, const std::string& file)
     }
     if (module.escape_triage.empty()) fail(source, "field 'escape_triage' is empty");
     module.do_not_load_straps = names(document, "do_not_load_straps", source);
+    const bool symbol = object_field(document, "mate_symbol") != nullptr, renames = object_field(document, "mate_pad_names") != nullptr;
+    if (symbol != renames) fail(source, "mate_symbol and mate_pad_names are stated together or not at all");
+    if (symbol) {
+        module.mate_symbol = text(document, "mate_symbol", source);
+        if (module.mate_symbol.find(':') == std::string::npos) fail(source, "mate_symbol is not a Library:Name symbol id");
+        const JsonNode& map = member(document, "mate_pad_names", JsonKind::Object, source);
+        if (map.object_value.empty()) fail(source, "mate_pad_names is empty");
+        std::set<std::string> targets;
+        for (const auto& [pin, pad] : map.object_value) {
+            if (pad.kind != JsonKind::String || pad.string_value.empty() || pin.empty())
+                fail(source, "mate_pad_names." + pin + " is not a pad name");
+            if (!targets.insert(pad.string_value).second) fail(source, "mate_pad_names names pad " + pad.string_value + " twice");
+            module.mate_pad_names[pin] = pad.string_value;
+        }
+    }
     std::set<std::string> supplied;
     for (const JsonNode& row : rows(document, "supplies", source)) {
         module.supplies.push_back(supply_of(row, source + " supplies"));

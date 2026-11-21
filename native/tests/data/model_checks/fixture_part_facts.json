@@ -1,5 +1,5 @@
 {
-  "schema": "schgen.part_facts/4",
+  "schema": "schgen.part_facts/5",
   "classes": {},
   "connectors": {},
   "stated_heights": {},
@@ -45,5 +45,7 @@
   "model_overrides": {},
   "footprint_aliases": {},
   "i2c_devices": {},
-  "i2c_bridges": {}
+  "i2c_bridges": {},
+  "lands": {},
+  "electrical_spacing": {"source": "IPC-2221B Table 6-1, electrical conductor spacing", "column": "B2", "basis": "B2 is the bare-board external conductor, uncoated, sea level to 3050 m column: every pair in the land-spacing scope has at least one land pad, which is an opening in the solder mask, so the coated column B4 does not apply to it", "rows": [{"max_volts": 15, "spacing_mm": 0.1}, {"max_volts": 30, "spacing_mm": 0.1}, {"max_volts": 50, "spacing_mm": 0.6}]}
 }

@@ -1,5 +1,5 @@
 CONTRACT COVERAGE LINT — every wired-sheet part in >=1 contract structure or explicitly free
-CONTRACT COVERAGE LINT (advisory): 12 sheets, 155 parts — 62 structured / 0 free / 93 UNGATED
+CONTRACT COVERAGE LINT (advisory): 12 sheets, 156 parts — 62 structured / 0 free / 94 UNGATED
 
 debug_boot           parts= 15  structured=  0  free= 0  UNGATED= 15  (no contract)
     UNGATED J1     -> J1001    878311420              nets: +3V3, GND, ZYNQ_TCK, ZYNQ_TDI, ZYNQ_TDO, ZYNQ_TMS
@@ -22,7 +22,8 @@ mechanical           parts=  4  structured=  0  free= 0  UNGATED=  4  (no contra
     UNGATED H2     -> H2002    MountingHole_M3        nets: CHASSIS_GND
     UNGATED H3     -> H2003    MountingHole_M3        nets: CHASSIS_GND
     UNGATED H4     -> H2004    MountingHole_M3        nets: CHASSIS_GND
-pd_input             parts= 13  structured= 11  free= 0  UNGATED=  2
+pd_input             parts= 14  structured= 11  free= 0  UNGATED=  3
+    UNGATED C4     -> C3004    100n                   nets: +3V3_SC, GND
     UNGATED TP1    -> TP3001   +VBUS_IN               nets: +VBUS_IN
     UNGATED TP2    -> TP3002   +VIN                   nets: +VIN
 power                parts= 54  structured= 38  free= 0  UNGATED= 16

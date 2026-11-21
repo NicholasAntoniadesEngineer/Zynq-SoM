@@ -1,5 +1,6 @@
 // Complete symbol-library contracts; no Python, catalogs or board generation.
 // Usage: symbols_contracts <repository> [--installed]
+#include "schgen/module_symbols.hpp"
 #include "schgen/symbols.hpp"
 #include "schgen/circuit.hpp"
 #include "schgen/json.hpp"
@@ -323,10 +324,11 @@ void golden_contracts(SymbolLibrary& library, const JsonNode& golden) {
               << " pin records match frozen Python metadata, raw expressions and transforms\n";
 }
 
-void circuit_contracts(SymbolLibrary& library, const fs::path& repo) {
+void circuit_contracts(const fs::path& repo) {
     std::set<std::string> ids;
     std::size_t circuits = 0, parts = 0;
     for (const auto* project : {"carrier", "devkit_mini"}) {
+        SymbolLibrary project_library = schgen::project_symbol_library(schgen::resolve_project_paths(repo, std::string(project)));
         std::vector<fs::path> paths;
         for (const auto& folder : fs::directory_iterator(repo / project / "subsystems")) {
             if (fs::is_regular_file(folder.path() / "circuit.json")) paths.push_back(folder.path() / "circuit.json");
@@ -338,7 +340,7 @@ void circuit_contracts(SymbolLibrary& library, const fs::path& repo) {
             for (const auto& part : circuit.parts) {
                 ids.insert(part.lib_id);
                 ++parts;
-                const auto numbers = library.pin_numbers(part.lib_id);
+                const auto numbers = project_library.pin_numbers(part.lib_id);
                 std::set<std::string> assigned;
                 for (const auto& net : circuit.nets) {
                     for (const auto& pin : net.pins) if (pin.ref == part.ref) assigned.insert(pin.pin);
@@ -374,7 +376,7 @@ int main(int argc, char** argv) {
         inheritance_contracts(data, library);
         power_contracts(library);
         golden_contracts(library, golden);
-        circuit_contracts(library, repo);
+        circuit_contracts(repo);
         {
             auto changed = library.get("Device:R");
             const auto original_body = changed.body;

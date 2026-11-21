@@ -13,7 +13,8 @@ double value(const Sexpr& n){if(auto p=std::get_if<double>(&n.v))return *p;if(au
 std::optional<double> minimum(const std::vector<double>& v){return v.empty()?std::nullopt:std::optional<double>(*std::min_element(v.begin(),v.end()));}
 std::optional<double> rule(const std::string& text,const std::string& pattern,bool first=false){std::regex re(pattern);std::vector<double> vals;for(std::sregex_iterator i(text.begin(),text.end(),re),end;i!=end;++i){vals.push_back(std::stod((*i)[1]));if(first)break;}return minimum(vals);}
 }
-const ManufacturingFabProfile& manufacturing_jlcpcb_multilayer(){static const ManufacturingFabProfile p{"JLCPCB standard "+std::to_string(board_stackup().copper.size())+"-layer (1oz)",0.09,0.09,0.15,0.25,0.075,0.15,"JLCPCB PCB Manufacturing & Assembly Capabilities (jlcpcb.com/capabilities/pcb-capabilities) + JLCPCB via/annular Q&A; retrieved 2026-07"};return p;}
+ManufacturingMinimums manufacturing_jlcpcb_minimums(){return {0.09,0.09};}
+const ManufacturingFabProfile& manufacturing_jlcpcb_multilayer(){static const ManufacturingFabProfile p{"JLCPCB standard "+std::to_string(board_stackup().copper.size())+"-layer (1oz)",manufacturing_jlcpcb_minimums().min_trace_mm,manufacturing_jlcpcb_minimums().min_clearance_mm,0.15,0.25,0.075,0.15,"JLCPCB PCB Manufacturing & Assembly Capabilities (jlcpcb.com/capabilities/pcb-capabilities) + JLCPCB via/annular Q&A; retrieved 2026-07"};return p;}
 ManufacturingBoardDemand measure_manufacturing_board(const Sexpr& pcb,const std::string& dru,const std::string& project){
     ManufacturingBoardDemand d;std::vector<double> widths,dias,annuli,drills;
     std::function<void(const Sexpr&)> walk=[&](const Sexpr& n){if(auto a=list(n))for(const auto& child:*a){if(!list(child)||list(child)->empty())continue;

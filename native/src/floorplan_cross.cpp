@@ -40,7 +40,7 @@ void Engine::prepare_cross() {
             }
         }
     }
-    std::map<std::string,const SomJGeom*> jacks;
+    std::map<std::string,const ModuleConnectorGeom*> jacks;
     for (const auto& j : plan.som.js) jacks[j.ref]=&j;
     std::vector<std::string> dec_refs;
     for (std::size_t i=0; i<in.sheets.size(); ++i) {
@@ -61,7 +61,7 @@ void Engine::prepare_cross() {
                 if (p->ref!=jack || !jacks.count(jack)) continue;
                 part.owner=CrossPart::Owner::SomJack; part.key=jack;
                 const auto* j=jacks.at(jack); part.offset={j->x,j->y};
-                rotations[ref]=j->w<j->h ? 90 : 0;
+                rotations[ref]=j->turn;
             } else if (role.region==SheetRegion::under_module) {
                 part.owner=CrossPart::Owner::Decoupling; part.base_side="bottom";
                 dec_refs.push_back(ref);
@@ -169,7 +169,7 @@ void Engine::prepare_escape_rows() {
             for(const auto& [row,positions]:rows){
                 const auto [lo,hi]=std::minmax_element(positions.begin(),positions.end());
                 escape_rows.push_back({"escape:"+ref+(row>0?":S":":N"),{jack->x,jack->y},
-                    jack->w<jack->h?90.0:0.0,*lo,*hi,row,contacts});
+                    jack->turn,*lo,*hi,row,contacts});
             }
         }
     }
@@ -177,8 +177,8 @@ void Engine::prepare_escape_rows() {
 std::vector<std::pair<std::string,Box4>> Engine::current_escape_corridors() {
     auto result=in.compose.corridors; // Explicit caller constraints, never generated history.
     for(const auto& row:escape_rows){
-        const auto x=quantize("fixed_part_grid",in.origin.first+plan.som_x+row.offset.first);
-        const auto y=quantize("fixed_part_grid",in.origin.second+plan.som_y+row.offset.second);
+        const auto x=in.origin.first+plan.som_x+row.offset.first;
+        const auto y=in.origin.second+plan.som_y+row.offset.second;
         const auto box=pcb_escape_row_corridor(row.contacts,row.lo,row.hi,row.row,x,y,row.rotation,
             &plan.accounting.quantization_engagements);
         result.emplace_back(row.name,Box4{box.x0-in.origin.first,box.y0-in.origin.second,
@@ -237,8 +237,8 @@ std::optional<double> Engine::evaluate_estimate(const std::vector<const Floorpla
             x=position_precision(position_precision(in.origin.first+block->second->x)+d.first);
             y=position_precision(position_precision(in.origin.second+block->second->y)+d.second);
         } else if (part.owner==CrossPart::Owner::SomJack) {
-            x=quantize("fixed_part_grid",in.origin.first+plan.som_x+part.offset.first);
-            y=quantize("fixed_part_grid",in.origin.second+plan.som_y+part.offset.second);
+            x=in.origin.first+plan.som_x+part.offset.first;
+            y=in.origin.second+plan.som_y+part.offset.second;
         } else if (part.owner==CrossPart::Owner::Decoupling) {
             x=position_precision(in.origin.first+plan.som_x+dec_inset+rw*(part.owner_index%cols+.5)/cols);
             y=position_precision(in.origin.second+plan.som_y+dec_inset+rh*(part.owner_index/cols+.5)/rows);

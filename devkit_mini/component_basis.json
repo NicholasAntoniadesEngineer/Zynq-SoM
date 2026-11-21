@@ -63,6 +63,7 @@
     {"sheet": "pd_input", "target": "C3", "attribute": "value", "declaration": "subsystems.PD_INPUT_DVDT_CAP", "type": "Device:C"},
     {"sheet": "pd_input", "target": "R6", "attribute": "value", "declaration": "subsystems.PD_INPUT_FAULT_PULL", "type": "Device:R"},
     {"sheet": "pd_input", "target": "C2", "attribute": "value", "declaration": "subsystems.PD_INPUT_FUSED_BULK", "type": "Device:C"},
+    {"sheet": "pd_input", "target": "C4", "attribute": "value", "declaration": "subsystems.PD_INPUT_CLAMP_BYPASS", "type": "Device:C"},
     {"sheet": "power", "target": "C1", "attribute": "value", "declaration": "subsystems.POWER_VIN_HF", "type": "Device:C"},
     {"sheet": "power", "target": "C25", "attribute": "value", "declaration": "subsystems.POWER_VIN_HF", "type": "Device:C"},
     {"sheet": "power", "target": "C2", "attribute": "value", "declaration": "subsystems.POWER_VIN_BULK", "type": "Device:C"},

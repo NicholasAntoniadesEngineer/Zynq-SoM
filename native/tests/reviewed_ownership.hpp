@@ -23,7 +23,7 @@ inline PlacementRequirements reviewed(const std::string& sheet) {
     } else if (sheet == "bringup_rails") {
         d.owners = {{"U1", "TCA9535PWR"}};
         d.ownership = {{"U1", "24", "VCC", "C1", "1", "2", "+3V3_SC", "GND", "100n", "supply_bypass"}};
-        d.top_switches = {"SW1", "SW2", "SW3", "SW4", "SW5", "SW6"};
+        d.top_switches = {"SW1", "SW2", "SW3", "SW4", "SW6"};
     } else throw std::runtime_error("no reviewed ownership for " + sheet);
     return d;
 }

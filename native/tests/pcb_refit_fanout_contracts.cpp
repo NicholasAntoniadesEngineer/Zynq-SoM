@@ -99,7 +99,7 @@ void projection(const std::filesystem::path& root) {
             "trial projection is atomic and preserves identities");
     std::map<std::string,std::size_t> expected;
     for(const auto& i : checked.model().insts)
-        expected[p.grid_placed.count(i.ref) ? "placement_emission_pose_precision4dp" : "fixed_part_grid"] += 2;
+        expected[p.grid_placed.count(i.ref) || p.som_refs.count(i.ref) ? "placement_emission_pose_precision4dp" : "fixed_part_grid"] += 2;
     for(const auto& [key,count] : expected) {
         const auto prior = before.find(key);
         require(p.ctx.quantization.at(key)-(prior==before.end()?0:prior->second)==count,

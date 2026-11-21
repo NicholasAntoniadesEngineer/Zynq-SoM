@@ -2,7 +2,7 @@ schgen per-part rule engine (ratings vs netlist usage)
 ==============================================================================
 
 enforced: CAP_VOLTAGE (MLCC 2x / C0G 1.5x / elec 1.5x rail), IC_VIN (abs-max >= input rail). advisory: RES_POWER (2x).
-57 part-checks evaluated; ratings from schgen/ratings.py (LCSC-keyed).
+58 part-checks evaluated; ratings from schgen/ratings.py (LCSC-keyed).
 
 UNSPEC — reported, NOT failing (21):
   ? debug_boot:J1 (878311420, LCSC C240854) — no ratings row
@@ -29,4 +29,4 @@ UNSPEC — reported, NOT failing (21):
 
 errors: none
 
-PART RULES: PASS (57 checks, 0 findings, 21 unspeced, 0 waived)
+PART RULES: PASS (58 checks, 0 findings, 21 unspeced, 0 waived)

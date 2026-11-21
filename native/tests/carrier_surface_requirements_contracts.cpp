@@ -208,7 +208,7 @@ void exercise(const std::filesystem::path& root, const std::string& sheet,
     require(unsupported.ok && unsupported.checked==0,
             "engine capability changed: review requirements promotion explicitly");
     const auto& access=field(field(req,"access"),"top_face_switches").array_value;
-    require(access.size()==(sheet=="board_aux"?1:6),"switch requirement count");
+    require(access.size()==(sheet=="board_aux"?1:5),"switch requirement count");
     std::set<std::string> seen;
     for(const auto& r:access) {
         require(seen.insert(r.string_value).second,"duplicate access member");

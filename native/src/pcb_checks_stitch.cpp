@@ -1,4 +1,5 @@
 #include "pcb_checks_internal.hpp"
+#include "schgen/land_spacing.hpp"
 #include <numeric>
 
 namespace schgen {
@@ -23,10 +24,10 @@ void network(const PcbCheckInput& input,const std::map<std::string,std::size_t>&
 void clearance(const PcbCheckInput& input,const std::vector<const PcbCheckCopper*>& vias,const std::vector<const PcbCheckCopper*>& segs,ReturnStitchResult& res){
     if(vias.empty()&&segs.empty())return;const auto& m=input.model();auto fail=[&](std::string s){res.ok=false;res.violations.push_back(std::move(s));};
     double inf=std::numeric_limits<double>::infinity();Box4 win{inf,inf,-inf,-inf};auto add=[&](double x,double y){win=united(win,{x,y,x,y});};for(auto v:vias)add(v->x,v->y);for(auto s:segs){add(s->x1,s->y1);add(s->x2,s->y2);}win={win.x0-3,win.y0-3,win.x1+3,win.y1+3};
-    struct Foreign{Box4 box;std::string side;double rule;std::string label;};std::vector<Foreign> foreign;std::vector<std::size_t> order(m.insts.size());std::iota(order.begin(),order.end(),0);std::stable_sort(order.begin(),order.end(),[&](auto a,auto b){return m.insts[a].ref<m.insts[b].ref;});
-    for(auto i:order){const auto& inst=m.insts[i];for(const auto& [pad,b]:input.geometry_at(i).pad_boxes){auto net=net_name(inst,pad);if(net=="GND")continue;auto cls=m.netclass_of.find(net);double rule=cls!=m.netclass_of.end()&&cls->second=="POWER"?0.2:0.15;if(b.x1<win.x0||b.x0>win.x1||b.y1<win.y0||b.y0>win.y1)continue;foreign.push_back({b,inst.side,rule,inst.ref+"."+pad});}}
+    struct Foreign{Box4 box;std::string side;double rule;std::string label,ref,net;};std::vector<Foreign> foreign;std::vector<std::size_t> order(m.insts.size());std::iota(order.begin(),order.end(),0);std::stable_sort(order.begin(),order.end(),[&](auto a,auto b){return m.insts[a].ref<m.insts[b].ref;});
+    for(auto i:order){const auto& inst=m.insts[i];for(const auto& [pad,b]:input.geometry_at(i).pad_boxes){auto net=net_name(inst,pad);if(net=="GND")continue;auto cls=m.netclass_of.find(net);double rule=cls!=m.netclass_of.end()&&cls->second=="POWER"?0.2:0.15;if(b.x1<win.x0||b.x0>win.x1||b.y1<win.y0||b.y0>win.y1)continue;foreign.push_back({b,inst.side,rule,inst.ref+"."+pad,inst.ref,net});}}
     for(auto v:vias)for(const auto& o:foreign){double d=point_box_dist(v->x,v->y,o.box);if(d<v->size/2+o.rule)fail("via "+position(*v)+" vs foreign "+o.label+": "+f(d,4)+" < "+f(v->size/2+o.rule,4));}
-    for(auto s:segs)for(const auto& o:foreign)if(o.side=="top"){double d=box_gap(segment_box(*s,false),o.box);if(d<s->width/2+o.rule)fail("segment "+s->role+" vs foreign "+o.label+": "+f(d,4)+" < "+f(s->width/2+o.rule,4));}
+    for(auto s:segs)for(const auto& o:foreign)if(o.side=="top"){double d=box_gap(segment_box(*s,false),o.box);const double rule=o.ref==s->conn?copper_pair_requirement(m,true,s->net_name,o.net):o.rule;if(d<s->width/2+rule)fail("segment "+s->role+" vs foreign "+o.label+": "+f(d,4)+" < "+f(s->width/2+rule,4));}
 }
 }
 ReturnStitchResult check_return_stitch(const PcbCheckInput& input,const ReturnPathResult& v1,const std::map<std::string,ReturnStitchClass>& triage,std::string_view interface_bytes,const ModuleReturnPath& pinned,const PcbEmittedBoard* emitted){

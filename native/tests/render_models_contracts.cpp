@@ -159,7 +159,7 @@ void live(const JsonNode& fixture,const fs::path& repo,const fs::path& scratch) 
     const auto ref=parse_json_file((repo/"native/tests/data/render_models/render_reference.json").string());
     const auto tiles_path=repo/"native/tests/data/render_models/raster_tiles.json";
     require(pcb_sha256(read(tiles_path))=="93b0bd80feb38dc6d6d5218832cba80270d9e852a161c25102c260a94751971e","immutable independent raster tiles"); const auto tiles=parse_json_file(tiles_path.string());
-    require(pcb_sha256(read(repo/"native/tests/data/render_models/render_reference.json"))=="235238bdd34dbb1d051ce7dc45f81d0a8c525367c63934b5a98f84979280f775","immutable render baseline");
+    require(pcb_sha256(read(repo/"native/tests/data/render_models/render_reference.json"))=="e4e5155d9cfcdb89fb887dff763ccfbd3ecb60a22320294c6030ee08a6b49907","immutable render baseline");
     for (const bool historical:{true,false}) for (const auto& b:field(ref,"boards").array_value) {
         const auto project_source=repo/str(b,"source");
         const auto source=historical?repo/"native/tests/data/pcb_emit"/(str(b,"name")+".kicad_pcb"):project_source;

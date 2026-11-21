@@ -1,4 +1,5 @@
 #include "schgen/board_inputs.hpp"
+#include "schgen/module_symbols.hpp"
 #include "sheet_roles_fixture.hpp"
 #include "schgen/catalog.hpp"
 #include "schgen/board_schematic.hpp"
@@ -119,7 +120,7 @@ int main(int argc, char** argv) {
             require(band != index.end(), "missing persistent reference band");
             schematic_inputs.push_back({c.circuit, band->second, std::nullopt});
         }
-        SymbolLibrary library(paths.repository_root);
+        SymbolLibrary library = project_symbol_library(paths);
         BoardSchematicOptions schematic_options;
         schematic_options.root_name = "Zynq_Carrier";
         schematic_options.sheet_subdir = "schematic";

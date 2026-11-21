@@ -1,5 +1,6 @@
 #pragma once
 #include "schgen/board_schematic.hpp"
+#include "schgen/module_symbols.hpp"
 #include "schgen/project.hpp"
 #include <algorithm>
 #include <iostream>
@@ -24,7 +25,7 @@ inline std::filesystem::path fresh_project_schematic(const ProjectPaths& paths,
         if(band==index.end())throw std::runtime_error("missing persistent sheet reference band");
         inputs.push_back({circuit.circuit,band->second,std::nullopt});
     }
-    SymbolLibrary library(paths.repository_root);
+    SymbolLibrary library = project_symbol_library(paths);
     BoardSchematicOptions options;
     options.root_name="Zynq_Carrier";options.sheet_subdir="schematic";options.reports_dir=scratch/"reports";
     const auto result=build_board_schematic(inputs,library,scratch/"generated",options);

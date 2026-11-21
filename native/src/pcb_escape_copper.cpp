@@ -1,10 +1,14 @@
 #include "pcb_escape_internal.hpp"
 #include "schgen/output_precision.hpp"
+#include "schgen/ladder_stub_rule.hpp"
+#include "schgen/land_spacing.hpp"
+#include <limits>
 #include <numeric>
 
 namespace schgen {
 namespace {
 using namespace pcb_escape;
+using ladder_stub_constants::track_foreign_clearance;
 using CopperObstacle = std::tuple<double, double, double, double, double, std::string>;
 using Hole = std::tuple<double, double, double, std::string>;
 struct Obstacles {
@@ -296,7 +300,7 @@ PcbEscapeCopperResult build_pcb_escape_copper(const PcbEscapeInput &input, Quant
             nets.push_back(v.net);
         }
         auto result = seat_band(members, obs.front, obs.back, obs.same, obs.holes, g.row_v,
-                                g.half_h, ladder(), clear(), .15, radius, lattice, ref, 0, counts);
+                                g.half_h, ladder(), clear(), track_foreign_clearance.value, radius, lattice, ref, 0, counts);
         meta.ledger.insert(meta.ledger.end(), result.ledger.begin(), result.ledger.end());
         if (result.vias.empty()) {
             auto audit = result.audit;
@@ -357,22 +361,64 @@ PcbEscapeCopperResult build_pcb_escape_copper(const PcbEscapeInput &input, Quant
         const auto grounds = ground_pads(inst, c, counts);
         if (grounds.empty())
             throw PcbEscapeError(ref + ": no GND attach options on the connector");
+        const double pad_width = 2 * c.contacts.half_w;
+        const double native_gap = c.contacts.pitch - pad_width;
+        if (!m.land_spacing) throw PcbEscapeError(ref + ": the board model carries no land-spacing policy for the GND ladder");
+        const auto &land = *m.land_spacing;
+        if (native_gap < land.fab_minimum)
+            throw PcbEscapeError(ref + ": the land pattern's own pad gap " + f(native_gap, 4) +
+                                 " mm is below the fabricator's minimum spacing " + f(land.fab_minimum, 4) + " mm");
         try {
-            segs = escape_ladder_plan(grounds, uv, c.contacts.pitch, .001, c.contacts.row_v, .30,
-                                      .25, .30, counts);
+            segs = escape_ladder_plan(grounds, uv, c.contacts.pitch, .001, c.contacts.row_v, pad_width,
+                                      pad_width, .30, counts);
         } catch (const std::runtime_error &e) {
             throw PcbEscapeError(ref + ": " + e.what());
         }
-        for (const auto &s : segs)
-            for (const auto &[x0, y0, x1, y1, rule, label] : obstacles.at(ref).front) {
-                auto d = seg_box_dist(s.ax, s.ay, s.bx, s.by, {x0, y0, x1, y1});
-                auto need = s.w / 2 + std::max(.15, rule);
-                if (d < need)
-                    throw PcbEscapeError(ref + ": ladder " + s.role + " " + point_repr(s.ax, s.ay) +
-                                         "-" + point_repr(s.bx, s.by) + " vs foreign " + label +
-                                         ": " + f(d, 4) + " < " + f(need, 4));
+        std::vector<LadderStubObstacle> nearby;
+        for (const auto &[x0, y0, x1, y1, rule, label] : obstacles.at(ref).front) {
+            const bool same = label.rfind(inst.ref + "(", 0) == 0;
+            const auto pad = label.substr(label.rfind('.') + 1);
+            const auto net = inst.pad_nets.find(pad);
+            nearby.push_back({x0, y0, x1, y1, rule, label, same && net != inst.pad_nets.end() ? net->second.second : std::string{}, same});
+        }
+        const auto land_requirement = [&](const std::string &net) {
+            return copper_pair_requirement(m, true, "GND", net);
+        };
+        LadderStubEvidence evidence;
+        evidence.connector = ref;
+        evidence.pad_width = pad_width;
+        evidence.native_gap = native_gap;
+        evidence.fab_minimum = land.fab_minimum;
+        evidence.nearest_same = evidence.nearest_other = evidence.narrowest = std::numeric_limits<double>::infinity();
+        std::vector<EscapeLadderSeg> kept;
+        for (auto s : segs) {
+            s.w = ladder_stub_width(s, pad_width, track_foreign_clearance.value, nearby);
+            if (ladder_stub_joins_pad(s)) evidence.narrowest = std::min(evidence.narrowest, s.w);
+            if (s.w < land.fab_minimum_track) {
+                evidence.dropped.push_back(s.role + " " + point_repr(s.ax, s.ay) + "-" + point_repr(s.bx, s.by) +
+                                           ": no width at or above the fabricator's minimum track keeps the net-class clearance");
+                continue;
             }
-        ladders[ref] = std::move(segs);
+            const auto violation = ladder_stub_violation(s, pad_width, native_gap, track_foreign_clearance.value, nearby, land_requirement, evidence);
+            if (!violation) {
+                kept.push_back(s);
+                ++evidence.kept;
+                continue;
+            }
+            const auto where = s.role + " " + point_repr(s.ax, s.ay) + "-" + point_repr(s.bx, s.by) + ": " + *violation;
+            if (!ladder_stub_joins_pad(s)) throw PcbEscapeError(ref + ": ladder " + where);
+            evidence.dropped.push_back(where);
+        }
+        SeatLedger rule_row;
+        rule_row.kind = "ladder_stub_rule";
+        rule_row.conn = ref;
+        rule_row.dia = pad_width;
+        rule_row.at = native_gap;
+        rule_row.worst = evidence.nearest_same;
+        rule_row.depth = static_cast<int>(evidence.dropped.size());
+        rule_row.members = {ladder_stub_report(evidence)};
+        meta.ledger.push_back(rule_row);
+        ladders[ref] = std::move(kept);
     }
     self_check(m, conns, by_conn, ladders, zone, counts);
     for (auto &[ref, vias] : by_conn) {

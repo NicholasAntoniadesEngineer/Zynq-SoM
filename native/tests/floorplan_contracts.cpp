@@ -91,7 +91,7 @@ FloorplanZoneShape shape(const J& n) {
 }
 SomOutline som(const J& n) {
     SomOutline out; out.w=num(n,"w"); out.h=num(n,"h");
-    for (const auto& j:field(n,"js").array_value) out.js.push_back({str(j,"ref"),num(j,"pcb_x"),num(j,"pcb_y"),num(j,"rot"),num(j,"x"),num(j,"y"),num(j,"w"),num(j,"h")});
+    for (const auto& j:field(n,"js").array_value) out.js.push_back({str(j,"ref"),num(j,"pcb_x"),num(j,"pcb_y"),num(j,"rot"),num(j,"x"),num(j,"y"),num(j,"w"),num(j,"h"),num(j,"w")<num(j,"h")?90.0:0.0,{},{}});
     return out;
 }
 PowerPolicy legacy;
@@ -829,9 +829,10 @@ void pack_behavior() {
     std::map<std::pair<bool,std::string>,FloorplanPoint> forward_edge_poses;
     for(const bool reversed:{false,true})for(const bool edge_target:{false,true})for(const bool shaped:{false,true})for(const std::string hint:{"E","N","S","W"}) {
         if(reversed&&!edge_target)continue; // Edge-to-interior authored terms.
-        auto constrained=in;constrained.roles=explicit_sheet_roles(std::vector<std::string>{"logic","som_j2"});SomJGeom jack;jack.ref="J2";jack.x=0;jack.y=5;jack.w=2;jack.h=10;
+        const double connector_reach=5,module_reach=som_seat_band+1,bound=edge_target?connector_reach:module_reach;
+        auto constrained=in;constrained.roles=explicit_sheet_roles(std::vector<std::string>{"logic","som_j2"});ModuleConnectorGeom jack;jack.ref="J2";jack.x=1;jack.y=10;jack.w=2;jack.h=10;
         constrained.som.js={jack};
-        FloorplanTerm term;term.kind="near_max";term.subject="logic";term.target_raw=edge_target?"connector":"som_j2";term.bound=5;
+        FloorplanTerm term;term.kind="near_max";term.subject="logic";term.target_raw=edge_target?"connector":"som_j2";term.bound=bound;
         if(reversed)std::swap(term.subject,term.target_raw);
         constrained.compose.index.hard={term};
         constrained.compose.metrics["logic"].pad_union={{"U1",0,0,10,10}};
@@ -857,12 +858,12 @@ void pack_behavior() {
                 "reversing a symmetric proximity term changes seating/refinement");
             else forward_edge_poses[key]=point;
         }
-        Box4 target{e.plan.som_x,e.plan.som_y+5,e.plan.som_x+2,e.plan.som_y+15};
+        Box4 target{e.plan.som_x+jack.x-jack.w/2,e.plan.som_y+jack.y-jack.h/2,e.plan.som_x+jack.x+jack.w/2,e.plan.som_y+jack.y+jack.h/2};
         if(edge_target) {
             const auto& edge=e.plan.edge_blocks.front();
             target={edge.x+2,edge.y+2,edge.x+8,edge.y+8};
         }
-        const auto domain=near_translation_domain(shaped?Box4{1,1,9,9}:Box4{0,0,10,10},target,5,occ_step);
+        const auto domain=near_translation_domain(shaped?Box4{1,1,9,9}:Box4{0,0,10,10},target,bound,occ_step);
         require(placed.shape_idx==(shaped?1:0),"hard-domain fixture lost selected-shape coverage");
         require(placed.x>=domain.x0&&placed.x<=domain.x1&&placed.y>=domain.y0&&placed.y<=domain.y1,
                 "side hint bypassed hard connector proximity during seating/refinement");
@@ -872,7 +873,7 @@ void pack_behavior() {
             const auto& moved_edge=e.plan.edge_blocks.front();
             const auto& moved=e.plan.interior_blocks.front();
             const Box4 moved_target{moved_edge.x+2,moved_edge.y+2,moved_edge.x+8,moved_edge.y+8};
-            const auto moved_domain=near_translation_domain(shaped?Box4{1,1,9,9}:Box4{0,0,10,10},moved_target,5,occ_step);
+            const auto moved_domain=near_translation_domain(shaped?Box4{1,1,9,9}:Box4{0,0,10,10},moved_target,connector_reach,occ_step);
             require(moved.x>=moved_domain.x0&&moved.x<=moved_domain.x1&&
                     moved.y>=moved_domain.y0&&moved.y<=moved_domain.y1,
                     "hard proximity cache escaped its attempt after moving an edge connector");
@@ -1271,8 +1272,8 @@ void frozen(const std::filesystem::path& dir,const std::string& name,bool geomet
         FloorplanBlock block;block.name="near_som_probe";block.zone="@som_j"+jack.ref.substr(1);
         const auto anchor=e.anchor_row(block,{});
         require(!anchor.zone_is_at_edge,"SoM target must not masquerade as a perimeter connector");
-        require(anchor.zone_ax==e.plan.som_x+jack.x+jack.w/2&&
-                anchor.zone_ay==e.plan.som_y+jack.y+jack.h/2,"explicit SoM connector anchor fell back to E");
+        require(anchor.zone_ax==e.plan.som_x+jack.x&&
+                anchor.zone_ay==e.plan.som_y+jack.y,"explicit SoM connector anchor fell back to E");
     }
     const auto geometry=parse_json_file((dir/(name+"_geometry.json")).string());
     for(const auto& row:geometry.array_value) {

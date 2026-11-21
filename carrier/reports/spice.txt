@@ -3,13 +3,11 @@ schgen spice / analytic spot-check gate
 
 engine: analytic (gate) + ngspice .op cross-check on 7 divider(s), 1% agreement enforced
 
-checks (16):
+checks (15):
   [PASS] bringup_rails: RC PL_BTN0 = 1 ms (limits 0.2 .. 20 ms; analytic)
          debounce/reset ramp: R7=10000R with C2=100n -> tau must mask >=0.2 ms bounce, release <20 ms
   [PASS] bringup_rails: RC PL_BTN1 = 1 ms (limits 0.2 .. 20 ms; analytic)
          debounce/reset ramp: R8=10000R with C3=100n -> tau must mask >=0.2 ms bounce, release <20 ms
-  [PASS] bringup_rails: RC STM32_NRST = 4 ms (limits 0.2 .. 20 ms; analytic)
-         debounce/reset ramp: STM32 internal ~40k NRST pull-up (contract) with C4=100n -> tau must mask >=0.2 ms bounce, release <20 ms
   [PASS] debug_boot: BOOT0 strap VIH = 3.09375 V (limits 2.31 .. 3.3 V; analytic)
          DIP closed: 3.3 V through R3=100R vs the SoM 1k5 pull-down (contract) -> must exceed STM32 VIH = 0.7*VDD = 2.31 V
   [PASS] hdmi_rx: divider HDMI_RX_5V_DET [bank abs-max at 5.25 V cable] = 3.15 V (limits  .. 3.465 V; analytic+ngspice)  ngspice=3.15
@@ -39,4 +37,4 @@ checks (16):
 
 errors: none
 
-SPICE GATE: PASS (16 checks)
+SPICE GATE: PASS (15 checks)

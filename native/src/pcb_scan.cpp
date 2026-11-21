@@ -898,34 +898,37 @@ Box4 footprint_bbox(const Sexpr& doc, int decimals) {
 }
 
 SomOutline extract_som_scan(const std::string& text, const std::vector<std::string>& connectors) {
+    if (connectors.empty()) {
+        throw std::runtime_error("extract_som_scan: the module interface names no connector");
+    }
+    struct RawPad {
+        std::string pin;
+        double x = 0.0, y = 0.0, rot = 0.0, w = 0.0, h = 0.0;
+    };
+    struct RawFootprint {
+        double x = 0.0, y = 0.0, rot = 0.0;
+        std::vector<RawPad> pads;
+    };
     std::vector<std::pair<double, double>> edge_pts;
-    std::unordered_map<std::string, std::tuple<double, double, double, double,
-                                               double>>
-        js_raw;
+    std::unordered_map<std::string, RawFootprint> js_raw;
     bool in_gr = false;
     std::vector<std::pair<double, double>> gr_pts;
     bool in_fp = false;
     bool have_fp_at = false;
-    double fp_x = 0.0;
-    double fp_y = 0.0;
-    double fp_rot = 0.0;
+    RawFootprint fp;
     std::string fp_ref;
-    std::vector<double> pad_xs;
-    std::vector<double> pad_ys;
     bool pad_pending = false;
     bool have_pad_at = false;
-    double pad_at_x = 0.0;
-    double pad_at_y = 0.0;
+    RawPad pad;
 
+    const auto wanted = [&](const std::string& ref) {
+        return std::find(connectors.begin(), connectors.end(), ref) != connectors.end();
+    };
     auto commit_fp = [&]() {
-        if (in_fp && std::find(connectors.begin(), connectors.end(), fp_ref) != connectors.end()
-            && have_fp_at && !pad_xs.empty()) {
-            const auto [xmin, xmax] = std::minmax_element(pad_xs.begin(),
-                                                          pad_xs.end());
-            const auto [ymin, ymax] = std::minmax_element(pad_ys.begin(),
-                                                          pad_ys.end());
-            js_raw[fp_ref] = std::make_tuple(fp_x, fp_y, fp_rot, *xmax - *xmin,
-                                             *ymax - *ymin);
+        if (in_fp && wanted(fp_ref) && have_fp_at && !fp.pads.empty()) {
+            if (!js_raw.emplace(fp_ref, fp).second) {
+                throw std::runtime_error("extract_som_scan: module connector " + fp_ref + " appears twice");
+            }
         }
         in_fp = false;
     };
@@ -970,8 +973,7 @@ SomOutline extract_som_scan(const std::string& text, const std::vector<std::stri
             in_fp = true;
             have_fp_at = false;
             fp_ref.clear();
-            pad_xs.clear();
-            pad_ys.clear();
+            fp = RawFootprint{};
             pad_pending = false;
             have_pad_at = false;
             continue;
@@ -984,9 +986,9 @@ SomOutline extract_som_scan(const std::string& text, const std::vector<std::stri
             if (vals.size() < 2) {
                 throw std::runtime_error("extract_som_scan: footprint at");
             }
-            fp_x = vals[0];
-            fp_y = vals[1];
-            fp_rot = vals.size() > 2 ? vals[2] : 0.0;
+            fp.x = vals[0];
+            fp.y = vals[1];
+            fp.rot = vals.size() > 2 ? vals[2] : 0.0;
             have_fp_at = true;
         } else if (s.rfind("(property \"Reference\"", 0) == 0) {
             std::vector<std::string> quotes;
@@ -1007,6 +1009,13 @@ SomOutline extract_som_scan(const std::string& text, const std::vector<std::stri
                 fp_ref = quotes[1];
             }
         } else if (s.rfind("(pad ", 0) == 0) {
+            const auto a = s.find('"');
+            const auto b = a == std::string::npos ? std::string::npos : s.find('"', a + 1);
+            if (b == std::string::npos) {
+                throw std::runtime_error("extract_som_scan: pad without a number");
+            }
+            pad = RawPad{};
+            pad.pin = s.substr(a + 1, b - a - 1);
             pad_pending = true;
             have_pad_at = false;
         } else if (pad_pending && s.rfind("(at ", 0) == 0) {
@@ -1014,29 +1023,24 @@ SomOutline extract_som_scan(const std::string& text, const std::vector<std::stri
             if (vals.size() < 2) {
                 throw std::runtime_error("extract_som_scan: pad at");
             }
-            pad_at_x = vals[0];
-            pad_at_y = vals[1];
+            pad.x = vals[0];
+            pad.y = vals[1];
+            pad.rot = vals.size() > 2 ? vals[2] : 0.0;
             have_pad_at = true;
         } else if (pad_pending && have_pad_at && s.rfind("(size ", 0) == 0) {
             const auto vals = scan_floats(s);
             if (vals.size() < 2) {
                 throw std::runtime_error("extract_som_scan: pad size");
             }
-            pad_xs.push_back(pad_at_x - vals[0] / 2.0);
-            pad_xs.push_back(pad_at_x + vals[0] / 2.0);
-            pad_ys.push_back(pad_at_y - vals[1] / 2.0);
-            pad_ys.push_back(pad_at_y + vals[1] / 2.0);
+            pad.w = vals[0];
+            pad.h = vals[1];
+            fp.pads.push_back(pad);
             pad_pending = false;
         }
     }
     commit_fp();
     if (edge_pts.empty()) {
         throw std::runtime_error("extract_som_scan: Edge.Cuts required");
-    }
-    for (const std::string& connector : connectors) {
-        if (js_raw.find(connector) == js_raw.end()) {
-            throw std::runtime_error("extract_som_scan: module connector " + connector + " required");
-        }
     }
     double x0 = edge_pts[0].first;
     double y0 = edge_pts[0].second;
@@ -1048,31 +1052,43 @@ SomOutline extract_som_scan(const std::string& text, const std::vector<std::stri
         x1 = std::max(x1, p.first);
         y1 = std::max(y1, p.second);
     }
-    const double w = x1 - x0;
-    const double h = y1 - y0;
     SomOutline out;
-    out.w = py_round(w, 3);
-    out.h = py_round(h, 3);
-    for (const std::string& ref : connectors) {
-        const auto& row = js_raw[ref];
-        const double px = std::get<0>(row);
-        const double py = std::get<1>(row);
-        const double rot = std::get<2>(row);
-        const double pw = std::get<3>(row);
-        const double ph = std::get<4>(row);
-        const bool swap = std::fmod(rot, 180.0) == 90.0;
-        const double ew = swap ? ph : pw;
-        const double eh = swap ? pw : ph;
-        SomJGeom j;
+    out.w = py_round(x1 - x0, 3);
+    out.h = py_round(y1 - y0, 3);
+    for (const auto& ref : connectors) {
+        const auto found = js_raw.find(ref);
+        if (found == js_raw.end()) {
+            throw std::runtime_error("extract_som_scan: module connector " + ref + " has no footprint with pads on the module board");
+        }
+        const RawFootprint& raw = found->second;
+        ModuleConnectorGeom j;
         j.ref = ref;
-        j.pcb_x = px;
-        j.pcb_y = py;
-        j.rot = rot;
-        j.x = py_round(w - (px - x0), 3);
-        j.y = py_round(py - y0, 3);
-        j.w = py_round(ew, 3);
-        j.h = py_round(eh, 3);
-        out.js.push_back(j);
+        j.pcb_x = raw.x;
+        j.pcb_y = raw.y;
+        j.rot = raw.rot;
+        j.x = raw.x - x0;
+        j.y = raw.y - y0;
+        double lx = 0.0, ly = 0.0, hx = 0.0, hy = 0.0;
+        bool first = true;
+        for (const auto& row : raw.pads) {
+            const auto [dx, dy] = turn_point(row.x, row.y, -raw.rot);
+            const auto [ex, ey] = pad_half_extent(row.w, row.h, row.rot);
+            SomPad placed;
+            placed.pin = row.pin;
+            placed.x = raw.x + dx - x0;
+            placed.y = raw.y + dy - y0;
+            placed.w = ex + ex;
+            placed.h = ey + ey;
+            lx = first ? placed.x - ex : std::min(lx, placed.x - ex);
+            hx = first ? placed.x + ex : std::max(hx, placed.x + ex);
+            ly = first ? placed.y - ey : std::min(ly, placed.y - ey);
+            hy = first ? placed.y + ey : std::max(hy, placed.y + ey);
+            first = false;
+            j.pads.push_back(std::move(placed));
+        }
+        j.w = py_round(hx - lx, 3);
+        j.h = py_round(hy - ly, 3);
+        out.js.push_back(std::move(j));
     }
     return out;
 }

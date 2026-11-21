@@ -2,7 +2,9 @@
 #include "schgen/authoring.hpp"
 #include "board_aux_frozen_identity.hpp"
 #include <algorithm>
+#include <iterator>
 #include <stdexcept>
+#include <utility>
 
 // Test-only bridge to immutable migration oracles. Validate the reviewed live
 // identity BEFORE projecting only enumerated reviewed changes; all other IR stays visible
@@ -11,8 +13,104 @@ namespace historical_input_contracts {
 inline void require(bool ok, const std::string& why) {
     if (!ok) throw std::runtime_error(why);
 }
+inline schgen::CircuitPartIr& unique_part(schgen::CircuitSheetIr& sheet, const std::string& ref) {
+    require(std::count_if(sheet.parts.begin(), sheet.parts.end(), [&](const auto& p) { return p.ref == ref; }) == 1,
+            "unique reviewed part " + sheet.name + "." + ref);
+    return *std::find_if(sheet.parts.begin(), sheet.parts.end(), [&](const auto& p) { return p.ref == ref; });
+}
+inline std::string lcsc_code(const schgen::CircuitPartIr& part) {
+    require(std::count_if(part.fields.begin(), part.fields.end(), [](const auto& f) { return f.key == "LCSC"; }) == 1,
+            "unique reviewed LCSC " + part.ref);
+    return std::find_if(part.fields.begin(), part.fields.end(), [](const auto& f) { return f.key == "LCSC"; })->value;
+}
+inline void require_capacitor(const schgen::CircuitPartIr& part, const std::string& value,
+                              const std::string& footprint, const std::string& code) {
+    require(part.lib_id == "Device:C" && part.value == value && part.footprint == "Capacitor_SMD:" + footprint &&
+            lcsc_code(part) == code, "reviewed capacitor identity " + part.ref);
+}
+inline void restore_capacitor(schgen::CircuitSheetIr& live, const std::string& ref) {
+    auto& part = unique_part(live, ref);
+    require_capacitor(part, "10u", "C_0805_2012Metric", "C15850");
+    part.value = "100n";
+    part.footprint = "Capacitor_SMD:C_0603_1608Metric";
+    for (auto& f : part.fields) if (f.key == "LCSC") f.value = "C14663";
+}
+inline void drop_pin(schgen::CircuitSheetIr& live, const std::string& net_name, const std::string& ref, const std::string& pin) {
+    require(std::count_if(live.nets.begin(), live.nets.end(), [&](const auto& n) { return n.name == net_name; }) == 1,
+            "unique reviewed net " + net_name);
+    auto& net = *std::find_if(live.nets.begin(), live.nets.end(), [&](const auto& n) { return n.name == net_name; });
+    require(!net.pins.empty() && net.pins.back().ref == ref && net.pins.back().pin == pin,
+            "reviewed trailing pin " + ref + "." + pin + " on " + net_name);
+    net.pins.pop_back();
+}
+inline void drop_clamp_capacitor(schgen::CircuitSheetIr& live, const std::string& ref,
+                                 const std::string& supply_net) {
+    require_capacitor(unique_part(live, ref), "100n", "C_0603_1608Metric", "C14663");
+    drop_pin(live, supply_net, ref, "1");
+    drop_pin(live, "GND", ref, "2");
+    live.parts.erase(std::find_if(live.parts.begin(), live.parts.end(), [&](const auto& p) { return p.ref == ref; }));
+}
+inline void restore_reset_button(schgen::CircuitSheetIr& live) {
+    require(std::none_of(live.parts.begin(), live.parts.end(), [](const auto& p) { return p.ref == "SW5" || p.ref == "C4"; }),
+            "reviewed reset button already absent");
+    const auto sw4 = unique_part(live, "SW4");
+    const auto c3 = unique_part(live, "C3");
+    require_capacitor(c3, "100n", "C_0603_1608Metric", "C14663");
+    auto sw5 = sw4; sw5.ref = "SW5";
+    auto c4 = c3; c4.ref = "C4";
+    const auto r9 = std::find_if(live.parts.begin(), live.parts.end(), [](const auto& p) { return p.ref == "R9"; });
+    require(r9 != live.parts.end() && r9 != live.parts.begin() && std::prev(r9)->ref == "R8", "reviewed reset button slot");
+    const auto slot = live.parts.insert(r9, sw5);
+    live.parts.insert(std::next(slot), c4);
+    auto gnd = std::find_if(live.nets.begin(), live.nets.end(), [](const auto& n) { return n.name == "GND"; });
+    require(gnd != live.nets.end(), "reviewed ground net");
+    const auto c3_ground = std::find_if(gnd->pins.begin(), gnd->pins.end(), [](const auto& p) { return p.ref == "C3" && p.pin == "2"; });
+    require(c3_ground != gnd->pins.end(), "reviewed debounce ground pin");
+    gnd->pins.insert(std::next(c3_ground), {{"SW5", "3"}, {"SW5", "4"}, {"C4", "2"}});
+    const auto before = std::find_if(live.nets.begin(), live.nets.end(), [](const auto& n) { return n.name == "PUDC_34"; });
+    require(before != live.nets.end() && before != live.nets.begin() && std::prev(before)->name == "PL_BTN1" &&
+            std::none_of(live.nets.begin(), live.nets.end(), [](const auto& n) { return n.name == "STM32_NRST"; }),
+            "reviewed reset net slot");
+    schgen::CircuitNetIr reset;
+    reset.name = "STM32_NRST"; reset.net_class = "port"; reset.pins = {{"SW5", "1"}, {"SW5", "2"}, {"C4", "1"}};
+    live.nets.insert(before, reset);
+}
+inline void restore_module_connector(schgen::CircuitSheetIr& live, const std::string& ref) {
+    auto& part = unique_part(live, ref);
+    require(part.lib_id == "DF40C-100DP-0.4V_51:DF40C-100DP-0.4V_51_module_mate" &&
+            part.footprint == "Mylibrary:HRS_DF40C-100DP-0.4V_51_" && lcsc_code(part) == "C531031",
+            "reviewed module connector identity " + live.name + "." + ref);
+    part.lib_id = "DF40C-100DP-0.4V_51:DF40C-100DP-0.4V_51";
+    part.footprint = "DF40C-100DP-0.4V_51:DF40C-100DP-0.4V_51";
+    const std::vector<std::pair<std::string, std::string>> pads{{"S4", "101"}, {"S3", "102"}, {"S2", "103"}, {"S1", "104"}};
+    for (const auto& [mate, symbol] : pads) {
+        require(std::count(part.pin_numbers.begin(), part.pin_numbers.end(), mate) == 1, "reviewed mate pad " + ref + "." + mate);
+        *std::find(part.pin_numbers.begin(), part.pin_numbers.end(), mate) = symbol;
+        for (auto& name : part.pin_names)
+            for (auto& number : name.numbers)
+                if (number == mate) number = symbol;
+        for (auto& pin : live.nc)
+            if (pin.ref == ref && pin.pin == mate) pin.pin = symbol;
+    }
+}
+inline schgen::CircuitSheetIr project_reviewed_circuit(schgen::CircuitSheetIr live, const std::string& project_name) {
+    if (live.name == "som_j1") restore_module_connector(live, "J1");
+    if (live.name == "som_j2") restore_module_connector(live, "J2");
+    if (live.name == "som_j3") restore_module_connector(live, "J3");
+    if (project_name == "carrier" && live.name == "bringup_modules") {
+        for (const auto* ref : {"C1", "C3", "C5", "C7", "C9", "C11", "C13", "C15", "C17", "C19", "C4", "C12", "C16", "C18"})
+            restore_capacitor(live, ref);
+    }
+    if (project_name == "carrier" && live.name == "motor_pwm") restore_capacitor(live, "C2");
+    if (project_name == "carrier" && live.name == "board_qwiic") drop_clamp_capacitor(live, "C1", "+3V3");
+    if (project_name == "carrier" && live.name == "lcd") drop_clamp_capacitor(live, "C6", "+3V3");
+    if (live.name == "pd_input") drop_clamp_capacitor(live, "C4", "+3V3_SC");
+    if (project_name == "carrier" && live.name == "bringup_rails") restore_reset_button(live);
+    return live;
+}
 inline schgen::CircuitSheetIr project(schgen::CircuitSheetIr live,
                                      const std::string& project_name) {
+    live = project_reviewed_circuit(std::move(live), project_name);
     if (project_name != "carrier" || live.name != "board_aux") return live;
     require(std::count_if(live.parts.begin(), live.parts.end(), [](const auto& p) {
         return p.ref == "C1"; }) == 1, "unique reviewed board_aux C1");
@@ -60,6 +158,17 @@ template<class Matches> void check(const schgen::CircuitSheetIr& live,
                                   const std::string& project_name, Matches matches) {
     require(matches(project(live, project_name)), project_name + ":" + live.name +
         " differs beyond reviewed capacitor/reference-topology deltas from immutable historical input");
+    if (!schgen::authoring_json_equal(schgen::authored_circuit_json(project_reviewed_circuit(live, project_name)),
+                                      schgen::authored_circuit_json(live))) {
+        bool refused = false;
+        try { (void)project_reviewed_circuit(project_reviewed_circuit(live, project_name), project_name); }
+        catch (const std::runtime_error&) { refused = true; }
+        require(refused, "reviewed projection accepted an already-historical sheet");
+        auto drift = live; drift.title += " drift";
+        require(!matches(project(drift, project_name)), "reviewed projection hid unrelated drift");
+        auto stray = live; stray.parts.push_back({"R9999", "Device:R", "1k", "Resistor_SMD:R_0603_1608Metric", {}, {}, {}});
+        require(!matches(project(stray, project_name)), "reviewed projection hid an added part");
+    }
     if (project_name != "carrier" || live.name != "board_aux") return;
     auto rejects = [&](const auto& changed) {
         bool rejected = false;

@@ -80,6 +80,8 @@ struct ModuleDefinition {
     ModuleReturnPath return_path;
     std::vector<ModuleTriageRule> escape_triage;
     std::vector<std::string> do_not_load_straps;
+    std::string mate_symbol;
+    std::map<std::string, std::string> mate_pad_names;
     std::vector<PowerSupply> supplies;
     std::vector<std::string> regulated_rails;
     std::string regulated_rails_basis;

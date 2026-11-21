@@ -1,4 +1,5 @@
 #include "schgen/geometry_cli.hpp"
+#include "schgen/module_symbols.hpp"
 #include "schgen/board_pipeline.hpp"
 #include "schgen/catalog.hpp"
 
@@ -180,7 +181,7 @@ PcbPlacementInput load_geometry_board_inputs(const ProjectPaths& paths, const Ne
         inputs.push_back({sheet, band->second, std::nullopt});
     }
     Scratch scratch;
-    SymbolLibrary library(paths.repository_root); BoardSchematicOptions options;
+    SymbolLibrary library = project_symbol_library(paths); BoardSchematicOptions options;
     options.root_name = paths.file_stem; options.extraction = extraction; options.reports_dir = scratch.path / "reports";
     const auto board = build_board_schematic(inputs, library, scratch.path, options);
     if (!board.ok()) throw ProjectError("geometry schematic gate failed: " + board.report);

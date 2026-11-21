@@ -32,7 +32,7 @@ waivers — author-declared, verbatim (8):
   RESET CP2102N_RST_N (on uart_bridge): open-drain RST: 1k pull-up only, internal POR; no RC cap
   RESET DBG_RST_N (on usb_jtag): CH347 RST#: 10k pull-up + the chip's built-in power-on reset (DS 5.1); no external RC cap fitted by design
   RESET LCD_CTP_RST (on lcd): GPIO-driven reset, held by 100k pull-down until PL releases
-  RESET STM32_NRST (on bringup_rails): internal-pull whitelist (part provides its own pull; external RC optional)
+  RESET STM32_NRST (on debug_boot): internal-pull whitelist (part provides its own pull; external RC optional)
   RESET WATCHDOG_RST_N (on board_services): TPS3823 RESET# is a push-pull supervisor OUTPUT driving a PL bank-33 input as a firmware-mediated event (not a POR line): no pull needed (push-pull; PL internal pull holds it when +3V3_AUX is OFF), no cap by design (logic-event edge)
 
 DESIGN RULES: PASS (0 findings, 8 waived)

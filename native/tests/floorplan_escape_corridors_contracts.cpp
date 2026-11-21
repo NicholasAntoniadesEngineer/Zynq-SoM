@@ -53,17 +53,33 @@ void check(const std::filesystem::path& root,const std::string& project){
     require(base.size()==6,"all three connector rows must be reserved");
     const auto source=parse_json_file((root/"native/tests/data/pcb_escape"/(project+"_escape_block.json")).string());
     const auto& expected=*object_field(*object_field(source,"t1_constraints"),"corridors");
-    for(const auto& [name,b]:base){
+    std::map<std::string,FloorplanPoint> frozen_origin;
+    for(const auto& inst:object_field(fixture.model,"insts")->array_value){
+        const auto sheet=object_field(inst,"sheet")->string_value;
+        if(sheet.rfind("som_j",0)!=0)continue;
+        require(frozen_origin.emplace("J"+sheet.substr(5),FloorplanPoint{object_field(inst,"x")->number_value,
+            object_field(inst,"y")->number_value}).second,"one frozen module connector per sheet");
+    }
+    require(frozen_origin.size()==3,"frozen capture carries all three module connectors");
+    for(std::size_t i=0;i<base.size();++i){
+        const auto& [name,b]=base[i];
         const auto* row=object_field(expected,name.substr(7));require(row,"missing independent frozen corridor");
         const auto& a=object_field(*row,"rect")->array_value;
-        same(b,{a[0].number_value-25,a[1].number_value-25,a[2].number_value-25,a[3].number_value-25});
+        const auto connector=name.substr(7,name.find(':',7)-7);
+        const auto found=frozen_origin.find(connector);
+        require(found!=frozen_origin.end(),"frozen capture lacks module connector "+connector);
+        const auto& live=engine.escape_rows[i];
+        require(live.name==name,"corridor rows follow the prepared escape rows");
+        const double dx=found->second.first-(25+engine.plan.som_x+live.offset.first);
+        const double dy=found->second.second-(25+engine.plan.som_y+live.offset.second);
+        same(b,{a[0].number_value-25-dx,a[1].number_value-25-dy,a[2].number_value-25-dx,a[3].number_value-25-dy});
     }
     const auto count=[](const auto& m,const char* k){const auto it=m.find(k);return it==m.end()?std::size_t{0}:it->second;};
     const auto& after=engine.plan.accounting.quantization_engagements;
     require(count(after,"escape_corridor_precision4dp")-count(before,"escape_corridor_precision4dp")==24,
             "current corridor precision work was not accounted");
-    require(count(after,"fixed_part_grid")-count(before,"fixed_part_grid")==12,
-            "current connector snapping work was not accounted");
+    require(count(after,"fixed_part_grid")-count(before,"fixed_part_grid")==0,
+            "module connectors are posed with the rigid module and never snapped to the part grid");
     // Same prepared rows, different current outlines/SoM positions: no stale
     // absolute rectangle or last-run translation may survive.
     const auto old_x=engine.plan.som_x,old_y=engine.plan.som_y;
@@ -72,11 +88,8 @@ void check(const std::filesystem::path& root,const std::string& project){
         const auto moved=engine.current_escape_corridors();
         require(moved.size()==base.size(),"changing pose lost corridor rows");
         for(std::size_t i=0;i<moved.size();++i){
-            const auto& row=engine.escape_rows[i];
-            const double dx=fixed_part_grid(25+old_x+delta.first+row.offset.first)-fixed_part_grid(25+old_x+row.offset.first);
-            const double dy=fixed_part_grid(25+old_y+delta.second+row.offset.second)-fixed_part_grid(25+old_y+row.offset.second);
             const auto& b=base[i].second;
-            same(moved[i].second,{b.x0+dx,b.y0+dy,b.x1+dx,b.y1+dy});
+            same(moved[i].second,{b.x0+delta.first,b.y0+delta.second,b.x1+delta.first,b.y1+delta.second});
         }
     }
     engine.plan.som_x=old_x;engine.plan.som_y=old_y;

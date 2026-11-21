@@ -56,8 +56,14 @@ the smallest verified-Basic RSET point, 13k = 523 mA.
 **Enable.** Each `EN_<module>` is driven push-pull at 3.3 V by its `bringup_en`
 AND-cell, so EN never floats.
 
-**Decoupling.** 100 nF on each switch IN and OUT (module subsystems own their
-own bulk).
+**Decoupling.** 10 µF (0805, C15850) on each switch IN, as the Silergy SY6280/A
+application note (Rev1.0C, p.2 pin table and p.7 Supply Filter Capacitor)
+recommends against hot-plug droop and short-circuit input ringing. The OUT pin
+is also specified with 10 µF (p.2 pin table, p.4 test conditions): the four
+gated rails whose module sheets carry less than 10 µF on the net (HDMI RX 3V3,
+USB 5V, USER_LED 3V3, HDMI TX 5V) take a 10 µF (0805, C15850) OUT capacitor;
+the other six already carry at least 10 µF on the net and keep a 100 nF OUT
+bypass (module subsystems own their own bulk).
 
 **Status LEDs.** A KT-0603R red LED on each gated output: 330R series on the
 3.3 V rails (~3.9 mA), 1k on the 5 V outputs (~3 mA). A faulting module's LED
@@ -85,7 +91,9 @@ power-tree budget (~4 mA on the 3.3 V rails, ~3 mA on the 5 V rails).
 | LED series R | 330R / 1k | `Device:R` 0603 | C23138 / C21190 |
 | SD bleed | 10k | `Device:R` 0603 | C25804 |
 | D (per gate) | red | `Device:LED` 0603 (KT-0603R) | C2286 |
-| C (IN + OUT per gate) | 100n | `Device:C` 0603 | C14663 |
+| C (IN per gate) | 10u | `Device:C` 0805 | C15850 |
+| C (OUT, rails below 10 µF) | 10u | `Device:C` 0805 | C15850 |
+| C (OUT, other rails) | 100n | `Device:C` 0603 | C14663 |
 
 ## Build & test
 

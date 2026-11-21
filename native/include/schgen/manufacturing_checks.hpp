@@ -13,6 +13,10 @@ struct ManufacturingFabProfile {
     std::string source;
 };
 const ManufacturingFabProfile& manufacturing_jlcpcb_multilayer();
+struct ManufacturingMinimums {
+    double min_trace_mm, min_clearance_mm;
+};
+ManufacturingMinimums manufacturing_jlcpcb_minimums();
 struct ManufacturingBoardDemand {
     std::optional<double> min_trace_mm, min_clearance_mm, min_drill_mm,
         min_via_dia_mm, min_via_annular_mm, min_hole_to_hole_mm, pro_via_annular_mm;

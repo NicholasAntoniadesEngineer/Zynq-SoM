@@ -5,7 +5,7 @@ bring-up. The bring-up contract is "DIP is the master, STM32 is a veto": the
 rail/module DIP switches request enables, the TCA9535 I2C expander lets the
 STM32 system controller veto them, and the EN AND-gate cells (on `bringup_en` /
 `bringup_en_modules`) consume both. This sheet carries the masters, the veto
-expander, the user/reset buttons, and the config straps that feed those cells.
+expander, the user buttons, and the config straps that feed those cells.
 
 This is a carrier-local subsystem: it uses real carrier net names directly, has
 no abstract `bind` map, and is foldered only for 4-artifact parity with the
@@ -26,7 +26,6 @@ Carrier nets driven by `circuit()`:
 | `SC_INT_N` | PORT — single SC interrupt, wire-OR of the TCA9535 and FUSB302 INT. |
 | `PMON_ALERT_N`, `USBOTG_FLT_N`, `PD_FLT_N` | PORT — telemetry flags read in as expander inputs. |
 | `PL_BTN0` / `PL_BTN1` | PORT — user buttons to PL bank-33 pins. |
-| `STM32_NRST` | PORT — reset button (J3.47). |
 | `PUDC_34` | PORT — bank-34 PUDC config strap (J3.39). |
 
 Pull-ups / straps this sheet owns:
@@ -86,8 +85,7 @@ pulls (unlike the PCA9555), so every floating port is resolved explicitly:
 **Buttons (TS-1187A-B-A-B).** Pads 1/2 and 3/4 are internally bridged pairs.
 Two user buttons drive `PL_BTN0` / `PL_BTN1` to PL bank-33 pins: active-LOW with
 a 10k pull-up to `+3V3` (the PL bank VCCO) and a 100n cap across the contacts for
-RC debounce. The reset button drives `STM32_NRST` (J3.47) with a 100n cap; the
-STM32's internal ~40k pull-up means no external resistor is needed.
+RC debounce. The system-controller reset button is SW2 on `debug_boot`; this sheet has none.
 
 **PUDC strap.** `PUDC_34` (bank-34 IO_L3P_PUDC, J3.39) has no resistor on the
 SoM, so a 10k to GND is added here. PUDC LOW during config enables the Zynq
@@ -108,9 +106,9 @@ testpoints, as this sheet owns the bus pull-ups.
 | SW2 | — | DSHP08TSGER | — |
 | SW6 | — | DSHP04TSGER | — |
 | U1 | — | TCA9535PWR | — |
-| SW3, SW4, SW5 | — | TS-1187A-B-A-B | — |
+| SW3, SW4 | — | TS-1187A-B-A-B | — |
 | C1 | 100n | C decouple (U1.VCC) | C14663 |
-| C (debounce ×3) | 100n | Device:C | C14663 |
+| C (debounce ×2) | 100n | Device:C | C14663 |
 | R (I2C pulls ×2) | 4k7 | Device:R | C23162 |
 | R (INT pull) | 10k | Device:R | C25804 |
 | R (button pulls ×2) | 10k | Device:R | C25804 |
@@ -123,7 +121,7 @@ project part library via `use_part`.
 ## Build & test
 
 `test_bringup_rails.py` checks model completeness (including the `SW6.4`/`SW6.6`
-NCs), rail/port classes, the design-rule slice (I2C pull-up, NRST RC, no
+NCs), rail/port classes, the design-rule slice (I2C pull-up, no
 floating strap), the part/SPICE slices, and the surface invariants this sheet
 owns: three DIPs, the TCA9535 @0x20, the 4k7 I2C pulls, the single 10k INT
 pull-up, the P10/P16/P17 don't-float pulldowns, the 10k button pulls, the PUDC

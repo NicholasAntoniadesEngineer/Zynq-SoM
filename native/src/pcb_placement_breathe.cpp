@@ -4,6 +4,7 @@
 #include "schgen/precision_ops.hpp"
 
 namespace schgen::pcb_placement {
+using quantization_policy::kPageOriginMm;
 void Placer::breathe(const std::string &phase) {
     using board_decision_policy::breathe_epsilon_mm;
     using board_decision_policy::breathe_step_mm;
@@ -94,8 +95,8 @@ void Placer::breathe(const std::string &phase) {
     // Retain the accepted default layout until this path has full-board proof.
     const auto grid_mode = ctx.in.floorplan.compact_search
         ? BreatheGrid::Mode::Counted : BreatheGrid::Mode::Assignment;
-    BreatheGrid top(width, height, .25, 25, 25, &ctx.quantization, grid_mode),
-        bottom(width, height, .25, 25, 25, &ctx.quantization, grid_mode);
+    BreatheGrid top(width, height, .25, kPageOriginMm, kPageOriginMm, &ctx.quantization, grid_mode),
+        bottom(width, height, .25, kPageOriginMm, kPageOriginMm, &ctx.quantization, grid_mode);
     auto grid = [&](const std::string &r) -> BreatheGrid & {
         return side(r) == "bottom" ? bottom : top;
     };
@@ -117,12 +118,12 @@ void Placer::breathe(const std::string &phase) {
         if (compact && through.count(r))
             opposite_grid(r).stamp(grow_rect(b, pc), value, &ctx.quantization);
     };
-    auto page_keepout = offset_rect(keepout, 25, 25);
+    auto page_keepout = offset_rect(keepout, kPageOriginMm, kPageOriginMm);
     for (auto *g : {&top, &bottom}) {
-        g->stamp({25, 25, 25 + width, 25 + .6}, 1, &ctx.quantization);
-        g->stamp({25, 25 + height - .6, 25 + width, 25 + height}, 1, &ctx.quantization);
-        g->stamp({25, 25, 25 + .6, 25 + height}, 1, &ctx.quantization);
-        g->stamp({25 + width - .6, 25, 25 + width, 25 + height}, 1, &ctx.quantization);
+        g->stamp({kPageOriginMm, kPageOriginMm, kPageOriginMm + width, kPageOriginMm + .6}, 1, &ctx.quantization);
+        g->stamp({kPageOriginMm, kPageOriginMm + height - .6, kPageOriginMm + width, kPageOriginMm + height}, 1, &ctx.quantization);
+        g->stamp({kPageOriginMm, kPageOriginMm, kPageOriginMm + .6, kPageOriginMm + height}, 1, &ctx.quantization);
+        g->stamp({kPageOriginMm + width - .6, kPageOriginMm, kPageOriginMm + width, kPageOriginMm + height}, 1, &ctx.quantization);
         g->stamp(page_keepout, 1, &ctx.quantization);
         g->stamp(grow_rect(page_keepout, 2), 1, &ctx.quantization);
         for (const auto &[r, j] : som_refs) {
@@ -312,8 +313,8 @@ void Placer::breathe(const std::string &phase) {
     auto snap = [&](const Group &g, FloorplanPoint delta) {
         auto p = pos.at(g.anchor);
         return FloorplanPoint{
-            delta_precision(ctx.fixed_grid(25 + p.first + delta.first, "breathe_anchor_grid") - 25 - p.first),
-            delta_precision(ctx.fixed_grid(25 + p.second + delta.second, "breathe_anchor_grid") - 25 - p.second)};
+            delta_precision(ctx.fixed_grid(kPageOriginMm + p.first + delta.first, "breathe_anchor_grid") - kPageOriginMm - p.first),
+            delta_precision(ctx.fixed_grid(kPageOriginMm + p.second + delta.second, "breathe_anchor_grid") - kPageOriginMm - p.second)};
     };
     // A raster is a search accelerator, not the physical clearance oracle.
     // In assignment mode removing one group can erase a shared obstacle cell;

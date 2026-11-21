@@ -1,1 +1,1 @@
-{"schema":"schgen.subsystem-layout/1","name":"board_qwiic","serves":[{"part":"U1","role":"protect","pin":"J1.3"}],"free":[]}
+{"schema":"schgen.subsystem-layout/1","name":"board_qwiic","serves":[{"part":"U1","role":"protect","pin":"J1.3"},{"part":"C1","role":"bypass","pin":"U1.5"}],"free":[]}

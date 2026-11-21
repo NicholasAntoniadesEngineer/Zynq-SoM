@@ -24,6 +24,7 @@
 *   R1 1.5R                              ISET sense       (LCD_VLED_N -> GND)
 *   C3 100n + C4 10u                     panel VDD bypass (+VDD_LCD   -> GND)
 *   R2 4k7 + R3 4k7                      touch I2C pull-ups (+VDD_LCD -> TP_SDA/SCL)
+*   C6 100n                              touch-ESD clamp ref (VDD_TP_CLAMP -> GND)
 *   R6 10k                               DISP pull-up     (+VDD_LCD   -> LCD_DISP)
 *   R5 100k                              TP_RST pull-down (TP_RST     -> GND)
 *   R4 100k                              BL_PWM pull-down (BL_PWM     -> GND)
@@ -52,6 +53,9 @@ C4 VDD_LCD GND 10u
 R2 VDD_LCD TP_SDA 4k7
 R3 VDD_LCD TP_SCL 4k7
 R6 VDD_LCD LCD_DISP 10k
+
+* USBLC6-2 VBUS (U2.5) clamp-reference bypass, ST USBLC6-2 Rev 2 fig.7
+C6 VDD_TP_CLAMP GND 100n
 
 * default pulls: touch reset held low, backlight enable off
 R5 TP_RST GND 100k

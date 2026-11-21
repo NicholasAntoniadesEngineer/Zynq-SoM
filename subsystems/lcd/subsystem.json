@@ -95,6 +95,13 @@
       "fields": {"LCSC": "C15849"}
     },
     {
+      "ref": "C6",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {
       "ref": "R4",
       "symbol": "Device:R",
       "value": "100k",
@@ -284,11 +291,11 @@
     },
     {
       "name": "+VDD_TP_CLAMP",
-      "pins": ["U2.5"]
+      "pins": ["U2.5", "C6.1"]
     },
     {
       "name": "GND",
-      "pins": ["U2.2", "R5.2", "J1.3", "J1.29", "J1.36", "C3.2", "C4.2", "U1.2", "C1.2", "C2.2", "R1.2", "C5.2", "R4.2"]
+      "pins": ["U2.2", "R5.2", "J1.3", "J1.29", "J1.36", "C3.2", "C4.2", "U1.2", "C1.2", "C2.2", "R1.2", "C5.2", "R4.2", "C6.2"]
     },
     {
       "name": "TP_RST",
@@ -395,6 +402,7 @@
     {"part": "C3", "role": "bypass", "pin": "J1.4"},
     {"part": "C4", "role": "reservoir", "pin": "J1.4"},
     {"part": "C5", "role": "bypass", "pin": "U1.6"},
+    {"part": "C6", "role": "bypass", "pin": "U2.5"},
     {"part": "D1", "role": "switching", "pin": "U1.1"},
     {"part": "L1", "role": "switching", "pin": "U1.1"},
     {"part": "R1", "role": "sense", "pin": "U1.3"},

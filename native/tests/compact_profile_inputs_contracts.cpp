@@ -1,6 +1,7 @@
 // Exercise the diagnostic's actual loader, not a second copy of its logic.
 #define main compact_stage_profile_entry
 #include "compact_stage_profile.cpp"
+#include "schgen/module_symbols.hpp"
 #undef main
 #include "historical_input_contracts.hpp"
 #include "pcb_placement_requirements.hpp"
@@ -272,9 +273,9 @@ void reviewed_profile_identity(const schgen::PcbPlacementInput& input) {
     (void)historical_input_contracts::project(sheet, "carrier");
 }
 void reviewed_profile_counts(const std::map<std::string, std::size_t>& counts) {
-    const std::map<std::string, std::size_t> expected{{"board_aux", 36}, {"bringup_rails", 24}};
+    const std::map<std::string, std::size_t> expected{{"board_aux", 36}, {"bringup_rails", 22}};
     if (counts != expected)
-        throw std::runtime_error("profile must exercise board_aux=36, bringup_rails=24 owned alternatives only");
+        throw std::runtime_error("profile must exercise board_aux=36, bringup_rails=22 owned alternatives only");
 }
 void observer_free_equivalence(const schgen::PcbPlacementInput& input){
     std::array<std::string,2> hashes,receipts;
@@ -315,7 +316,7 @@ int main(int argc, char** argv) {
             if(band==index.end())throw std::runtime_error("missing persistent sheet reference band");
             inputs.push_back({circuit.circuit,band->second,std::nullopt});
         }
-        schgen::SymbolLibrary library(paths.repository_root);
+        schgen::SymbolLibrary library = schgen::project_symbol_library(paths);
         schgen::BoardSchematicOptions schematic_options;
         schematic_options.root_name="Zynq_Carrier";schematic_options.sheet_subdir="schematic";
         schematic_options.reports_dir=scratch/"reports";
@@ -383,7 +384,7 @@ int main(int argc, char** argv) {
             rejects([&] { reviewed_profile_identity(changed); });
         }
         std::cout << "PASS actual profile loader: reviewed C1 10u/0805/C15850; default no ownership; "
-            "compact board_aux=36 + bringup_rails=24, 60 alternatives; identity/count mutations rejected\n";
+            "compact board_aux=36 + bringup_rails=22, 58 alternatives; identity/count mutations rejected\n";
         return 0;
     } catch (const std::exception& error) {
         std::cerr << error.what() << '\n';

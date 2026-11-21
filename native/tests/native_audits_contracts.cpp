@@ -1,6 +1,7 @@
 #include "schgen/run_config.hpp"
 #include "schgen/native_audit_state.hpp"
 #include "schgen/quantize.hpp"
+#include "schgen/floorplan.hpp"
 #include "verification_internal.hpp"
 #include <iostream>
 #include <thread>
@@ -179,11 +180,11 @@ void source_contracts(const fs::path& root,const fs::path& scratch){
     // source. All raw operations must be inside an explicitly registered body.
     CppAuditOptions live;live.workers=1;live.flags={"-I"+(root/"native/include").string()};
     const auto census=scan_cpp_audit_sources(root,{{"native/include/schgen/quantize.hpp"},{"native/src/quantize.cpp"},{"native/src/native_audit_quantize.cpp"},{"native/src/precision_ops.cpp"},{"native/src/occupancy_precision.cpp"},{"native/src/legalize_precision.cpp"},{"native/src/stage_precision.cpp"},{"native/src/placement_precision.cpp"},{"native/src/output_precision.cpp"},{"native/src/pack_precision.cpp"},{"native/src/pack_geometry_precision.cpp"},{"native/src/pack_search_precision.cpp"},{"native/src/pack_plain_precision.cpp"},{"native/src/pack_grid_precision.cpp"}},live);
-    require(census.constants.size()==8&&census.functions.size()==159,"actual native quantize/precision declarations including edge tick ceiling are scanned");
+    require(census.constants.size()==9&&census.functions.size()==159,"actual native quantize/precision declarations including edge tick ceiling are scanned");
     NativeQuantizations all;register_native_quantizations(all);
     NativeLedger live_ledger;
     const std::vector<std::pair<std::string,double>> constants={{"kGridMm",fixed_part_grid(1.3)},{"kHalfMm",som_pose_half_mm(0.7)},{"kCreditMm",quant_credit(0)},
-        {"kSnapErosionMm",snap_erosion_pad(5)-5},{"kOutlineSnapMm",outline_grow(1)},{"kFineSnapMm",fine_shrink(2,1)},{"kViaOrdinaryMm",est_via_cost(false)},{"kViaImpedanceMm",est_via_cost(true)}};
+        {"kSnapErosionMm",snap_erosion_pad(5)-5},{"kOutlineSnapMm",outline_grow(1)},{"kFineSnapMm",fine_shrink(2,1)},{"kViaOrdinaryMm",est_via_cost(false)},{"kViaImpedanceMm",est_via_cost(true)},{"kPageOriginMm",FloorplanInput{}.origin.first}};
     for(const auto& [name,value]:constants)live_ledger.declare(assumption(name,"native/include/schgen/quantize.hpp::schgen::quantization_policy::"+name,value));
     live_ledger.open_step("floorplan.sizing");live_ledger.close_step("floorplan.sizing");
     const auto audited=check_native_audits(census,live_ledger,all);require(audited.ok,"production quantize C++ policy audit: "+audited.summary());
