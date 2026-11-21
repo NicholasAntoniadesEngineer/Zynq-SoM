@@ -152,9 +152,9 @@ void exercise(const fs::path& repo, const fs::path& archive, const fs::path& cma
     write(widget.package / "CMakeLists.txt", "# deliberately missing registration\n");
     configure("widget", false, "Package did not explicitly register a live factory");
     write(widget.package / "CMakeLists.txt", package_cmake);
-    fs::rename(widget.package / "widget.cir", widget.package / "saved.cir");
+    fs::rename(widget.package / "subsystem.json", widget.package / "saved.json");
     configure("widget", false, "Missing native subsystem asset");
-    fs::rename(widget.package / "saved.cir", widget.package / "widget.cir");
+    fs::rename(widget.package / "saved.json", widget.package / "subsystem.json");
     configure("widget;class", true);
     compile(); test(true, "100% tests passed");
     // Selection alone is insufficient without the production registry hook.

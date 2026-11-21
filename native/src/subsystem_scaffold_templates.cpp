@@ -107,97 +107,8 @@ constexpr const char* metadata = R"scaffold({
   "header": "@NAME@.hpp",
   "factory": "schgen::subsystem_packages::define_@NAME@",
   "test": "test_@NAME@.cpp",
-  "spice": "@NAME@.cir",
   "default_meta": {"bind": {}, "expects": {}, "buses": {}, "notes": {}}
 }
-)scaffold";
-constexpr const char* spice = R"scaffold(* @NAME@.cir — SPICE subckt for the @NAME@ subsystem.
-*
-* PROJECT-AGNOSTIC: the subckt pins are the subsystem's ABSTRACT interface, NOT
-* any board net. Values mirror @NAME@.cpp one-for-one (parse_si compatible).
-*
-* Port order: VDD GND   (GND last by convention; add the rest)
-
-.subckt @NAME@ VDD GND
-* <passives mirroring the netlist, e.g.:>
-* C1 VDD GND 100n
-.ends @NAME@
-
-.end
-)scaffold";
-constexpr const char* readme = R"scaffold(# @NAME@ — <one-line purpose> (reusable subsystem)
-
-A project-agnostic, self-contained native schgen subsystem. Its interface uses
-abstract port and rail names; a project supplies an abstract -> real bind map.
-Active parts are referenced from global `parts/<MPN>/`, never vendored.
-
-## Package contents
-
-- `@NAME@.cpp`: live C++ netlist builder with `SubsystemMeta` and `AuthoringContext`.
-- `@NAME@.hpp`: abstract rails/ports and the explicit factory declaration.
-- `@NAME@.cir`: SPICE passive network with abstract subcircuit pins.
-- `test_@NAME@.cpp`: local electrical acceptance, with no skipped tests.
-- `subsystem.json`: native asset/metadata contract, NOT frozen circuit output.
-- `CMakeLists.txt`: opt-in source, factory registration, and test build hookup.
-- `README.md`: this file.
-
-## Abstract interface
-
-Default rails are `+VDD` (POWER, <supply>) and `GND` (GROUND). Add real abstract
-ports to `@NAME@_ports` in the header, then declare them with `c.port(...)` in
-the implementation. Internal SIGNAL nets are not bindable. Update the SPICE
-port order and passive values to mirror the live C++ builder.
-
-## Implement and register
-
-Fill in `build_@NAME@`, remove its explicit not-implemented throw, and retain
-`return meta.finish(c)`. The untouched template compiles but fails its test;
-an empty netlist is not an implementation. Add datasheet/dossier design notes
-here and local electrical assertions to `test_@NAME@.cpp` as needed.
-
-From the repository root, after the native scaffold integration is installed:
-
-```sh
-cmake -S native -B /private/tmp/schgen-@NAME@-build -DBUILD_TESTING=ON \
-  -DSCHGEN_SUBSYSTEM_PACKAGES=@NAME@
-cmake --build /private/tmp/schgen-@NAME@-build --target schgen_subsystem_@NAME@_test
-ctest --test-dir /private/tmp/schgen-@NAME@-build -R '^native_subsystem_@NAME@$' --output-on-failure
-```
-
-Supply the complete semicolon-separated opt-in list when selecting several
-packages, e.g. `-DSCHGEN_SUBSYSTEM_PACKAGES='@NAME@;other_package'`. The native
-project's existing catalog must be available, or set `SCHGEN_SUBSYSTEM_PART_CATALOG`
-to an explicitly built catalog. Building this test does not regenerate catalogs.
-The generated header/build artifacts stay in the chosen binary directory.
-No source edit, package publication, or registry-file rewrite occurs at build time.
-
-The configured factory joins `subsystem_definitions()` and is therefore used by
-`author_subsystem`, `native_subsystem_factories`, and native package checks.
-Run the native subsystem structure check after the local test. Existing project
-factory selection is separate: explicitly add a thin project adapter in the
-project authoring registry; this scaffold never edits an existing project.
-
-## Consume from native project code
-
-```cpp
-#include "schgen/subsystem_authoring.hpp"
-
-const auto meta = schgen::parse_json_text(R"json({
-  "bind": {"+VDD": "+3V3", "GND": "GND"},
-  "expects": {}, "buses": {}, "notes": {}
-})json");
-auto circuit = schgen::author_subsystem("@NAME@", schgen::SubsystemMeta(meta), context);
-```
-
-Use `expects` for per-port linker deferrals, `buses` for bus-role overrides, and
-`notes` for house-style annotations. These inputs go to the live factory, not
-an archived circuit. The local test checks exact externals, symbol/pin coverage,
-decoupling/EP/strap rules, unknown-name rejection, and positive metadata binds.
-Board-wide link, full power tree, and board ERC remain aggregated board gates.
-
-## Design notes
-
-- <datasheet / dossier notes>
 )scaffold";
 } // namespace
 
@@ -211,8 +122,8 @@ SubsystemScaffold render_subsystem_scaffold(const std::string& name) {
                                     "(1..63 characters, no double underscore or device name)");
     SubsystemScaffold result{name, {}};
     for (const auto& entry : std::vector<std::pair<std::string, const char*>>{
-             {"CMakeLists.txt", cmake}, {"README.md", readme}, {"subsystem.json", metadata},
-             {name + ".hpp", header}, {name + ".cpp", source}, {name + ".cir", spice},
+             {"CMakeLists.txt", cmake}, {"subsystem.json", metadata},
+             {name + ".hpp", header}, {name + ".cpp", source},
              {"test_" + name + ".cpp", test}})
         result.files.push_back({entry.first, substitute(entry.second, name)});
     return result;

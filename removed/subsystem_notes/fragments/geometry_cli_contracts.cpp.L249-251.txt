@@ -1,0 +1,3 @@
+        if(std::string(failure)=="fallbacks")
+            require(field(field(gates,failure),"report").string_value.find("board fallback baseline invalid")!=std::string::npos,
+                    "invalid required fallback evidence causes the rejection, not search effort");

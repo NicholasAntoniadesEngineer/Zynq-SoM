@@ -1,0 +1,5 @@
+        if(fs::weakly_canonical(target)!=fs::weakly_canonical(paths.subsystems_dir/sc.name))
+            for(const auto& asset:{std::string("README.md"),sc.name+".cir"}){
+                const auto source=paths.subsystems_dir/sc.name/asset;
+                if(fs::is_regular_file(source))files.emplace_back(target/asset,read(source));
+            }

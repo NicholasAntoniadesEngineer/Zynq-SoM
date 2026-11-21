@@ -68,16 +68,15 @@ struct CarrierStructureResult {
 // compares that companion against an independently authored circuit.
 // native_assets uses the union of registry declarations and visible asset
 // folders, so a missing package or unregistered folder cannot disappear from
-// discovery. No .py or interpreter is required. Libraries require README/.cir
+// discovery. No .py or interpreter is required. Libraries require subsystem.json
 // plus a parameterized native factory and matching declared interface; an
 // optional circuit.json is checked against that live factory. Every project
-// package requires independently checked circuit.json. Local packages own their
-// README/.cir; adapters reference those assets in their generic library and
-// must carry a valid native metadata declaration. Missing files must be regular
+// package requires independently checked circuit.json and layout.json; adapters
+// reference their generic library's subsystem.json and must carry a valid native
+// metadata declaration. Missing files must be regular
 // files, not directories. Empty native registries/package roots fail closed.
 std::vector<std::string> subsystem_required_files(const std::string& name,
     AuthoringPackageMode mode = AuthoringPackageMode::native_assets);
-std::vector<std::string> local_package_authored_files(const std::string& name, bool adapter);
 std::vector<std::string> carrier_required_files(const std::string& name, bool adapter,
     AuthoringPackageMode mode = AuthoringPackageMode::native_assets);
 SubsystemPackageReport check_subsystem_package(const std::string& name,

@@ -398,7 +398,7 @@ void authored_inputs(const fs::path& root){
                     "native factory differs from canonical hardware IR: "+expected.name);
         }
         Temp tmp;
-        publish_board_pipeline_inputs(authored,paths,tmp.path);
+        publish_board_pipeline_inputs(authored,tmp.path);
         for(const auto& actual:authored.circuits){
             require(actual.path==tmp.path/"subsystems"/actual.name/"circuit.json","isolated authoring output path");
             require(json(authored_circuit_json(load_circuit_json(actual.path)))==json(authored_circuit_json(actual.circuit)),

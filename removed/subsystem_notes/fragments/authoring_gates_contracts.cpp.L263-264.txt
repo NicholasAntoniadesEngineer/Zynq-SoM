@@ -1,0 +1,2 @@
+    // A directory named README.md is not a required file.
+    fs::remove(library/"camera/README.md");fs::create_directory(library/"camera/README.md");

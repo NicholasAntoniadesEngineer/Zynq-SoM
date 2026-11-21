@@ -18,6 +18,7 @@ namespace {
 namespace fs = std::filesystem;
 using namespace schgen;
 std::size_t assertions = 0;
+const std::size_t package_file_count = 5;
 void require(bool condition, const std::string& message) {
     ++assertions;
     if (!condition) throw std::runtime_error(message);
@@ -57,9 +58,9 @@ const std::string& file(const SubsystemScaffold& rendered, const std::string& na
     for (const auto& entry : rendered.files) if (entry.name == name) return entry.contents;
     throw std::runtime_error("missing rendered file: " + name);
 }
-void rendering(const fs::path& repo) {
+void rendering() {
     const auto rendered = render_subsystem_scaffold("widget");
-    require(rendered.name == "widget" && rendered.files.size() == 7, "native package shape");
+    require(rendered.name == "widget" && rendered.files.size() == package_file_count, "native package shape");
     std::set<std::string> names;
     for (const auto& entry : rendered.files) {
         require(names.insert(entry.name).second, "unique native asset");
@@ -67,14 +68,8 @@ void rendering(const fs::path& repo) {
         require(entry.contents.find("@NAME@") == std::string::npos, "unexpanded placeholder");
         require(fs::path(entry.name).extension() != ".py", "no generated Python");
     }
-    require(names == std::set<std::string>{"CMakeLists.txt", "README.md", "subsystem.json",
-        "widget.hpp", "widget.cpp", "widget.cir", "test_widget.cpp"}, "exact package files");
-    const auto reference = parse_json_file((repo / "native/tests/data/subsystem_scaffold/python_reference.json").string());
-    auto expected_spice = object_field(reference, "widget_cir")->string_value;
-    const auto source = expected_spice.find("widget.py");
-    require(source != std::string::npos, "independent Python SPICE reference");
-    expected_spice.replace(source, 9, "widget.cpp");
-    require(file(rendered, "widget.cir") == expected_spice, "SPICE bytes differ beyond source extension migration");
+    require(names == std::set<std::string>{"CMakeLists.txt", "subsystem.json",
+        "widget.hpp", "widget.cpp", "test_widget.cpp"}, "exact package files");
     const auto metadata = parse_json_text(file(rendered, "subsystem.json"));
     require(object_field(metadata, "name")->string_value == "widget", "metadata name");
     require(object_field(metadata, "default_meta")->object_value.size() == 4, "four metadata channels");
@@ -105,7 +100,7 @@ void publication() {
     const auto rendered = render_subsystem_scaffold("widget");
     require(result.package == root / "widget", "published path");
     require(children(root) == std::set<std::string>{"widget"}, "staging directory leaked");
-    require(children(result.package).size() == 7, "partial package publication");
+    require(children(result.package).size() == package_file_count, "partial package publication");
     for (const auto& entry : rendered.files) require(read(result.package / entry.name) == entry.contents, "published bytes");
     require(subsystem_scaffold_summary(result).find("-DSCHGEN_SUBSYSTEM_PACKAGES=widget") != std::string::npos,
             "native next-step guidance");
@@ -263,10 +258,10 @@ void registration() {
     rejects([&] { merge_subsystem_definitions({}, {ext}); }, "empty port registered");
 }
 } // namespace
-int main(int argc, char** argv) {
+int main(int argc, char**) {
     try {
         require(argc == 2, "usage: subsystem_scaffold_contracts REPOSITORY");
-        rendering(argv[1]); publication(); local_checks(); registration();
+        rendering(); publication(); local_checks(); registration();
         std::cout << "PASS: " << assertions << " native scaffold, publication, registration, and electrical contracts\n";
     } catch (const std::exception& error) { std::cerr << error.what() << '\n'; return 1; }
 }

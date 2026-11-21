@@ -29,17 +29,16 @@ No hosted workflow or gate bypass is introduced.
    LCSC/EasyEDA (`native/bin/schgen part-import --parts-root parts --lcsc C…`):
    pin table, symbol, footprint, 3D.
    See `parts/README.md`.
-2. **`subsystems/`** — project-agnostic subsystem assets: interface contracts,
-   READMEs, SPICE subcircuits and independent reference data. C++ netlist
+2. **`subsystems/`** — project-agnostic subsystem assets: interface contracts
+   and independent reference data. C++ netlist
    factories live in `native/src/authoring_*.cpp`; project adapters supply
    `bind`/`expects`/`buses`/`notes` metadata through the native registry.
-   Scaffold a new one with `native/bin/schgen subsystem-new <name>`. See
-   `subsystems/README.md`.
+   Scaffold a new one with `native/bin/schgen subsystem-new <name>`.
 3. **`carrier/subsystems/`** — board subsystem assets and generated circuit
    projections. C++ project factories and adapters in `native/src/project_*.cpp`
    define the netlists; the J1/J2/J3 connector contract is extracted live from
    the SoM. Parts are resolved by library identity and named pins. See
-   `carrier/README.md` and `carrier/subsystems/README.md`.
+   `carrier/README.md`.
 4. **The board** — `schgen` derives ALL geometry from netlist topology,
    proves it (netlist-equivalence + ERC + zero-overlap visual gates) and
    links the sheets into one KiCad project.
@@ -109,11 +108,10 @@ A board is a folder of data; the compiled application builds it unchanged. Write
 5. `<board>/som_mapping.json` (`schema`, `function_map`, `pudc_straps`, `vcco_rail_map`,
    `rebound_som_rails`, `isolated_som_rails`; optional `rail_aliases`).
 6. `<board>/escape_triage.json`.
-7. `<board>/subsystems/<sheet>/README.md` and `<sheet>.cir` for every module-connector sheet.
-8. `<board>/research/si_spec.json` when any sheet declares a pair; optional `floorplan.json` and
+7. `<board>/research/si_spec.json` when any sheet declares a pair; optional `floorplan.json` and
    `sheet_index.json`.
-9. `<board>/component_basis.json` covering every sheet and value of the board.
-10. `parts/part_facts.json` rows (class, I2C devices) for any new part; power homes come from `power` in
+8. `<board>/component_basis.json` covering every sheet and value of the board.
+9. `parts/part_facts.json` rows (class, I2C devices) for any new part; power homes come from `power` in
     `board.json` and the netlist.
 
 Then `native/bin/schgen board-check --project <board>` (non-zero until every row is present) and
@@ -129,9 +127,7 @@ states it. `schgen basis-check` audits the component basis of every board folder
   the worktree/commit discipline) live in
   [`WORKING_GUIDELINES.txt`](docs/WORKING_GUIDELINES.txt).
 - Layer guides: [`parts/README.md`](parts/README.md),
-  [`subsystems/README.md`](subsystems/README.md) (the reusable library),
   [`carrier/README.md`](carrier/README.md),
-  [`carrier/subsystems/README.md`](carrier/subsystems/README.md),
   and the engine contract [`schgen/DESIGN.md`](schgen/DESIGN.md).
 
 <!-- schgen:gallery -->

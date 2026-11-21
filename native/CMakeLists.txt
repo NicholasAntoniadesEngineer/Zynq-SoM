@@ -399,11 +399,6 @@ if(BUILD_TESTING)
     target_compile_options(schgen_pcb_owned_groups_live_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
     add_test(NAME native_pcb_owned_groups_live_contracts COMMAND schgen_pcb_owned_groups_live_contracts
         "${CMAKE_CURRENT_SOURCE_DIR}/.." "${CMAKE_CURRENT_SOURCE_DIR}/catalog.bin")
-    add_executable(schgen_carrier_spice_identity_contracts tests/carrier_spice_identity_contracts.cpp)
-    target_link_libraries(schgen_carrier_spice_identity_contracts PRIVATE schgen_core)
-    target_compile_options(schgen_carrier_spice_identity_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
-    add_test(NAME native_carrier_spice_identity_contracts COMMAND schgen_carrier_spice_identity_contracts
-        "${CMAKE_CURRENT_SOURCE_DIR}/.." "${CMAKE_CURRENT_SOURCE_DIR}/catalog.bin")
     add_executable(schgen_breathe_occupancy_contracts tests/breathe_occupancy_contracts.cpp)
     target_link_libraries(schgen_breathe_occupancy_contracts PRIVATE schgen_core)
     target_compile_options(schgen_breathe_occupancy_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)

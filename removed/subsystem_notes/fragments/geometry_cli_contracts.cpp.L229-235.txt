@@ -1,0 +1,7 @@
+    const auto collateral = project / "subsystems/som_j1/README.md";
+    fs::rename(collateral, project / "retained-som-j1-README.txt");
+    for (const auto* failure : {"carrier_structure", "fallbacks"}) {
+        if (std::string(failure) == "fallbacks") {
+            fs::rename(project / "retained-som-j1-README.txt", collateral);
+            write(project / "reports/fallback_baseline.json", "INVALID REQUIRED BASELINE\n");
+        }
