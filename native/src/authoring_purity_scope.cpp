@@ -7,7 +7,7 @@ AuthoringPurityScope native_authoring_purity_scope() {
     // Reviewed named constructors; never inferred from whatever files happen to
     // exist. New files and overloads require explicit review plus live checking.
     for (const auto* name : {"authoring", "authoring_ir", "circuit_helpers", "subsystem_authoring", "subsystem_authoring_data",
-            "subsystem_registration", "project_authoring", "example_devkit"})
+            "subsystem_registration", "project_authoring"})
         s.units.push_back(std::string("native/src/") + name + ".cpp");
     for (const auto* name : {"json", "circuit", "circuit_layout", "roles", "catalog", "link", "som_interface", "authoring_context", "symbols", "sexpr",
             "occupancy", "board_definition"})
@@ -28,7 +28,7 @@ AuthoringPurityScope native_authoring_purity_scope() {
     // subsystem_build, and the mixed example build umbrella. Provider-only
     // headers above are not imported or directly callable by constructor units.
     for (const auto* name : {"authoring", "circuit_helpers", "catalog", "circuit", "json", "subsystem_authoring", "subsystem_data",
-            "subsystem_registration", "project_authoring", "board_definition", "authoring_gates", "link", "som_interface", "xdc", "example_devkit_authoring"})
+            "subsystem_registration", "project_authoring", "board_definition", "authoring_gates", "link", "som_interface", "xdc"})
         s.headers.push_back(std::string("native/include/schgen/") + name + ".hpp");
     s.headers.push_back("native/src/authoring_values.hpp");
     s.constructors.push_back("native/src/subsystem_authoring.cpp::schgen::author_subsystem | schgen::CircuitSheetIr (const std::string &, const schgen::SubsystemMeta &, const schgen::AuthoringContext &)");
@@ -36,8 +36,6 @@ AuthoringPurityScope native_authoring_purity_scope() {
     s.constructors.push_back("native/src/subsystem_authoring_data.cpp::schgen::author_subsystem_data | schgen::CircuitSheetIr (const schgen::JsonNode &, const schgen::SubsystemMeta &, const schgen::AuthoringContext &)");
     s.constructors.push_back("native/src/project_authoring.cpp::schgen::author_project_subsystem | schgen::CircuitSheetIr (const std::string &, const std::string &, const schgen::ProjectAuthoringInput &)");
     s.constructors.push_back("native/src/project_authoring.cpp::schgen::author_som_connector | schgen::CircuitSheetIr (const std::string &, const std::string &, const std::string &, const schgen::SomInterface &, const schgen::LinkMapping &, const schgen::ConnectorAuthoringPolicy &, const schgen::AuthoringContext &)");
-    s.constructors.push_back("native/src/example_devkit.cpp::schgen::author_example_devkit | std::vector<schgen::CircuitSheetIr> (const schgen::AuthoringContext &, const std::map<std::string, schgen::JsonNode> &)");
-    s.constructors.push_back("native/src/example_devkit.cpp::schgen::author_example_devkit_subsystem | schgen::CircuitSheetIr (const std::string &, const schgen::AuthoringContext &, const std::optional<schgen::JsonNode> &)");
     // Canonical type strings depend on the configured standard library. The
     // initial catalog below is validated on Apple Clang/libc++; other toolchains
     // must supply a separately reviewed manifest, not normalize away overloads.

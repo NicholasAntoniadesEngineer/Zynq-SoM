@@ -1,6 +1,6 @@
 #include "schgen/native_authoring_guard.hpp"
 #include "schgen/authoring_context.hpp"
-#include "schgen/example_devkit_authoring.hpp"
+#include "example_devkit_authoring.hpp"
 #include "schgen/project.hpp"
 #include <iostream>
 #include <stdexcept>
