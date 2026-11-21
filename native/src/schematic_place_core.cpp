@@ -209,6 +209,8 @@ std::string Engine::_power_lib(const std::string& name) const {
     if (const auto found = known.find(name); found != known.end()) return found->second;
     // Every remaining entry in Python POWER_LIBS is exactly schgen:<+rail>.
     if (!name.empty() && name.front() == '+') return "schgen:" + name;
+    if (const auto found = nets_.find(name); found != nets_.end() && c.nets[found->second].net_class == "ground")
+        return "schgen:" + name;
     throw SchematicPlaceError("no power symbol mapped for rail " + py_quote(name));
 }
 Point Engine::_dodge_value_off_nc(const std::string& text, Point value, double ax, double ay) const {

@@ -1314,6 +1314,12 @@ if(BUILD_TESTING)
         -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
     add_test(NAME native_schematic_place_core_contracts COMMAND schgen_schematic_place_core_contracts
         "${CMAKE_CURRENT_SOURCE_DIR}/..")
+    add_executable(schgen_schematic_place_patterns_contracts tests/schematic_place_patterns_contracts.cpp)
+    target_link_libraries(schgen_schematic_place_patterns_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_schematic_place_patterns_contracts PRIVATE
+        -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
+    add_test(NAME native_schematic_place_patterns_contracts COMMAND schgen_schematic_place_patterns_contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/..")
     add_executable(schgen_design_rules_contracts tests/design_rules_contracts.cpp)
     target_link_libraries(schgen_design_rules_contracts PRIVATE schgen_core)
     target_compile_options(schgen_design_rules_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
