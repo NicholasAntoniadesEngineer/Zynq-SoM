@@ -29,6 +29,8 @@
           ]
         },
         {"kind": "thermal_fact", "scopes": ["library", "carrier", "devkit_mini", "motor_carrier"], "sheet": "power", "refs": ["U1", "U2"], "rth_ja": 58.7, "rth_ja_pour": 35.0, "pour_evidence": "LM61460"},
+        {"kind": "thermal_credit", "part": "LM61460AANRJRR", "need": {"min_vias": 6, "radius_mm": 5.2, "pour_layers": ["F.Cu", "B.Cu"]}},
+        {"kind": "emission_via", "size_mm": 0.6, "drill_mm": 0.3},
         {
           "kind": "part",
           "scopes": ["motor_carrier"],
@@ -41,9 +43,7 @@
             {"pin": "11", "net": "GND"}
           ]
         },
-        {"kind": "thermal_fact", "scopes": ["motor_carrier"], "sheet": "vbat_supply", "refs": ["U2"], "rth_ja": 58.7, "rth_ja_pour": 35.0, "pour_evidence": "LM61460"},
-        {"kind": "thermal_credit", "part": "LM61460AANRJRR", "need": {"min_vias": 6, "radius_mm": 5.2, "pour_layers": ["F.Cu", "B.Cu"]}},
-        {"kind": "emission_via", "size_mm": 0.6, "drill_mm": 0.3}
+        {"kind": "thermal_fact", "scopes": ["motor_carrier"], "sheet": "vbat_supply", "refs": ["U2"], "rth_ja": 58.7, "rth_ja_pour": 35.0, "pour_evidence": "LM61460"}
       ],
       "measure": {"kind": "thermal_via_field", "part": "LM61460AANRJRR", "emits": "In1.Cu GND plane: {plane}; {rows}", "row": "{ref}: {count} GND vias<={radius}mm", "pour": ", {layer} pour {state}"}
     },
