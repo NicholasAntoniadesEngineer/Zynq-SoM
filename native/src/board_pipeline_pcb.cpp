@@ -28,9 +28,11 @@ template<class F> auto precision_receipt(Context& c,const std::string& id,F&& ru
         c.inbox.merge_once(id,NativeAccountingBatch{native_counter_batch(counts),{}});
     });
 }
-std::optional<int> baseline(const fs::path& p){try{const auto j=parse_json_file(p.string());const auto* n=object_field(j,"starved_baseline");
-    if(!n||n->kind!=JsonKind::Number||!std::isfinite(n->number_value)||n->number_value<0||n->number_value>INT_MAX||std::floor(n->number_value)!=n->number_value)return {};
-    return static_cast<int>(n->number_value);}catch(const std::bad_alloc&){throw;}catch(const std::exception&){return {};}}
+struct FanoutCeiling{int ceiling=0;bool stored=false;};
+FanoutCeiling fanout_ceiling(const fs::path& p){if(!fs::exists(p))return {};const auto j=parse_json_file(p.string());const auto* n=object_field(j,"starved_baseline");
+    if(!n||n->kind!=JsonKind::Number||!std::isfinite(n->number_value)||n->number_value<0||n->number_value>INT_MAX||std::floor(n->number_value)!=n->number_value)
+        throw ProjectError(p.string()+": 'starved_baseline' is missing or is not a whole number of at least zero");
+    return {static_cast<int>(n->number_value),true};}
 struct RequirementsScope{bool applicable=false;std::string statement;};
 RequirementsScope requirements_scope(const JsonNode& project,const std::string& file){
     const auto fail=[&](const std::string& what)->RequirementsScope{throw ProjectError(file+": 'placement_requirements' "+what);};
@@ -181,10 +183,11 @@ void pcb_stages(Context& c){
         const auto report=std::to_string(errors)+" non-unrouted errors; "+std::to_string(r.n_unconnected)+" unrouted (expected); "+r.stderr_tail;
         c.report("pcb_drc.txt",report);c.gate("pcb_drc",errors==0,report);});
     c.attempt("pcb_geometry",[&]{if(!c.pcb_published)throw ProjectError("no board emitted this invocation");
-        const auto bp=c.options.fanout_baseline.empty()?c.paths.repository_root/"carrier/reports/fanout_baseline.json":c.options.fanout_baseline;
+        const auto bp=c.options.fanout_baseline.empty()?c.paths.reports_dir/"fanout_baseline.json":c.options.fanout_baseline;
+        const auto ceiling=fanout_ceiling(bp);
         PcbEmittedBoard emitted{pcb_path.string(),sexpr_loads(read(pcb_path)),true};
         c.geometry=precision_receipt(c,"pcb/geometry/ratsnest_precision",[&](auto& counts){
-            return verify_pcb_geometry(*c.pcb,emitted,baseline(bp),&counts);});const auto& r=*c.geometry;
+            return verify_pcb_geometry(*c.pcb,emitted,ceiling.ceiling,&counts);});const auto& r=*c.geometry;
         NativeAccountingBatch mechanical;
         mechanical.quantization_engagements.insert(r.mechanical.quantization_engagements.begin(),r.mechanical.quantization_engagements.end());
         c.inbox.merge_once("pcb/geometry/mechanical",mechanical);
@@ -203,8 +206,8 @@ void pcb_stages(Context& c){
         gate("return_stitch",r.return_stitch.ok,r.return_stitch.summary());gate("escape_lanes",r.escape_lanes.ok,r.escape_lanes.summary());
         gate("placement_integrity",r.integrity.ok_at(r.reached),r.integrity.summary(r.reached));
         gate("return_path",r.return_path.ok,"REPORT-ONLY: fixed SoM interface; remediation judged by return_stitch.\n"+r.return_path.summary());
-        gate("fanout",r.fanout.ok,r.fanout.summary());
-        if(r.fanout.ok){const auto old=baseline(bp);const auto n=old?std::min(*old,r.fanout.n_starved):r.fanout.n_starved;
+        gate("fanout",r.fanout.ok,r.fanout.summary()+(ceiling.stored?"":"\n  no stored baseline at "+(c.options.fanout_baseline.empty()?std::string("reports/fanout_baseline.json in the board folder"):bp.string())+": held to 0, the strictest ceiling"));
+        if(r.fanout.ok){const auto n=std::min(ceiling.ceiling,r.fanout.n_starved);
             const auto destination=c.out==c.paths.project_root?bp:c.reports/"fanout_baseline.json";
             publish_text(destination,"{\n \"starved_baseline\": "+std::to_string(n)+",\n \"note\": \"fan-out ratchet ceiling — may only DECREASE; a build whose starved count exceeds this FAILS. Reach 0 to promote the gate to HARD.\"\n}\n");}
         c.gate("pcb_geometry",r.ok(),"independent final-board gates complete");});

@@ -76,10 +76,8 @@ void preflight(const GeometryCommandOptions& options, const ProjectPaths& paths,
         if (entry.is_symlink()) throw ProjectError("geometry: symlink in board output tree: " + entry.path().string());
         if (!entry.is_directory()) safe_file(entry.path());
     }
-    // The historical in-place board pipeline also ratchets the common carrier
-    // fanout ceiling. Its target must pass the same output safety checks.
     if (output == paths.project_root) {
-        const auto baseline = paths.repository_root / "carrier/reports/fanout_baseline.json";
+        const auto baseline = paths.reports_dir / "fanout_baseline.json";
         safe_directory(baseline.parent_path()); safe_file(baseline);
     }
 }
