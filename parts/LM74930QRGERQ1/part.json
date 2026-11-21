@@ -1,0 +1,146 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "LM74930QRGERQ1",
+  "safe_name": "LM74930QRGERQ1",
+  "lcsc": "C22428070",
+  "description": "LM74930QRGERQ1 (VQFN-24_L4.0-W4.0-P0.50-TL-EP2.1)",
+  "manufacturer": "TI(德州仪器)",
+  "package": "VQFN-24_L4.0-W4.0-P0.50-TL-EP2.1",
+  "jlc_class": "Extended Part",
+  "prefix": "U",
+  "datasheet": "https://www.lcsc.com/datasheet/C22428070.pdf",
+  "product_url": "",
+  "lib_id": "LM74930QRGERQ1:LM74930QRGERQ1",
+  "footprint": "LM74930QRGERQ1:LM74930QRGERQ1",
+  "models_3d": [
+    "LM74930QRGERQ1.wrl",
+    "LM74930QRGERQ1.step"
+  ],
+  "pins": [
+    {
+      "num": "1",
+      "name": "DGATE",
+      "etype": "passive"
+    },
+    {
+      "num": "2",
+      "name": "A",
+      "etype": "passive"
+    },
+    {
+      "num": "3",
+      "name": "SW",
+      "etype": "passive"
+    },
+    {
+      "num": "4",
+      "name": "UVLO",
+      "etype": "passive"
+    },
+    {
+      "num": "5",
+      "name": "OV",
+      "etype": "passive"
+    },
+    {
+      "num": "6",
+      "name": "EN",
+      "etype": "passive"
+    },
+    {
+      "num": "7",
+      "name": "MODE",
+      "etype": "passive"
+    },
+    {
+      "num": "8",
+      "name": "N.C",
+      "etype": "passive"
+    },
+    {
+      "num": "9",
+      "name": "TMR",
+      "etype": "passive"
+    },
+    {
+      "num": "10",
+      "name": "IMON",
+      "etype": "passive"
+    },
+    {
+      "num": "11",
+      "name": "ILIM",
+      "etype": "passive"
+    },
+    {
+      "num": "12",
+      "name": "FLT",
+      "etype": "passive"
+    },
+    {
+      "num": "13",
+      "name": "GND",
+      "etype": "passive"
+    },
+    {
+      "num": "14",
+      "name": "HGATE",
+      "etype": "passive"
+    },
+    {
+      "num": "15",
+      "name": "OUT",
+      "etype": "passive"
+    },
+    {
+      "num": "16",
+      "name": "OVCLAMP",
+      "etype": "passive"
+    },
+    {
+      "num": "17",
+      "name": "N.C",
+      "etype": "passive"
+    },
+    {
+      "num": "18",
+      "name": "ISCP",
+      "etype": "passive"
+    },
+    {
+      "num": "19",
+      "name": "CS-",
+      "etype": "passive"
+    },
+    {
+      "num": "20",
+      "name": "CS+",
+      "etype": "passive"
+    },
+    {
+      "num": "21",
+      "name": "N.C",
+      "etype": "passive"
+    },
+    {
+      "num": "22",
+      "name": "VS",
+      "etype": "passive"
+    },
+    {
+      "num": "23",
+      "name": "CAP",
+      "etype": "passive"
+    },
+    {
+      "num": "24",
+      "name": "C",
+      "etype": "passive"
+    },
+    {
+      "num": "25",
+      "name": "EP",
+      "etype": "passive"
+    }
+  ]
+}

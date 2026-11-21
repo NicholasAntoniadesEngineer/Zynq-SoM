@@ -1,0 +1,71 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "INA237AIDGSR",
+  "safe_name": "INA237AIDGSR",
+  "lcsc": "C2864837",
+  "description": "INA237AIDGSR (VSSOP-10_L3.0-W3.0-P0.50-LS4.9-BL)",
+  "manufacturer": "TI(德州仪器)",
+  "package": "VSSOP-10_L3.0-W3.0-P0.50-LS4.9-BL",
+  "jlc_class": "Extended Part",
+  "prefix": "U",
+  "datasheet": "https://www.lcsc.com/datasheet/C2864837.pdf",
+  "product_url": "",
+  "lib_id": "INA237AIDGSR:INA237AIDGSR",
+  "footprint": "INA237AIDGSR:INA237AIDGSR",
+  "models_3d": [
+    "INA237AIDGSR.wrl",
+    "INA237AIDGSR.step"
+  ],
+  "pins": [
+    {
+      "num": "1",
+      "name": "A1",
+      "etype": "passive"
+    },
+    {
+      "num": "2",
+      "name": "A0",
+      "etype": "passive"
+    },
+    {
+      "num": "3",
+      "name": "ALERT",
+      "etype": "passive"
+    },
+    {
+      "num": "4",
+      "name": "SDA",
+      "etype": "passive"
+    },
+    {
+      "num": "5",
+      "name": "SCL",
+      "etype": "passive"
+    },
+    {
+      "num": "6",
+      "name": "VS",
+      "etype": "passive"
+    },
+    {
+      "num": "7",
+      "name": "GND",
+      "etype": "passive"
+    },
+    {
+      "num": "8",
+      "name": "VBUS",
+      "etype": "passive"
+    },
+    {
+      "num": "9",
+      "name": "IN–",
+      "etype": "passive"
+    },
+    {
+      "num": "10",
+      "name": "IN+",
+      "etype": "passive"
+    }
+  ]
+}

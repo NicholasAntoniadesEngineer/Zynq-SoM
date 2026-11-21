@@ -1,0 +1,14 @@
+* som_j1.cir - SPICE subckt of the som_j1 sheet.
+*
+* Module connector J1 (power / USB / STM32 / JTAG / SDIO / ETH MDI): a pass-through plug with no on-sheet passive network.
+* The subckt declares the sheet's power and ground rails as its pins and models
+* each rail as a 1G tie to the last pin so no node floats in .op; the signal
+* ports carry no two-rail passive and are not pins.
+*
+* Port order: V5V_SOM V3V3_SC GND
+
+.subckt som_j1 V5V_SOM V3V3_SC GND
+RV5V_SOM V5V_SOM GND 1G
+RV3V3_SC V3V3_SC GND 1G
+.ends som_j1
+.end

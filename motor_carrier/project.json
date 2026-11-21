@@ -1,0 +1,47 @@
+{
+  "name": "motor_carrier",
+  "placement_requirements": {
+    "applicable": false,
+    "statement": "NOT APPLICABLE: motor_carrier lists no owned group (board.json owned_groups is empty), so it has no reviewed ownership declaration to check. No qualitative placement approval implied."
+  },
+  "placement": {
+    "wired_sheets": [
+      "can_bus",
+      "esc_io",
+      "esc_power",
+      "ethernet",
+      "microsd",
+      "pd_input",
+      "pl_expansion",
+      "power",
+      "power_mon",
+      "power_som",
+      "uart_bridge",
+      "usb_uart_connector",
+      "vbat_supply"
+    ],
+    "pilot_prox_sheets": [
+      "ethernet"
+    ],
+    "module_offset": [
+      0.0,
+      0.0
+    ],
+    "module_face_anchors": {
+      "power_som": "N"
+    },
+    "reg_band_prefixes": [
+      "bringup",
+      "power",
+      "vbat"
+    ]
+  },
+  "fpga": {
+    "bank_rails": {
+      "13": "+3V3",
+      "33": "+3V3",
+      "34": "+3V3",
+      "35": "+3V3"
+    }
+  }
+}

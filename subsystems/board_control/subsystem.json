@@ -1,0 +1,862 @@
+{
+  "schema": "schgen.subsystem/1",
+  "name": "board_control",
+  "title": "Board control: rail DIP, TCA9535 status expander (I2C 0x20), user LEDs and button, PUDC strap",
+  "interface": [
+    "+3V3_SC",
+    "+3V3",
+    "GND",
+    "I2C_SCL",
+    "I2C_SDA",
+    "INT_N",
+    "DIP_5V0",
+    "DIP_3V3",
+    "DIP_1V8",
+    "FLT_PD_N",
+    "ALERT_PMON_N",
+    "FLT_BAT_N",
+    "ALERT_ESC_N",
+    "OE_SENSE_N",
+    "PUDC",
+    "PWR_REQ",
+    "PWR_FLT_N",
+    "+5V",
+    "+5V_FAN",
+    "FAN_PWM",
+    "FAN_TACH"
+  ],
+  "placement": {
+    "region": "board",
+    "silk_label": null,
+    "far_guard_mm": null,
+    "escape_basis": null,
+    "escape_escalates": false,
+    "reserves_edge": false
+  },
+  "checks": {
+    "dividers": [],
+    "divider_sources": [],
+    "iset_window_ma": null,
+    "iset_basis": null
+  },
+  "parts": [
+    {
+      "ref": "SW1",
+      "part": "DSHP04TSGER",
+      "value": "DIP-4"
+    },
+    {
+      "ref": "U1",
+      "part": "TCA9535PWR"
+    },
+    {
+      "ref": "C1",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      }
+    },
+    {
+      "ref": "R1",
+      "symbol": "Device:R",
+      "value": "4k7",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C23162"
+      }
+    },
+    {
+      "ref": "R2",
+      "symbol": "Device:R",
+      "value": "4k7",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C23162"
+      }
+    },
+    {
+      "ref": "R3",
+      "symbol": "Device:R",
+      "value": "10k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C25804"
+      }
+    },
+    {
+      "ref": "R4",
+      "symbol": "Device:R",
+      "value": "100k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C25803"
+      }
+    },
+    {
+      "ref": "D1",
+      "symbol": "Device:LED",
+      "value": "green",
+      "footprint": "LED_SMD:LED_0603_1608Metric",
+      "fields": {
+        "LCSC": "C12624"
+      }
+    },
+    {
+      "ref": "D2",
+      "symbol": "Device:LED",
+      "value": "red",
+      "footprint": "LED_SMD:LED_0603_1608Metric",
+      "fields": {
+        "LCSC": "C2286"
+      }
+    },
+    {
+      "ref": "R5",
+      "symbol": "Device:R",
+      "value": "1k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C21190"
+      }
+    },
+    {
+      "ref": "R6",
+      "symbol": "Device:R",
+      "value": "1k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C21190"
+      }
+    },
+    {
+      "ref": "SW2",
+      "part": "TS-1187A-B-A-B",
+      "value": "USER"
+    },
+    {
+      "ref": "R7",
+      "symbol": "Device:R",
+      "value": "10k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C25804"
+      }
+    },
+    {
+      "ref": "R8",
+      "symbol": "Device:R",
+      "value": "1k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C21190"
+      }
+    },
+    {
+      "ref": "R9",
+      "symbol": "Device:R",
+      "value": "100k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C25803"
+      }
+    },
+    {
+      "ref": "TP1",
+      "symbol": "Connector:TestPoint",
+      "value": "XP16",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      }
+    },
+    {
+      "ref": "TP2",
+      "symbol": "Connector:TestPoint",
+      "value": "XP17",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      }
+    },
+    {
+      "ref": "U2",
+      "part": "SY6280AAC"
+    },
+    {
+      "ref": "Q1",
+      "part": "AO3400A"
+    },
+    {
+      "ref": "J1",
+      "part": "ZX-SH1.0-4PWT"
+    },
+    {
+      "ref": "R10",
+      "symbol": "Device:R",
+      "value": "13k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C22797"
+      }
+    },
+    {
+      "ref": "C2",
+      "symbol": "Device:C",
+      "value": "10u",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "fields": {
+        "LCSC": "C15850"
+      }
+    },
+    {
+      "ref": "C3",
+      "symbol": "Device:C",
+      "value": "10u",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "fields": {
+        "LCSC": "C15850"
+      }
+    },
+    {
+      "ref": "R11",
+      "symbol": "Device:R",
+      "value": "100k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C25803"
+      }
+    },
+    {
+      "ref": "R12",
+      "symbol": "Device:R",
+      "value": "10k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C25804"
+      }
+    },
+    {
+      "ref": "R13",
+      "symbol": "Device:R",
+      "value": "1k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C21190"
+      }
+    },
+    {
+      "ref": "TP10",
+      "symbol": "Connector:TestPoint",
+      "value": "+5V_FAN",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      }
+    },
+    {
+      "ref": "TP11",
+      "symbol": "Connector:TestPoint",
+      "value": "PWR_REQ",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      }
+    },
+    {
+      "ref": "TP5",
+      "symbol": "Connector:TestPoint",
+      "value": "I2C_SCL",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      }
+    },
+    {
+      "ref": "TP6",
+      "symbol": "Connector:TestPoint",
+      "value": "I2C_SDA",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      }
+    },
+    {
+      "ref": "TP7",
+      "symbol": "Connector:TestPoint",
+      "value": "+3V3_SC",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      }
+    },
+    {
+      "ref": "TP8",
+      "symbol": "Connector:TestPoint",
+      "value": "INT_N",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      }
+    },
+    {
+      "ref": "TP9",
+      "symbol": "Connector:TestPoint",
+      "value": "PUDC",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      }
+    }
+  ],
+  "nets": [
+    {
+      "name": "+3V3_SC",
+      "pins": [
+        "SW1.8",
+        "SW1.7",
+        "SW1.6",
+        "SW1.5",
+        "U1.24",
+        "C1.1",
+        "R1.1",
+        "R2.1",
+        "R3.1",
+        "R5.1",
+        "R6.1",
+        "R7.1",
+        "TP7.1"
+      ]
+    },
+    {
+      "name": "+3V3",
+      "pins": [
+        "R8.1",
+        "R12.1"
+      ]
+    },
+    {
+      "name": "GND",
+      "pins": [
+        "U1.12",
+        "U1.21",
+        "U1.2",
+        "U1.3",
+        "C1.2",
+        "R4.2",
+        "SW2.3",
+        "SW2.4",
+        "R9.2",
+        "U2.2",
+        "R10.2",
+        "C2.2",
+        "C3.2",
+        "Q1.2",
+        "R11.2",
+        "J1.1",
+        "J1.5",
+        "J1.6"
+      ]
+    },
+    {
+      "name": "I2C_SCL",
+      "class": "port",
+      "pins": [
+        "U1.22",
+        "R1.2",
+        "TP5.1"
+      ]
+    },
+    {
+      "name": "I2C_SDA",
+      "class": "port",
+      "pins": [
+        "U1.23",
+        "R2.2",
+        "TP6.1"
+      ]
+    },
+    {
+      "name": "INT_N",
+      "class": "port",
+      "pins": [
+        "U1.1",
+        "R3.2",
+        "TP8.1"
+      ]
+    },
+    {
+      "name": "DIP_5V0",
+      "class": "port",
+      "pins": [
+        "SW1.1",
+        "U1.9"
+      ]
+    },
+    {
+      "name": "DIP_3V3",
+      "class": "port",
+      "pins": [
+        "SW1.2",
+        "U1.10"
+      ]
+    },
+    {
+      "name": "DIP_1V8",
+      "class": "port",
+      "pins": [
+        "SW1.3",
+        "U1.11"
+      ]
+    },
+    {
+      "name": "DIP_USER",
+      "pins": [
+        "SW1.4",
+        "U1.13",
+        "R4.1"
+      ]
+    },
+    {
+      "name": "FLT_PD_N",
+      "class": "port",
+      "pins": [
+        "U1.4"
+      ]
+    },
+    {
+      "name": "ALERT_PMON_N",
+      "class": "port",
+      "pins": [
+        "U1.5"
+      ]
+    },
+    {
+      "name": "FLT_BAT_N",
+      "class": "port",
+      "pins": [
+        "U1.6"
+      ]
+    },
+    {
+      "name": "ALERT_ESC_N",
+      "class": "port",
+      "pins": [
+        "U1.7"
+      ]
+    },
+    {
+      "name": "OE_SENSE_N",
+      "class": "port",
+      "pins": [
+        "U1.8"
+      ]
+    },
+    {
+      "name": "LED1_A",
+      "pins": [
+        "R5.2",
+        "D1.2"
+      ]
+    },
+    {
+      "name": "LED1_K",
+      "pins": [
+        "D1.1",
+        "U1.14"
+      ]
+    },
+    {
+      "name": "LED2_A",
+      "pins": [
+        "R6.2",
+        "D2.2"
+      ]
+    },
+    {
+      "name": "LED2_K",
+      "pins": [
+        "D2.1",
+        "U1.15"
+      ]
+    },
+    {
+      "name": "BTN_N",
+      "pins": [
+        "U1.16",
+        "R7.2",
+        "SW2.1",
+        "SW2.2"
+      ]
+    },
+    {
+      "name": "PUDC",
+      "class": "port",
+      "pins": [
+        "R8.2",
+        "TP9.1"
+      ]
+    },
+    {
+      "name": "PWR_REQ",
+      "class": "port",
+      "pins": [
+        "U1.17",
+        "R9.1",
+        "TP11.1"
+      ]
+    },
+    {
+      "name": "PWR_FLT_N",
+      "class": "port",
+      "pins": [
+        "U1.18"
+      ]
+    },
+    {
+      "name": "XP16",
+      "pins": [
+        "U1.19",
+        "TP1.1"
+      ]
+    },
+    {
+      "name": "XP17",
+      "pins": [
+        "U1.20",
+        "TP2.1"
+      ]
+    },
+    {
+      "name": "+5V",
+      "pins": [
+        "U2.5",
+        "U2.4",
+        "C2.1"
+      ]
+    },
+    {
+      "name": "+5V_FAN",
+      "pins": [
+        "U2.1",
+        "C3.1",
+        "J1.2",
+        "TP10.1"
+      ]
+    },
+    {
+      "name": "FAN_ISET",
+      "pins": [
+        "U2.3",
+        "R10.1"
+      ]
+    },
+    {
+      "name": "FAN_PWM_OD",
+      "pins": [
+        "Q1.3",
+        "J1.4"
+      ]
+    },
+    {
+      "name": "FAN_TACH_CONN",
+      "pins": [
+        "J1.3",
+        "R13.1"
+      ]
+    },
+    {
+      "name": "FAN_PWM",
+      "class": "port",
+      "pins": [
+        "Q1.1",
+        "R11.1"
+      ]
+    },
+    {
+      "name": "FAN_TACH",
+      "class": "port",
+      "pins": [
+        "R13.2",
+        "R12.2"
+      ]
+    }
+  ],
+  "unconnected": [],
+  "ports": [
+    {
+      "net": "I2C_SCL",
+      "kind": "i2c",
+      "role": "scl",
+      "bus": {
+        "instance": "i2c",
+        "default": "MGMT_I2C"
+      },
+      "speed_hz": 400000,
+      "expect": {
+        "instance": "as_given",
+        "default": "controller"
+      }
+    },
+    {
+      "net": "I2C_SDA",
+      "kind": "i2c",
+      "role": "sda",
+      "bus": {
+        "instance": "i2c",
+        "default": "MGMT_I2C"
+      },
+      "speed_hz": 400000,
+      "expect": {
+        "instance": "as_given",
+        "default": "controller"
+      }
+    },
+    {
+      "net": "INT_N",
+      "kind": "single",
+      "expect": {
+        "instance": "non_empty"
+      }
+    },
+    {
+      "net": "DIP_5V0",
+      "kind": "single",
+      "expect": {
+        "instance": "non_empty"
+      }
+    },
+    {
+      "net": "DIP_3V3",
+      "kind": "single",
+      "expect": {
+        "instance": "non_empty"
+      }
+    },
+    {
+      "net": "DIP_1V8",
+      "kind": "single",
+      "expect": {
+        "instance": "non_empty"
+      }
+    },
+    {
+      "net": "FLT_PD_N",
+      "kind": "single",
+      "expect": {
+        "instance": "non_empty"
+      }
+    },
+    {
+      "net": "ALERT_PMON_N",
+      "kind": "single",
+      "expect": {
+        "instance": "non_empty"
+      }
+    },
+    {
+      "net": "FLT_BAT_N",
+      "kind": "single",
+      "expect": {
+        "instance": "non_empty"
+      }
+    },
+    {
+      "net": "ALERT_ESC_N",
+      "kind": "single",
+      "expect": {
+        "instance": "non_empty"
+      }
+    },
+    {
+      "net": "OE_SENSE_N",
+      "kind": "single",
+      "expect": {
+        "instance": "non_empty"
+      }
+    },
+    {
+      "net": "PUDC",
+      "kind": "single",
+      "expect": {
+        "instance": "non_empty"
+      }
+    },
+    {
+      "net": "PWR_REQ",
+      "kind": "single",
+      "expect": {
+        "instance": "non_empty"
+      }
+    },
+    {
+      "net": "PWR_FLT_N",
+      "kind": "single",
+      "expect": {
+        "instance": "non_empty"
+      }
+    },
+    {
+      "net": "FAN_PWM",
+      "kind": "single",
+      "expect": {
+        "instance": "non_empty"
+      }
+    },
+    {
+      "net": "FAN_TACH",
+      "kind": "single",
+      "expect": {
+        "instance": "non_empty"
+      }
+    }
+  ],
+  "hints": [],
+  "draws": [
+    {
+      "rail": "+5V_FAN",
+      "amps": 0.2,
+      "note": {
+        "instance": "draws_fan",
+        "default": "fan allowance (ILIM 523 mA)"
+      }
+    },
+    {
+      "rail": "+3V3_SC",
+      "amps": 0.006,
+      "note": "2 user LEDs 1.3 mA each + I2C and INT pulls when low + TCA9535"
+    }
+  ],
+  "waivers": [],
+  "purpose": [
+    {
+      "part": "R9",
+      "role": "pull",
+      "pin": "U1.17"
+    },
+    {
+      "part": "R10",
+      "role": "set",
+      "pin": "U2.3"
+    },
+    {
+      "part": "C2",
+      "role": "bypass",
+      "pin": "U2.5"
+    },
+    {
+      "part": "C3",
+      "role": "reservoir",
+      "pin": "U2.1"
+    },
+    {
+      "part": "R11",
+      "role": "pull",
+      "pin": "Q1.1"
+    },
+    {
+      "part": "R12",
+      "role": "pull",
+      "pin": "R13.2"
+    },
+    {
+      "part": "R13",
+      "role": "limit",
+      "pin": "J1.3"
+    },
+    {
+      "part": "C1",
+      "role": "bypass",
+      "pin": "U1.24"
+    },
+    {
+      "part": "R1",
+      "role": "pull",
+      "pin": "U1.22"
+    },
+    {
+      "part": "R2",
+      "role": "pull",
+      "pin": "U1.23"
+    },
+    {
+      "part": "R3",
+      "role": "pull",
+      "pin": "U1.1"
+    },
+    {
+      "part": "R4",
+      "role": "pull",
+      "pin": "U1.13"
+    },
+    {
+      "part": "R5",
+      "role": "indicate",
+      "pin": "D1.2"
+    },
+    {
+      "part": "R6",
+      "role": "indicate",
+      "pin": "D2.2"
+    },
+    {
+      "part": "R7",
+      "role": "pull",
+      "pin": "U1.16"
+    },
+    {
+      "part": "D1",
+      "role": "indicate",
+      "pin": "U1.14"
+    },
+    {
+      "part": "D2",
+      "role": "indicate",
+      "pin": "U1.15"
+    },
+    {
+      "part": "R8",
+      "role": "pull",
+      "module_net": "PUDC"
+    }
+  ],
+  "free": [
+    {
+      "part": "TP1",
+      "reason": "probe point; it follows its net"
+    },
+    {
+      "part": "TP2",
+      "reason": "probe point; it follows its net"
+    },
+    {
+      "part": "TP10",
+      "reason": "probe point; it follows its net"
+    },
+    {
+      "part": "TP11",
+      "reason": "probe point; it follows its net"
+    },
+    {
+      "part": "TP5",
+      "reason": "probe point; it follows its net"
+    },
+    {
+      "part": "TP6",
+      "reason": "probe point; it follows its net"
+    },
+    {
+      "part": "TP7",
+      "reason": "probe point; it follows its net"
+    },
+    {
+      "part": "TP8",
+      "reason": "probe point; it follows its net"
+    },
+    {
+      "part": "TP9",
+      "reason": "probe point; it follows its net"
+    }
+  ]
+}

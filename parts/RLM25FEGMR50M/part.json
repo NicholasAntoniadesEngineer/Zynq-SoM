@@ -1,0 +1,31 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "RLM25FEGMR50M",
+  "safe_name": "RLM25FEGMR50M",
+  "lcsc": "C710260",
+  "description": "RLM25FEGMR50M (RES-SMD_L6.4-W3.2_RLM25)",
+  "manufacturer": "大毅科技",
+  "package": "RES-SMD_L6.4-W3.2_RLM25",
+  "jlc_class": "Extended Part",
+  "prefix": "R",
+  "datasheet": "https://www.lcsc.com/datasheet/C710260.pdf",
+  "product_url": "",
+  "lib_id": "RLM25FEGMR50M:RLM25FEGMR50M",
+  "footprint": "RLM25FEGMR50M:RLM25FEGMR50M",
+  "models_3d": [
+    "RLM25FEGMR50M.wrl",
+    "RLM25FEGMR50M.step"
+  ],
+  "pins": [
+    {
+      "num": "2",
+      "name": "2",
+      "etype": "passive"
+    },
+    {
+      "num": "1",
+      "name": "1",
+      "etype": "passive"
+    }
+  ]
+}
