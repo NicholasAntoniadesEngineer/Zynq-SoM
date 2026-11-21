@@ -95,7 +95,7 @@
     "AFC07-S40FCA-00": {"handling": "flat_cable", "mating_face": "+Y", "edge_pinned": true, "overmold": false, "pad_row_face_check": false, "description": "FFC 40-pin 0.5mm (LCD)"},
     "DS1024-2x6R2": {"handling": "pins", "mating_face": "+Y", "edge_pinned": true, "overmold": false, "pad_row_face_check": false, "description": "PMOD 2x6 socket", "numbered_label": "PMOD"},
     "HDMI-019S": {"handling": "grip_sides", "mating_face": "+Y", "edge_pinned": true, "overmold": true, "pad_row_face_check": true, "description": "HDMI receptacle"},
-    "KH-5224-8P8C-D": {"handling": "latch", "mating_face": "+Y", "edge_pinned": false, "overmold": false, "pad_row_face_check": false},
+    "KH-5224-8P8C-D": {"handling": "latch", "mating_face": "+Z", "edge_pinned": false, "overmold": false, "pad_row_face_check": false},
     "SFW15R-1STE1LF": {"handling": "flat_cable", "mating_face": "+Y", "edge_pinned": true, "overmold": false, "pad_row_face_check": false, "description": "FFC 15-pin 1mm (camera)"},
     "TF-01A": {"handling": "card", "mating_face": "+Y", "edge_pinned": true, "overmold": false, "pad_row_face_check": false, "description": "microSD push-pull"},
     "TYPE-C-31-M-12": {"handling": "grip_sides", "mating_face": "+Y", "edge_pinned": true, "overmold": false, "pad_row_face_check": true, "description": "USB-C receptacle"},
