@@ -361,3 +361,45 @@ The table is built from the board definition, the library, the module interface 
 | Two sheets carry the same connector. | `board B sheet S: module connector C is also carried by sheet T` |
 | A sheet names a connector the module interface lacks. | `board B sheet S: module connector C is not a connector of the module interface F` |
 | The module interface has a connector that no sheet carries. | `board B: no sheet carries module connector C of the module interface F` |
+
+## 10. Copper claims
+
+The copper-debt ledger (`reports/copper_debt.txt`) lists the engineering claims that rest on copper the board must carry. The claims, the checks that tie each claim to the live circuits and policies, and the measurement of the emitted board are data in `subsystems/copper_claims.json`. `load_copper_claims` takes the repository root and fails with a message naming the file, the claim and the key when the file is missing or malformed. Any key or kind not listed below is rejected. The `where:` line of a claim in the report is `subsystems/copper_claims.json#<id>`.
+
+Top-level keys, all required: `schema` (`schgen.copper_claims/1`), `plane`, `inventory`, `claims`.
+
+| Key | Contents |
+|---|---|
+| `plane` | `net` and `layer` of the ground plane every measure refers to. |
+| `inventory` | `with_text`, `without_text` and `emits`, the text of the inventory line. `emits` may use `{fills}`, `{plane}`, `{rules}`, `{vias}`, `{gnd}`, `{segments}`. |
+| `claims` | Non-empty list, in report order. Each claim has `id` (unique), `title`, `assumes`, `risk`, `checks` (non-empty) and `measure`. |
+
+A claim is verified on every run, with or without a PCB. Any check that fails raises `CopperProvenanceError` naming the claim. Thermal figures, pour needs, exposed-pad via needs and isolation margins are read from `parts/part_facts.json` rows; a claim restates only the figure it asserts (`thermal_fact`) and the check fails when the row differs.
+
+Check kinds. The sheet kinds take `scopes` (the `library` and board folder names to check; each must exist, and each listed sheet and part must exist in each listed scope) and `sheet`.
+
+| Kind | Other keys | Fails when |
+|---|---|---|
+| `part` | `refs` (list) or `all_parts` (true); optional `lib_id`, `footprint`, `value_prefix`, `fields` (name to value), `pins` (rows of `pin` and one of `net`, `net_prefix`) | a listed part is missing, or one given attribute, field or pin connection differs. `all_parts` needs at least one attribute. |
+| `net_pins` | `net`, `pins` (rows of `[reference, pin]`) | a listed part is missing or a pin is not on the net. |
+| `part_count` | `count` | the sheet does not hold that many parts. |
+| `thermal_fact` | `refs`, `rth_ja`, `rth_ja_pour` (number or null), `pour_evidence` | the part has no `thermal` row, a figure differs, or the row has no citation. |
+| `part_fact` | `refs`, `section` (`ep_vias` or `isolation`) | the part has no row in that section. |
+| `thermal_credit` | `part` (MPN) | the thermal, `thermal_copper` and `regulators` rows of the part, the thermal pour need and the emitter pour need disagree, or the pour field is short of the need. |
+| `emission_via` | `size_mm`, `drill_mm` | the emitter's thermal via differs. |
+| `emission_ground_layer` | `layer` | the emitter's ground layer differs. |
+| `isolation_margins` | none | the isolation facts are empty or one has no positive margin. |
+| `impedance_geometry` | `impedance_ohm` | the researched differential geometry differs from the live one or the ground reference is missing. |
+
+Measure kinds. Each takes every key listed; text keys are templates and may use only the placeholders named.
+
+| Kind | Keys |
+|---|---|
+| `thermal_via_field` | `part` (MPN; its instances are found by its `regulators` label; radius, via count and pour layers come from its `thermal_copper` need), `emits` (`{plane}`, `{rows}`), `row` (`{ref}`, `{count}`, `{radius}`), `pour` (`{layer}`, `{state}`, appended to a row once per pour layer) |
+| `ep_via_pads` | `part`, `emits` (`{plane}`, `{rows}`), `row` (`{ref}`, `{count}`); pad count and radius come from the `ep_vias` row |
+| `net_island` | `net`, `emits` (`{zones}`, `{vias}`) |
+| `plane_voids` | `zone_prefix`, `min_voids_with_plane`, `none_text`, `emits` (`{names}`) |
+| `reference_plane` | `emits` (`{x0}`, `{y0}`, `{x1}`, `{y1}`), `absent_emits` |
+| `module_body_vias` | `zone_prefix`, `found_text`, `missing_text`, `emits` (`{count}`, `{zone}`) |
+
+Add a claim by appending a row with its checks and a measure; the ledger and the report follow the file.

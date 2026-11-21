@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <fstream>
 #include <iostream>
+#include <iterator>
 #include <stdexcept>
 namespace {
 using namespace schgen;
@@ -13,6 +14,23 @@ template<class F> void rejects(const CopperDebtSources& original,F&& mutation,co
     auto s=original;mutation(s);
     try { (void)analyze_copper_debt(nullptr,s); } catch(const CopperProvenanceError&) { ++checks;return; }
     throw std::runtime_error("accepted invalid provenance: "+why);
+}
+JsonNode& member(JsonNode& n,const std::string& k){for(auto& e:n.object_value)if(e.first==k)return e.second;throw std::runtime_error(k);}
+JsonNode& claim_node(JsonNode& doc,const std::string& id){
+    for(auto& c:member(doc,"claims").array_value)if(member(c,"id").string_value==id)return c;
+    throw std::runtime_error(id);
+}
+JsonNode text_node(const std::string& v){JsonNode n;n.kind=JsonKind::String;n.string_value=v;return n;}
+template<class F> void loader_rejects(const JsonNode& original,F&& mutation,const std::string& why) {
+    auto doc=original;mutation(doc);
+    try { (void)parse_copper_claims(doc,"scratch claims"); } catch(const CopperProvenanceError&) { ++checks;return; }
+    throw std::runtime_error("loader accepted: "+why);
+}
+template<class F> void claims_reject(const CopperDebtSources& original,const JsonNode& document,F&& mutation,const std::string& why) {
+    auto doc=document;mutation(doc);
+    auto s=original;s.claims=parse_copper_claims(doc,"scratch claims");
+    try { (void)analyze_copper_debt(nullptr,s); } catch(const CopperProvenanceError&) { ++checks;return; }
+    throw std::runtime_error("accepted invalid claim: "+why);
 }
 CircuitSheetIr& sheet(CopperDebtSources& s,const std::string& scope,const std::string& name) {
     for(auto& c:s.circuits)if(c.scope==scope && c.sheet==name)return c.circuit;
@@ -26,6 +44,11 @@ int main(int argc,char** argv) {
         const std::filesystem::path root=argv[1];
         require(open_part_catalog((root/"native/catalog.bin").string()),"catalog");
         const auto sources=author_copper_debt_sources(root);
+        const auto& claims_text=sources.claims;
+        const auto claims_path=root/"subsystems/copper_claims.json";
+        std::string claims_file_text;
+        { std::ifstream in(claims_path); claims_file_text.assign(std::istreambuf_iterator<char>(in),std::istreambuf_iterator<char>()); }
+        require(!claims_file_text.empty(),"claims file");
         const auto fixture=parse_json_file((root/"native/tests/data/component_basis/python_copper.json").string());
         for(const auto& row:fixture.array_value) {
             const auto name=at(row,"name").string_value;
@@ -40,13 +63,8 @@ int main(int argc,char** argv) {
                 require(a.eid==b.eid && a.title==b.title && a.assumes==b.assumes &&
                     a.emits==b.emits && a.status==b.status && a.risk==b.risk,name+": entry "+a.eid);
                 require(!a.where.empty(),"missing provenance");
-                for(const auto& w:a.where) {
-                    const auto split=w.rfind(':'); require(split!=std::string::npos,"site separator");
-                    std::ifstream in(root/w.substr(0,split));require(bool(in),"site file");
-                    std::string line;const int n=std::stoi(w.substr(split+1));
-                    for(int k=0;k<n;++k)require(bool(std::getline(in,line)),"site line");
-                    require(line.find("ENTRY(")!=std::string::npos && line.find(a.eid)!=std::string::npos,"structured claim site");
-                }
+                require(a.where.size()==1 && a.where[0]==claims_text.reference+"#"+a.eid,"claim location");
+                require(claims_file_text.find("\"id\": \""+a.eid+"\"")!=std::string::npos,"claim id in file");
             }
             require(copper_debt_report(got)==copper_debt_report(copper_debt_result_from_json(copper_debt_result_json(got))),"report roundtrip");
         }
@@ -90,6 +108,44 @@ int main(int argc,char** argv) {
                 for(auto& n:c.nets)if(n.name=="GND")n.pins.erase(n.pins.begin());
             },"SoM cap ground pin");
         }
+        const auto document=parse_json_file(claims_path.string());
+        require(parse_copper_claims(document,"scratch claims").claims.size()==8,"claims round parse");
+        for(const auto* scope:{"library","carrier","devkit_mini"})
+            rejects(sources,[&](auto& s){
+                auto& c=sheet(s,scope,"power");
+                std::string other;
+                for(auto& n:c.nets)if(n.name!="GND"){other=n.name;break;}
+                for(auto& n:c.nets)for(auto p=n.pins.begin();p!=n.pins.end();++p)if(p->ref=="U1"&&p->pin=="3"){
+                    auto moved=*p;n.pins.erase(p);
+                    for(auto& o:c.nets)if(o.name==other)o.pins.push_back(moved);
+                    return;
+                }
+            },"buck ground pad moved to another net");
+        for(const auto* scope:{"carrier","devkit_mini"})
+            rejects(sources,[&](auto& s){
+                auto& c=sheet(s,scope,"mechanical");
+                c.parts.erase(std::remove_if(c.parts.begin(),c.parts.end(),[](const auto& p){return p.ref=="H4";}),c.parts.end());
+            },"mounting hole removed");
+        for(const auto* scope:{"library","carrier"})
+            rejects(sources,[&](auto& s){
+                for(auto& p:sheet(s,scope,"ethernet").parts)if(p.ref=="C5")for(auto& f:p.fields)if(f.key=="LCSC")f.value="C0";
+            },"2kV capacitor order code changed");
+        loader_rejects(document,[](auto& d){member(claim_node(d,"CD-01"),"checks").array_value[0].object_value.emplace_back("kind_extra",text_node("x"));},"unknown key in a check");
+        loader_rejects(document,[](auto& d){claim_node(d,"CD-01").object_value.emplace_back("extra",text_node("x"));},"unknown key in a claim");
+        loader_rejects(document,[](auto& d){member(member(claim_node(d,"CD-01"),"checks").array_value[0],"kind")=text_node("telepathy");},"unknown check kind");
+        loader_rejects(document,[](auto& d){member(member(claim_node(d,"CD-01"),"measure"),"kind")=text_node("telepathy");},"unknown measure kind");
+        loader_rejects(document,[](auto& d){member(claim_node(d,"CD-01"),"checks").array_value.clear();},"claim with empty checks");
+        loader_rejects(document,[](auto& d){auto& c=claim_node(d,"CD-01");c.object_value.erase(std::remove_if(c.object_value.begin(),c.object_value.end(),[](const auto& e){return e.first=="checks";}),c.object_value.end());},"claim without checks");
+        loader_rejects(document,[](auto& d){member(claim_node(d,"CD-01"),"measure").object_value.emplace_back("extra",text_node("x"));},"unknown key in a measure");
+        loader_rejects(document,[](auto& d){member(member(claim_node(d,"CD-01"),"measure"),"emits")=text_node("{nonsense}");},"unknown placeholder");
+        loader_rejects(document,[](auto& d){member(claim_node(d,"CD-02"),"id")=text_node("CD-01");},"duplicate claim id");
+        loader_rejects(document,[](auto& d){member(d,"schema")=text_node("schgen.copper_claims/2");},"wrong schema");
+        loader_rejects(document,[](auto& d){member(d,"claims").array_value.clear();},"no claims");
+        claims_reject(sources,document,[](auto& d){member(member(claim_node(d,"CD-01"),"checks").array_value[0],"refs").array_value.push_back(text_node("Z99"));},"claim names a part absent from its sheet");
+        claims_reject(sources,document,[](auto& d){member(member(claim_node(d,"CD-01"),"checks").array_value[0],"sheet")=text_node("no_such_sheet");},"claim names an absent sheet");
+        claims_reject(sources,document,[](auto& d){member(member(claim_node(d,"CD-01"),"checks").array_value[0],"scopes").array_value.push_back(text_node("no_such_board"));},"claim names an absent scope");
+        claims_reject(sources,document,[](auto& d){member(member(claim_node(d,"CD-01"),"checks").array_value[1],"rth_ja")=[]{JsonNode n;n.kind=JsonKind::Number;n.number_value=1.0;return n;}();},"thermal figure differs from the part facts");
+        claims_reject(sources,document,[](auto& d){member(member(claim_node(d,"CD-01"),"checks").array_value[2],"part")=text_node("NO-SUCH-PART");},"thermal credit for an unknown part");
         ThermalCopper empty; const auto r=analyze_copper_debt(&empty,sources);
         for(const auto& e:r.entries)require(e.status=="NOTHING","empty PCB granted evidence");
         std::cout<<checks<<" copper-debt contracts PASS (Python baseline fields + live provenance mutations)\n";
