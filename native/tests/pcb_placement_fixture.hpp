@@ -157,6 +157,7 @@ inline Fixture load(const std::filesystem::path &root, const std::string &projec
             pins.push_back({p.array_value[0].string_value, p.array_value[1].string_value});
         input.netlist.push_back({row.array_value[0].string_value, pins});
     }
+    input.land_spacing = repository_land_spacing(input.netlist);
     input.interface_bytes = read(module_root_of(root / project) / module_interface_file);
     input.som_interface = load_som_interface(module_root_of(root / project) / module_interface_file);
     auto mapping =

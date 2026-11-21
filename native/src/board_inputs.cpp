@@ -195,22 +195,7 @@ PcbPlacementInput load_board_inputs(const ProjectPaths& paths,
         if (!fs::is_regular_file(dossier)) throw std::runtime_error(ref + ": cannot resolve return-path footprint dossier");
         result.return_path_footprints.emplace(ref, snapshot(dossier));
     }
-    std::vector<std::pair<std::string, double>> known_volts;
-    double highest_volts = 0.0;
-    for (const auto& [rail, source] : default_power_policy().sources) {
-        (void)rail;
-        highest_volts = std::max(highest_volts, source.volts);
-    }
-    for (const auto& [pattern, volts] : default_power_policy().voltage_patterns) {
-        (void)pattern;
-        highest_volts = std::max(highest_volts, volts);
-    }
-    for (const auto& [net, pins] : result.netlist) {
-        (void)pins;
-        if (const auto volts = rail_volts(net)) known_volts.emplace_back(net, *volts);
-    }
-    const auto& fab = manufacturing_jlcpcb_multilayer();
-    result.land_spacing = land_spacing_policy(facts, fab.min_clearance_mm, fab.min_trace_mm, known_volts, highest_volts);
+    result.land_spacing = board_land_spacing(facts, result.netlist);
     if (options.compact_search)
         result.owned_groups = resolve_owned_group_inputs(paths, circuits, result);
     return result;

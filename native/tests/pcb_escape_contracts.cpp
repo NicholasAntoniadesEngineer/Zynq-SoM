@@ -1,3 +1,4 @@
+#include "connector_facts_fixture.hpp"
 #include "schgen/occupancy.hpp"
 #include "schgen/pcb_escape.hpp"
 #include <algorithm>
@@ -139,6 +140,12 @@ Fixture load(const fs::path &root, const std::string &name) {
     }
     for (const auto &[net, n] : field(m, "net_numbers").object_value)
         f.model.net_numbers[net] = static_cast<int>(n.number_value);
+    KicadNetlist nets;
+    for (const auto &[net, n] : f.model.net_numbers) {
+        (void)n;
+        nets.push_back({net, {}});
+    }
+    f.model.land_spacing = repository_land_spacing(nets);
     for (const auto &[net, n] : field(m, "netclass_of").object_value)
         f.model.netclass_of[net] = n.string_value;
     for (const auto &[cls, g] : field(m, "classes").object_value) {

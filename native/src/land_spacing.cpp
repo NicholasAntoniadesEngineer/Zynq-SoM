@@ -1,6 +1,8 @@
 #include "schgen/land_spacing.hpp"
 
 #include "schgen/pack.hpp"
+#include "schgen/manufacturing_checks.hpp"
+#include "schgen/power_checks.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -150,6 +152,25 @@ LandSpacingJudgement judge_land_spacing(const PcbCheckInput& input) {
         out.rows.push_back(row);
     }
     return out;
+}
+
+LandSpacingPolicy board_land_spacing(const PartFacts& facts, const KicadNetlist& netlist) {
+    std::vector<std::pair<std::string, double>> known;
+    double highest = 0.0;
+    for (const auto& [rail, source] : default_power_policy().sources) {
+        (void)rail;
+        highest = std::max(highest, source.volts);
+    }
+    for (const auto& [pattern, volts] : default_power_policy().voltage_patterns) {
+        (void)pattern;
+        highest = std::max(highest, volts);
+    }
+    for (const auto& [net, pins] : netlist) {
+        (void)pins;
+        if (const auto volts = rail_volts(net)) known.emplace_back(net, *volts);
+    }
+    const auto fab = manufacturing_jlcpcb_minimums();
+    return land_spacing_policy(facts, fab.min_clearance_mm, fab.min_trace_mm, known, highest);
 }
 
 std::string land_spacing_kicad_rules(const LandSpacingJudgement& judgement) {
