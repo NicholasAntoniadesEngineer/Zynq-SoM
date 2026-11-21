@@ -110,8 +110,30 @@ struct BoardHeader {
     std::string module_folder;
 };
 
+inline const std::vector<std::string>& connector_handling_classes() {
+    static const std::vector<std::string> classes{"grip_sides", "latch", "card", "flat_cable", "pins", "none"};
+    return classes;
+}
+
+struct BoardAccess {
+    std::string handling;
+    double side_mm = 0, front_mm = 0;
+    std::string basis;
+};
+
+struct BoardFunction {
+    std::string sheet, reference, serves, basis;
+};
+
+struct BoardLayout {
+    bool stated = false;
+    std::vector<BoardAccess> access;
+    std::vector<BoardFunction> functions;
+};
+
 struct BoardDefinition {
     std::string name;
+    BoardLayout layout;
     BoardFiles files;
     BoardFlags flags;
     BoardModule module;

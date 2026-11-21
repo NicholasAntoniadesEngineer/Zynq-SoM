@@ -399,6 +399,17 @@ void mark_connectors(const PcbModel& model, const AdapterOptions& options, const
         part.edge = EdgeRule{mouth, rear, to_nm(constants::edge_reach.value), seat};
         part.top_only = part.top_only || placement[index].face == Face::top;
     }
+    std::map<std::string, const PcbCheckInstance*> instances;
+    for (const auto& instance : model.insts) instances[instance.ref] = &instance;
+    for (Part& part : problem.parts) {
+        const auto found = instances.find(part.reference);
+        if (found == instances.end()) continue;
+        const ConnectorFact* fact = connector_fact(model.connectors, found->second->value);
+        if (!fact) continue;
+        part.connector = true;
+        if (fact->access) part.access = to_nm(fact->access->side_mm);
+        if (fact->mating && fact->mating->plug_width_mm) part.plug_width = to_nm(*fact->mating->plug_width_mm);
+    }
     ConnectorRules& rules = problem.constraints.connectors;
     rules.overlap_slack = to_nm(constants::connector_overlap.value);
     rules.band_share = constants::band_share.value;
