@@ -1,0 +1,84 @@
+{
+  "outline": "auto",
+  "_comment": "DECLARATIVE motor_carrier floorplan, same schema as carrier/floorplan.json. Order in each edge list = order ALONG that edge (N/S left->right, W/E top->bottom). USB inlets and microSD on N as on the carrier; the ESC power path (XT60 in and out) alone on E; the ESC signal header, CAN and expansion headers on S; the RJ45 on W.",
+  "edges": {
+    "N": [
+      "microsd",
+      "pd_input",
+      "usb_uart_connector"
+    ],
+    "E": [
+      "esc_power"
+    ],
+    "S": [
+      "esc_io",
+      "can_bus",
+      "pl_expansion"
+    ],
+    "W": [
+      "rj45_connector"
+    ]
+  },
+  "interior": {
+    "debug_boot": {
+      "side": "N"
+    },
+    "mechanical": {
+      "side": "E"
+    },
+    "power": {
+      "side": "E",
+      "layer": "either"
+    },
+    "power_mon": {
+      "near": "power_som"
+    },
+    "power_som": {
+      "side": "E"
+    },
+    "ethernet": {
+      "near": "rj45_connector",
+      "pull": {
+        "to": "rj45_connector",
+        "weight": 60.0,
+        "face": "inboard",
+        "exclusive": true,
+        "basis": "magnetics seat at the RJ45 jack, the carrier's rule (Pulse HX5008 guidance: part-to-part at most 25 mm); same pull as carrier/floorplan.json"
+      }
+    },
+    "uart_bridge": {
+      "near": "usb_uart_connector",
+      "pull": {
+        "to": "usb_uart_connector",
+        "weight": 60.0,
+        "face": "inboard",
+        "exclusive": true,
+        "basis": "CP2102N FS pair terminates at the UART USB-C: the near_max seat rule of carrier/floorplan.json and devkit_mini/floorplan.json"
+      }
+    },
+    "vbat_supply": {
+      "near": "esc_power"
+    },
+    "board_control": {
+      "side": "S"
+    }
+  },
+  "edge_order": {
+    "N": [
+      "microsd",
+      "pd_input",
+      "usb_uart_connector"
+    ],
+    "E": [
+      "esc_power"
+    ],
+    "S": [
+      "esc_io",
+      "can_bus",
+      "pl_expansion"
+    ],
+    "W": [
+      "rj45_connector"
+    ]
+  }
+}
