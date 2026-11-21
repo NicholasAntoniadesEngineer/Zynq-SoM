@@ -1,0 +1,1723 @@
+{
+  "schema": "schgen.component_basis/1",
+  "uses": [
+    {
+      "sheet": "debug_boot",
+      "target": "R1",
+      "attribute": "value",
+      "declaration": "devkit_mini.debug_boot.jtag_pullup",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "debug_boot",
+      "target": "R2",
+      "attribute": "value",
+      "declaration": "devkit_mini.debug_boot.jtag_pullup",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "debug_boot",
+      "target": "R3",
+      "attribute": "value",
+      "declaration": "devkit_mini.debug_boot.boot0_series_r",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "debug_boot",
+      "target": "R4",
+      "attribute": "value",
+      "declaration": "devkit_mini.debug_boot.bootsel_pullup",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "debug_boot",
+      "target": "R5",
+      "attribute": "value",
+      "declaration": "devkit_mini.debug_boot.bootsel_pullup",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "debug_boot",
+      "target": "R6",
+      "attribute": "value",
+      "declaration": "devkit_mini.debug_boot.bootsel_pullup",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "power_mon",
+      "target": "RS1",
+      "attribute": "value",
+      "declaration": "devkit_mini.power_mon.shunt_3a",
+      "type": "RLM12FTCMR010:RLM12FTCMR010"
+    },
+    {
+      "sheet": "power_mon",
+      "target": "RS2",
+      "attribute": "value",
+      "declaration": "devkit_mini.power_mon.shunt_3a",
+      "type": "RLM12FTCMR010:RLM12FTCMR010"
+    },
+    {
+      "sheet": "power_mon",
+      "target": "RS3",
+      "attribute": "value",
+      "declaration": "devkit_mini.power_mon.shunt_3a",
+      "type": "RLM12FTCMR010:RLM12FTCMR010"
+    },
+    {
+      "sheet": "power_mon",
+      "target": "RS4",
+      "attribute": "value",
+      "declaration": "devkit_mini.power_mon.shunt_600ma",
+      "type": "RLM12FTCMR020:RLM12FTCMR020"
+    },
+    {
+      "sheet": "power_mon",
+      "target": "C1",
+      "attribute": "value",
+      "declaration": "devkit_mini.power_mon.supply_hf",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "power_mon",
+      "target": "C2",
+      "attribute": "value",
+      "declaration": "devkit_mini.power_mon.supply_hf",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "power_mon",
+      "target": "C3",
+      "attribute": "value",
+      "declaration": "devkit_mini.power_mon.supply_bulk",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "power_mon",
+      "target": "R1",
+      "attribute": "value",
+      "declaration": "devkit_mini.power_mon.alert_pullup",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "power_som",
+      "target": "C14",
+      "attribute": "value",
+      "declaration": "devkit_mini.power_som.input_hf",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "power_som",
+      "target": "C25",
+      "attribute": "value",
+      "declaration": "devkit_mini.power_som.input_hf",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "power_som",
+      "target": "C15",
+      "attribute": "value",
+      "declaration": "devkit_mini.power_som.input_bulk",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "power_som",
+      "target": "C16",
+      "attribute": "value",
+      "declaration": "devkit_mini.power_som.input_bulk",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "power_som",
+      "target": "C22",
+      "attribute": "value",
+      "declaration": "devkit_mini.power_som.vcc_bypass",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "power_som",
+      "target": "R17",
+      "attribute": "value",
+      "declaration": "devkit_mini.power_som.bias_series_r",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "power_som",
+      "target": "C23",
+      "attribute": "value",
+      "declaration": "devkit_mini.power_som.bias_bypass",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "power_som",
+      "target": "R18",
+      "attribute": "value",
+      "declaration": "devkit_mini.power_som.rt",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "power_som",
+      "target": "C17",
+      "attribute": "value",
+      "declaration": "devkit_mini.power_som.boot_cap",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "power_som",
+      "target": "L3",
+      "attribute": "value",
+      "declaration": "devkit_mini.power_som.inductor",
+      "type": "Device:L"
+    },
+    {
+      "sheet": "power_som",
+      "target": "C18",
+      "attribute": "value",
+      "declaration": "devkit_mini.power_som.output_bulk",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "power_som",
+      "target": "C19",
+      "attribute": "value",
+      "declaration": "devkit_mini.power_som.output_bulk",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "power_som",
+      "target": "R14",
+      "attribute": "value",
+      "declaration": "devkit_mini.power_som.fb_top",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "power_som",
+      "target": "R15",
+      "attribute": "value",
+      "declaration": "devkit_mini.power_som.fb_bottom",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "power_som",
+      "target": "C21",
+      "attribute": "value",
+      "declaration": "devkit_mini.power_som.ff_cap",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "power_som",
+      "target": "R19",
+      "attribute": "value",
+      "declaration": "devkit_mini.power_som.ff_series_r",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "power_som",
+      "target": "R16",
+      "attribute": "value",
+      "declaration": "devkit_mini.power_som.pg_led_r",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "som_decoupling",
+      "target": "C1",
+      "attribute": "value",
+      "declaration": "devkit_mini.som_decoupling.bulk",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "som_decoupling",
+      "target": "C2",
+      "attribute": "value",
+      "declaration": "devkit_mini.som_decoupling.bulk",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "som_decoupling",
+      "target": "C3",
+      "attribute": "value",
+      "declaration": "devkit_mini.som_decoupling.hf",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "som_decoupling",
+      "target": "C4",
+      "attribute": "value",
+      "declaration": "devkit_mini.som_decoupling.hf",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "som_decoupling",
+      "target": "C5",
+      "attribute": "value",
+      "declaration": "devkit_mini.som_decoupling.hf",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "som_decoupling",
+      "target": "C6",
+      "attribute": "value",
+      "declaration": "devkit_mini.som_decoupling.hf",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "som_decoupling",
+      "target": "C7",
+      "attribute": "value",
+      "declaration": "devkit_mini.som_decoupling.bulk",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "som_decoupling",
+      "target": "C8",
+      "attribute": "value",
+      "declaration": "devkit_mini.som_decoupling.bulk",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "som_decoupling",
+      "target": "C9",
+      "attribute": "value",
+      "declaration": "devkit_mini.som_decoupling.hf",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "som_decoupling",
+      "target": "C10",
+      "attribute": "value",
+      "declaration": "devkit_mini.som_decoupling.hf",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "som_decoupling",
+      "target": "C11",
+      "attribute": "value",
+      "declaration": "devkit_mini.som_decoupling.hf",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "som_decoupling",
+      "target": "C12",
+      "attribute": "value",
+      "declaration": "devkit_mini.som_decoupling.hf",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "som_decoupling",
+      "target": "C13",
+      "attribute": "value",
+      "declaration": "devkit_mini.som_decoupling.bulk",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "som_decoupling",
+      "target": "C14",
+      "attribute": "value",
+      "declaration": "devkit_mini.som_decoupling.bulk",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "som_decoupling",
+      "target": "C15",
+      "attribute": "value",
+      "declaration": "devkit_mini.som_decoupling.hf",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "som_decoupling",
+      "target": "C16",
+      "attribute": "value",
+      "declaration": "devkit_mini.som_decoupling.hf",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "som_decoupling",
+      "target": "C17",
+      "attribute": "value",
+      "declaration": "devkit_mini.som_decoupling.hf",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "som_decoupling",
+      "target": "C18",
+      "attribute": "value",
+      "declaration": "devkit_mini.som_decoupling.hf",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "power_mon",
+      "target": "STM32_I2C2_SDA",
+      "attribute": "speed_hz",
+      "declaration": "devkit_mini.power_mon.i2c_speed",
+      "type": "i2c"
+    },
+    {
+      "sheet": "power_mon",
+      "target": "STM32_I2C2_SCL",
+      "attribute": "speed_hz",
+      "declaration": "devkit_mini.power_mon.i2c_speed",
+      "type": "i2c"
+    },
+    {
+      "sheet": "pd_input",
+      "target": "C1",
+      "attribute": "value",
+      "declaration": "subsystems.PD_INPUT_INLET_BYPASS",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "pd_input",
+      "target": "R3",
+      "attribute": "value",
+      "declaration": "subsystems.PD_INPUT_OVP_TOP",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "pd_input",
+      "target": "R4",
+      "attribute": "value",
+      "declaration": "subsystems.PD_INPUT_OVP_BOTTOM",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "pd_input",
+      "target": "R5",
+      "attribute": "value",
+      "declaration": "subsystems.PD_INPUT_ILIM_SET",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "pd_input",
+      "target": "C3",
+      "attribute": "value",
+      "declaration": "subsystems.PD_INPUT_DVDT_CAP",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "pd_input",
+      "target": "R6",
+      "attribute": "value",
+      "declaration": "subsystems.PD_INPUT_FAULT_PULL",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "pd_input",
+      "target": "C2",
+      "attribute": "value",
+      "declaration": "subsystems.PD_INPUT_FUSED_BULK",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "pd_input",
+      "target": "C4",
+      "attribute": "value",
+      "declaration": "subsystems.PD_INPUT_CLAMP_BYPASS",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "power",
+      "target": "C1",
+      "attribute": "value",
+      "declaration": "subsystems.POWER_VIN_HF",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "power",
+      "target": "C25",
+      "attribute": "value",
+      "declaration": "subsystems.POWER_VIN_HF",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "power",
+      "target": "C2",
+      "attribute": "value",
+      "declaration": "subsystems.POWER_VIN_BULK",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "power",
+      "target": "C3",
+      "attribute": "value",
+      "declaration": "subsystems.POWER_VIN_BULK",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "power",
+      "target": "C24",
+      "attribute": "value",
+      "declaration": "subsystems.POWER_VCC_BYPASS",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "power",
+      "target": "R11",
+      "attribute": "value",
+      "declaration": "subsystems.POWER_BIAS_SERIES",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "power",
+      "target": "C28",
+      "attribute": "value",
+      "declaration": "subsystems.POWER_BIAS_BYPASS",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "power",
+      "target": "R10",
+      "attribute": "value",
+      "declaration": "subsystems.POWER_RT_FREQ",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "power",
+      "target": "C4",
+      "attribute": "value",
+      "declaration": "subsystems.POWER_BOOT_CAP",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "power",
+      "target": "L1",
+      "attribute": "value",
+      "declaration": "subsystems.POWER_SW_INDUCTOR",
+      "type": "Device:L"
+    },
+    {
+      "sheet": "power",
+      "target": "C5",
+      "attribute": "value",
+      "declaration": "subsystems.POWER_COUT_BULK",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "power",
+      "target": "C6",
+      "attribute": "value",
+      "declaration": "subsystems.POWER_COUT_BULK",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "power",
+      "target": "C26",
+      "attribute": "value",
+      "declaration": "subsystems.POWER_COUT_BULK",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "power",
+      "target": "R1",
+      "attribute": "value",
+      "declaration": "subsystems.POWER_FB5V_TOP",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "power",
+      "target": "R2",
+      "attribute": "value",
+      "declaration": "subsystems.POWER_FB_BOTTOM",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "power",
+      "target": "C27",
+      "attribute": "value",
+      "declaration": "subsystems.POWER_CFF_CAP",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "power",
+      "target": "R12",
+      "attribute": "value",
+      "declaration": "subsystems.POWER_RFF_SERIES",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "power",
+      "target": "R3",
+      "attribute": "value",
+      "declaration": "subsystems.POWER_LED5V_SERIES",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "power",
+      "target": "C7",
+      "attribute": "value",
+      "declaration": "subsystems.POWER_VIN_HF",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "power",
+      "target": "C29",
+      "attribute": "value",
+      "declaration": "subsystems.POWER_VIN_HF",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "power",
+      "target": "C8",
+      "attribute": "value",
+      "declaration": "subsystems.POWER_5V_BULK",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "power",
+      "target": "C30",
+      "attribute": "value",
+      "declaration": "subsystems.POWER_5V_BULK",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "power",
+      "target": "C31",
+      "attribute": "value",
+      "declaration": "subsystems.POWER_VCC_BYPASS",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "power",
+      "target": "R13",
+      "attribute": "value",
+      "declaration": "subsystems.POWER_BIAS_SERIES",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "power",
+      "target": "C32",
+      "attribute": "value",
+      "declaration": "subsystems.POWER_BIAS_BYPASS",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "power",
+      "target": "R14",
+      "attribute": "value",
+      "declaration": "subsystems.POWER_RT_FREQ",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "power",
+      "target": "C9",
+      "attribute": "value",
+      "declaration": "subsystems.POWER_BOOT_CAP",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "power",
+      "target": "L2",
+      "attribute": "value",
+      "declaration": "subsystems.POWER_SW_INDUCTOR",
+      "type": "Device:L"
+    },
+    {
+      "sheet": "power",
+      "target": "C10",
+      "attribute": "value",
+      "declaration": "subsystems.POWER_COUT_BULK",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "power",
+      "target": "C11",
+      "attribute": "value",
+      "declaration": "subsystems.POWER_COUT_BULK",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "power",
+      "target": "R4",
+      "attribute": "value",
+      "declaration": "subsystems.POWER_FB3V3_TOP",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "power",
+      "target": "R5",
+      "attribute": "value",
+      "declaration": "subsystems.POWER_FB_BOTTOM",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "power",
+      "target": "C23",
+      "attribute": "value",
+      "declaration": "subsystems.POWER_CFF_CAP",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "power",
+      "target": "R15",
+      "attribute": "value",
+      "declaration": "subsystems.POWER_RFF_SERIES",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "power",
+      "target": "R6",
+      "attribute": "value",
+      "declaration": "subsystems.POWER_LED_SERIES",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "power",
+      "target": "C12",
+      "attribute": "value",
+      "declaration": "subsystems.POWER_LDO_CAP",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "power",
+      "target": "C13",
+      "attribute": "value",
+      "declaration": "subsystems.POWER_LDO_CAP",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "power",
+      "target": "R7",
+      "attribute": "value",
+      "declaration": "subsystems.POWER_GATE_STOP",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "power",
+      "target": "R8",
+      "attribute": "value",
+      "declaration": "subsystems.POWER_GATE_PULLDOWN",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "power",
+      "target": "R9",
+      "attribute": "value",
+      "declaration": "subsystems.POWER_LED_SERIES",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "uart_bridge",
+      "target": "C1",
+      "attribute": "value",
+      "declaration": "subsystems.UART_BRIDGE_SUPPLY_BYPASS",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "uart_bridge",
+      "target": "C2",
+      "attribute": "value",
+      "declaration": "subsystems.UART_BRIDGE_VREGIN_BULK",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "uart_bridge",
+      "target": "C3",
+      "attribute": "value",
+      "declaration": "subsystems.UART_BRIDGE_SUPPLY_BYPASS",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "uart_bridge",
+      "target": "C4",
+      "attribute": "value",
+      "declaration": "subsystems.UART_BRIDGE_SUPPLY_BYPASS",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "uart_bridge",
+      "target": "R1",
+      "attribute": "value",
+      "declaration": "subsystems.UART_BRIDGE_RESET_PULL",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "uart_bridge",
+      "target": "R2",
+      "attribute": "value",
+      "declaration": "subsystems.UART_BRIDGE_SENSE_TOP",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "uart_bridge",
+      "target": "R3",
+      "attribute": "value",
+      "declaration": "subsystems.UART_BRIDGE_SENSE_BOTTOM",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "usb_uart_connector",
+      "target": "C1",
+      "attribute": "value",
+      "declaration": "subsystems.UART_CONN_VBUS_BULK",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "usb_uart_connector",
+      "target": "R1",
+      "attribute": "value",
+      "declaration": "subsystems.UART_CONN_CC_RD",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "usb_uart_connector",
+      "target": "R2",
+      "attribute": "value",
+      "declaration": "subsystems.UART_CONN_CC_RD",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "bringup_en",
+      "target": "R1",
+      "attribute": "value",
+      "declaration": "carrier.bringup_en.dip_pulldown",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "bringup_en",
+      "target": "R2",
+      "attribute": "value",
+      "declaration": "carrier.bringup_en.override_pullup",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "bringup_en",
+      "target": "C1",
+      "attribute": "value",
+      "declaration": "carrier.bringup_en.gate_decap",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "bringup_en",
+      "target": "R3",
+      "attribute": "value",
+      "declaration": "carrier.bringup_en.dip_pulldown",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "bringup_en",
+      "target": "R4",
+      "attribute": "value",
+      "declaration": "carrier.bringup_en.override_pullup",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "bringup_en",
+      "target": "C2",
+      "attribute": "value",
+      "declaration": "carrier.bringup_en.gate_decap",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "bringup_en",
+      "target": "R5",
+      "attribute": "value",
+      "declaration": "carrier.bringup_en.dip_pulldown",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "bringup_en",
+      "target": "R6",
+      "attribute": "value",
+      "declaration": "carrier.bringup_en.override_pullup",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "bringup_en",
+      "target": "C3",
+      "attribute": "value",
+      "declaration": "carrier.bringup_en.gate_decap",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "ethernet",
+      "target": "R1",
+      "attribute": "value",
+      "declaration": "subsystems.ETHERNET_BOB_SMITH_R",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "ethernet",
+      "target": "C1",
+      "attribute": "value",
+      "declaration": "subsystems.ETHERNET_BOB_SMITH_C",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "ethernet",
+      "target": "R2",
+      "attribute": "value",
+      "declaration": "subsystems.ETHERNET_BOB_SMITH_R",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "ethernet",
+      "target": "C2",
+      "attribute": "value",
+      "declaration": "subsystems.ETHERNET_BOB_SMITH_C",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "ethernet",
+      "target": "R3",
+      "attribute": "value",
+      "declaration": "subsystems.ETHERNET_BOB_SMITH_R",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "ethernet",
+      "target": "C3",
+      "attribute": "value",
+      "declaration": "subsystems.ETHERNET_BOB_SMITH_C",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "ethernet",
+      "target": "R4",
+      "attribute": "value",
+      "declaration": "subsystems.ETHERNET_BOB_SMITH_R",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "ethernet",
+      "target": "C4",
+      "attribute": "value",
+      "declaration": "subsystems.ETHERNET_BOB_SMITH_C",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "ethernet",
+      "target": "C5",
+      "attribute": "value",
+      "declaration": "subsystems.ETHERNET_BOB_SMITH_C",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "microsd",
+      "target": "R1",
+      "attribute": "value",
+      "declaration": "subsystems.MICROSD_CARD_PULL",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "microsd",
+      "target": "R2",
+      "attribute": "value",
+      "declaration": "subsystems.MICROSD_CARD_PULL",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "microsd",
+      "target": "R3",
+      "attribute": "value",
+      "declaration": "subsystems.MICROSD_CARD_PULL",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "microsd",
+      "target": "R4",
+      "attribute": "value",
+      "declaration": "subsystems.MICROSD_CARD_PULL",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "microsd",
+      "target": "R5",
+      "attribute": "value",
+      "declaration": "subsystems.MICROSD_CARD_PULL",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "microsd",
+      "target": "R6",
+      "attribute": "value",
+      "declaration": "subsystems.MICROSD_DETECT_PULL",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "microsd",
+      "target": "C1",
+      "attribute": "value",
+      "declaration": "subsystems.MICROSD_HOST_BYPASS",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "microsd",
+      "target": "C2",
+      "attribute": "value",
+      "declaration": "subsystems.MICROSD_CARD_BYPASS",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "microsd",
+      "target": "C3",
+      "attribute": "value",
+      "declaration": "subsystems.MICROSD_CARD_BULK",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "microsd",
+      "target": "C4",
+      "attribute": "value",
+      "declaration": "subsystems.MICROSD_ESD_BYPASS",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "rj45_connector",
+      "target": "R1",
+      "attribute": "value",
+      "declaration": "subsystems.RJ45_LED_SERIES",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "rj45_connector",
+      "target": "R2",
+      "attribute": "value",
+      "declaration": "subsystems.RJ45_LED_SERIES",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "esc_power",
+      "target": "C1",
+      "attribute": "value",
+      "declaration": "subsystems.ESC_POWER_RAIL_HF",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "esc_power",
+      "target": "C6",
+      "attribute": "value",
+      "declaration": "subsystems.ESC_POWER_RAIL_HF",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "esc_power",
+      "target": "C7",
+      "attribute": "value",
+      "declaration": "subsystems.ESC_POWER_CP_CAP",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "esc_power",
+      "target": "R4",
+      "attribute": "value",
+      "declaration": "subsystems.ESC_POWER_DVDT_R",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "esc_power",
+      "target": "C8",
+      "attribute": "value",
+      "declaration": "subsystems.ESC_POWER_DVDT_C",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "esc_power",
+      "target": "R5",
+      "attribute": "value",
+      "declaration": "subsystems.ESC_POWER_RSET",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "esc_power",
+      "target": "R6",
+      "attribute": "value",
+      "declaration": "subsystems.ESC_POWER_RISCP",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "esc_power",
+      "target": "R7",
+      "attribute": "value",
+      "declaration": "subsystems.ESC_POWER_RILIM",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "esc_power",
+      "target": "C9",
+      "attribute": "value",
+      "declaration": "subsystems.ESC_POWER_TMR",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "esc_power",
+      "target": "R8",
+      "attribute": "value",
+      "declaration": "subsystems.ESC_POWER_RIMON",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "esc_power",
+      "target": "R9",
+      "attribute": "value",
+      "declaration": "subsystems.ESC_POWER_ANALOG_SERIES",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "esc_power",
+      "target": "R10",
+      "attribute": "value",
+      "declaration": "subsystems.ESC_POWER_FLT_PULL",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "esc_power",
+      "target": "R11",
+      "attribute": "value",
+      "declaration": "subsystems.ESC_POWER_EN_PULL",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "esc_power",
+      "target": "R12",
+      "attribute": "value",
+      "declaration": "subsystems.ESC_POWER_VSENSE_TOP",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "esc_power",
+      "target": "R13",
+      "attribute": "value",
+      "declaration": "subsystems.ESC_POWER_VSENSE_BOTTOM",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "esc_power",
+      "target": "C10",
+      "attribute": "value",
+      "declaration": "subsystems.ESC_POWER_VSENSE_FILTER",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "esc_power",
+      "target": "R14",
+      "attribute": "value",
+      "declaration": "subsystems.ESC_POWER_ANALOG_SERIES",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "esc_power",
+      "target": "RS1",
+      "attribute": "value",
+      "declaration": "subsystems.ESC_POWER_SHUNT",
+      "type": "RLM25FEGMR50M:RLM25FEGMR50M"
+    },
+    {
+      "sheet": "esc_power",
+      "target": "C2",
+      "attribute": "value",
+      "declaration": "subsystems.ESC_POWER_MON_BYPASS",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "esc_power",
+      "target": "R1",
+      "attribute": "value",
+      "declaration": "subsystems.ESC_POWER_ALERT_PULL",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "esc_power",
+      "target": "C3",
+      "attribute": "value",
+      "declaration": "subsystems.ESC_POWER_RAIL_BULK",
+      "type": "RVT1H471M1213:RVT1H471M1213"
+    },
+    {
+      "sheet": "esc_power",
+      "target": "C4",
+      "attribute": "value",
+      "declaration": "subsystems.ESC_POWER_RAIL_BULK",
+      "type": "RVT1H471M1213:RVT1H471M1213"
+    },
+    {
+      "sheet": "esc_power",
+      "target": "C5",
+      "attribute": "value",
+      "declaration": "subsystems.ESC_POWER_RAIL_HF",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "esc_power",
+      "target": "RT1",
+      "attribute": "value",
+      "declaration": "subsystems.ESC_POWER_STAR_TIE",
+      "type": "RLM25FEGMR50M:RLM25FEGMR50M"
+    },
+    {
+      "sheet": "esc_power",
+      "target": "R2",
+      "attribute": "value",
+      "declaration": "subsystems.ESC_POWER_LIVE_LED_R",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "esc_power",
+      "target": "R3",
+      "attribute": "value",
+      "declaration": "subsystems.ESC_POWER_LIVE_LED_R",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "esc_power",
+      "target": "C11",
+      "attribute": "value",
+      "declaration": "subsystems.ESC_POWER_RAIL_HF",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "esc_power",
+      "target": "STM32_I2C2_SDA",
+      "attribute": "speed_hz",
+      "declaration": "subsystems.ESC_POWER_I2C_SPEED",
+      "type": "i2c"
+    },
+    {
+      "sheet": "esc_power",
+      "target": "STM32_I2C2_SCL",
+      "attribute": "speed_hz",
+      "declaration": "subsystems.ESC_POWER_I2C_SPEED",
+      "type": "i2c"
+    },
+    {
+      "sheet": "vbat_supply",
+      "target": "C13",
+      "attribute": "value",
+      "declaration": "subsystems.VBAT_SUPPLY_BUCK_IN_BULK",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "vbat_supply",
+      "target": "C14",
+      "attribute": "value",
+      "declaration": "subsystems.VBAT_SUPPLY_IN_DAMP",
+      "type": "RVT1H471M1213:RVT1H471M1213"
+    },
+    {
+      "sheet": "vbat_supply",
+      "target": "R1",
+      "attribute": "value",
+      "declaration": "subsystems.VBAT_SUPPLY_UVLO_TOP",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "vbat_supply",
+      "target": "R2",
+      "attribute": "value",
+      "declaration": "subsystems.VBAT_SUPPLY_UVLO_MID",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "vbat_supply",
+      "target": "R3",
+      "attribute": "value",
+      "declaration": "subsystems.VBAT_SUPPLY_OVP_BOTTOM",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "vbat_supply",
+      "target": "R4",
+      "attribute": "value",
+      "declaration": "subsystems.VBAT_SUPPLY_ILIM",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "vbat_supply",
+      "target": "C1",
+      "attribute": "value",
+      "declaration": "subsystems.VBAT_SUPPLY_DVDT",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "vbat_supply",
+      "target": "R5",
+      "attribute": "value",
+      "declaration": "subsystems.VBAT_SUPPLY_FLT_PULL",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "vbat_supply",
+      "target": "C2",
+      "attribute": "value",
+      "declaration": "subsystems.VBAT_SUPPLY_HV_HF",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "vbat_supply",
+      "target": "C3",
+      "attribute": "value",
+      "declaration": "subsystems.VBAT_SUPPLY_BUCK_IN_BULK",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "vbat_supply",
+      "target": "C4",
+      "attribute": "value",
+      "declaration": "subsystems.VBAT_SUPPLY_BUCK_IN_BULK",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "vbat_supply",
+      "target": "C5",
+      "attribute": "value",
+      "declaration": "subsystems.VBAT_SUPPLY_HV_HF",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "vbat_supply",
+      "target": "C6",
+      "attribute": "value",
+      "declaration": "subsystems.VBAT_SUPPLY_HV_HF",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "vbat_supply",
+      "target": "C7",
+      "attribute": "value",
+      "declaration": "subsystems.VBAT_SUPPLY_VCC_BYPASS",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "vbat_supply",
+      "target": "R6",
+      "attribute": "value",
+      "declaration": "subsystems.VBAT_SUPPLY_BIAS_SERIES",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "vbat_supply",
+      "target": "C8",
+      "attribute": "value",
+      "declaration": "subsystems.VBAT_SUPPLY_BIAS_BYPASS",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "vbat_supply",
+      "target": "R7",
+      "attribute": "value",
+      "declaration": "subsystems.VBAT_SUPPLY_RT",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "vbat_supply",
+      "target": "C9",
+      "attribute": "value",
+      "declaration": "subsystems.VBAT_SUPPLY_BOOT",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "vbat_supply",
+      "target": "L1",
+      "attribute": "value",
+      "declaration": "subsystems.VBAT_SUPPLY_INDUCTOR",
+      "type": "Device:L"
+    },
+    {
+      "sheet": "vbat_supply",
+      "target": "C10",
+      "attribute": "value",
+      "declaration": "subsystems.VBAT_SUPPLY_OUT_BULK",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "vbat_supply",
+      "target": "C11",
+      "attribute": "value",
+      "declaration": "subsystems.VBAT_SUPPLY_OUT_BULK",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "vbat_supply",
+      "target": "R8",
+      "attribute": "value",
+      "declaration": "subsystems.VBAT_SUPPLY_FB_TOP",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "vbat_supply",
+      "target": "R9",
+      "attribute": "value",
+      "declaration": "subsystems.VBAT_SUPPLY_FB_BOTTOM",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "vbat_supply",
+      "target": "C12",
+      "attribute": "value",
+      "declaration": "subsystems.VBAT_SUPPLY_FF_CAP",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "vbat_supply",
+      "target": "R10",
+      "attribute": "value",
+      "declaration": "subsystems.VBAT_SUPPLY_FF_SERIES",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "vbat_supply",
+      "target": "R11",
+      "attribute": "value",
+      "declaration": "subsystems.VBAT_SUPPLY_PG_LED_R",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "esc_io",
+      "target": "C1",
+      "attribute": "value",
+      "declaration": "subsystems.ESC_IO_DRIVER_BYPASS",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "esc_io",
+      "target": "R1",
+      "attribute": "value",
+      "declaration": "subsystems.ESC_IO_OE_PULLUP",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "esc_io",
+      "target": "R2",
+      "attribute": "value",
+      "declaration": "subsystems.ESC_IO_SERVO_ISET",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "esc_io",
+      "target": "C2",
+      "attribute": "value",
+      "declaration": "subsystems.ESC_IO_SERVO_IN",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "esc_io",
+      "target": "C3",
+      "attribute": "value",
+      "declaration": "subsystems.ESC_IO_SERVO_OUT",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "esc_io",
+      "target": "R3",
+      "attribute": "value",
+      "declaration": "subsystems.ESC_IO_SERVO_EN_PULL",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "esc_io",
+      "target": "C4",
+      "attribute": "value",
+      "declaration": "subsystems.ESC_IO_RX_BYPASS",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "esc_io",
+      "target": "C5",
+      "attribute": "value",
+      "declaration": "subsystems.ESC_IO_RX_BYPASS",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "esc_io",
+      "target": "R4",
+      "attribute": "value",
+      "declaration": "subsystems.ESC_IO_IDLE_BIAS",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "esc_io",
+      "target": "R5",
+      "attribute": "value",
+      "declaration": "subsystems.ESC_IO_IDLE_BIAS",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "esc_io",
+      "target": "R6",
+      "attribute": "value",
+      "declaration": "subsystems.ESC_IO_IDLE_BIAS",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "esc_io",
+      "target": "R7",
+      "attribute": "value",
+      "declaration": "subsystems.ESC_IO_IDLE_BIAS",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "esc_io",
+      "target": "R8",
+      "attribute": "value",
+      "declaration": "subsystems.ESC_IO_IDLE_BIAS",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "esc_io",
+      "target": "R9",
+      "attribute": "value",
+      "declaration": "subsystems.ESC_IO_IDLE_BIAS",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "esc_io",
+      "target": "R10",
+      "attribute": "value",
+      "declaration": "subsystems.ESC_IO_IDLE_BIAS",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "esc_io",
+      "target": "R11",
+      "attribute": "value",
+      "declaration": "subsystems.ESC_IO_IDLE_BIAS",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "esc_io",
+      "target": "R12",
+      "attribute": "value",
+      "declaration": "subsystems.ESC_IO_IDLE_SEL_PULL",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "esc_io",
+      "target": "C6",
+      "attribute": "value",
+      "declaration": "subsystems.ESC_IO_RX_BYPASS",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "esc_io",
+      "target": "R13",
+      "attribute": "value",
+      "declaration": "subsystems.ESC_IO_TLM_SERIES",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "esc_io",
+      "target": "R14",
+      "attribute": "value",
+      "declaration": "subsystems.ESC_IO_TLM_PULL",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "esc_io",
+      "target": "C7",
+      "attribute": "value",
+      "declaration": "subsystems.ESC_IO_RX_BYPASS",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "esc_io",
+      "target": "R16",
+      "attribute": "value",
+      "declaration": "subsystems.ESC_IO_LIVE_LED_R",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "esc_io",
+      "target": "R15",
+      "attribute": "value",
+      "declaration": "subsystems.ESC_IO_OE_SENSE_SERIES",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "can_bus",
+      "target": "C2",
+      "attribute": "value",
+      "declaration": "subsystems.CAN_BUS_BYPASS",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "can_bus",
+      "target": "C1",
+      "attribute": "value",
+      "declaration": "subsystems.CAN_BUS_BYPASS",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "can_bus",
+      "target": "R1",
+      "attribute": "value",
+      "declaration": "subsystems.CAN_BUS_TXD_PULL",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "can_bus",
+      "target": "R2",
+      "attribute": "value",
+      "declaration": "subsystems.CAN_BUS_TERMINATION",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "board_control",
+      "target": "C1",
+      "attribute": "value",
+      "declaration": "subsystems.BOARD_CONTROL_BYPASS",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "board_control",
+      "target": "R1",
+      "attribute": "value",
+      "declaration": "subsystems.BOARD_CONTROL_I2C_PULL",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "board_control",
+      "target": "R2",
+      "attribute": "value",
+      "declaration": "subsystems.BOARD_CONTROL_I2C_PULL",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "board_control",
+      "target": "R3",
+      "attribute": "value",
+      "declaration": "subsystems.BOARD_CONTROL_INT_PULL",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "board_control",
+      "target": "R4",
+      "attribute": "value",
+      "declaration": "subsystems.BOARD_CONTROL_DIP_PULL",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "board_control",
+      "target": "R5",
+      "attribute": "value",
+      "declaration": "subsystems.BOARD_CONTROL_LED_R",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "board_control",
+      "target": "R6",
+      "attribute": "value",
+      "declaration": "subsystems.BOARD_CONTROL_LED_R",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "board_control",
+      "target": "R7",
+      "attribute": "value",
+      "declaration": "subsystems.BOARD_CONTROL_BTN_PULL",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "board_control",
+      "target": "R8",
+      "attribute": "value",
+      "declaration": "subsystems.BOARD_CONTROL_PUDC_PULL",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "board_control",
+      "target": "R9",
+      "attribute": "value",
+      "declaration": "subsystems.BOARD_CONTROL_REQ_PULL",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "board_control",
+      "target": "R10",
+      "attribute": "value",
+      "declaration": "subsystems.BOARD_CONTROL_FAN_ISET",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "board_control",
+      "target": "C2",
+      "attribute": "value",
+      "declaration": "subsystems.BOARD_CONTROL_FAN_IN",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "board_control",
+      "target": "C3",
+      "attribute": "value",
+      "declaration": "subsystems.BOARD_CONTROL_FAN_OUT",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "board_control",
+      "target": "R11",
+      "attribute": "value",
+      "declaration": "subsystems.BOARD_CONTROL_FAN_GATE_PULL",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "board_control",
+      "target": "R12",
+      "attribute": "value",
+      "declaration": "subsystems.BOARD_CONTROL_TACH_PULL",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "board_control",
+      "target": "R13",
+      "attribute": "value",
+      "declaration": "subsystems.BOARD_CONTROL_TACH_SERIES",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "board_control",
+      "target": "STM32_I2C2_SCL",
+      "attribute": "speed_hz",
+      "declaration": "subsystems.BOARD_CONTROL_I2C_SPEED",
+      "type": "i2c"
+    },
+    {
+      "sheet": "board_control",
+      "target": "STM32_I2C2_SDA",
+      "attribute": "speed_hz",
+      "declaration": "subsystems.BOARD_CONTROL_I2C_SPEED",
+      "type": "i2c"
+    },
+    {
+      "sheet": "pl_expansion",
+      "target": "R1",
+      "attribute": "value",
+      "declaration": "subsystems.PL_EXPANSION_ISET",
+      "type": "Device:R"
+    },
+    {
+      "sheet": "pl_expansion",
+      "target": "C1",
+      "attribute": "value",
+      "declaration": "subsystems.PL_EXPANSION_IN_BYPASS",
+      "type": "Device:C"
+    },
+    {
+      "sheet": "pl_expansion",
+      "target": "C2",
+      "attribute": "value",
+      "declaration": "subsystems.PL_EXPANSION_OUT",
+      "type": "Device:C"
+    }
+  ],
+  "sheets": [
+    "board_control",
+    "bringup_en",
+    "can_bus",
+    "debug_boot",
+    "esc_io",
+    "esc_power",
+    "ethernet",
+    "mechanical",
+    "microsd",
+    "pd_input",
+    "pl_expansion",
+    "power",
+    "power_mon",
+    "power_som",
+    "rj45_connector",
+    "som_decoupling",
+    "som_j1",
+    "som_j2",
+    "som_j3",
+    "uart_bridge",
+    "usb_uart_connector",
+    "vbat_supply"
+  ]
+}
