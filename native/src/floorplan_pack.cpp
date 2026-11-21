@@ -265,6 +265,19 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
     const auto rejected=[&](const std::string& stage,const std::string& subject,bool phase_compact,
                             const std::vector<std::string>& diagnostics=std::vector<std::string>{}) {
         if(!subject.empty())rejected_subjects.insert(subject);
+        std::string reason=stage+(subject.empty()?"":" "+subject);
+        for(const auto& line:diagnostics)if(line.rfind("REJECT",0)==0){
+            std::string kept;
+            for(std::size_t at=0;at<line.size();){
+                const auto margin=line.find(" margin ",at);
+                if(margin==std::string::npos){kept+=line.substr(at);break;}
+                kept+=line.substr(at,margin-at);
+                const auto next=line.find(';',margin);
+                at=next==std::string::npos?line.size():next;
+            }
+            reason+=": "+kept;break;
+        }
+        ++rejection_reasons[reason];
         if(in.experiment&&in.experiment->stage_rejected)
             in.experiment->stage_rejected({bw,bh,stage,subject,phase_compact,plan.punch_free,compact_order,diagnostics});
     };

@@ -184,6 +184,10 @@ void Placer::instantiate() {
     m.two_side = ctx.in.two_side;
     m.connectors = ctx.in.floorplan.project.connectors;
     m.isolation = ctx.in.floorplan.project.isolation;
+    for (const auto &[sheet, row] : floorplan_sheet_edges(ctx.in.floorplan)) {
+        (void)row;
+        m.edge_sheets.insert(sheet);
+    }
     for (const auto &entry : ctx.in.som_interface.connectors)
         m.module_connectors.insert(entry.first);
     m.net_numbers = net_numbers;

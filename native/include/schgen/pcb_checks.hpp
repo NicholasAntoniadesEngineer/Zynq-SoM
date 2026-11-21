@@ -96,6 +96,7 @@ struct PcbCheckModel {
     std::optional<LandSpacingPolicy> land_spacing;
     IsolationFacts isolation;
     std::set<std::string> module_connectors;
+    std::set<std::string> edge_sheets;
 };
 struct PcbCheckGeometry {
     std::optional<Box4> courtyard, pad_bbox;
