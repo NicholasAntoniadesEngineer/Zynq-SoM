@@ -204,30 +204,31 @@ Entry keys `part` and `reason`, both required names. Calls `CircuitAuthor::free`
 
 ### 3.11 `placement`
 
-An object. Accepted keys: `region`, `silk_label`, `far_guard_mm`, `escape_basis`, `escape_escalates`, `reserves_edge`; any other fails with `unknown key 'K' in <name> placement`. Every key is required. Errors below carry the prefix `subsystem file <name> placement: `. Read by `subsystem_data_facts`; a sheet's region is read by `sheet_roles` (`native/include/schgen/sheet_roles.hpp`) through `load_subsystem_facts`.
+An object. Accepted keys: `region`, `silk_label`, `far_guard_mm`, `escape_basis`, `escape_escalates`, `reserves_edge`; any other fails with `unknown key 'K' in <name> placement`. Every key is required. Errors below carry the prefix `subsystem file <name> placement: `. Read by `subsystem_data_facts`; the values reach the code through `sheet_roles` (`native/include/schgen/sheet_roles.hpp`) and `load_subsystem_facts`, one `SheetRole` per sheet of the board.
 
 | Key | Type | Meaning and errors |
 |---|---|---|
 | `region` | name | `board` or `under_module`: where the sheet's parts are placed. Another name fails with `field 'region' is 'X', not board or under_module`; empty: `field 'region' is empty`; not text: `field 'region' is missing or has the wrong type`. |
-| `silk_label` | name or `null` | Text of the connector label on the silkscreen. `null` states that there is none. An empty string or a value of another type fails with `field 'silk_label' is neither null nor a name`. |
-| `far_guard_mm` | number above zero or `null` | Guard distance in millimetres. `null` states that there is none. Else `field 'far_guard_mm' is neither null nor a number above zero`. |
-| `escape_basis` | name or `null` | Reason a bottom-side part may stay in the escape region. `null` states that there is none. Else `field 'escape_basis' is neither null nor a name`. |
-| `escape_escalates` | boolean | Else `field 'escape_escalates' is missing or has the wrong type`. |
-| `reserves_edge` | boolean | Else `field 'reserves_edge' is missing or has the wrong type`. |
+| `silk_label` | name or `null` | Text of the connector label on the silkscreen and in the assembly notes for the connectors of this sheet. `null` states that there is none. An empty string or a value of another type fails with `field 'silk_label' is neither null nor a name`. |
+| `far_guard_mm` | number above zero or `null` | Guard distance in millimetres that the floorplan legalizer adds to every far and flow bound this sheet takes part in. `null` states that there is none. Else `field 'far_guard_mm' is neither null nor a number above zero`. |
+| `escape_basis` | name or `null` | Reason a bottom-side part of this sheet may stay in the escape region of a module connector; it is printed as the basis of the coexistence row. `null` states that there is none. Else `field 'escape_basis' is neither null nor a name`. |
+| `escape_escalates` | boolean | `true` makes the verdict of such a part `CONSTRAINT` instead of `STAY` when the seat ledger split the connector it sits beside. `true` with a `null` `escape_basis` fails with `field 'escape_escalates' is true but 'escape_basis' is null`. Else `field 'escape_escalates' is missing or has the wrong type`. |
+| `reserves_edge` | boolean | `true` states that the sheet is a connector whose board edge another sheet reserves by naming it in a port `expect` text. Else `field 'reserves_edge' is missing or has the wrong type`. |
 
-An absent key fails with `field 'K' is missing`; an explicit `null` or `false` is the statement that the fact does not apply. Of these keys, only `region` is read by `sheet_roles` so far; the others are loaded and validated and are not yet read by any other code.
+An absent key fails with `field 'K' is missing`; an explicit `null` or `false` is the statement that the fact does not apply. A sheet that states no fact gets no behaviour from these keys.
 
 ### 3.12 `checks`
 
-An object. Accepted keys: `dividers`, `divider_sources`, `iset_window_ma`; any other fails with `unknown key 'K' in <name> checks`. Every key is required. Errors below carry the prefix `subsystem file <name> checks: `.
+An object. Accepted keys: `dividers`, `divider_sources`, `iset_window_ma`, `iset_basis`; any other fails with `unknown key 'K' in <name> checks`. Every key is required. Errors below carry the prefix `subsystem file <name> checks: `.
 
 | Key | Type | Meaning and errors |
 |---|---|---|
-| `dividers` | array of objects | Named divider limits. An empty array is accepted. A value that is not an object fails with `'dividers' holds a value that is not an object`. |
-| `divider_sources` | array of names | Nets treated as divider sources. An empty array is accepted. Else `'divider_sources' holds a value that is not a name`. |
-| `iset_window_ma` | `[low, high]` or `null` | The allowed current window in milliamps. `null` states that there is none. Anything other than two numbers with `0 < low < high` fails with `field 'iset_window_ma' is neither null nor [low, high]` or `field 'iset_window_ma' is not 0 < low < high`. |
+| `dividers` | array of objects | Named divider limits. An empty array is accepted. A value that is not an object fails with `'dividers' holds a value that is not an object`. Two entries for one net fail with `divider N is stated twice`. |
+| `divider_sources` | array of names | Nets of this sheet that count as the supply end of a divider although they are not power-class nets. An empty array is accepted. Else `'divider_sources' holds a value that is not a name`. |
+| `iset_window_ma` | `[low, high]` or `null` | The allowed current window in milliamps of the LED boost regulator on this sheet. `null` states that there is none; a sheet with a boost regulator and no window fails the SPICE gate naming the sheet and the key. Anything other than two numbers with `0 < low < high` fails with `field 'iset_window_ma' is neither null nor [low, high]` or `field 'iset_window_ma' is not 0 < low < high`. |
+| `iset_basis` | name or `null` | The document the window comes from, printed in the check's detail text. A name exactly when `iset_window_ma` is stated, else `field 'iset_basis' must be a name exactly when 'iset_window_ma' is stated`; not a name or `null`: `field 'iset_basis' is neither null nor a name`. |
 
-A `dividers` entry accepts the keys `net`, `source`, `limits`, `why`; any other fails with `unknown key 'K' in <name> checks divider`. `net`, `source` and `why` are required names. `limits` is a required array of objects and must not be empty (`divider N states no limits`). A `limits` entry accepts `volts`, `lo`, `hi`, `tag` (other keys fail with `unknown key 'K' in <name> checks divider limit`). `volts` is a required number, `tag` a required name, `lo` and `hi` optional numbers (`field 'K' is not a number`). At least one of them must be present (`a limit of divider N states neither lo nor hi`), and when both are present `lo` must be below `hi` (`a limit of divider N has lo not below hi`). The loader stores these values; no check reads them yet.
+A `dividers` entry accepts the keys `net`, `source`, `limits`, `why`; any other fails with `unknown key 'K' in <name> checks divider`. `net`, `source` and `why` are required names. `limits` is a required array of objects and must not be empty (`divider N states no limits`). A `limits` entry accepts `volts`, `lo`, `hi`, `tag` (other keys fail with `unknown key 'K' in <name> checks divider limit`). `volts` is a required number, `tag` a required name, `lo` and `hi` optional numbers (`field 'K' is not a number`). At least one of them must be present (`a limit of divider N states neither lo nor hi`), and when both are present `lo` must be below `hi` (`a limit of divider N has lo not below hi`). The loader stores these values as written. Every net named in `dividers` and `divider_sources` is a net of the subsystem's own circuit: `sheet_roles` replaces it by the name the board's `bind` gives it (a net the board does not bind keeps its name), and the SPICE gate fails with `sheet S: checks divider net N is not a net of the sheet` when the bound name of a divider's `net` is no net of the sheet. The SPICE gate then reads the bound names: a divider whose net exists on the sheet and whose topology is not found throws `required divider N: topology could not be extracted`, and a divider whose supply end is another net than `source` throws `required divider N: source S, expected E`.
 
 ## 4. Per-board settings
 

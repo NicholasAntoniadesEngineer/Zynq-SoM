@@ -3,8 +3,8 @@
   "name": "camera",
   "title": "RPi camera port: 2-lane MIPI CSI-2 (15P FFC)",
   "interface": ["+VDD_CAM", "GND", "CSI_D0_P", "CSI_D0_N", "CSI_D1_P", "CSI_D1_N", "CSI_CLK_P", "CSI_CLK_N", "CAM_SCL", "CAM_SDA", "CAM_EN", "CAM_LED"],
-  "placement": {"region": "board", "silk_label": null, "far_guard_mm": null, "escape_basis": null, "escape_escalates": false, "reserves_edge": false},
-  "checks": {"dividers": [], "divider_sources": [], "iset_window_ma": null},
+  "placement": {"region": "board", "silk_label": "CAM", "far_guard_mm": null, "escape_basis": null, "escape_escalates": false, "reserves_edge": false},
+  "checks": {"dividers": [], "divider_sources": [], "iset_window_ma": null, "iset_basis": null},
   "parts": [
     {"ref": "J1", "part": "SFW15R-1STE1LF"},
     {"ref": "U1", "part": "TPD4E02B04DQAR"},

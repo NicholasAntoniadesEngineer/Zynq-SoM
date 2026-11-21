@@ -3,8 +3,8 @@
   "name": "ethernet",
   "title": "Ethernet: HX5008NL magnetics + Bob-Smith",
   "interface": ["CHASSIS_GND", "MDI0_P", "MDI0_N", "MDI1_P", "MDI1_N", "MDI2_P", "MDI2_N", "MDI3_P", "MDI3_N", "MX0_P", "MX0_N", "MX1_P", "MX1_N", "MX2_P", "MX2_N", "MX3_P", "MX3_N"],
-  "placement": {"region": "board", "silk_label": null, "far_guard_mm": null, "escape_basis": null, "escape_escalates": false, "reserves_edge": false},
-  "checks": {"dividers": [], "divider_sources": [], "iset_window_ma": null},
+  "placement": {"region": "board", "silk_label": null, "far_guard_mm": 14, "escape_basis": null, "escape_escalates": false, "reserves_edge": false},
+  "checks": {"dividers": [], "divider_sources": [], "iset_window_ma": null, "iset_basis": null},
   "parts": [
     {
       "ref": "T1",

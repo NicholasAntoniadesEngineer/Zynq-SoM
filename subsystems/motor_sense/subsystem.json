@@ -4,7 +4,7 @@
   "title": "ESC motor-rail telemetry: INA3221 + 10mR shunt (I2C 0x42)",
   "interface": ["GND", "+3V3_SC", "STM32_I2C2_SDA", "STM32_I2C2_SCL", "ESC_FAULT_N"],
   "placement": {"region": "board", "silk_label": null, "far_guard_mm": null, "escape_basis": null, "escape_escalates": false, "reserves_edge": false},
-  "checks": {"dividers": [], "divider_sources": [], "iset_window_ma": null},
+  "checks": {"dividers": [], "divider_sources": [], "iset_window_ma": null, "iset_basis": null},
   "parts": [
     {"ref": "J2", "part": "XT60PW-M"},
     {"ref": "D1", "part": "SMBJ28A"},

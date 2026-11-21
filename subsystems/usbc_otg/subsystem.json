@@ -3,8 +3,8 @@
   "name": "usbc_otg",
   "title": "USB 2.0 HS OTG port (Type-C, host)",
   "interface": ["+VBUS_SUPPLY", "+VDD_LOGIC", "GND", "CHASSIS_GND", "USB_DP", "USB_DM", "VBUS", "VBUS_EN", "FLT_N", "USB_ID"],
-  "placement": {"region": "board", "silk_label": null, "far_guard_mm": null, "escape_basis": null, "escape_escalates": false, "reserves_edge": false},
-  "checks": {"dividers": [], "divider_sources": [], "iset_window_ma": null},
+  "placement": {"region": "board", "silk_label": "USB OTG", "far_guard_mm": null, "escape_basis": null, "escape_escalates": false, "reserves_edge": false},
+  "checks": {"dividers": [], "divider_sources": [], "iset_window_ma": null, "iset_basis": null},
   "parts": [
     {"ref": "J2", "part": "TYPE-C-31-M-12"},
     {"ref": "U1", "part": "TPS2051CDBVR"},

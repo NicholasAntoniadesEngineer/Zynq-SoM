@@ -79,7 +79,7 @@ const char* const quiet_placement =
     R"("placement": {"region": "board", "silk_label": null, "far_guard_mm": null, "escape_basis": null, "escape_escalates": false, "reserves_edge": false})";
 const char* const under_placement =
     R"("placement": {"region": "under_module", "silk_label": null, "far_guard_mm": null, "escape_basis": null, "escape_escalates": false, "reserves_edge": false})";
-const char* const quiet_checks = R"("checks": {"dividers": [], "divider_sources": [], "iset_window_ma": null})";
+const char* const quiet_checks = R"("checks": {"dividers": [], "divider_sources": [], "iset_window_ma": null, "iset_basis": null})";
 
 struct Bench {
     std::filesystem::path root;

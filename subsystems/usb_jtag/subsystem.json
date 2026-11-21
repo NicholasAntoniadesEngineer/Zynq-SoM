@@ -4,7 +4,7 @@
   "title": "USB-JTAG/UART bridge: CH347T, isolated",
   "interface": ["+VBUS_USB", "+3V3_ISLAND", "GND", "USB_DP", "USB_DM", "JTAG_TCK", "JTAG_TDI", "JTAG_TMS", "JTAG_TDO", "UART_RXD", "UART_TXD"],
   "placement": {"region": "board", "silk_label": null, "far_guard_mm": null, "escape_basis": null, "escape_escalates": false, "reserves_edge": false},
-  "checks": {"dividers": [], "divider_sources": [], "iset_window_ma": null},
+  "checks": {"dividers": [], "divider_sources": [], "iset_window_ma": null, "iset_basis": null},
   "parts": [
     {"ref": "U4", "part": "AP2112K-3.3TRG1"},
     {
