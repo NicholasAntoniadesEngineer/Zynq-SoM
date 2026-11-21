@@ -120,6 +120,7 @@ void board(std::ostream& out,const std::filesystem::path& root,const std::string
     // Match its explicit input policy; live full-board construction below
     // still uses the current production policy and checks reproducibility.
     policy.interface_reference_labels_only=false;
+    policy.drc_floors=DrcFloors{0.25, 0.8, 0.08, 0.0, 0.0};
     out<<"BOARD "<<name<<'\n';
     QuantizationCounts counts;
     // The immutable rendering oracle was captured with a supplied plan whose
@@ -308,8 +309,9 @@ void scalars(){
     PcbModel model;PcbProjectDocument a,b;
     a.data=parse_json_text("{\"untouched\":1.0}");b=a;b.float_paths.insert("/untouched");
     QuantizationCounts qa,qb;
-    (void)render_pcb_project(model,"probe",&a,default_pcb_emit_policy(),&qa);
-    (void)render_pcb_project(model,"probe",&b,default_pcb_emit_policy(),&qb);
+    auto floored=default_pcb_emit_policy();floored.drc_floors=DrcFloors{0.25, 0.8, 0.08, 0.0, 0.0};
+    (void)render_pcb_project(model,"probe",&a,floored,&qa);
+    (void)render_pcb_project(model,"probe",&b,floored,&qb);
     require(qa.at("pcb_project_integer_trunc")==qb.at("pcb_project_integer_trunc")+1,"float token short circuit lost");
 }
 #endif

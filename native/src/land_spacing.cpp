@@ -170,7 +170,7 @@ LandSpacingPolicy board_land_spacing(const PartFacts& facts, const KicadNetlist&
         (void)pins;
         if (const auto volts = rail_volts(net, power)) known.emplace_back(net, *volts);
     }
-    const auto fab = manufacturing_jlcpcb_minimums();
+    const auto fab = manufacturing_fab_minimums();
     return land_spacing_policy(facts, fab.min_clearance_mm, fab.min_trace_mm, known, highest);
 }
 

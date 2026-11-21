@@ -35,7 +35,7 @@ int main(int argc,char** argv) {
         rejects([]{board_stackup();},"no stack-up is selected");
         rejects([&]{load_run_config(run_file.parent_path()/"absent"/run_config_file);},"not found");
         rejects([&]{apply_run_config(run_file,"absent");},"'stackup' names no stack-up for board 'absent'");
-        const std::string run_text="{\"schema\":\"schgen.run/1\",\"boards\":[\"carrier\"],\"output\":\"out\",\"squeeze\":false,\"arrange\":false,\"renders\":false,\"labels\":false,\"timing\":false,\"plane_net\":\"GND\",\"audit_projections\":0,\"stackup\":{\"carrier\":\"JLC06161H-3313\"},\"overmold_parts\":{}}";
+        const std::string run_text="{\"schema\":\"schgen.run/1\",\"boards\":[\"carrier\"],\"output\":\"out\",\"squeeze\":false,\"arrange\":false,\"renders\":false,\"labels\":false,\"timing\":false,\"plane_net\":\"GND\",\"audit_projections\":0,\"stackup\":{\"carrier\":\"JLC06161H-3313\"},\"fabrication\":{\"carrier\":{\"fabricator\":\"jlcpcb\",\"copper\":{\"outer_oz\":1,\"inner_oz\":0.5},\"finish\":\"ENIG\",\"assembly_service\":\"standard\",\"build_count\":5}},\"overmold_parts\":{}}";
         require(parse_run_config(parse_json_text(run_text)).stackup_of("carrier")=="JLC06161H-3313","complete run configuration rejected");
         rejects([&]{parse_run_config(parse_json_text(replaced(run_text,"{\"carrier\":\"JLC06161H-3313\"}","{}")));},"'stackup' names no stack-up for board 'carrier'");
         rejects([&]{parse_run_config(parse_json_text(replaced(run_text,"\"output\"","\"surprise\":true,\"output\"")));},"surprise");

@@ -1,3 +1,4 @@
+#include "schgen/run_config.hpp"
 #include "connector_facts_fixture.hpp"
 #include "schgen/occupancy.hpp"
 #include "schgen/pcb_escape.hpp"
@@ -403,6 +404,7 @@ int main(int argc, char **argv) {
         if (argc != 2)
             throw std::runtime_error("repo root required");
         for (const auto &name : {"carrier", "devkit_mini"}) {
+            schgen::apply_run_config(std::filesystem::path(argv[1]) / schgen::run_config_file, name);
             baseline(argv[1], name);
             real_mutations(argv[1], name);
         }

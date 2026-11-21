@@ -1,5 +1,6 @@
 #pragma once
 
+#include "schgen/fabricator.hpp"
 #include "schgen/pcb_model.hpp"
 #include "schgen/execution_accounting.hpp"
 #include "schgen/thermal_checks.hpp"
@@ -21,6 +22,9 @@ struct PcbThermalCopperSpec {
     std::vector<std::string> pour_layers;
     std::string cite;
 };
+struct DrcFloors {
+    double hole_to_hole, text_height, text_thickness, mask_bridge, silk_clearance;
+};
 struct PcbEmitPolicy {
     bool interface_reference_labels_only = false, labels = true;
     FootprintAliasFacts footprint_aliases;
@@ -37,13 +41,15 @@ struct PcbEmitPolicy {
     double thermal_via_h2h = 0.45, thermal_via_edge = 1.0;
     double thermal_via_spacing = 0.8, thermal_lattice_pitch = 0.25;
     double default_track = 0.2032, default_clearance = 0.15;
-    double power_track = 0.4, power_clearance = 0.2, minimum_hole_to_hole = 0.25;
+    double power_track = 0.4, power_clearance = 0.2;
+    std::optional<DrcFloors> drc_floors;
     double stack_thickness = 1.6;
     std::string ground_layer = "In1.Cu", power_class = "POWER", board_stem;
     ModelOverrideFacts model_overrides;
 };
 // Default constants are project independent. Header/switch descriptions are
 // taken only from the explicitly supplied project's already-parsed metadata.
+DrcFloors drc_floors_of(const FabricationSelection &);
 const PcbEmitPolicy &default_pcb_emit_policy();
 PcbEmitPolicy pcb_emit_policy(const ProjectConfig &);
 std::optional<PcbThermalCopperSpec> thermal_copper_spec(const PcbEmitPolicy &, const std::string &value);

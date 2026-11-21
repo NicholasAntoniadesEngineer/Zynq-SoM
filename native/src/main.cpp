@@ -15,6 +15,7 @@
 #include "schgen/layout_cli.hpp"
 #include "schgen/rules.hpp"
 #include "schgen/part_import.hpp"
+#include "schgen/assembly_refresh.hpp"
 #include "schgen/selftest_full.hpp"
 
 #include <iostream>
@@ -56,6 +57,7 @@ int main(int argc, char** argv) {
                          "  rules (print the placement rule book as markdown)\n"
                          "  subsystem-new NAME [--repo DIRECTORY] (new C++ package; never overwrites)\n"
                          "  part-import --parts-root DIRECTORY (--from-json FILE | --lcsc ID) [--name NAME] [--overwrite] [--catalog FILE]\n"
+                         "  assembly-refresh [--config FILE] [--repo DIR] [--code CODE]... [--dry-run] (reads JLCPCB assembly-library facts into parts/assembly_facts.json)\n"
                          "  render3d | model3d-check [--project NAME] [-o DIRECTORY]\n"
                          "  board-step [--project NAME] [--pcb FILE] --output FILE\n"
                          "  assembly | ratsnest | si-constraints [--project NAME] [-o DIRECTORY]\n"
@@ -88,6 +90,7 @@ int main(int argc, char** argv) {
         if (const auto status = schgen::run_layout_command(argc, argv)) return *status;
         if (const auto status = schgen::rules::run_rules_command(argc, argv)) return *status;
         if (const auto status = schgen::run_part_import_command(argc, argv)) return *status;
+        if (const auto status = schgen::run_assembly_refresh_command(argc, argv)) return *status;
         if (const auto status = schgen::run_regression_command(argc, argv)) return *status;
         if (const auto status = schgen::run_geometry_command(argc, argv)) return *status;
         if (const auto status = schgen::run_project_command(argc, argv)) return *status;

@@ -29,6 +29,29 @@
     "max_outline_mm": null,
     "reliability": {"pass_rate": 0.8, "area_spread": 0.05, "basis": "integrator's decision 2026-11-21; revisit after the first sweeps on three boards"}
   },
+  "fabrication": {
+    "carrier": {
+      "fabricator": "jlcpcb",
+      "copper": {"outer_oz": 1, "inner_oz": 0.5},
+      "finish": "ENIG",
+      "assembly_service": "standard",
+      "build_count": 5
+    },
+    "devkit_mini": {
+      "fabricator": "jlcpcb",
+      "copper": {"outer_oz": 1, "inner_oz": 0.5},
+      "finish": "ENIG",
+      "assembly_service": "standard",
+      "build_count": 5
+    },
+    "motor_carrier": {
+      "fabricator": "jlcpcb",
+      "copper": {"outer_oz": 1, "inner_oz": 0.5},
+      "finish": "ENIG",
+      "assembly_service": "standard",
+      "build_count": 5
+    }
+  },
   "study": {
     "stackups": ["JLC04161H-3313", "JLC06161H-3313", "JLC08161H-3313", "JLC10161H-2116"]
   }

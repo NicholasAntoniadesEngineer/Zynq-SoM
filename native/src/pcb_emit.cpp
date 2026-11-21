@@ -36,8 +36,15 @@ Box4 thermal_pour_extent(const Box4& pour, bool mirror, double rotation, double 
     }
     return extent;
 }
+DrcFloors drc_floors_of(const FabricationSelection &selection) {
+    const auto &profile = selection.profile;
+    return {profile.number(fabricator_key::hole_pad), profile.number(fabricator_key::silk_height),
+            profile.number(fabricator_key::silk_line), selection.outer_value(fabricator_key::mask_bridge),
+            profile.number(fabricator_key::silk_pad)};
+}
 PcbEmitPolicy pcb_emit_policy(const ProjectConfig &c) {
     auto p = default_pcb_emit_policy();
+    p.drc_floors = drc_floors_of(board_fabrication());
     p.interface_reference_labels_only = true;
     p.labels = c.labels;
     p.board_stem = c.file_stem;
