@@ -14,7 +14,9 @@ namespace schgen {
 namespace ladder_stub_constants {
 inline constexpr NamedConstant stub_quantum{"stub_quantum", 1e-4, "mm", "physical",
     "emitted copper carries four decimals, so a stub that matches its land pattern before emission differs by at most this much after it"};
-inline constexpr std::array ladder_stub_registry{stub_quantum};
+inline constexpr NamedConstant track_foreign_clearance{"track_foreign_clearance", 0.15, "mm", "policy",
+    "escape copper keeps at least this from foreign copper whatever the net-class rule; published as CLR.track_foreign in the escape metadata"};
+inline constexpr std::array ladder_stub_registry{stub_quantum, track_foreign_clearance};
 }
 
 struct LadderStubObstacle {

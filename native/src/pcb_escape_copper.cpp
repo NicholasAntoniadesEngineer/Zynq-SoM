@@ -8,6 +8,7 @@
 namespace schgen {
 namespace {
 using namespace pcb_escape;
+using ladder_stub_constants::track_foreign_clearance;
 using CopperObstacle = std::tuple<double, double, double, double, double, std::string>;
 using Hole = std::tuple<double, double, double, std::string>;
 struct Obstacles {
@@ -297,7 +298,7 @@ PcbEscapeCopperResult build_pcb_escape_copper(const PcbEscapeInput &input, Quant
             nets.push_back(v.net);
         }
         auto result = seat_band(members, obs.front, obs.back, obs.same, obs.holes, g.row_v,
-                                g.half_h, ladder(), clear(), .15, radius, lattice, ref, 0, counts);
+                                g.half_h, ladder(), clear(), track_foreign_clearance.value, radius, lattice, ref, 0, counts);
         meta.ledger.insert(meta.ledger.end(), result.ledger.begin(), result.ledger.end());
         if (result.vias.empty()) {
             auto audit = result.audit;
@@ -389,14 +390,14 @@ PcbEscapeCopperResult build_pcb_escape_copper(const PcbEscapeInput &input, Quant
         evidence.nearest_same = evidence.nearest_other = evidence.narrowest = std::numeric_limits<double>::infinity();
         std::vector<EscapeLadderSeg> kept;
         for (auto s : segs) {
-            s.w = ladder_stub_width(s, pad_width, .15, nearby);
+            s.w = ladder_stub_width(s, pad_width, track_foreign_clearance.value, nearby);
             if (ladder_stub_joins_pad(s)) evidence.narrowest = std::min(evidence.narrowest, s.w);
             if (s.w < land.fab_minimum_track) {
                 evidence.dropped.push_back(s.role + " " + point_repr(s.ax, s.ay) + "-" + point_repr(s.bx, s.by) +
                                            ": no width at or above the fabricator's minimum track keeps the net-class clearance");
                 continue;
             }
-            const auto violation = ladder_stub_violation(s, pad_width, native_gap, .15, nearby, land_requirement, evidence);
+            const auto violation = ladder_stub_violation(s, pad_width, native_gap, track_foreign_clearance.value, nearby, land_requirement, evidence);
             if (!violation) {
                 kept.push_back(s);
                 ++evidence.kept;

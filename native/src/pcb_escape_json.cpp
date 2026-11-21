@@ -1,4 +1,5 @@
 #include "pcb_escape_internal.hpp"
+#include "schgen/ladder_stub_rule.hpp"
 #include <cmath>
 
 namespace schgen {
@@ -104,7 +105,7 @@ JsonNode PcbEscapeMetadata::json() const {
                             {"hole_foreign", num(.30)},
                             {"hole_hole", num(hole_hole)},
                             {"hole_samenet_pad", num(.10)},
-                            {"track_foreign", num(.15)},
+                            {"track_foreign", num(ladder_stub_constants::track_foreign_clearance.value)},
                             {"edge", num(.30)}})},
                {"widths",
                 obj({{"spine", num(.30)}, {"stub_pair", num(.30)}, {"stub_single", num(.25)}})},

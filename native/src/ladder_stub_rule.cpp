@@ -1,6 +1,7 @@
 #include "schgen/ladder_stub_rule.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <sstream>
 
 namespace schgen {
@@ -55,12 +56,18 @@ std::optional<std::string> ladder_stub_violation(const EscapeLadderSeg& seg, dou
 }
 
 std::string ladder_stub_report(const LadderStubEvidence& evidence) {
+    const auto distance = [](double mm) {
+        if (!std::isfinite(mm)) return std::string("none in reach");
+        std::ostringstream shown;
+        shown << mm << " mm";
+        return shown.str();
+    };
     std::ostringstream text;
     text << "LADDER STUB RULE " << evidence.connector << ": stub width = pad width " << evidence.pad_width
          << " mm; same-footprint pads judged against the land pattern's own gap " << evidence.native_gap
-         << " mm (fabricator minimum " << evidence.fab_minimum << " mm); nearest same-footprint pad " << evidence.nearest_same
-         << " mm, nearest other copper " << evidence.nearest_other << " mm; narrowest pad stub " << evidence.narrowest
-         << " mm; " << evidence.kept << " stubs kept, "
+         << " mm (fabricator minimum " << evidence.fab_minimum << " mm); nearest same-footprint pad " << distance(evidence.nearest_same)
+         << ", nearest other copper " << distance(evidence.nearest_other) << "; narrowest pad stub " << distance(evidence.narrowest)
+         << "; " << evidence.kept << " ladder segments kept, "
          << evidence.dropped.size() << " dropped";
     for (const auto& drop : evidence.dropped) text << "\n    dropped " << drop;
     return text.str();
