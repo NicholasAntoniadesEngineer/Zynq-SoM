@@ -23,7 +23,15 @@ void rail_box(std::ostream& o,int x,int y,const PowerSequenceRow& r,const std::s
     o<<"<text x=\""<<x+10<<"\" y=\""<<y+34<<"\" fill=\"#374151\" font-size=\"10\">"<<esc(sub)<<"</text>\n";
 }
 }
-PowerSequence build_power_sequence(const std::vector<ProjectCircuit>& sheets,const PowerCheckResult& result,const PowerPolicy& policy) {
+std::string module_supply_rail(const BoardLoad& draw,const LinkMapping& mapping) {
+    if(draw.rail.empty())throw FirmwareDocsError("module supply rail: the module draw names no rail");
+    for(const auto* map:{&mapping.rebound_som_rails,&mapping.vcco_rail_map,&mapping.function_map,&mapping.pudc_straps}) {
+        const auto found=map->find(draw.rail);if(found!=map->end())return found->second;
+    }
+    return draw.rail;
+}
+PowerSequence build_power_sequence(const std::vector<ProjectCircuit>& sheets,const PowerCheckResult& result,const std::string& module_rail,const PowerPolicy& policy) {
+    if(module_rail.empty())throw FirmwareDocsError("power-sequence: the module supply rail is empty");
     std::map<std::string,int> depth;
     for(const auto& [r,source]:policy.sources){(void)source;depth[r]=0;}
     // The legacy relaxation loops forever on a reachable positive-length cycle.
@@ -41,7 +49,7 @@ PowerSequence build_power_sequence(const std::vector<ProjectCircuit>& sheets,con
         }
         for(const auto& b:result.bridges)if(depth.count(b.from)&&(!depth.count(b.to)||depth.at(b.to)<depth.at(b.from))){depth[b.to]=depth.at(b.from);changed=true;}
     }
-    std::set<std::string> always{"+3V3_SC","+5V_SOM"},sources;
+    std::set<std::string> always{module_rail},sources;
     for(const auto& [r,source]:policy.sources){(void)source;always.insert(r);sources.insert(r);}
     std::vector<PowerSequenceRow> rows;
     for(const auto& r:result.regs) {
@@ -59,7 +67,8 @@ PowerSequence build_power_sequence(const std::vector<ProjectCircuit>& sheets,con
     for(const auto& r:always)if(depth.count(r)||sources.count(r))out.stage0.push_back(r);
     return out;
 }
-std::string render_power_sequence_svg(const PowerSequence& seq,bool ok,const PowerPolicy& policy) {
+std::string render_power_sequence_svg(const PowerSequence& seq,const std::string& board,bool ok,const PowerPolicy& policy) {
+    if(board.empty())throw FirmwareDocsError("power-sequence drawing: the board name is empty");
     constexpr int x=40,col2=410,row=46,gap=26;int y=84;
     std::map<std::string,int> ypos,modpos;
     for(const auto& r:seq.stage0){ypos[r]=y;y+=row+gap;}
@@ -71,11 +80,11 @@ std::string render_power_sequence_svg(const PowerSequence& seq,bool ok,const Pow
     std::ostringstream o;o.imbue(std::locale::classic());
     o<<"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 "<<width<<' '<<height<<"\" font-family=\"ui-monospace, SFMono-Regular, Menlo, monospace\" font-size=\"11\">\n";
     o<<"<rect width=\""<<width<<"\" height=\""<<height<<"\" fill=\"white\"/>\n";
-    o<<"<text x=\"40\" y=\"30\" font-size=\"15\" font-weight=\"bold\">carrier power-up sequence — staged bring-up ("<<(ok?"PASS":"FAIL")<<")</text>\n";
-    o<<"<text x=\"40\" y=\"52\" font-size=\"11\" fill=\"#6b7280\">derived from the power-tree netlist; matches carrier/docs/BRINGUP.md staging. Arrows = rail dependency (parent -&gt; child).</text>\n";
-    o<<"<text x=\"40\" y=\"76\" font-size=\"12\" font-weight=\"bold\" fill=\"#92400e\">stage 0 — always-on (pre-DIP / pre-PD)</text>\n";
-    o<<"<text x=\"40\" y=\""<<chain_top-8<<"\" font-size=\"12\" font-weight=\"bold\" fill=\"#1e3a8a\">stages 1-3 — rail chain (close one DIP at a time)</text>\n";
-    if(!seq.modules.empty())o<<"<text x=\"410\" y=\""<<mod_top-22<<"\" font-size=\"12\" font-weight=\"bold\" fill=\"#065f46\">stage 4 — gated module rails (SY6280 load switches)</text>\n";
+    o<<"<text x=\"40\" y=\"30\" font-size=\"15\" font-weight=\"bold\">"<<esc(board)<<" power-up sequence ("<<(ok?"PASS":"FAIL")<<")</text>\n";
+    o<<"<text x=\"40\" y=\"52\" font-size=\"11\" fill=\"#6b7280\">derived from the power-tree netlist. Arrows = rail dependency (parent -&gt; child).</text>\n";
+    o<<"<text x=\"40\" y=\"76\" font-size=\"12\" font-weight=\"bold\" fill=\"#92400e\">always-on rails (sources, module supply, rails with no enable)</text>\n";
+    o<<"<text x=\"40\" y=\""<<chain_top-8<<"\" font-size=\"12\" font-weight=\"bold\" fill=\"#1e3a8a\">enabled rails, ordered by depth from the sources</text>\n";
+    if(!seq.modules.empty())o<<"<text x=\"410\" y=\""<<mod_top-22<<"\" font-size=\"12\" font-weight=\"bold\" fill=\"#065f46\">switched rails (load switches)</text>\n";
     for(const auto& r:seq.chain)if(ypos.count(r.vin)&&ypos.count(r.vout)) {
         const int py=ypos.at(r.vin)+23,ch=ypos.at(r.vout)+23;
         o<<"<path d=\"M165,"<<py+22<<" C165,"<<py+30<<" 165,"<<ch-30<<" 165,"<<ch-22<<"\" fill=\"none\" stroke=\""<<(r.load>r.limit?"#dc2626":"#1e3a8a")<<"\" stroke-width=\"1.6\"/>\n";

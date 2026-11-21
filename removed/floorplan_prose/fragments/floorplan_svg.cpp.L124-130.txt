@@ -1,0 +1,7 @@
+    emit("<text x=\""+number(lx)+"\" y=\"68\" font-size=\"13\" font-weight=\"bold\">placement notes (derived)</text>");
+    for (std::size_t k=0;k<legend.size();++k) {
+        const double yy=oy+26+k*22;
+        emit("<circle cx=\""+number(lx+8)+"\" cy=\""+number(yy-4)+"\" r=\"8\" fill=\"white\" stroke=\"#111827\" stroke-width=\"1.2\"/>");
+        emit("<text x=\""+number(lx+8)+"\" y=\""+number(yy-1)+"\" text-anchor=\"middle\" font-size=\"9\" font-weight=\"bold\">"+std::to_string(legend[k]->n)+"</text>");
+        emit("<text x=\""+number(lx+24)+"\" y=\""+number(yy)+"\">"+esc(legend[k]->short_text)+"</text>");
+    }

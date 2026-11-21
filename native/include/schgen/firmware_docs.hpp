@@ -1,6 +1,8 @@
 #pragma once
 
+#include "schgen/board_definition.hpp"
 #include "schgen/bringup_facts.hpp"
+#include "schgen/link.hpp"
 #include "schgen/power_checks.hpp"
 
 namespace schgen {
@@ -21,9 +23,10 @@ struct PowerSequence {
     std::vector<std::string> stage0;
     std::vector<PowerSequenceRow> chain, modules;
 };
+std::string module_supply_rail(const BoardLoad& draw, const LinkMapping& mapping);
 PowerSequence build_power_sequence(const std::vector<ProjectCircuit>&,
-    const PowerCheckResult&, const PowerPolicy&);
-std::string render_power_sequence_svg(const PowerSequence&, bool ok,
+    const PowerCheckResult&, const std::string& module_rail, const PowerPolicy&);
+std::string render_power_sequence_svg(const PowerSequence&, const std::string& board, bool ok,
     const PowerPolicy&);
 
 } // namespace schgen

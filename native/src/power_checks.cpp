@@ -232,13 +232,14 @@ PowerCheckResult analyze_power(const std::vector<ProjectCircuit>& sheets,const P
     return res;
 }
 
-std::string power_report(const PowerCheckResult& res,const PowerPolicy& policy) {
+std::string power_report(const PowerCheckResult& res,const std::string& board,const PowerPolicy& policy) {
+    if(board.empty())throw ModelCheckError("power-tree report: the board name is empty");
     std::vector<std::string> ls{"schgen power-tree budget gate",std::string(64,'='),"","sources:"};
     for(const auto& [rail,s]:policy.sources) {
         auto p=find(res.source_load,rail);double load=p?*p:0,pct=s.amps?100*load/s.amps:0;
         ls.push_back("  "+pad(rail,10)+" "+pad(f(s.volts,1),5,true)+" V  limit "+f(s.amps,2)+" A  load "+f(load,3)+" A  ("+f(pct,0)+"%)  — "+s.note);
     }
-    ls.insert(ls.end(),{"","regulators ("+std::to_string(res.regs.size())+") — numbered as in carrier/docs/power_tree.svg:"});
+    ls.insert(ls.end(),{"","regulators ("+std::to_string(res.regs.size())+") — numbered as in "+board+"/docs/power_tree.svg:"});
     for(const auto& r:res.regs)ls.push_back("  ("+pad(std::to_string(r.n),2,true)+") "+r.sheet+":"+pad(r.ref,4)+" "+pad(r.value,14)+" "+pad(r.vin,9,true)+" -> "+pad(r.vout,14)+" load "+f(r.i_out,3)+" A / limit "+f(r.limit_a,3)+" A ("+f(r.limit_a?100*r.i_out/r.limit_a:0,0)+"%)  in "+f(r.i_in,3)+" A ["+r.kind+"] "+r.note);
     ls.insert(ls.end(),{"","shunt bridges (series R rail->rail, power_mon):"});
     for(const auto& b:res.bridges)ls.push_back("  "+b.sheet+":"+b.ref+" "+b.from+" -> "+b.to);
@@ -254,7 +255,8 @@ std::string power_report(const PowerCheckResult& res,const PowerPolicy& policy) 
     ls.insert(ls.end(),{"",std::string("POWER TREE: ")+(res.ok()?"PASS":"FAIL")+" ("+std::to_string(res.errors.size())+" errors, "+std::to_string(res.findings.size())+" findings, "+std::to_string(res.warnings.size())+" warnings)"});return join(ls);
 }
 
-std::string power_svg(const PowerCheckResult& res,const PowerPolicy& policy) {
+std::string power_svg(const PowerCheckResult& res,const std::string& board,const PowerPolicy& policy) {
+    if(board.empty())throw ModelCheckError("power-tree SVG: the board name is empty");
     std::map<std::string,int> depth;for(const auto& s:policy.sources)depth[s.first]=0;
     // The legacy relaxation never terminates for a source-reachable cycle.
     // Bound by graph vertices; do not publish a partial/misleading diagram.
@@ -279,7 +281,7 @@ std::string power_svg(const PowerCheckResult& res,const PowerPolicy& policy) {
     auto esc=[](std::string s){replace_all(s,"&","&amp;");replace_all(s,"<","&lt;");replace_all(s,">","&gt;");return s;};
     std::vector<std::string> e{"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 "+i(width)+" "+i(total_h)+"\" font-family=\"ui-monospace, SFMono-Regular, Menlo, monospace\" font-size=\"11\">",
         "<rect width=\""+i(width)+"\" height=\""+i(total_h)+"\" fill=\"white\"/>",
-        "<text x=\"30\" y=\"28\" font-size=\"15\" font-weight=\"bold\">carrier power tree — budget gate ("+std::string(res.ok()?"PASS":"FAIL")+")</text>"};
+        "<text x=\"30\" y=\"28\" font-size=\"15\" font-weight=\"bold\">"+esc(board)+" power tree — budget gate ("+std::string(res.ok()?"PASS":"FAIL")+")</text>"};
     for(const auto& r:res.regs) {
         auto a=find(pos,r.vin),b=find(pos,r.vout);if(!a||!b)continue;
         int ax=a->first+190,ay=a->second+20,bx=b->first,by=b->second+20;
@@ -310,9 +312,9 @@ std::string power_svg(const PowerCheckResult& res,const PowerPolicy& policy) {
     e.push_back("</svg>");return join(e)+"\n";
 }
 
-PowerCheckResult run_power_checks(const std::vector<ProjectCircuit>& sheets,const std::filesystem::path& reports,const std::filesystem::path& docs,const PowerPolicy& policy) {
-    auto res=analyze_power(sheets,policy);auto svg=power_svg(res,policy);
-    publish(reports/"power_tree.txt",power_report(res,policy)+"\n");publish(docs/"power_tree.svg",svg);return res;
+PowerCheckResult run_power_checks(const std::vector<ProjectCircuit>& sheets,const std::string& board,const std::filesystem::path& reports,const std::filesystem::path& docs,const PowerPolicy& policy) {
+    auto res=analyze_power(sheets,policy);auto svg=power_svg(res,board,policy);
+    publish(reports/"power_tree.txt",power_report(res,board,policy)+"\n");publish(docs/"power_tree.svg",svg);return res;
 }
 
 JsonNode power_result_json(const PowerCheckResult& res) {

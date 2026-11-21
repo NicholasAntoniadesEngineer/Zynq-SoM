@@ -46,7 +46,7 @@ target_compile_definitions(schgen_core PRIVATE SCHGEN_PART_FACTS="${CMAKE_CURREN
 set(SCHGEN_FLOORPLAN_SOURCES
     src/floorplan_spec.cpp src/floorplan_geometry.cpp src/floorplan_cross.cpp
     src/floorplan_pack.cpp src/floorplan_compose.cpp src/floorplan_build.cpp
-    src/floorplan_ledger.cpp src/floorplan_json.cpp src/floorplan_notes.cpp
+    src/floorplan_ledger.cpp src/floorplan_json.cpp
     src/floorplan_svg.cpp src/floorplan_md.cpp src/floorplan_output.cpp src/floorplan_export.cpp)
 set(SCHGEN_PCB_EMIT_SOURCES
     src/pcb_model.cpp src/pcb_embed.cpp src/pcb_emit.cpp src/pcb_project.cpp src/pcb_silk.cpp)

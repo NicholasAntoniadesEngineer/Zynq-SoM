@@ -84,7 +84,7 @@ std::vector<FloorplanNote> build_floorplan_notes(const FloorplanPlan& plan,const
         const FloorplanRegulator* ldo=nullptr;
         for (const auto& r:input.regulators) if (r.sheet==b.name) { if (!ldo) ldo=&r; vadj |= r.value.find("TLV75725")!=std::string::npos; }
         if (vadj && ldo) {
-            const double vi=rail_volts(ldo->vin,input.power).value_or(0),vo=rail_volts(ldo->vout,input.power).value_or(0);
+            const double vi=rail_volts(ldo->vin).value_or(0),vo=rail_volts(ldo->vout).value_or(0);
             add(b.name,"bank-35 IO header: VADJ LDO copper",ldo->value+" VADJ LDO dissipates ~"+
                 number((vi-vo)*ldo->i_out,2)+" W at the declared "+number(ldo->i_out)+" A — give its EP pad a ground pour.");
         }
@@ -96,7 +96,7 @@ std::vector<FloorplanNote> build_floorplan_notes(const FloorplanPlan& plan,const
             for (const auto& r:input.regulators) if (r.sheet==b.name && r.kind=="buck") {
                 if (r.eff==0) throw FloorplanError("floorplan notes: zero regulator efficiency for "+r.ref);
                 if (!diss.empty()) diss+="; ";
-                diss+=r.value+" "+r.vout+" ~"+number((1/r.eff-1)*rail_volts(r.vout,input.power).value_or(0)*r.i_out,2)+" W";
+                diss+=r.value+" "+r.vout+" ~"+number((1/r.eff-1)*rail_volts(r.vout).value_or(0)*r.i_out,2)+" W";
             }
             add(b.name,"2 bucks: thermal copper + vias; keep SW loops tight",
                 "Buck thermal (worst-case declared draws): "+diss+". Pour copper on the SW/PGND side, stitch vias under the packages, keep each SW node loop minimal.");

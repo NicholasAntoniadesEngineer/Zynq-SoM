@@ -1,0 +1,3 @@
+    std::map<std::string,std::vector<int>> note_of;
+    std::vector<const FloorplanNote*> legend;
+    for (const auto& n:notes) { if (!n.block.empty()) note_of[n.block].push_back(n.n); if (n.n) legend.push_back(&n); }

@@ -20,6 +20,7 @@ namespace {
 using namespace schgen;
 namespace fs=std::filesystem;
 std::size_t checks=0;
+const char* const drawing_board="carrier";
 void require(bool cond,const std::string& why){++checks;if(!cond)throw std::runtime_error(why);}
 const JsonNode& at(const JsonNode& n,const std::string& key){auto p=object_field(n,key);require(p!=nullptr,"missing fixture key "+key);return *p;}
 JsonNode& mut(JsonNode& n,const std::string& key){for(auto& [k,v]:n.object_value)if(k==key)return v;throw std::runtime_error("missing mutation field "+key);}
@@ -108,9 +109,9 @@ void family(const std::vector<ProjectCircuit>& sheets,const JsonNode& expected,c
     eq(power_result_json(detect_power_regulators(sheets,policy)),at(expected,"detection"),name+" detector");
     auto power=analyze_power(sheets,policy);auto pj=power_result_json(power);
     eq(pj,at(expected,"power"),name+" power");
-    text_eq(power_report(power,policy),str(at(expected,"power_report")),name+" power report");
-    if(auto svg=object_field(expected,"svg"))text_eq(power_svg(power,policy),str(*svg),name+" SVG");
-    else fails([&]{(void)power_svg(power,policy);},name+" reachable cycle must not hang SVG");
+    text_eq(power_report(power,drawing_board,policy),str(at(expected,"power_report")),name+" power report");
+    if(auto svg=object_field(expected,"svg"))text_eq(power_svg(power,drawing_board,policy),str(*svg),name+" SVG");
+    else fails([&]{(void)power_svg(power,drawing_board,policy);},name+" reachable cycle must not hang SVG");
     auto power_copy=power_result_from_json(pj);eq(power_result_json(power_copy),pj,name+" power inverse");
     auto thermal=analyze_thermal(sheets,power_copy,policy,copper,source,thermal_policy);
     auto tj=thermal_result_json(thermal);eq(tj,at(expected,"thermal"),name+" thermal");
@@ -240,7 +241,7 @@ int main(int argc,char** argv) {
         }
         require(!temp.empty(),"create isolated test directory");
         auto sheets=selected(projects.array_value.front(),corpus);const auto& expected=at(projects.array_value.front(),"expected_bare");
-        auto power=run_power_checks(sheets,temp/"reports",temp/"docs",legacy);
+        auto power=run_power_checks(sheets,drawing_board,temp/"reports",temp/"docs",legacy);
         text_eq(read(temp/"reports/power_tree.txt"),str(at(expected,"power_report"))+"\n","published power");
         text_eq(read(temp/"docs/power_tree.svg"),str(at(expected,"svg")),"published svg");
         (void)run_thermal_checks(sheets,temp/"reports",legacy,&power,temp/"missing.kicad_pcb",temp);

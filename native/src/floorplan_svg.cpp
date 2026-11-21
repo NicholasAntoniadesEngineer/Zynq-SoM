@@ -27,17 +27,13 @@ std::size_t text_length(const std::string& s) {
 }
 }  // namespace
 
-std::string render_floorplan_svg(const FloorplanPlan& plan,const std::vector<FloorplanNote>& notes,
-                                QuantizationCounts* counts) {
+std::string render_floorplan_svg(const FloorplanPlan& plan,QuantizationCounts* counts) {
     const auto px=[&](double x){return floorplan_svg_coordinate_precision1dp(x,ox,scale,counts);};
     const auto py=[&](double y){return floorplan_svg_coordinate_precision1dp(y,oy,scale,counts);};
     const auto gx=[&](double x){return f(px(x));};
     const auto gy=[&](double y){return f(py(y));};
-    std::map<std::string,std::vector<int>> note_of;
-    std::vector<const FloorplanNote*> legend;
-    for (const auto& n:notes) { if (!n.block.empty()) note_of[n.block].push_back(n.n); if (n.n) legend.push_back(&n); }
     const double view_w=ox+plan.board_w*scale+30+400;
-    const double view_h=std::max(oy+plan.board_h*scale+56,130.0+legend.size()*22+20);
+    const double view_h=std::max(oy+plan.board_h*scale+56,130.0+20);
     if(!std::isfinite(view_w)||!std::isfinite(view_h)||plan.board_w<=0||plan.board_h<=0||
        view_w>std::numeric_limits<int>::max()||view_h>std::numeric_limits<int>::max())
         throw FloorplanError("floorplan SVG: invalid or unrepresentable board dimensions");
@@ -100,11 +96,6 @@ std::string render_floorplan_svg(const FloorplanPlan& plan,const std::vector<Flo
             emit("<text x=\""+f(cx)+"\" y=\""+f(cy)+"\" text-anchor=\"middle\" font-size=\""+number(fs,1)+"\" font-weight=\"bold\">"+esc(b.name)+"</text>");
             emit("<text x=\""+f(cx)+"\" y=\""+f(cy+10)+"\" text-anchor=\"middle\" font-size=\"7.5\" fill=\"#6b7280\">"+std::to_string(b.n_parts)+"p</text>");
         }
-        for (std::size_t k=0;k<note_of[b.name].size();++k) {
-            const double bcx=x+16*k;
-            emit("<circle cx=\""+number(bcx)+"\" cy=\""+number(y)+"\" r=\"7\" fill=\"white\" stroke=\"#111827\" stroke-width=\"1.2\"/>");
-            emit("<text x=\""+number(bcx)+"\" y=\""+number(y+3)+"\" text-anchor=\"middle\" font-size=\"9\" font-weight=\"bold\">"+std::to_string(note_of[b.name][k])+"</text>");
-        }
     }
     const double sx=px(plan.som_x),sy=py(plan.som_y),sw=plan.som.w*scale,sh=plan.som.h*scale;
     emit("<rect x=\""+f(sx)+"\" y=\""+f(sy)+"\" width=\""+number(sw)+"\" height=\""+number(sh)+"\" rx=\"8\" fill=\"#fef3c7\" stroke=\"#92400e\" stroke-width=\"2\" opacity=\"0.95\"/>");
@@ -121,14 +112,7 @@ std::string render_floorplan_svg(const FloorplanPlan& plan,const std::vector<Flo
     emit("<line x1=\""+f(bx)+"\" y1=\""+f(sby)+"\" x2=\""+gx(20)+"\" y2=\""+f(sby)+"\" stroke=\"#111827\" stroke-width=\"3\"/>");
     emit("<text x=\""+gx(10)+"\" y=\""+f(sby+14)+"\" text-anchor=\"middle\" fill=\"#6b7280\">20 mm</text>");
     const double lx=ox+plan.board_w*scale+30;
-    emit("<text x=\""+number(lx)+"\" y=\"68\" font-size=\"13\" font-weight=\"bold\">placement notes (derived)</text>");
-    for (std::size_t k=0;k<legend.size();++k) {
-        const double yy=oy+26+k*22;
-        emit("<circle cx=\""+number(lx+8)+"\" cy=\""+number(yy-4)+"\" r=\"8\" fill=\"white\" stroke=\"#111827\" stroke-width=\"1.2\"/>");
-        emit("<text x=\""+number(lx+8)+"\" y=\""+number(yy-1)+"\" text-anchor=\"middle\" font-size=\"9\" font-weight=\"bold\">"+std::to_string(legend[k]->n)+"</text>");
-        emit("<text x=\""+number(lx+24)+"\" y=\""+number(yy)+"\">"+esc(legend[k]->short_text)+"</text>");
-    }
-    emit("<text x=\""+number(lx)+"\" y=\""+number(oy+26+legend.size()*22+12)+"\" fill=\"#6b7280\" font-size=\"10\">block area = courtyards (big parts raw, small x"+number(plan.factor)+") — see FLOORPLAN.md</text>");
+    emit("<text x=\""+number(lx)+"\" y=\""+number(oy+26+12)+"\" fill=\"#6b7280\" font-size=\"10\">block area = courtyards (big parts raw, small x"+number(plan.factor)+") — see FLOORPLAN.md</text>");
     emit("</svg>");
     return out;
 }

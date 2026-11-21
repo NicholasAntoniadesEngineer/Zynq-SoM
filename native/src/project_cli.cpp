@@ -764,7 +764,8 @@ std::optional<int> run_project_command(int argc, char** argv) {
     }
     if(options.command=="power-sequence") {
         const auto policy=board_power();const auto power=analyze_power(circuits,policy);
-        const auto text=render_power_sequence_svg(build_power_sequence(circuits,power,policy),power.ok(),policy);
+        const auto mapping=link_mapping_from_json(parse_json_file((paths.project_root/"som_mapping.json").string()),paths.module.do_not_load_straps);
+        const auto text=render_power_sequence_svg(build_power_sequence(circuits,power,module_supply_rail(paths.module.draw,mapping),policy),load_project_config(paths).name,power.ok(),policy);
         const auto output=options.output.empty()?paths.project_root/"docs/power_sequence.svg":options.output;
         publish_text(output,text);std::cout<<options.command<<": "<<output.string()<<'\n';return 0;
     }
@@ -803,7 +804,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
         std::string report;
         bool ok = false;
         if (options.command == "powertree") {
-            report = power_report(power, policy); ok = power.ok();
+            report = power_report(power, load_project_config(paths).name, policy); ok = power.ok();
         } else if (options.command == "part-rules") {
             const auto result = analyze_part_rules(circuits,power,policy);
             report = part_rules_report(result); ok = result.ok();
