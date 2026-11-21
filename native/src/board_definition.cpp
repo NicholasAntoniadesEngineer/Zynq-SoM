@@ -300,9 +300,13 @@ BoardDefinition parse_board(const JsonNode& document, const std::string& file, M
 }
 
 BoardDefinition load_board(const std::filesystem::path& board_root) {
+    return load_board(board_root, load_module(module_root_of(board_root)));
+}
+
+BoardDefinition load_board(const std::filesystem::path& board_root, ModuleDefinition module) {
     const std::filesystem::path file = board_root / board_file;
     if (!std::filesystem::is_regular_file(file)) throw std::runtime_error("board file " + file.string() + " is missing");
-    BoardDefinition board = parse_board(parse_json_file(file.string()), file.string(), load_module(module_root_of(board_root)));
+    BoardDefinition board = parse_board(parse_json_file(file.string()), file.string(), std::move(module));
     if (board.name != board_root.filename().string()) fail(file.string(), "name " + board.name + " differs from its folder");
     return board;
 }

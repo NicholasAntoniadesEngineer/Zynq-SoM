@@ -128,5 +128,6 @@ ModuleDefinition load_board_module(const std::filesystem::path& board_root);
 BoardPower parse_board_power(const JsonNode& node, const std::string& source);
 BoardDefinition parse_board(const JsonNode& document, const std::string& source, ModuleDefinition module_definition);
 BoardDefinition load_board(const std::filesystem::path& board_root);
+BoardDefinition load_board(const std::filesystem::path& board_root, ModuleDefinition module);
 
 }
