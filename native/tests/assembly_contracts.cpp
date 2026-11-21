@@ -1,6 +1,7 @@
 #include "placement_report_fixture.hpp"
 #include "schgen/assembly_parts.hpp"
 #include "schgen/assembly_refresh.hpp"
+#include "schgen/project_outputs.hpp"
 #include "schgen/run_config.hpp"
 
 #include <fstream>
@@ -84,6 +85,16 @@ void recorded(const std::filesystem::path& root) {
     const std::string text = assembly_facts_text(result.facts);
     const AssemblyFacts again = parse_assembly_facts(parse_json_text(text), "round trip");
     require(assembly_facts_text(again) == text, "the facts text is stable");
+    const std::filesystem::path scratch = std::filesystem::temp_directory_path() / "schgen_assembly_contracts";
+    std::filesystem::remove_all(scratch);
+    std::filesystem::create_directories(scratch);
+    publish_text(scratch / assembly_facts_name, text);
+    publish_text(scratch / assembly_facts_name, text);
+    require(assembly_facts_text(load_assembly_facts_in(scratch)) == text, "the facts file is written whole");
+    std::size_t entries = 0;
+    for (const auto& entry : std::filesystem::directory_iterator(scratch)) { (void)entry; ++entries; }
+    require(entries == 1, "publication leaves no temporary file beside the facts file");
+    std::filesystem::remove_all(scratch);
     require(text.find("\"C00000\"") < text.find("\"C22775\"") && text.find("\"C22775\"") < text.find("\"C98732\""), "rows are sorted");
 }
 
