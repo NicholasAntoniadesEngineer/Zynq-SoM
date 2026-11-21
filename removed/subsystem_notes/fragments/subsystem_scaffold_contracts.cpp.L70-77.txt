@@ -1,0 +1,8 @@
+    require(names == std::set<std::string>{"CMakeLists.txt", "README.md", "subsystem.json",
+        "widget.hpp", "widget.cpp", "widget.cir", "test_widget.cpp"}, "exact package files");
+    const auto reference = parse_json_file((repo / "native/tests/data/subsystem_scaffold/python_reference.json").string());
+    auto expected_spice = object_field(reference, "widget_cir")->string_value;
+    const auto source = expected_spice.find("widget.py");
+    require(source != std::string::npos, "independent Python SPICE reference");
+    expected_spice.replace(source, 9, "widget.cpp");
+    require(file(rendered, "widget.cir") == expected_spice, "SPICE bytes differ beyond source extension migration");

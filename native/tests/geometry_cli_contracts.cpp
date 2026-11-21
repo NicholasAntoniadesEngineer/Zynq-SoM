@@ -153,7 +153,7 @@ fs::path mirror(const fs::path& repo, const fs::path& work) {
         const auto relative = entry.path().lexically_relative(input);
         const auto top = *relative.begin();
         if (top != "subsystems" && top != "research" && top != "reports" && relative.has_parent_path()) continue;
-        if (entry.path().extension() != ".json" && entry.path().extension() != ".md" && entry.path().extension() != ".cir") continue;
+        if (entry.path().extension() != ".json" && entry.path().extension() != ".md") continue;
         write(output / relative, read(entry.path()));
     }
     for (const auto* name : {module_file, module_interface_file}) write(work / "input/som" / name, read(repo / "som" / name));
@@ -223,16 +223,11 @@ void live(const fs::path& repo, const fs::path& work, const JsonNode& reference,
     // is unavailable in both cases and its mandatory audit must fail closed.
     // KiCad is selected by its trusted absolute path; real ngspice stays usable.
     WithoutAuditCompiler tools(work / "tools-without-audit-compiler");
-    // Two additional independent full-pipeline hard failures after an eligible edit:
-    // missing local package collateral, then invalid required fallback evidence.
+    // One additional full-pipeline hard failure after an eligible edit:
+    // invalid required fallback evidence.
     // Search effort is observational, so a zero retry ceiling is not a failure.
-    const auto collateral = project / "subsystems/som_j1/README.md";
-    fs::rename(collateral, project / "retained-som-j1-README.txt");
-    for (const auto* failure : {"carrier_structure", "fallbacks"}) {
-        if (std::string(failure) == "fallbacks") {
-            fs::rename(project / "retained-som-j1-README.txt", collateral);
-            write(project / "reports/fallback_baseline.json", "INVALID REQUIRED BASELINE\n");
-        }
+    for (const auto* failure : {"fallbacks"}) {
+        write(project / "reports/fallback_baseline.json", "INVALID REQUIRED BASELINE\n");
         const auto unchanged = snapshot(project);
         const auto output = work / (std::string("apply-") + failure);
         const auto result = invoke("compose", output, {"--repair", "--no-render"});
@@ -246,9 +241,8 @@ void live(const fs::path& repo, const fs::path& work, const JsonNode& reference,
         require(!field(verdict, "board_ok").bool_value, "actual full-board verdict fails");
         const auto& gates = field(verdict, "gates");
         require(field(field(gates, failure), "status").string_value == "FAIL" && field(field(gates, failure), "mandatory").bool_value, "deliberately mutated mandatory gate is not waived");
-        if(std::string(failure)=="fallbacks")
-            require(field(field(gates,failure),"report").string_value.find("board fallback baseline invalid")!=std::string::npos,
-                    "invalid required fallback evidence causes the rejection, not search effort");
+        require(field(field(gates,failure),"report").string_value.find("board fallback baseline invalid")!=std::string::npos,
+                "invalid required fallback evidence causes the rejection, not search effort");
         require(field(field(gates, "native_policy"), "status").string_value == "PASS", "apply ran reviewed native policy");
         const auto& audit = field(gates, "quantize_census");
         require(field(audit, "status").string_value == "FAIL" && field(audit, "mandatory").bool_value, "missing trusted compiler is a mandatory failure");

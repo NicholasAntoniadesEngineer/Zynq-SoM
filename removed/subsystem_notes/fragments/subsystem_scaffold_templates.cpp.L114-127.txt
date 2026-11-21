@@ -1,0 +1,14 @@
+constexpr const char* spice = R"scaffold(* @NAME@.cir — SPICE subckt for the @NAME@ subsystem.
+*
+* PROJECT-AGNOSTIC: the subckt pins are the subsystem's ABSTRACT interface, NOT
+* any board net. Values mirror @NAME@.cpp one-for-one (parse_si compatible).
+*
+* Port order: VDD GND   (GND last by convention; add the rest)
+
+.subckt @NAME@ VDD GND
+* <passives mirroring the netlist, e.g.:>
+* C1 VDD GND 100n
+.ends @NAME@
+
+.end
+)scaffold";

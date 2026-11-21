@@ -1,0 +1,6 @@
+// discovery. No .py or interpreter is required. Libraries require README/.cir
+// plus a parameterized native factory and matching declared interface; an
+// optional circuit.json is checked against that live factory. Every project
+// package requires independently checked circuit.json. Local packages own their
+// README/.cir; adapters reference those assets in their generic library and
+// must carry a valid native metadata declaration. Missing files must be regular

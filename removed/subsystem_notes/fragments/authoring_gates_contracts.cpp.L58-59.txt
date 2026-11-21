@@ -1,0 +1,2 @@
+    require(subsystem_required_files("widget")==std::vector<std::string>{"README.md","widget.cir"},
+        "default library requirements retained Python");

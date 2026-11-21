@@ -140,7 +140,7 @@ std::string subsystem_scaffold_summary(const PublishedSubsystemScaffold& result)
     out += ")\nnext: implement " + name + ".cpp; configure native with "
            "-DSCHGEN_SUBSYSTEM_PACKAGES=" + name +
            "; build schgen_subsystem_" + name + "_test and run native_subsystem_" + name +
-           ". See the package README for metadata, registration, and catalog inputs.\n";
+           ".\n";
     if (!result.directory_synced)
         out += "warning: package published, but the parent directory could not be fsynced\n";
     return out;

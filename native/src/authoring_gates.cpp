@@ -73,19 +73,11 @@ std::size_t CarrierStructureResult::n_ok() const {return std::count_if(packages.
 std::size_t CarrierStructureResult::n_adapters() const {return std::count_if(packages.begin(),packages.end(),[](const auto& p){return p.adapter;});}
 std::size_t CarrierStructureResult::n_locals() const {return packages.size()-n_adapters();}
 std::vector<std::string> subsystem_required_files(const std::string& name,AuthoringPackageMode mode) {
-    if(mode==AuthoringPackageMode::native_assets)return {"README.md",name+".cir"};
+    if(mode==AuthoringPackageMode::native_assets)return {"subsystem.json"};
     return {name+".py","README.md","test_"+name+".py",name+".cir"};
 }
-std::vector<std::string> local_package_authored_files(const std::string& name,bool adapter) {
-    if(adapter)return {};
-    return {"README.md",name+".cir"};
-}
 std::vector<std::string> carrier_required_files(const std::string& name,bool adapter,AuthoringPackageMode mode) {
-    if(mode==AuthoringPackageMode::native_assets) {
-        std::vector<std::string> files{"circuit.json","layout.json"};
-        for(const auto& file:local_package_authored_files(name,adapter))files.push_back(file);
-        return files;
-    }
+    if(mode==AuthoringPackageMode::native_assets)return {"circuit.json","layout.json"};
     if(adapter)return {name+".py","test_"+name+".py"};
     return {name+".py","__init__.py","README.md","test_"+name+".py",name+".cir"};
 }
@@ -211,7 +203,7 @@ std::string SubsystemStructureResult::summary() const {
         "  <name>.py (abstract-port netlist + circuit(meta=)) + README.md + test_<name>.py + <name>.cir,",
         "  and a declared abstract INTERFACE that matches the netlist's externals.",""};
     if(native)lines={"schgen subsystem-structure gate (NATIVE HARD)",std::string(60,'='),"",
-        "contract: each native library package has README.md + <name>.cir,",
+        "contract: each native library package has subsystem.json,",
         "  a registered parameterized circuit factory and a matching abstract INTERFACE.",
         "  Optional circuit.json must match the live factory; Python files are not required.",""};
     if(packages.empty())lines.push_back("(no subsystems/ packages found)");
@@ -239,8 +231,8 @@ std::string CarrierStructureResult::summary() const {
         "           README.md + test_<name>.py + <name>.cir and a callable circuit().",""};
     if(native)lines={"schgen carrier-structure gate (NATIVE HARD)",std::string(60,'='),"",
         "contract: every project package has circuit.json matching its live native factory.",
-        "  ADAPTER: native metadata plus the generic library's README.md and <name>.cir.",
-        "  LOCAL: package-local README.md and <name>.cir. Python files are not required.",""};
+        "  ADAPTER: native metadata plus the generic library's subsystem.json.",
+        "  LOCAL: circuit.json and layout.json only. Python files are not required.",""};
     for(const auto& p:packages)if(!p.ok()) {
         lines.push_back(p.name+" ["+p.kind()+"]: INCOMPLETE");
         if(!p.missing.empty())lines.push_back("  missing: "+join(p.missing));

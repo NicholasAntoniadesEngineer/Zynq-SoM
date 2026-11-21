@@ -1,0 +1,1 @@
+    foreach(asset "${name}.cpp" "${name}.hpp" "test_${name}.cpp" "${name}.cir" README.md subsystem.json)

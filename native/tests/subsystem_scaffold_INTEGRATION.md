@@ -2,7 +2,7 @@
 
 New files only; no shared build, module, CLI, registry, or existing package edits
 are made by this worker. The generated package contains C++ source/header/test,
-README, SPICE, `subsystem.json`, and opt-in CMake registration. It is deliberately
+`subsystem.json`, and opt-in CMake registration. It is deliberately
 unimplemented, not a frozen netlist or a green skipped test.
 
 ## Proven handoff
@@ -98,7 +98,7 @@ function(schgen_register_subsystem_package name)
     if("${name}" IN_LIST registered)
         message(FATAL_ERROR "Duplicate subsystem package registration: ${name}")
     endif()
-    foreach(asset "${name}.cpp" "${name}.hpp" "test_${name}.cpp" "${name}.cir" README.md subsystem.json)
+    foreach(asset "${name}.cpp" "${name}.hpp" "test_${name}.cpp" subsystem.json)
         if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/${asset}" OR IS_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/${asset}")
             message(FATAL_ERROR "Missing native subsystem asset: ${CMAKE_CURRENT_SOURCE_DIR}/${asset}")
         endif()

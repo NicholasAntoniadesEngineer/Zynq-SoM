@@ -1,0 +1,2 @@
+    fs::remove(library/"camera/README.md");write(library/"camera/README.md",read(root/"subsystems/camera/README.md"));
+    write(library/"ghost/README.md","unregistered");write(library/"ghost/ghost.cir","* fixture\n.end\n");

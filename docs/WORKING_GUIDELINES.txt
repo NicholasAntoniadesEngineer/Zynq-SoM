@@ -305,10 +305,6 @@ Run on every build; non-zero exit on any failure:
   schgen/DESIGN.md ................ the engine architecture contract
   README.md / carrier/README.md ... how to generate; the layer READMEs
   parts/README.md ................. how to add a part from LCSC
-  subsystems/README.md ............ the reusable subsystem-library index
-  subsystems/<name>/README.md ..... a reusable subsystem's abstract interface
-  carrier/subsystems/README.md .... how to author/adapt a subsystem (the META
-                                    adapter -> reusable library contract)
   carrier/research/*.md ........... per-subsystem engineering dossiers
   WORKING_GUIDELINES.txt .......... this file
 

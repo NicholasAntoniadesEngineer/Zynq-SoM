@@ -1,0 +1,2 @@
+            for (const std::string& asset : local_package_authored_files(sheet.name, !sheet.from_module()))
+                rows.file(board_root / "subsystems" / sheet.name / asset, "subsystems/" + sheet.name + "/" + asset, true);

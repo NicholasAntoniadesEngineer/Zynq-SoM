@@ -57,7 +57,7 @@ BoardAuthoredProject author_board_pipeline_inputs(const ProjectPaths& paths,
     if(out.circuits.empty())throw ProjectError("board has no native authoring factories");
     return out;
 }
-void publish_board_pipeline_inputs(BoardAuthoredProject& project,const ProjectPaths& paths,
+void publish_board_pipeline_inputs(BoardAuthoredProject& project,
         const std::filesystem::path& output){
     using namespace board_pipeline_detail;
     if(output.empty())throw ProjectError("native board authoring requires an output tree");
@@ -68,11 +68,6 @@ void publish_board_pipeline_inputs(BoardAuthoredProject& project,const ProjectPa
         if(fs::is_symlink(target))throw ProjectError("symlinked native board output package: "+sc.name);
         files.emplace_back(target/"circuit.json",json(authored_circuit_json(sc.circuit))+"\n");
         files.emplace_back(target/"layout.json",json(circuit_layout_json(sc.circuit))+"\n");
-        if(fs::weakly_canonical(target)!=fs::weakly_canonical(paths.subsystems_dir/sc.name))
-            for(const auto& asset:{std::string("README.md"),sc.name+".cir"}){
-                const auto source=paths.subsystems_dir/sc.name/asset;
-                if(fs::is_regular_file(source))files.emplace_back(target/asset,read(source));
-            }
     }
     for(const auto& [path,bytes]:files)publish_text(path,bytes);
     for(auto& sc:project.circuits)sc.path=output/"subsystems"/sc.name/"circuit.json";

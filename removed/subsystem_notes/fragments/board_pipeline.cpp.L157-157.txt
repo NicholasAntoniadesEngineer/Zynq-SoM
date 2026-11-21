@@ -1,0 +1,1 @@
+        },c.timing);c.measure("input_publication",[&]{publish_board_pipeline_inputs(*c.authored,p,c.out);});c.circuits=c.authored->circuits;c.roles=load_sheet_roles(p,c.circuits);c.power_policy=load_board_power_policy(p,c.circuits,*c.roles);
