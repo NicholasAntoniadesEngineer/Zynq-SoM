@@ -302,6 +302,35 @@ PlacementMark Engine::_mark() const {
     for (const auto& [name, paths] : pl.plans) mark.plans[name] = paths.size();
     return mark;
 }
+std::optional<Point> Engine::_pack_anchor(const PlacementMark& mark) const {
+    std::set<std::string> moved;
+    for (std::size_t i = mark.parts; i < pl.parts.size(); ++i) moved.insert(pl.parts[i].ref);
+    Refs seated;
+    std::map<std::string, Point> centre;
+    for (std::size_t i = 0; i < mark.boxes; ++i) {
+        const auto& box = pl.boxes[i];
+        if (box.kind != "body" || moved.count(box.owner) || centre.count(box.owner)) continue;
+        if (std::none_of(c.parts.begin(), c.parts.end(), [&](const auto& p) { return p.ref == box.owner; })) continue;
+        seated.push_back(box.owner); centre[box.owner] = {(box.x0 + box.x1) / 2, (box.y0 + box.y1) / 2};
+    }
+    std::map<std::string, std::size_t> shared;
+    bool joined = false;
+    for (const auto& n : c.nets) {
+        if (n.net_class != "signal" && n.net_class != "port") continue;
+        if (std::none_of(n.pins.begin(), n.pins.end(), [&](const auto& p) { return moved.count(p.ref); })) continue;
+        joined = true;
+        std::set<std::string> others;
+        for (const auto& p : n.pins) if (centre.count(p.ref)) others.insert(p.ref);
+        for (const auto& ref : others) ++shared[ref];
+    }
+    if (!joined) return std::nullopt;
+    for (const auto& s : c.layout.serves)
+        if (moved.count(s.part) && centre.count(s.owner.ref)) return centre.at(s.owner.ref);
+    const std::string* best = nullptr;
+    for (const auto& ref : seated) if (shared.count(ref) && (!best || shared.at(ref) > shared.at(*best))) best = &ref;
+    if (!best) return std::nullopt;
+    return centre.at(*best);
+}
 void Engine::_pack_since(const PlacementMark& mark) {
     const auto planned = [&](const std::string& name) { return get(mark.plans, name); };
     std::vector<Box4> fixed, moved;
@@ -331,10 +360,16 @@ void Engine::_pack_since(const PlacementMark& mark) {
         });
     };
     Point seat{page.x0, gceil(page.y1 + PACK_GAP)};
-    bool found = false;
-    for (double y = gfloor(page.y1 - height); !found && y >= page.y0; y = r3(y - PACK_STEP))
-        for (double x = gceil(page.x0); x <= right; x = r3(x + PACK_STEP))
-            if (clear(x, y)) { seat = {x, y}; found = true; break; }
+    const auto anchor = _pack_anchor(mark);
+    bool found = false; double nearest = 0.0;
+    for (double y = gfloor(page.y1 - height); !(found && !anchor) && y >= page.y0; y = r3(y - PACK_STEP))
+        for (double x = gceil(page.x0); x <= right; x = r3(x + PACK_STEP)) {
+            if (!clear(x, y)) continue;
+            const double reach = anchor ? std::fabs(x + width / 2 - anchor->first) + std::fabs(y + height / 2 - anchor->second) : 0.0;
+            if (found && reach >= nearest) continue;
+            seat = {x, y}; found = true; nearest = reach;
+            if (!anchor) break;
+        }
     const double dx = gsnap(seat.first - cell.x0), dy = gsnap(seat.second - cell.y0);
     const auto move = [&](double& x, double& y) { x = r3(x + dx); y = r3(y + dy); };
     const auto text = [&](std::optional<SchematicTextPosition>& p) { if (p) move(p->x, p->y); };

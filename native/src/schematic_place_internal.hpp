@@ -357,6 +357,7 @@ public:
     void _path_cell(const std::string& ref, double ax, double ay, const std::set<std::string>& rails, Handled&);
     void _power_path_row(Handled&);
     void _pack_since(const PlacementMark&);
+    std::optional<Point> _pack_anchor(const PlacementMark&) const;
     double _clear_label_x(const std::string& name, double x, double y, double lo, double hi) const;
     void _pin_divider_columns();
     SchematicPlacement run();
