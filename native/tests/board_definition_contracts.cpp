@@ -122,7 +122,7 @@ void names_board_files() {
     require(board_file_name("Bench_Board", BoardFileKind::Pcb) == "Bench_Board.kicad_pcb", "board name");
     require(board_file_name("Bench_Board", BoardFileKind::DesignRules) == "Bench_Board_pcb.kicad_dru", "design rules name");
     require(board_file_name("Bench_Board", BoardFileKind::Placements) == "Bench_Board_cpl.csv", "placements name");
-    require(board_file_name("Bench_Board", BoardFileKind::PlacementsScratch) == "Bench_Board_cpl.pipeline.csv", "placements scratch name");
+    require(board_file_name("Bench_Board", BoardFileKind::OrderBom) == "Bench_Board_bom.csv", "order BOM name");
     require(board_file_name("Bench_Board", BoardFileKind::PinConstraints) == "Bench_Board_pins.xdc", "pin constraints name");
     rejects([] { board_file_name("", BoardFileKind::Pcb); }, "files.stem");
 }
