@@ -94,6 +94,11 @@ void refuses_bad_files() {
     const auto load = [](const std::string& text) { return author_subsystem_data(parse_json_text(text), SubsystemMeta{}, {}); };
     rejects([&] { load(replaced(widget, "\"hints\": []", "\"hints\": [], \"extra\": 1")); }, "extra");
     rejects([&] { load(replaced(widget, "schgen.subsystem/1", "schgen.subsystem/0")); }, "schema is not");
+    const std::string two_rows = "Widget sensor with a title of forty glyphs and a continuation row that still fits here";
+    require(title_block_rows(two_rows).size() == kTitleRowLimit, "the two-row title fixture does not fill two rows");
+    require(load(replaced(widget, "Widget sensor", two_rows)).title == two_rows, "a title that fits two rows was changed");
+    rejects([&] { load(replaced(widget, "Widget sensor", two_rows + " and then runs on into a third row of the block")); },
+            "sheet widget: title needs 3 title-block rows; the limit is 2");
     rejects([&] { load(replaced(widget, "\"role\": \"pull\", \"net\": \"SCL\"", "\"role\": \"pull\", \"net\": \"SCL\", \"pin\": \"R1.2\"")); },
             "exactly one of");
     rejects([&] { load(replaced(widget, "\"instance\": \"non_empty\"", "\"instance\": \"sometimes\"")); }, "unknown per-board mode");

@@ -1270,4 +1270,34 @@ std::size_t circuit_catalog_count() {
     }
 }
 
+std::vector<std::string> title_block_rows(const std::string& title) {
+    std::vector<std::string> lines;
+    std::string remaining = title;
+    while (!remaining.empty()) {
+        const std::size_t budget = lines.empty() ? kTitleFieldGlyphs : kTitleContinuationGlyphs;
+        std::size_t end = 0, glyphs = 0, space = std::string::npos;
+        while (end < remaining.size() && glyphs < budget) {
+            if (remaining[end] == ' ') space = end;
+            ++end;
+            while (end < remaining.size() &&
+                   (static_cast<unsigned char>(remaining[end]) & kUtf8LeadMask) == kUtf8ContinuationTag) ++end;
+            ++glyphs;
+        }
+        if (end < remaining.size() && space != std::string::npos && space != 0) end = space;
+        lines.push_back(remaining.substr(0, end));
+        remaining.erase(0, end);
+        if (!remaining.empty() && remaining.front() == ' ') remaining.erase(0, 1);
+    }
+    return lines;
+}
+
+void require_title_fits(const std::string& sheet, const std::string& title) {
+    const auto rows = title_block_rows(title);
+    if (rows.size() <= kTitleRowLimit) return;
+    throw std::runtime_error("sheet " + sheet + ": title needs " + std::to_string(rows.size()) +
+        " title-block rows; the limit is " + std::to_string(kTitleRowLimit) + " (" + std::to_string(kTitleFieldGlyphs) +
+        " glyphs, then one continuation row of " + std::to_string(kTitleContinuationGlyphs) +
+        ", broken at spaces); shorten the title: \"" + title + "\"");
+}
+
 }  // namespace schgen
