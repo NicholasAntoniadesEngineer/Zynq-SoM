@@ -1,6 +1,6 @@
 {
   "outline": "auto",
-  "_comment": "DECLARATIVE motor_carrier floorplan, same schema as carrier/floorplan.json. Order in each edge list = order ALONG that edge (N/S left->right, W/E top->bottom). USB inlets and microSD on N as on the carrier; the ESC power path (XT60 in and out) alone on E; the ESC signal header, CAN and expansion headers on S; the RJ45 on W.",
+  "_comment": "DECLARATIVE motor_carrier floorplan, same schema as carrier/floorplan.json. Order in each edge list = order ALONG that edge (N/S left->right, W/E top->bottom). USB inlets and microSD on N as on the carrier; the ESC power path (XT60 in and out) alone on E; the ESC signal header, CAN and expansion headers on S; the RJ45 and the fan connector (board_control) on W.",
   "edges": {
     "N": [
       "microsd",
@@ -16,7 +16,8 @@
       "pl_expansion"
     ],
     "W": [
-      "rj45_connector"
+      "rj45_connector",
+      "board_control"
     ]
   },
   "interior": {
@@ -58,9 +59,6 @@
     },
     "vbat_supply": {
       "near": "esc_power"
-    },
-    "board_control": {
-      "side": "S"
     }
   },
   "edge_order": {
@@ -78,7 +76,8 @@
       "pl_expansion"
     ],
     "W": [
-      "rj45_connector"
+      "rj45_connector",
+      "board_control"
     ]
   }
 }
