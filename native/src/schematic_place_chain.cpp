@@ -719,6 +719,10 @@ SchematicPlacement Engine::_chain_template() {
             }
             for (const auto& name : placed) jogged.push_back(names.at(name));
         }
+        if (sp.refine && !demoted.empty()) {
+            demoted.insert(demoted.end(), aligned.begin(), aligned.end()); demoted.insert(demoted.end(), jogged.begin(), jogged.end());
+            aligned.clear(); jogged.clear();
+        }
         for (const auto& p : demoted) { trunks.erase(p.net); _bridge(p.net); }
         auto kept = aligned; kept.insert(kept.end(), jogged.begin(), jogged.end());
         for (const auto& p : kept) {

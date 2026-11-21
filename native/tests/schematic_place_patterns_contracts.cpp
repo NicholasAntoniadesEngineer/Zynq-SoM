@@ -183,6 +183,26 @@ void enclosing_taps(SymbolLibrary& lib) {
     }
 }
 
+void bus_drawn_one_way(SymbolLibrary& lib) {
+    auto circuit = sheet("bus_drawn_one_way",
+        {part("U1", "SN74HCT245PWR:SN74HCT245PWR", "driver"), part("U2", "SN74LVC125ADR:SN74LVC125ADR", "receiver")},
+        {{"+5V", "power", Pins{{"U1", "20"}, {"U1", "1"}, {"U2", "14"}}},
+         {"GND", "ground", Pins{{"U1", "10"}, {"U1", "19"}, {"U2", "7"}, {"U2", "1"}, {"U2", "4"}}},
+         {"IN_A", "port", Pins{{"U1", "2"}}}, {"IN_B", "port", Pins{{"U1", "3"}}},
+         {"OUT_A", "port", Pins{{"U2", "3"}}}, {"OUT_B", "port", Pins{{"U2", "6"}}},
+         {"BUS_A", "signal", Pins{{"U1", "18"}, {"U2", "2"}}}, {"BUS_B", "signal", Pins{{"U1", "17"}, {"U2", "5"}}}});
+    for (const char* number : {"4", "5", "6", "7", "8", "9", "11", "12", "13", "14", "15", "16"}) circuit.nc.push_back({"U1", number});
+    for (const char* number : {"8", "9", "10", "11", "12", "13"}) circuit.nc.push_back({"U2", number});
+    const auto labelled = [&](bool refine) {
+        SchematicSpacing spacing; spacing.refine = refine;
+        const auto page = place_and_route_schematic(circuit, lib, spacing);
+        require(check_visual_geometry(page.geometry).ok, "the two-part bus sheet does not pass the visual check");
+        return page.placement.label_bridged.count("BUS_A") + page.placement.label_bridged.count("BUS_B");
+    };
+    require(labelled(false) == 1, "the ordinary round no longer draws the crossed pair as one wire and one label pair");
+    require(labelled(true) == 2, "the refine round left one member of a bus wired while its sibling is labelled");
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -191,7 +211,7 @@ int main(int argc, char** argv) {
         const fs::path root(argv[1]);
         SymbolLibrary lib(std::vector<fs::path>{root / "schgen/lib", root / "native/tests/data/schematic_place_chain/symbols"});
         ground_template(lib); side_pin_chain(lib); divider_ladder(lib); trunk_port_tail(lib);
-        power_path(lib); compact_retry(lib); pack_relocates(lib); enclosing_taps(lib);
+        power_path(lib); compact_retry(lib); pack_relocates(lib); enclosing_taps(lib); bus_drawn_one_way(lib);
         std::cout << "schematic place pattern contracts passed\n";
         return 0;
     } catch (const std::exception& error) {
