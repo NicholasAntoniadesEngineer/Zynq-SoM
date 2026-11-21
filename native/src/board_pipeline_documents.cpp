@@ -2,6 +2,8 @@
 #include "schgen/board_files.hpp"
 #include "schgen/gallery.hpp"
 #include "schgen/i2c_inventory.hpp"
+#include "schgen/connector_pinout.hpp"
+#include "schgen/rated_bom.hpp"
 #include "schgen/native_render.hpp"
 #include "schgen/model3d.hpp"
 #include "schgen/sheet_roles.hpp"
@@ -61,6 +63,17 @@ void document_stages(Context& c){
         const auto errors=verify_module_pin_map(map,inputs,c.xdc_pins);
         const auto open=std::count_if(map.rows.begin(),map.rows.end(),[](const ModulePinRow& row){return row.board_net==module_pin_map_empty_cell;});
         c.gate("module_pin_map",errors.empty(),std::to_string(map.rows.size())+" pins on "+std::to_string(c.som->connectors.size())+" connectors; "+std::to_string(open)+" without a board net"+(errors.empty()?"":"; "+join(errors,"; ")));});
+    c.attempt("connector_pinout",[&]{const PartFacts& facts=default_part_facts();const auto pinout=build_connector_pinout(c.sheets,c.index,facts);
+        publish_text(c.reports/"connector_pinout.txt",pinout.text());
+        const auto errors=verify_connector_pinout(pinout,c.sheets,c.index,facts);
+        std::set<std::string> connectors,guards;size_t open=0;
+        for(const auto& row:pinout.rows){connectors.insert(row.sheet+"\t"+row.ref);open+=row.net==connector_pinout_empty_cell;for(const auto& guard:row.protectors)guards.insert(guard.board_ref);}
+        c.gate("connector_pinout",errors.empty(),std::to_string(pinout.rows.size())+" pins on "+std::to_string(connectors.size())+" connectors; "+std::to_string(open)+" unconnected; "+std::to_string(guards.size())+" protecting parts shown"+(errors.empty()?"":"; "+join(errors,"; ")));});
+    c.attempt("bom_ratings",[&]{if(!c.parts)throw ProjectError("part rule result unavailable; the part_rules stage did not complete");
+        const auto bom=generate_bom(c.sheets,true);const PartRatingsTable& ratings=default_part_ratings();
+        const auto report=build_rated_bom(bom,ratings,*c.parts);publish_text(c.reports/"bom_ratings.txt",report.text());
+        const auto errors=verify_rated_bom(report,bom,ratings,*c.parts);
+        c.gate("bom_ratings",errors.empty(),std::to_string(report.lines.size())+" lines; "+std::to_string(report.checks())+" checks of "+std::to_string(c.parts->checked)+" evaluated; "+std::to_string(report.fails())+" failing of "+std::to_string(c.parts->findings.size())+" findings; "+std::to_string(report.unrated())+" unrated"+(errors.empty()?"":"; "+join(errors,"; ")));});
     manifest_stage(c);
     golden_stage(c);
     c.attempt("contract_coverage_lint",[&]{

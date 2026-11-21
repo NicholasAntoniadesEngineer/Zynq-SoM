@@ -2,6 +2,7 @@
 
 #include "schgen/thermal_checks.hpp"
 
+#include <cstdint>
 #include <filesystem>
 
 namespace schgen {
@@ -26,10 +27,21 @@ std::optional<double> parse_resistor_ohms(const std::string&);
 struct PartRulePolicy { double derate_mlcc = 2.0, derate_c0g = 1.5, derate_elec = 1.5, derate_res = 2.0; };
 inline constexpr PartRulePolicy default_part_rule_policy{};
 double capacitor_derating(const PartRatings&, const PartRulePolicy& = default_part_rule_policy);
+inline constexpr const char* part_check_voltage_quantity = "voltage";
+inline constexpr const char* part_check_power_quantity = "power";
+enum class PartCheckVerdict : std::uint8_t { pass, fail, waived, advisory };
+enum class PartCheckBound : std::uint8_t { none, at_least, at_most };
+struct PartCheckRecord {
+    std::string sheet, ref, rule, quantity;
+    PartCheckVerdict verdict = PartCheckVerdict::pass;
+    PartCheckBound bound = PartCheckBound::none;
+    std::optional<double> stress, rating, ratio, limit;
+};
 struct PartCheckResult {
     std::vector<std::string> findings, notes, unspecced;
     ModelWaivers waived;
     std::size_t checked = 0;
+    std::vector<PartCheckRecord> evaluated;
     bool ok() const { return findings.empty(); }
 };
 PartCheckResult analyze_part_rules(const std::vector<ProjectCircuit>& sheets, const PowerCheckResult& power,
