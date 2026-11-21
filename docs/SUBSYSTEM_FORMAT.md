@@ -384,3 +384,45 @@ The voltage of every net is resolved in this order, and each rail has exactly on
 3. a producer, repeated until nothing changes: a regulator with `out_v` in `parts/part_facts.json` gives that voltage; a regulator of kind `load_switch` or `efuse` passes its input rail's voltage; a power-tree bridge (a part on exactly two power nets) whose part class is `resistor`, `inductor` or `ferrite` passes the voltage of its other end.
 
 A regulator with `fb_vref` (an adjustable output) is not a home: its output needs a `rails` row stating the target, and the spice gate checks the divider set point (`fb_vref x (1 + Rtop/Rbottom)`) against that target. The load fails, naming the rails, when: a power-class net has no home; an adjustable output has no target (the message gives the divider value); a rail has two homes; a bridge joins two different voltages; a row names a net no sheet of the board has; a `supplier: module` row names no module supply; or a module supply is not taken by the board. A net of another class has a voltage only from a `rails` row.
+
+## 11. Copper claims
+
+The copper-debt ledger (`reports/copper_debt.txt`) lists the engineering claims that rest on copper the board must carry. The claims, the checks that tie each claim to the live circuits and policies, and the measurement of the emitted board are data in `subsystems/copper_claims.json`. `load_copper_claims` takes the repository root and fails with a message naming the file, the claim and the key when the file is missing or malformed. Any key or kind not listed below is rejected. The `where:` line of a claim in the report is `subsystems/copper_claims.json#<id>`.
+
+Top-level keys, all required: `schema` (`schgen.copper_claims/1`), `plane`, `inventory`, `claims`.
+
+| Key | Contents |
+|---|---|
+| `plane` | `net` and `layer` of the ground plane every measure refers to. |
+| `inventory` | `with_text`, `without_text` and `emits`, the text of the inventory line. `emits` may use `{fills}`, `{plane}`, `{rules}`, `{vias}`, `{gnd}`, `{segments}`. |
+| `claims` | Non-empty list, in report order. Each claim has `id` (unique), `title`, `assumes`, `risk`, `checks` (non-empty) and `measure`. |
+
+A claim is verified on every run, with or without a PCB. Any check that fails raises `CopperProvenanceError` naming the claim. Thermal figures, pour needs, exposed-pad via needs and isolation margins are read from `parts/part_facts.json` rows. A claim states the figures it relies on (`thermal_fact`, `thermal_credit` `need`) and the check fails when a row differs.
+
+Check kinds. The sheet kinds take `scopes` (the `library` and board folder names to check; each must exist, and each listed sheet and part must exist in each listed scope) and `sheet`.
+
+| Kind | Other keys | Fails when |
+|---|---|---|
+| `part` | `refs` (list) or `all_parts` (true); optional `lib_id`, `footprint`, `value_prefix`, `fields` (name to value), `pins` (rows of `pin` and one of `net`, `net_prefix`) | a listed part is missing, or one given attribute, field or pin connection differs. `all_parts` needs at least one attribute. |
+| `net_pins` | `net`, `pins` (rows of `[reference, pin]`) | a listed part is missing or a pin is not on the net. |
+| `part_count` | `count` | the sheet does not hold that many parts. |
+| `thermal_fact` | `refs`, `rth_ja`, `rth_ja_pour` (number or null), `pour_evidence` | the part has no `thermal` row, a figure differs, or the row has no citation. |
+| `part_fact` | `refs`, `section` (`ep_vias` or `isolation`) | the part has no row in that section. |
+| `thermal_credit` | `part` (MPN), `need` (`min_vias`, `radius_mm`, `pour_layers`: the copper the claim states) | the part's `thermal_copper` need, the thermal pour need or the emitter pour need differs from the claim's `need`, the pour field is short of it or lacks a citation, or the part has no pour credit. |
+| `emission_via` | `size_mm`, `drill_mm` | the emitter's thermal via differs. |
+| `emission_ground_layer` | `layer` | the emitter's ground layer differs. |
+| `isolation_margins` | none | the isolation facts are empty or one has no positive margin. |
+| `impedance_geometry` | `impedance_ohm` | the researched differential geometry differs from the live one or the ground reference is missing. |
+
+Measure kinds. Each takes every key listed; text keys are templates and may use only the placeholders named.
+
+| Kind | Keys |
+|---|---|
+| `thermal_via_field` | `part` (MPN; its instances are found by its `regulators` label; radius, via count and pour layers come from its `thermal_copper` need), `emits` (`{plane}`, `{rows}`), `row` (`{ref}`, `{count}`, `{radius}`), `pour` (`{layer}`, `{state}`, appended to a row once per pour layer) |
+| `ep_via_pads` | `part`, `emits` (`{plane}`, `{rows}`), `row` (`{ref}`, `{count}`); pad count and radius come from the `ep_vias` row |
+| `net_island` | `net`, `emits` (`{zones}`, `{vias}`) |
+| `plane_voids` | `zone_prefix`, `min_voids_with_plane`, `none_text`, `emits` (`{names}`) |
+| `reference_plane` | `emits` (`{x0}`, `{y0}`, `{x1}`, `{y1}`), `absent_emits` |
+| `module_body_vias` | `zone_prefix`, `found_text`, `missing_text`, `emits` (`{count}`, `{zone}`) |
+
+Add a claim by appending a row with its checks and a measure; the ledger and the report follow the file.
