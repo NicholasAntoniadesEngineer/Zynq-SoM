@@ -527,8 +527,8 @@ void repository_contracts(Suite& suite, const fs::path& repo) {
                 }
                 require(hits==1,"SoM supply endpoint must occur exactly once");
             }
-            require(parts == (carrier ? 562u : 156u) && nets == (carrier ? 816u : 325u)
-                    && ports == (carrier ? 387u : 51u) && nc == (carrier ? 130u : 55u), "real IR totals changed");
+            require(parts == (carrier ? 563u : 156u) && nets == (carrier ? 818u : 325u)
+                    && ports == (carrier ? 387u : 51u) && nc == (carrier ? 126u : 55u), "real IR totals changed");
             const auto index = load_sheet_index(paths);
             require(index.size() == expected.size() && extend_sheet_index(index, expected).unseen.empty(), "stable sheet bands diverged");
             require(index.front() == std::make_pair(expected.front(), int32_t(1)), "first sheet band changed");
