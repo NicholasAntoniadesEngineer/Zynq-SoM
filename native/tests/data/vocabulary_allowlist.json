@@ -11,8 +11,6 @@
   "native/src/circuit_helpers.cpp": {"reference": 1},
   "native/src/diagram.cpp": {"module": 4, "subsystem": 23},
   "native/src/experiment_tools_catalog.cpp": {"board": 1},
-  "native/src/floorplan_build.cpp": {"subsystem": 2},
-  "native/src/floorplan_compose.cpp": {"subsystem": 4},
   "native/src/floorplan_svg.cpp": {"subsystem": 3},
   "native/src/layout_json.cpp": {"subsystem": 1},
   "native/src/link.cpp": {"board": 9, "module": 2},
@@ -22,8 +20,7 @@
   "native/src/part_import_symbol.cpp": {"part": 1},
   "native/src/pcb_checks_ampacity.cpp": {"module": 1},
   "native/src/pcb_checks_placement.cpp": {"module": 1},
-  "native/src/pcb_emit.cpp": {"subsystem": 13},
-  "native/src/pcb_escape_copper.cpp": {"module": 1, "subsystem": 3},
+  "native/src/pcb_escape_copper.cpp": {"module": 1},
   "native/src/pcb_placement_zones.cpp": {"part": 1},
   "native/src/power_checks.cpp": {"subsystem": 1},
   "native/src/project_authoring.cpp": {"board": 2},
@@ -35,7 +32,6 @@
   "native/src/selftest.cpp": {"module": 5, "part": 6},
   "native/src/selftest_full_fixtures.cpp": {"part": 11},
   "native/src/selftest_full_models.cpp": {"part": 7},
-  "native/src/spice.cpp": {"part": 4, "subsystem": 1},
-  "native/src/symbol_law.cpp": {"subsystem": 1},
-  "native/src/xdc.cpp": {"module": 1}
+  "native/src/spice.cpp": {"part": 1},
+  "native/src/symbol_law.cpp": {"subsystem": 1}
  }}

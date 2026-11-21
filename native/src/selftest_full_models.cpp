@@ -10,6 +10,7 @@ namespace schgen {
 using namespace selftesting;
 namespace {
 std::vector<ProjectCircuit> sheets(const CircuitSheetIr& c){return {{c.name,{},c}};}
+SheetRoles unstated_roles(const CircuitSheetIr& c){SheetRoles roles;roles.emplace(c.name,SheetRole{});return roles;}
 std::vector<std::string> nets_of(const CircuitSheetIr& c,const std::string& ref){
     std::vector<std::string> out;for(const auto& n:c.nets)if(std::any_of(n.pins.begin(),n.pins.end(),[&](const auto& p){return p.ref==ref;}))out.push_back(n.name);return out;
 }
@@ -82,7 +83,7 @@ SelftestModelResult selftest_model_gates(const SelftestModelFixtures& f,SymbolLi
     }
     {const auto base=analyze_power(sheets(f.buck),f.power);auto mut=f.buck;load(mut,4,"selftest overrun");const auto res=analyze_power(sheets(mut),f.power);
         add({"power_overrun",base.ok(),!res.ok()&&contains(res.errors,"OVERRUN"),"power_overrun: +3V3 load 0.5A -> 4.0A (> 3 A limit)\n            by powertree: "+first(res.errors,"(no error)")});}
-    {const auto base=extract_spice_checks(sheets(f.buck),f.power);auto mut=f.buck;for(auto& p:mut.parts)if(p.ref=="R1")p.value="33k";const auto res=extract_spice_checks(sheets(mut),f.power);
+    {const auto base=extract_spice_checks(sheets(f.buck),f.power,unstated_roles(f.buck));auto mut=f.buck;for(auto& p:mut.parts)if(p.ref=="R1")p.value="33k";const auto res=extract_spice_checks(sheets(mut),f.power,unstated_roles(mut));
         add({"divider_drift",base.ok(),!res.ok()&&contains(res.errors(),"FB"),"divider_drift: FB top 45k3 -> 33k (Vout leaves +/-3%)\n            by spice: "+first(res.errors(),"(no error)")});}
     {const auto base=check_testpoint_coverage({f.testpoints});auto mut=f.testpoints;std::optional<std::string> drop;
         for(const auto& p:mut.parts)if(p.lib_id=="Connector:TestPoint"){const auto names=nets_of(mut,p.ref);if(std::find(names.begin(),names.end(),"+3V3")!=names.end()){drop=p.ref;break;}}

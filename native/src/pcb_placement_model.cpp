@@ -214,6 +214,9 @@ void Placer::instantiate() {
         const SheetRole &role = sheet_role(ctx.in.floorplan.roles, p.sheet);
         inst.module_connector = role.module_connector;
         inst.under_module = role.region == SheetRegion::under_module;
+        inst.silk_label = role.silk_label;
+        inst.escape_basis = role.escape_basis;
+        inst.escape_escalates = role.escape_escalates;
         if (p.fact) {
             inst.part_class = p.fact->part_class;
             inst.height = p.fact->height;

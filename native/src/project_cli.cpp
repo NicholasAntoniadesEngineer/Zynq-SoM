@@ -809,7 +809,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
             const auto r=check_bom_values(circuits,load_bom_value_catalog(data/"lcsc_values.json"));
             report=r.report();ok=r.ok;
         } else if(options.command=="spice") {
-            auto r=extract_spice_checks(circuits,board_power());SpiceRunOptions run;run.allow_ngspice=!options.no_ngspice;
+            auto r=extract_spice_checks(circuits,board_power(),load_sheet_roles(paths,options.subsystems.empty()?circuits:load_project_circuits(paths)));SpiceRunOptions run;run.allow_ngspice=!options.no_ngspice;
             run_ngspice_crosschecks(r,run);report=spice_report(r,ngspice_available().has_value());ok=r.ok();
         } else {
             SymbolLibrary library = project_symbol_library(paths);

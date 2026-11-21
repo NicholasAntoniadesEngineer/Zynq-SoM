@@ -22,6 +22,6 @@ void electrical_stages(Context& c){
         for(const auto& [from,alias]:load_part_facts_in(o.parts_dir).footprint_aliases)o.aliases.emplace(from,alias.footprint);
         const auto r=run_footprint_pads(c.circuits,c.library,o,c.reports);c.gate("footprint_pads",r.ok,r.report());});
     c.attempt("pin_completeness",[&]{const auto r=run_pin_completeness(c.circuits,c.library,load_nc_allowlist(c.paths.repository_root/"schgen/verify/data/nc_allowlist.json"),c.reports);c.gate("pin_completeness",r.ok,r.report());});
-    c.attempt("spice",[&]{c.spice=run_spice_checks(c.circuits,c.reports,c.require_power_policy(),c.options.spice);c.gate("spice",c.spice->ok(),spice_report(*c.spice,ngspice_available().has_value()));});
+    c.attempt("spice",[&]{c.spice=run_spice_checks(c.circuits,c.reports,c.require_power_policy(),c.require_roles(),c.options.spice);c.gate("spice",c.spice->ok(),spice_report(*c.spice,ngspice_available().has_value()));});
 }
 }

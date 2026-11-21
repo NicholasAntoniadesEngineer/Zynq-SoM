@@ -888,7 +888,7 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
             [](const auto& t){return t.prefer_short_flow;})) {
         FloorplanLegalizeInput li;
         li.board_w=bw; li.board_h=bh; li.index=in.compose.index; li.metrics=in.compose.metrics;
-        li.channel_demand=channel_demand; li.clear=clear; li.origin=in.origin;
+        li.channel_demand=channel_demand; li.clear=clear; li.origin=in.origin; li.far_guard=sheet_far_guards(in.roles);
         for (const auto& b:plan.interior_blocks) if (b.shape_idx) {
             const auto m=in.compose.shape_metrics.find({b.name,b.shape_idx});
             if (m==in.compose.shape_metrics.end()) throw std::logic_error("floorplan: "+b.name+" chose shape "+std::to_string(b.shape_idx)+" but no per-shape zone metrics were registered — the legalizer would judge shape-0 geometry (silent breakage)");

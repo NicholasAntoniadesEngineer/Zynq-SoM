@@ -4,7 +4,7 @@
   "title": "Bring-up module gates: 10x SY6280 + status/user LEDs",
   "interface": ["+3V3", "+3V3_HDMI_TX", "GND", "EN_HDMI_TX", "+3V3_HDMI_RX", "EN_HDMI_RX", "+3V3_LCD", "EN_LCD", "+3V3_CAM", "EN_CAM", "+3V3_SD", "EN_SD", "+5V", "+5V_USB", "EN_USB", "+3V3_PMOD", "EN_PMOD", "+3V3_USER_LED", "EN_USER_LED", "+5V_HDMI_TX", "EN_HDMI_TX_5V", "+5V_LCD", "EN_LCD_5V"],
   "placement": {"region": "board", "silk_label": null, "far_guard_mm": null, "escape_basis": null, "escape_escalates": false, "reserves_edge": false},
-  "checks": {"dividers": [], "divider_sources": [], "iset_window_ma": null},
+  "checks": {"dividers": [], "divider_sources": [], "iset_window_ma": null, "iset_basis": null},
   "parts": [
     {"ref": "U1", "part": "SY6280AAC"},
     {

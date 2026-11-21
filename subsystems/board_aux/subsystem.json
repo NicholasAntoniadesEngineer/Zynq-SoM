@@ -4,7 +4,7 @@
   "title": "Board services: gated +3V3_AUX rail + PCA9306 I2C isolator",
   "interface": ["+3V3", "+3V3_AUX", "GND", "+3V3_SC", "STM32_I2C2_SCL", "STM32_I2C2_SDA", "AUX_I2C_SCL", "AUX_I2C_SDA"],
   "placement": {"region": "board", "silk_label": null, "far_guard_mm": null, "escape_basis": null, "escape_escalates": false, "reserves_edge": false},
-  "checks": {"dividers": [], "divider_sources": [], "iset_window_ma": null},
+  "checks": {"dividers": [], "divider_sources": [], "iset_window_ma": null, "iset_basis": null},
   "parts": [
     {"ref": "U1", "part": "SY6280AAC"},
     {

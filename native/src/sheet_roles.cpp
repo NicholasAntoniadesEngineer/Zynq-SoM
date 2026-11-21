@@ -25,6 +25,21 @@ void check_connector_sheet(const BoardDefinition& board, const BoardSheet& sheet
                                     std::string(part_class_name(PartClass::module_connector)));
 }
 
+std::string bound_name(const AuthoringStrings& bind, const std::string& net) {
+    for (const auto& [from, to] : bind)
+        if (from == net) return to;
+    return net;
+}
+
+SubsystemChecks bound_checks(const AuthoringStrings& bind, SubsystemChecks checks) {
+    for (SubsystemDivider& divider : checks.dividers) {
+        divider.net = bound_name(bind, divider.net);
+        divider.source = bound_name(bind, divider.source);
+    }
+    for (std::string& source : checks.divider_sources) source = bound_name(bind, source);
+    return checks;
+}
+
 }
 
 SheetRoles sheet_roles(const BoardDefinition& board, const AuthoringContext& context, const SomInterface& module,
@@ -42,7 +57,14 @@ SheetRoles sheet_roles(const BoardDefinition& board, const AuthoringContext& con
                 fail(board, sheet.name, "module connector " + sheet.module_connector + " is also carried by sheet " + taken.first->second);
             role.module_connector = sheet.module_connector;
         } else {
-            role.region = load_subsystem_facts(context.library, sheet.name).placement.region;
+            const SubsystemFacts facts = load_subsystem_facts(context.library, sheet.name);
+            role.region = facts.placement.region;
+            role.silk_label = facts.placement.silk_label;
+            role.escape_basis = facts.placement.escape_basis;
+            role.far_guard_mm = facts.placement.far_guard_mm;
+            role.escape_escalates = facts.placement.escape_escalates;
+            role.reserves_edge = facts.placement.reserves_edge;
+            role.checks = bound_checks(SubsystemMeta(sheet.settings).bindings(), facts.checks);
         }
         roles.emplace(sheet.name, std::move(role));
     }
@@ -67,6 +89,20 @@ const SheetRole& sheet_role(const SheetRoles& roles, const std::string& sheet) {
 bool module_connector_sheet(const SheetRoles& roles, const std::string& sheet) { return !sheet_role(roles, sheet).module_connector.empty(); }
 
 bool under_module_sheet(const SheetRoles& roles, const std::string& sheet) { return sheet_role(roles, sheet).region == SheetRegion::under_module; }
+
+std::vector<std::pair<std::string, double>> sheet_far_guards(const SheetRoles& roles) {
+    std::vector<std::pair<std::string, double>> guards;
+    for (const auto& [sheet, role] : roles)
+        if (role.far_guard_mm) guards.emplace_back(sheet, *role.far_guard_mm);
+    return guards;
+}
+
+std::set<std::string> sheets_reserving_edge(const SheetRoles& roles) {
+    std::set<std::string> sheets;
+    for (const auto& [sheet, role] : roles)
+        if (role.reserves_edge) sheets.insert(sheet);
+    return sheets;
+}
 
 std::map<std::string, std::string> sheet_module_connectors(const SheetRoles& roles) {
     std::map<std::string, std::string> connectors;

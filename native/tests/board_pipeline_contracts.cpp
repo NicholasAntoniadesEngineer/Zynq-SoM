@@ -353,7 +353,7 @@ void live_electrical(const fs::path& root){
     require(c.result.gates.size()==10,"composed electrical family executes every report");
     for(const auto& g:c.result.gates)if(g.mandatory)require(g.status==BoardGateStatus::passed,"live devkit electrical gate "+g.name+": "+g.report);
     require(c.power&&c.testpoints&&c.spice,"computed results retained for dependent docs; no recomputation required");
-    Context no_checks(paths,o);no_checks.power_policy=c.power_policy;electrical_stages(no_checks);
+    Context no_checks(paths,o);no_checks.power_policy=c.power_policy;no_checks.roles=c.roles;electrical_stages(no_checks);
     const auto uncovered=std::find_if(no_checks.result.gates.begin(),no_checks.result.gates.end(),[](const auto& g){return g.name=="spice";});
     require(uncovered!=no_checks.result.gates.end()&&uncovered->mandatory&&uncovered->status==BoardGateStatus::failed&&
             uncovered->report.find("SPICE GATE: UNVERIFIED (0 checks)")!=std::string::npos,
@@ -362,8 +362,11 @@ void live_electrical(const fs::path& root){
     auto unsupported_options=o;unsupported_options.output_root=tmp.path/"unsupported-model";
     Context unsupported(paths,unsupported_options);unsupported.circuits=c.circuits;unsupported.power_policy=legacy_power_policy(root);
     const auto fixture=parse_json_file((root/"native/tests/data/spice/046_buck_en_unknown_zener.json").string());
-    for(const auto& sheet:field(fixture,"sheets").array_value)
+    unsupported.roles=c.roles;
+    for(const auto& sheet:field(fixture,"sheets").array_value){
         unsupported.circuits.push_back({field(sheet,"name").string_value,{},decode_intermediate_circuit_ir(field(sheet,"circuit"))});
+        unsupported.roles->emplace(field(sheet,"name").string_value,SheetRole{});
+    }
     electrical_stages(unsupported);
     const auto missing_model=std::find_if(unsupported.result.gates.begin(),unsupported.result.gates.end(),[](const auto& g){return g.name=="spice";});
     require(missing_model!=unsupported.result.gates.end()&&missing_model->mandatory&&missing_model->status==BoardGateStatus::failed&&

@@ -4,7 +4,7 @@
   "title": "Bring-up EN cells: 3x SN74LVC1G08 rail DIP-AND-override",
   "interface": ["BU_DIP_5V0", "GND", "STM32_RAIL_EN_5V0", "+3V3_SC", "EN_5V0", "BU_DIP_3V3", "STM32_RAIL_EN_3V3", "EN_3V3", "BU_DIP_1V8", "STM32_RAIL_EN_1V8", "EN_1V8"],
   "placement": {"region": "board", "silk_label": null, "far_guard_mm": null, "escape_basis": null, "escape_escalates": false, "reserves_edge": false},
-  "checks": {"dividers": [], "divider_sources": [], "iset_window_ma": null},
+  "checks": {"dividers": [], "divider_sources": [], "iset_window_ma": null, "iset_basis": null},
   "parts": [
     {
       "ref": "U1",

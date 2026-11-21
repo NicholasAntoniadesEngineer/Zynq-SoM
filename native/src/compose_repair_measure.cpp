@@ -82,7 +82,7 @@ ComposeReplica compose_plan_replica(const PcbPlacementInput &input,const Floorpl
     const auto zones=build_pcb_zone_geometry(authored);
     const auto prepared=prepare_pcb_floorplan(authored,zones);
     ComposeReplica out;out.plan=build_floorplan(prepared);
-    auto &ev=out.evaluation;ev.board_w=out.plan.board_w;ev.board_h=out.plan.board_h;ev.origin=prepared.origin;
+    auto &ev=out.evaluation;ev.board_w=out.plan.board_w;ev.board_h=out.plan.board_h;ev.origin=prepared.origin;ev.far_guard=sheet_far_guards(prepared.roles);
     ev.som_core_page=som_core_rect(out.plan.som_x,out.plan.som_y,out.plan.som.w,out.plan.som.h,prepared.origin.first,prepared.origin.second,.03);
     ev.metrics=prepared.compose.metrics;
     for(const auto *blocks:{&out.plan.edge_blocks,&out.plan.interior_blocks})for(const auto &b:*blocks) {

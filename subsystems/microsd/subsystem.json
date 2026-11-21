@@ -3,8 +3,8 @@
   "name": "microsd",
   "title": "microSD slot (1.8V SoM <-> 3.3V card, TXS02612)",
   "interface": ["+VDD_HOST", "+VDD_CARD", "GND", "SD_CLK", "SD_CMD", "SD_D0", "SD_D1", "SD_D2", "SD_D3", "CD_N"],
-  "placement": {"region": "board", "silk_label": null, "far_guard_mm": null, "escape_basis": null, "escape_escalates": false, "reserves_edge": false},
-  "checks": {"dividers": [], "divider_sources": [], "iset_window_ma": null},
+  "placement": {"region": "board", "silk_label": "microSD", "far_guard_mm": null, "escape_basis": null, "escape_escalates": false, "reserves_edge": false},
+  "checks": {"dividers": [], "divider_sources": [], "iset_window_ma": null, "iset_basis": null},
   "parts": [
     {"ref": "U1", "part": "TXS02612RTWR"},
     {"ref": "J1", "part": "TF-01A"},

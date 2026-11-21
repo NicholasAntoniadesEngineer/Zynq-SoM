@@ -9,19 +9,6 @@ using namespace pcb_emission;
 const PcbEmitPolicy &default_pcb_emit_policy() {
     static const PcbEmitPolicy policy = [] {
         PcbEmitPolicy p;
-        p.connector_descriptions = {{"pd_input", "PWR"},
-                                    {"usbc_otg", "USB OTG"},
-                                    {"usb_jtag_connector", "JTAG"},
-                                    {"usb_uart_connector", "UART"},
-                                    {"microsd", "microSD"},
-                                    {"hdmi_tx", "HDMI TX"},
-                                    {"hdmi_rx", "HDMI RX"},
-                                    {"rj45_connector", "ETH"},
-                                    {"board_qwiic", "QWIIC"},
-                                    {"camera", "CAM"},
-                                    {"lcd", "LCD"},
-                                    {"pmod", "PMOD"},
-                                    {"pmod_expansion", "PMOD"}};
         for (const auto &[_, need] : default_thermal_policy().pour_needs)
             p.thermal_credit_needs.push_back(need);
         return p;

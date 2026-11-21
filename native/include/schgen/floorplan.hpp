@@ -190,6 +190,7 @@ struct FloorplanLegalizeInput {
     // explicit hard terms in index are still evaluated independently.
     std::map<std::pair<std::string, std::string>, int> channel_demand;
     std::map<std::string, Box4> module_rects;
+    std::vector<std::pair<std::string, double>> far_guard;
     double clear = board_decision_policy::floorplan::clear;
     bool compact = false;
     FloorplanPoint origin{25.0, 25.0};

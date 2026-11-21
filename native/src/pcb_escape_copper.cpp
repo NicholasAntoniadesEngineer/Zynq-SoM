@@ -134,12 +134,6 @@ std::vector<PcbEscapeCoexistence> coexistence(const PcbEscapeInput &input,
     for (const auto &e : ledger)
         if (e.kind == "split_u" || e.kind == "split_row")
             escal.insert(e.conn);
-    const std::map<std::string, std::string> bases = {
-        {"hdmi_rx_term", "TMDS termination must live at the connector; its pads narrow the channel "
-                         "windows (seat ledger names the splits) — evict only if a failing contact "
-                         "becomes unconstructable; consumer: bottom-channel-keepout unit"},
-        {"power_som",
-         "SoM rail-entry parts; outside all live windows this build (re-derived every build)"}};
     for (const auto &[ref, c] : conns) {
         const auto &inst = input.model().insts[c.index];
         const auto &g = c.contacts;
@@ -154,13 +148,12 @@ std::vector<PcbEscapeCoexistence> coexistence(const PcbEscapeInput &input,
                                                region.first, region.second);
                 }))
                 continue;
-            auto b = bases.find(oi.sheet);
             std::string verdict = "STAY", basis;
             if (oi.under_module) {
                 basis = under_module_basis;
-            } else if (b != bases.end()) {
-                basis = b->second;
-                if (oi.sheet == "hdmi_rx_term" && escal.count(ref))
+            } else if (oi.escape_basis) {
+                basis = *oi.escape_basis;
+                if (oi.escape_escalates && escal.count(ref))
                     verdict = "CONSTRAINT";
             } else
                 basis = "foreign L4 stray inside the escape region but outside every live via "
