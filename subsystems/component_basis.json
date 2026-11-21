@@ -293,10 +293,7 @@
     {"name": "subsystems.BOARD_CONTROL_FAN_GATE_PULL", "value": "100k", "unit": "ohm", "basis": "Gate pull-down of the open-drain PWM driver: the fan PWM wire is released (fan at full speed) while the PL is unconfigured. AO3400A VGS(th) 0.65 to 1.45 V, RDS(on) < 48 mOhm at 2.5 V (AOS AO3400A Rev 3). LCSC C25803.", "class": "datasheet", "numeric": false},
     {"name": "subsystems.BOARD_CONTROL_TACH_PULL", "value": "10k", "unit": "ohm", "basis": "Pull-up of the fan's open-collector tachometer output. LCSC C25804.", "class": "datasheet", "numeric": false},
     {"name": "subsystems.BOARD_CONTROL_TACH_SERIES", "value": "1k", "unit": "ohm", "basis": "Series limit between the fan connector and the PL pin. LCSC C21190.", "class": "datasheet", "numeric": false},
-    {"name": "subsystems.BOARD_CONTROL_I2C_SPEED", "value": "400000", "unit": "Hz", "basis": "Fast-mode management bus.", "class": "datasheet", "numeric": true},
-    {"name": "subsystems.PL_EXPANSION_ISET", "value": "13k", "unit": "ohm", "basis": "SY6280 ILIM = 6800 / 13k = 523 mA on the header supply pins, so a shorted lead cannot pull the bank rail down. LCSC C22797.", "class": "datasheet", "numeric": false},
-    {"name": "subsystems.PL_EXPANSION_IN_BYPASS", "value": "100n", "unit": "F", "basis": "SY6280 input bypass. LCSC C14663.", "class": "datasheet", "numeric": false},
-    {"name": "subsystems.PL_EXPANSION_OUT", "value": "10u", "unit": "F", "basis": "SY6280 output capacitor at the header supply pins. LCSC C15850.", "class": "datasheet", "numeric": false}
+    {"name": "subsystems.BOARD_CONTROL_I2C_SPEED", "value": "400000", "unit": "Hz", "basis": "Fast-mode management bus.", "class": "datasheet", "numeric": true}
   ],
   "uses": [
     {"sheet": "camera", "target": "R1", "attribute": "value", "declaration": "subsystems.CAMERA_LANE_TERM", "type": "Device:R"},
@@ -470,6 +467,6 @@
     {"sheet": "usbc_otg", "target": "R4", "attribute": "value", "declaration": "subsystems.OTG_ID_STRAP", "type": "Device:R"}
   ],
   "sheets": ["camera", "ethernet", "hdmi_rx", "hdmi_tx", "lcd", "microsd", "pd_input", "pmod", "pmod_expansion", "power", "rj45_connector", "uart_bridge", "usb_jtag", "usb_jtag_connector", "usb_pd", "usb_uart_connector", "usbc_otg"],
-  "board_scope_only": ["board_aux", "board_control", "board_qwiic", "board_services", "bringup_en", "bringup_en_modules", "bringup_modules", "bringup_rails", "can_bus", "debug_boot", "esc_io", "esc_power", "fmc", "hdmi_rx_term", "mechanical", "motor_pwm", "motor_sense", "pl_expansion", "power_mon", "power_som", "som_decoupling", "user_io", "vbat_supply"]
+  "board_scope_only": ["board_aux", "board_control", "board_qwiic", "board_services", "bringup_en", "bringup_en_modules", "bringup_modules", "bringup_rails", "can_bus", "debug_boot", "esc_io", "esc_power", "fmc", "hdmi_rx_term", "mechanical", "motor_pwm", "motor_sense", "power_mon", "power_som", "som_decoupling", "user_io", "vbat_supply"]
 }
 

@@ -11,7 +11,7 @@
 #include <unistd.h>
 
 namespace {
-constexpr std::size_t library_packages=40;
+constexpr std::size_t library_packages=39;
 namespace fs=std::filesystem;
 using namespace schgen;
 std::size_t checks=0;

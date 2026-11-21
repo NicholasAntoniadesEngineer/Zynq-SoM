@@ -28,6 +28,7 @@ Rules the tool relies on (enforced by `native_removed_archive_contracts`):
 | `floorplan_prose/` | typed per-sheet placement notes and framing text of docs/FLOORPLAN.md and FLOORPLAN.svg | `9301deeda9d6c31cc06fc5f9230519033cd464c9` | `d6f1a6a4a9814aebb8fbf515e2494d38190bc922` |
 | `drawing_titles/` | typed titles, headings and always-on rail names of docs/power_sequence.svg and docs/power_tree.svg | `d6f1a6a4a9814aebb8fbf515e2494d38190bc922` | `8409f27ff7892b01c336bc42ea0828f7a2d12957` |
 | `subsystem_notes/` | READMEs and SPICE `.cir` files of the subsystem library and the board module sheets, the index READMEs, the SPICE identity test | `63c8ebf32d5f19e3dda76b4f0ada25ca66af032d` | `31f53061af1bd02339cbb345d89a98a83868f8cd` |
+| `pl_expansion/` | the motor-carrier 32-pin PL expansion header subsystem | `3255981b2c4122daf2ad7c1390d4d46bbd046d00` | (this commit) |
 
 ## Files
 
@@ -352,3 +353,8 @@ Original path, then archive path.
 - `motor_carrier/subsystems/som_j2/som_j2.cir` -> `removed/subsystem_notes/motor_carrier/som_j2/som_j2.cir`
 - `motor_carrier/subsystems/som_j3/README.md` -> `removed/subsystem_notes/motor_carrier/som_j3/README.md`
 - `motor_carrier/subsystems/som_j3/som_j3.cir` -> `removed/subsystem_notes/motor_carrier/som_j3/som_j3.cir`
+
+### pl_expansion
+
+- `subsystems/pl_expansion/subsystem.json` -> `removed/pl_expansion/source/subsystem.json`
+- `subsystems/component_basis.json:297-299` -> `removed/pl_expansion/fragments/component_basis.json.L297-299.txt`

@@ -1680,27 +1680,6 @@
       "attribute": "speed_hz",
       "declaration": "subsystems.BOARD_CONTROL_I2C_SPEED",
       "type": "i2c"
-    },
-    {
-      "sheet": "pl_expansion",
-      "target": "R1",
-      "attribute": "value",
-      "declaration": "subsystems.PL_EXPANSION_ISET",
-      "type": "Device:R"
-    },
-    {
-      "sheet": "pl_expansion",
-      "target": "C1",
-      "attribute": "value",
-      "declaration": "subsystems.PL_EXPANSION_IN_BYPASS",
-      "type": "Device:C"
-    },
-    {
-      "sheet": "pl_expansion",
-      "target": "C2",
-      "attribute": "value",
-      "declaration": "subsystems.PL_EXPANSION_OUT",
-      "type": "Device:C"
     }
   ],
   "sheets": [
@@ -1714,7 +1693,6 @@
     "mechanical",
     "microsd",
     "pd_input",
-    "pl_expansion",
     "power",
     "power_mon",
     "power_som",

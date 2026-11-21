@@ -95,8 +95,8 @@ int main(int argc, char** argv) {
             require(board_result.ok(), std::string("a single-board audit passes for ") + board + ": " + component_basis_report(board_result));
         }
         const auto fixture = parse_json_file((root/"native/tests/data/component_basis/python_basis.json").string());
-        require(live.size() == 88 && policy.sheets.size() == 88,"complete live coverage");
-        require(policy.declarations.size() == 296 && policy.uses.size() == 931,"expectation coverage");
+        require(live.size() == 87 && policy.sheets.size() == 87,"complete live coverage");
+        require(policy.declarations.size() == 293 && policy.uses.size() == 928,"expectation coverage");
         const std::vector<std::string> retired={"carrier.power_som.en_series_r","carrier.power_som.en_bypass","devkit_mini.power_som.en_series_r","devkit_mini.power_som.en_bypass"};
         std::size_t reviewed_basis_corrections = 0,reviewed_text_corrections = 0,retired_declarations=0,retired_uses=0;
         const auto migrations = reviewed_migrations();
@@ -196,7 +196,7 @@ int main(int argc, char** argv) {
             }),"port obligation differs from independent Python trace");
         }
         require(result.ok(), component_basis_report(result));
-        require(result.n_files == 88 && result.n_registered == 296 && result.n_sites == 931,"audit counts");
+        require(result.n_files == 87 && result.n_registered == 293 && result.n_sites == 928,"audit counts");
         {
             auto old_c1 = live;
             auto& aux = std::find_if(old_c1.begin(),old_c1.end(),[](const auto& x) {
