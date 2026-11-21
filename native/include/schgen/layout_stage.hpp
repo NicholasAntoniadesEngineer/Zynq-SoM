@@ -12,7 +12,14 @@ struct StageOptions {
     std::vector<std::string> overmold_parts;
 };
 
+struct Rebalance {
+    BalanceReport balance;
+    double before = 0, after = 0;
+    bool kept = false;
+};
+
 struct StageResult {
+    std::vector<Rebalance> rebalances;
     PcbModel model;
     AttractReport attract, reseat;
     OrderReport order;

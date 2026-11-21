@@ -40,6 +40,7 @@ bool sink_part(Kernel& kernel, std::size_t part, const std::vector<Point>& offse
 struct BalanceReport {
     std::size_t sets = 0, flipped = 0, parts = 0;
     double top_before = 0, rear_before = 0, top_after = 0, rear_after = 0;
+    std::vector<std::pair<double, std::string>> kept_on_top;
 };
 
 BalanceReport balance_faces(Kernel& kernel, Nm pitch, Nm reach);

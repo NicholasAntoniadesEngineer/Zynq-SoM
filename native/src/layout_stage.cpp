@@ -117,6 +117,22 @@ StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model
                       (result.balanced_area == result.plain_area && balanced.routed_after < plain.routed_after);
     if (!result.balanced) kernel.restore(plain_state);
     result.squeeze = result.balanced ? std::move(balanced) : std::move(plain);
+    for (;;) {
+        const Snapshot squeezed = kernel.snapshot();
+        const BalanceReport again = balance_faces(kernel, settings.pitch, static_cast<Nm>(constants::sink_reach.value));
+        if (again.flipped == 0) break;
+        SqueezeReport next = squeeze_best(kernel, settings);
+        Rebalance pass{again, area(result.squeeze), area(next), area(next) < area(result.squeeze)};
+        result.rebalances.push_back(pass);
+        if (!pass.kept) {
+            kernel.restore(squeezed);
+            break;
+        }
+        result.squeeze.after = next.after;
+        result.squeeze.routed_after = next.routed_after;
+        result.squeeze.fallen += next.fallen;
+        result.squeeze.attempts.insert(result.squeeze.attempts.end(), next.attempts.begin(), next.attempts.end());
+    }
     result.reseat = attract(kernel, settings.pitch, static_cast<Nm>(constants::sink_reach.value));
     result.rear_after = rear(kernel.placement());
     kernel.verify();
@@ -209,8 +225,20 @@ StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model
          << result.balance.top_before << " to " << result.balance.top_after << " mm2, rear "
          << result.balance.rear_before << " to " << result.balance.rear_after << " mm2\n"
          << "  squeezed area with mirroring " << result.balanced_area << " mm2, without " << result.plain_area
-         << " mm2; kept the " << (result.balanced ? "mirrored" : "unmirrored") << " board\n"
-         << squeeze_summary(result.squeeze) << "RESEAT AFTER SQUEEZE: " << result.reseat.wanted
+         << " mm2; kept the " << (result.balanced ? "mirrored" : "unmirrored") << " board\n";
+    for (const Rebalance& pass : result.rebalances)
+        text << "  on the squeezed board " << pass.balance.flipped << " of " << pass.balance.sets
+             << " movable clusters mirrored to the rear (" << pass.balance.parts << " parts); squeezed again "
+             << pass.before << " to " << pass.after << " mm2; " << (pass.kept ? "kept" : "discarded") << "\n";
+    {
+        const BalanceReport& last = result.rebalances.empty() ? result.balance : result.rebalances.back().balance;
+        std::vector<std::pair<double, std::string>> left = last.kept_on_top;
+        std::stable_sort(left.begin(), left.end(), [](const auto& a, const auto& b) { return a.first > b.first; });
+        text << "  rear-capable courtyard left on top, largest clusters:\n";
+        for (std::size_t index = 0; index < left.size() && index < straggler_rows; ++index)
+            text << "    " << left[index].first << " mm2 " << left[index].second << "\n";
+    }
+    text << squeeze_summary(result.squeeze) << "RESEAT AFTER SQUEEZE: " << result.reseat.wanted
          << " parts had drifted from the pin they serve, " << result.reseat.seated << " reseated ("
          << result.reseat.to_rear << " to the rear, " << result.reseat.far_seated
          << " to the nearest room beyond the first search); preferences met " << result.reseat.met_before << " to "

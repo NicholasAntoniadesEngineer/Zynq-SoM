@@ -73,6 +73,21 @@ bool sink_part(Kernel& kernel, std::size_t part, const std::vector<Point>& offse
 
 namespace {
 
+std::string held_by(const Problem& problem, const Placement& placement, const std::vector<std::size_t>& members) {
+    for (const std::size_t part : members) {
+        const Part& item = problem.parts[part];
+        if (item.fixed) return problem.parts[members.front()].reference + ": tied to fixed " + item.reference;
+        if (item.top_only) return problem.parts[members.front()].reference + ": tied to top-only " + item.reference;
+        if (!problem.footprints[item.footprint].flippable)
+            return problem.parts[members.front()].reference + ": tied to unmirrorable " + item.reference;
+        if (!mirrors_across_x(problem.footprints[item.footprint]))
+            return problem.parts[members.front()].reference + ": " + item.reference + " has no mirror axis";
+        if (placement[part].face == Face::bottom)
+            return problem.parts[members.front()].reference + ": tied to " + item.reference + " already on the rear";
+    }
+    return problem.parts[members.front()].reference + ": not movable";
+}
+
 }
 
 BalanceReport balance_faces(Kernel& kernel, Nm pitch, Nm reach) {
@@ -118,8 +133,14 @@ BalanceReport balance_faces(Kernel& kernel, Nm pitch, Nm reach) {
             return may_sink(problem, kernel.placement(), part) &&
                    mirrors_across_x(problem.footprints[problem.parts[part].footprint]).has_value();
         });
-        if (!movable) continue;
         double area = 0;
+        if (!movable) {
+            for (const std::size_t part : members)
+                if (kernel.placement()[part].face == Face::top && may_sink(problem, kernel.placement(), part))
+                    area += area_mm2(gate_at(problem, part, kernel.placement()[part]));
+            if (area > 0) report.kept_on_top.emplace_back(area, held_by(problem, kernel.placement(), members));
+            continue;
+        }
         for (const std::size_t part : members) area += area_mm2(gate_at(problem, part, kernel.placement()[part]));
         candidates.push_back({lead, area});
     }
@@ -128,8 +149,12 @@ BalanceReport balance_faces(Kernel& kernel, Nm pitch, Nm reach) {
     report.sets = candidates.size();
     const std::vector<Point> offsets = seat_ring(pitch, reach, {0, 0});
     for (const auto& candidate : candidates) {
-        if (rear + candidate.area > top - candidate.area) continue;
         const auto& members = sets[candidate.lead];
+        const std::string lead = problem.parts[candidate.lead].reference;
+        if (rear + candidate.area > top - candidate.area) {
+            report.kept_on_top.emplace_back(candidate.area, lead + ": the rear would hold more than the top");
+            continue;
+        }
         const Box hull = hull_at(problem, kernel.placement(), members);
         std::size_t along_x = 0, along_y = 0;
         for (const std::size_t part : members) {
@@ -138,7 +163,10 @@ BalanceReport balance_faces(Kernel& kernel, Nm pitch, Nm reach) {
             const Pose& pose = kernel.placement()[part];
             (turned(item.edge->mouth_on(pose.face), pose.turn).x != 0 ? along_x : along_y) += 1;
         }
-        if (along_x != 0 && along_y != 0) continue;
+        if (along_x != 0 && along_y != 0) {
+            report.kept_on_top.emplace_back(candidate.area, lead + ": edge parts face both axes");
+            continue;
+        }
         const bool about_x = along_x == 0;
         const Nm pivot = about_x ? hull.x0 + hull.x1 : hull.y0 + hull.y1;
         std::vector<Move> mirror;
@@ -162,7 +190,10 @@ BalanceReport balance_faces(Kernel& kernel, Nm pitch, Nm reach) {
                 break;
             }
         }
-        if (!flipped) continue;
+        if (!flipped) {
+            report.kept_on_top.emplace_back(candidate.area, lead + ": no mirrored seat within reach");
+            continue;
+        }
         ++report.flipped;
         report.parts += members.size();
         top -= candidate.area;
