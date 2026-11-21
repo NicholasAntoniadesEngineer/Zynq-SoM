@@ -317,6 +317,7 @@ bool seat_first(Kernel& kernel, const NetOrder& rule, Nm pitch) {
 bool seat_faced(Kernel& kernel, const PadGap& rule, Nm pitch, Nm radius, bool evict, std::size_t& moved_aside) {
     const Problem& problem = kernel.problem();
     const std::size_t part = rule.member;
+    if (!kernel.release(part)) return false;
     const Pose& anchor = kernel.placement()[rule.anchor];
     const std::vector<Box> pins = named_boxes(problem, rule.anchor, anchor, rule.anchor_names);
     if (pins.empty()) return false;

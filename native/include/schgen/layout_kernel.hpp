@@ -39,6 +39,7 @@ struct Snapshot {
     Placement placement;
     Board board;
     std::vector<Box> reserves;
+    std::vector<std::vector<std::size_t>> fields, freed;
 };
 
 struct Probe {
@@ -59,7 +60,8 @@ public:
     const Placement& placement() const { return placement_; }
     const Board& board() const { return board_; }
     void set_board(const Board& board);
-    Snapshot snapshot() const { return {placement_, board_, reserve_boxes_}; }
+    Snapshot snapshot() const { return {placement_, board_, reserve_boxes_, fields_, freed_}; }
+    bool release(std::size_t part);
     void restore(const Snapshot& snapshot);
     const std::vector<Box>& reserves() const { return reserve_boxes_; }
     bool outline_holds() const;
@@ -144,7 +146,7 @@ private:
     const Problem& problem_;
     Board board_;
     std::vector<Box> reserve_boxes_;
-    std::vector<std::vector<std::size_t>> fields_;
+    std::vector<std::vector<std::size_t>> fields_, freed_;
     Placement placement_;
     std::vector<Shape> shapes_;
     std::unordered_map<Key, std::vector<std::size_t>> cells_;

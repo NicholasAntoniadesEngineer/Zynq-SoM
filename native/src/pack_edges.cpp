@@ -66,15 +66,16 @@ double aff_sum(const std::vector<std::pair<std::string, double>>& j_aff) {
 
 double block_pair_gap(const PackEdgeBlock& a, const PackEdgeBlock& b,
                       char edge, const PackEdgesSpec& spec, QuantizationCounts* counts) {
+    const double room = a.overhang + b.overhang + std::max(a.access, b.access);
     if (a.overmold && b.overmold) {
-        return spec.cable_neighbor_gap;
+        return std::max(spec.cable_neighbor_gap, room);
     }
     // Fanout is along this placement's edge, never a previous attempt's edge.
     // A fresh block may have no current_edge; a spilled block may have another.
     const char axis = is_ns(edge) ? 'E' : 'S';
     const double floor = (a.overmold || b.overmold) ? spec.overmold_side_gap
                                                     : spec.clear;
-    return pair_gap(a.reach, a.inset, b.reach, b.inset, axis, floor, counts);
+    return std::max(pair_gap(a.reach, a.inset, b.reach, b.inset, axis, floor, counts), room);
 }
 
 double rounded_run_coordinate(double target,double lower,QuantizationCounts* counts) {
@@ -183,9 +184,9 @@ PackEdgesResult pack_edges(const std::vector<PackEdgeBlock>& blocks,
                 - 2.0 * spec.edge_margin;
             double used = 0.0;
             for (int idx : placed[si]) {
-                const double trail = blocks[static_cast<std::size_t>(idx)].overmold
-                    ? spec.cable_neighbor_gap
-                    : spec.clear;
+                const PackEdgeBlock& held = blocks[static_cast<std::size_t>(idx)];
+                const double trail = std::max(held.overmold ? spec.cable_neighbor_gap : spec.clear,
+                                              2 * held.overhang + held.access);
                 used += span_of(blocks[static_cast<std::size_t>(idx)], edge)
                     + trail;
             }
@@ -210,8 +211,8 @@ PackEdgesResult pack_edges(const std::vector<PackEdgeBlock>& blocks,
                     blocks[static_cast<std::size_t>(idx)];
                 if (used + span_of(block, edge) <= cap) {
                     placed[si].push_back(idx);
-                    const double trail = block.overmold ? spec.cable_neighbor_gap
-                                                        : spec.clear;
+                    const double trail = std::max(block.overmold ? spec.cable_neighbor_gap : spec.clear,
+                                                  2 * block.overhang + block.access);
                     used += span_of(block, edge) + trail;
                 } else {
                     const char nxt = spill_next(edge);

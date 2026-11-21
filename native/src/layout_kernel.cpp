@@ -80,6 +80,7 @@ Kernel::Kernel(const Problem& problem, Placement placement)
     for (const auto& part : problem_.parts)
         if (part.fanout_subject) reach_ = std::max(reach_, part.fanout_need);
     fields_.resize(placement_.size());
+    freed_.resize(placement_.size());
     for (std::size_t reserve = 0; reserve < problem_.reserves.size(); ++reserve) {
         reserve_boxes_.push_back(problem_.reserves[reserve].box);
         for (const std::size_t member : problem_.reserves[reserve].members) fields_.at(member).push_back(reserve);
@@ -145,6 +146,8 @@ void Kernel::rebuild() {
 void Kernel::restore(const Snapshot& snapshot) {
     board_ = snapshot.board;
     reserve_boxes_ = snapshot.reserves;
+    fields_ = snapshot.fields;
+    freed_ = snapshot.freed;
     std::vector<Move> changed;
     for (std::size_t part = 0; part < placement_.size(); ++part)
         if (placement_[part] != snapshot.placement[part]) changed.push_back({part, snapshot.placement[part]});
@@ -172,6 +175,16 @@ void Kernel::refresh_nets(const std::vector<Move>& moves) {
     }
 }
 
+bool Kernel::release(std::size_t part) {
+    for (const std::size_t reserve : fields_[part]) {
+        const std::optional<PourRule>& pour = problem_.reserves[reserve].pour;
+        if (pour && pour->owner == part) return false;
+    }
+    freed_[part].insert(freed_[part].end(), fields_[part].begin(), fields_[part].end());
+    fields_[part].clear();
+    return true;
+}
+
 bool Kernel::owns(std::size_t reserve, std::size_t part) const {
     const auto& fields = fields_[part];
     return std::find(fields.begin(), fields.end(), reserve) != fields.end();
@@ -190,9 +203,11 @@ bool Kernel::reserves_follow(const std::vector<Move>& moves, const std::vector<c
     for (std::size_t reserve = 0; reserve < problem_.reserves.size(); ++reserve) {
         const auto& members = problem_.reserves[reserve].members;
         const auto count = static_cast<std::size_t>(std::count_if(members.begin(), members.end(),
-            [&](std::size_t member) { return moved[member] != 0; }));
+            [&](std::size_t member) { return moved[member] != 0 && owns(reserve, member); }));
+        const auto held = static_cast<std::size_t>(std::count_if(members.begin(), members.end(),
+            [&](std::size_t member) { return owns(reserve, member); }));
         if (count == 0) continue;
-        if (count != members.size()) return false;
+        if (count != held) return false;
         const std::optional<PourRule>& pour = problem_.reserves[reserve].pour;
         std::optional<Turn> swing;
         std::optional<Pose> owner;
@@ -489,7 +504,8 @@ std::optional<Breach> Kernel::self_breach(std::size_t part, const Shape& shape, 
         const Reserve& field = problem_.reserves[reserve];
         const bool faced = pose.face == Face::top ? field.top : field.bottom;
         const bool guest = std::find(field.guests.begin(), field.guests.end(), part) != field.guests.end();
-        if ((!faced && shape.holes.empty()) || owns(reserve, part) || (guest && shape.holes.empty())) continue;
+        const bool freed = std::find(freed_[part].begin(), freed_[part].end(), reserve) != freed_[part].end();
+        if ((!faced && shape.holes.empty()) || owns(reserve, part) || freed || (guest && shape.holes.empty())) continue;
         if (overlaps(shape.bound, reserve_boxes_[reserve])) return Breach::reserved;
     }
     if (!item.fixed && problem_.rules.plane_margin > 0) {
