@@ -77,7 +77,10 @@ inline std::map<std::string, Part> parts(const FloorplanInput& input) {
     return result;
 }
 
-inline double estimate(const FloorplanInput& input, const FloorplanPlan& plan, bool rounded=true) {
+enum class ModulePose { Rigid, HistoricalGrid };
+
+inline double estimate(const FloorplanInput& input, const FloorplanPlan& plan, bool rounded=true,
+                       ModulePose module_pose=ModulePose::Rigid) {
     const auto& g = input.geometry;
     const auto authored = parts(input);
     std::map<std::string, const FloorplanBlock*> blocks;
@@ -162,10 +165,17 @@ inline double estimate(const FloorplanInput& input, const FloorplanPlan& plan, b
         auto key=input.footprint_of.find(p.authored->footprint);
         if (key==input.footprint_of.end()) continue;
         if (p.sheet.rfind("som_j",0)==0 && ref.rfind("J",0)==0) {
-            for (const auto& jack : plan.som.js) if (jack.ref=="J"+p.sheet.substr(5))
-                place(ref,key->second,jack.w<jack.h ? 90 : 0,
-                      {fixed_part_grid(input.origin.first+plan.som_x+jack.x),
-                       fixed_part_grid(input.origin.second+plan.som_y+jack.y)},0,true);
+            for (const auto& jack : plan.som.js) {
+                if (jack.ref!="J"+p.sheet.substr(5)) continue;
+                if (module_pose==ModulePose::Rigid)
+                    place(ref,key->second,jack.turn,
+                          {input.origin.first+plan.som_x+jack.x,
+                           input.origin.second+plan.som_y+jack.y},0,true);
+                else
+                    place(ref,key->second,jack.w<jack.h ? 90 : 0,
+                          {fixed_part_grid(input.origin.first+plan.som_x+jack.x),
+                           fixed_part_grid(input.origin.second+plan.som_y+jack.y)},0,true);
+            }
         } else if (p.sheet=="som_decoupling") {
             const auto k=std::find(decoupling.begin(),decoupling.end(),ref)-decoupling.begin();
             const auto rows=std::max(1,(plan.dec_count+cols-1)/cols);

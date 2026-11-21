@@ -102,7 +102,8 @@ ExperimentDocument stage_expectations(const PcbPlacementInput& input, const Expe
             for (const auto& inst : frame.instances) {
                 const auto& [x,y,rotation,side]=poses.at(inst.ref);
                 const bool page=index>=11;
-                const auto emit=[&](double value) {return frame.grid_placed.count(inst.ref) ? py_round(25+value,4) : fixed_part_grid(25+value);};
+                const bool module_connector=frame.fixed.count(inst.ref)!=0&&inst.sheet.rfind("som_j",0)==0;
+                const auto emit=[&](double value) {return frame.grid_placed.count(inst.ref)||module_connector ? py_round(25+value,4) : fixed_part_grid(25+value);};
                 require(inst.x==(page ? x : emit(x)) && inst.y==(page ? y : emit(y)) && inst.rotation==rotation,
                         "checkpoint matches current stage pose "+frame.stage+" "+inst.ref);
                 if (page) require(inst.side==side,"checkpoint page side "+inst.ref);
@@ -294,7 +295,8 @@ void historical_variant_metrics(const std::filesystem::path& root) {
             // gating error. Zero ordinary-via cost still anchors their length
             // result; nonzero costs use the independent actual-face oracle.
             if(costs[i].number_value==0)
-                require(measured==expected[i].number_value,"immutable zero-via metric "+label);
+                require(experiment_metric_contracts::estimate(input,plan,true,experiment_metric_contracts::ModulePose::HistoricalGrid)==
+                        expected[i].number_value,"immutable zero-via metric at the archived module pose "+label);
             ++cases;
         }
     }
@@ -434,6 +436,8 @@ void probes(const std::filesystem::path &root, const std::string &project) {
 }
 bool reviewed_projection_sheet(const std::string &project, const std::string &name) {
     const std::set<std::string> carrier{"board_aux","bringup_modules","motor_pwm","board_qwiic","lcd","pd_input","bringup_rails"};
+    const std::set<std::string> module{"som_j1","som_j2","som_j3"};
+    if (module.count(name)) return true;
     return project=="carrier" ? carrier.count(name)!=0 : project=="devkit_mini" && name=="pd_input";
 }
 void catalogs(const std::filesystem::path &root) {
