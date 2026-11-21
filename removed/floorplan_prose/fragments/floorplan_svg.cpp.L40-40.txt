@@ -1,0 +1,1 @@
+    const double view_h=std::max(oy+plan.board_h*scale+56,130.0+legend.size()*22+20);

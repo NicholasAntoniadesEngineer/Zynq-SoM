@@ -245,10 +245,6 @@ struct FloorplanBlock {
     double cx() const { return x + w / 2; }
     double cy() const { return y + h / 2; }
 };
-struct FloorplanNote {
-    int n = 0;
-    std::string block, short_text, long_text;
-};
 struct FloorplanDecision {
     std::string step, kind, name;
     JsonNode value;  // heterogeneous diagnostic scalar, never executable
@@ -325,13 +321,9 @@ std::string render_floorplan_spec_json(const FloorplanPlan& plan);
 std::filesystem::path write_floorplan_spec(const FloorplanPlan& plan,
                                          const std::filesystem::path& path);
 FloorplanPlan build_floorplan(const FloorplanInput& input, ExecutionFailureReceipt* failure = nullptr);
-std::vector<FloorplanNote> build_floorplan_notes(
-    const FloorplanPlan& plan, const FloorplanInput& input);
 std::string render_floorplan_svg(const FloorplanPlan& plan,
-                                 const std::vector<FloorplanNote>& notes,
                                  QuantizationCounts* counts = nullptr);
 std::string render_floorplan_md(const FloorplanPlan& plan,
-                                const std::vector<FloorplanNote>& notes,
                                 const FloorplanInput& input);
 std::string render_floorplan_ledger(const FloorplanPlan& plan);
 JsonNode floorplan_plan_json(const FloorplanPlan& plan);
@@ -340,7 +332,6 @@ JsonNode floorplan_plan_json(const FloorplanPlan& plan);
 // solver callback, or mutable process-wide render context. A PCB invocation
 // retains this stage before mutating its downstream instance placement.
 struct FloorplanDocuments {
-    std::vector<FloorplanNote> notes;
     std::string svg, markdown;
     ExecutionAccounting accounting;
 };

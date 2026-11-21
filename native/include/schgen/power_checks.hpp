@@ -56,10 +56,10 @@ PowerCheckResult analyze_power(const std::vector<ProjectCircuit>& sheets,
     const PowerPolicy& policy = default_power_policy());
 std::string power_report(const PowerCheckResult&,
     const PowerPolicy& policy = default_power_policy());  // No final newline.
-std::string power_svg(const PowerCheckResult&,
+std::string power_svg(const PowerCheckResult&, const std::string& board,
     const PowerPolicy& policy = default_power_policy());  // One final newline.
 // Report publication is separate from analysis and uses explicit destinations.
-PowerCheckResult run_power_checks(const std::vector<ProjectCircuit>& sheets,
+PowerCheckResult run_power_checks(const std::vector<ProjectCircuit>& sheets, const std::string& board,
     const std::filesystem::path& reports_dir, const std::filesystem::path& docs_dir,
     const PowerPolicy& policy = default_power_policy());
 JsonNode power_result_json(const PowerCheckResult&);

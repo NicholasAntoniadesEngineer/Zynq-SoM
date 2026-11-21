@@ -25,6 +25,8 @@ Rules the tool relies on (enforced by `native_removed_archive_contracts`):
 | `vivado_script/` | fpga/create_project.tcl and its generator | `9d2961a723a8b27af61bd49606abaea8f8ebaed4` | `f32ac35a280d8cca496f4dbec4dde9f51c63600d` |
 | `document_consistency/` | checker of the stored DESIGN_SPEC.md and COMPLIANCE.md | `e95a7702bfddd6775b5b0c482e90d29cf3c178b5` | `e4fd185c3ec9aac237b3c00f1ce534d5632d4152` |
 | `i2c_chip_facts/` | chip-specific I2C address functions and the sheet-named collision check they fed | `48d29d0194a10565be61ef5d8391051b1e0f7944` | `92644cdeccc63d6def0e71d9fc5dc14e7918f0af` |
+| `floorplan_prose/` | typed per-sheet placement notes and framing text of docs/FLOORPLAN.md and FLOORPLAN.svg | `9301deeda9d6c31cc06fc5f9230519033cd464c9` | `d6f1a6a4a9814aebb8fbf515e2494d38190bc922` |
+| `drawing_titles/` | typed titles, headings and always-on rail names of docs/power_sequence.svg and docs/power_tree.svg | `d6f1a6a4a9814aebb8fbf515e2494d38190bc922` | `8409f27ff7892b01c336bc42ea0828f7a2d12957` |
 
 ## Files
 
@@ -155,3 +157,39 @@ Original path, then archive path.
 - `native/src/manufacturing_exports_manifest.cpp:9-15` -> `removed/i2c_chip_facts/fragments/manufacturing_exports_manifest.cpp.L9-15.txt`
 - `native/src/manufacturing_exports_manifest.cpp:32-43` -> `removed/i2c_chip_facts/fragments/manufacturing_exports_manifest.cpp.L32-43.txt`
 - `native/src/manufacturing_exports_manifest.cpp:53-66` -> `removed/i2c_chip_facts/fragments/manufacturing_exports_manifest.cpp.L53-66.txt`
+
+### floorplan_prose
+
+- `native/src/floorplan_notes.cpp` -> `removed/floorplan_prose/source/floorplan_notes.cpp`
+- `native/tests/data/floorplan/carrier.json` key `expected.notes` -> `removed/floorplan_prose/tests/data/floorplan/carrier_expected_notes.json`
+- `native/tests/data/floorplan/devkit_mini.json` key `expected.notes` -> `removed/floorplan_prose/tests/data/floorplan/devkit_mini_expected_notes.json`
+- `native/include/schgen/floorplan.hpp:248-251` -> `removed/floorplan_prose/fragments/floorplan.hpp.L248-251.txt`
+- `native/include/schgen/floorplan.hpp:328-329` -> `removed/floorplan_prose/fragments/floorplan.hpp.L328-329.txt`
+- `native/include/schgen/floorplan.hpp:331-331` -> `removed/floorplan_prose/fragments/floorplan.hpp.L331-331.txt`
+- `native/include/schgen/floorplan.hpp:334-334` -> `removed/floorplan_prose/fragments/floorplan.hpp.L334-334.txt`
+- `native/include/schgen/floorplan.hpp:343-343` -> `removed/floorplan_prose/fragments/floorplan.hpp.L343-343.txt`
+- `native/tests/floorplan_contracts.cpp:1298-1301` -> `removed/floorplan_prose/fragments/floorplan_contracts.cpp.L1298-1301.txt`
+- `native/tests/floorplan_contracts.cpp:1315-1317` -> `removed/floorplan_prose/fragments/floorplan_contracts.cpp.L1315-1317.txt`
+- `native/src/floorplan_md.cpp:110-111` -> `removed/floorplan_prose/fragments/floorplan_md.cpp.L110-111.txt`
+- `native/src/floorplan_md.cpp:112-116` -> `removed/floorplan_prose/fragments/floorplan_md.cpp.L112-116.txt`
+- `native/src/floorplan_md.cpp:19-19` -> `removed/floorplan_prose/fragments/floorplan_md.cpp.L19-19.txt`
+- `native/src/floorplan_md.cpp:20-21` -> `removed/floorplan_prose/fragments/floorplan_md.cpp.L20-21.txt`
+- `native/src/floorplan_md.cpp:23-24` -> `removed/floorplan_prose/fragments/floorplan_md.cpp.L23-24.txt`
+- `native/src/floorplan_md.cpp:26-26` -> `removed/floorplan_prose/fragments/floorplan_md.cpp.L26-26.txt`
+- `native/src/floorplan_md.cpp:28-28` -> `removed/floorplan_prose/fragments/floorplan_md.cpp.L28-28.txt`
+- `native/src/floorplan_md.cpp:31-31` -> `removed/floorplan_prose/fragments/floorplan_md.cpp.L31-31.txt`
+- `native/src/floorplan_output.cpp:9-11` -> `removed/floorplan_prose/fragments/floorplan_output.cpp.L9-11.txt`
+- `native/src/floorplan_svg.cpp:103-107` -> `removed/floorplan_prose/fragments/floorplan_svg.cpp.L103-107.txt`
+- `native/src/floorplan_svg.cpp:124-130` -> `removed/floorplan_prose/fragments/floorplan_svg.cpp.L124-130.txt`
+- `native/src/floorplan_svg.cpp:131-131` -> `removed/floorplan_prose/fragments/floorplan_svg.cpp.L131-131.txt`
+- `native/src/floorplan_svg.cpp:30-30` -> `removed/floorplan_prose/fragments/floorplan_svg.cpp.L30-30.txt`
+- `native/src/floorplan_svg.cpp:36-38` -> `removed/floorplan_prose/fragments/floorplan_svg.cpp.L36-38.txt`
+- `native/src/floorplan_svg.cpp:40-40` -> `removed/floorplan_prose/fragments/floorplan_svg.cpp.L40-40.txt`
+- `native/tests/output_precision_contracts.cpp:129-129` -> `removed/floorplan_prose/fragments/output_precision_contracts.cpp.L129-129.txt`
+- `native/tests/output_precision_contracts.cpp:130-133` -> `removed/floorplan_prose/fragments/output_precision_contracts.cpp.L130-133.txt`
+
+### drawing_titles
+
+- `native/src/firmware_docs_power_sequence.cpp:44-44` -> `removed/drawing_titles/fragments/firmware_docs_power_sequence.cpp.L44-44.txt`
+- `native/src/firmware_docs_power_sequence.cpp:74-78` -> `removed/drawing_titles/fragments/firmware_docs_power_sequence.cpp.L74-78.txt`
+- `native/src/power_checks.cpp:286-286` -> `removed/drawing_titles/fragments/power_checks.cpp.L286-286.txt`
