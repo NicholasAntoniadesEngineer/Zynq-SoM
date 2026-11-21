@@ -239,7 +239,7 @@ ReturnPathResult check_return_path(const SomInterface&,
     const std::map<std::string, PcbCheckFootprintPtr>& connector_footprints, int k = 2);
 
 struct EscapeLaneResult {
-    bool ok = true;
+    bool ok = true, genuine_stated = true;
     int n_lanes = 0, n_pairs = 0, n_genuine = 0;
     std::vector<std::string> violations;
     std::string summary() const;
