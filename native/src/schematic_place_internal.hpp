@@ -20,6 +20,12 @@ inline constexpr double A3_TITLEBLOCK_LEFT = 300.0, A3_TITLEBLOCK_TOP = 252.9;
 inline constexpr double TITLEBLOCK_MARGIN = 4.0, PAPER_H_BUDGET = 240.0, PAPER_W_BUDGET = 330.0;
 inline constexpr double CHAR_W = 0.95, TEXT_SIZE = 1.27, LINE_H = 1.6;
 inline constexpr double GLABEL_PAD_LEN = 2.0, GLABEL_H = 2.2, GLABEL_INSET = 0.254;
+inline constexpr double PASSIVE_SPAN = 6 * U, RAIL_SYMBOL_SPAN = 4 * U, LADDER_JOG_PITCH = 2 * U;
+inline constexpr double TEXT_GAP = 0.42, PIN_CLEAR = 0.01;
+inline constexpr int SEAT_SEARCH_STEPS = 60;
+inline constexpr double ESCAPE_TEXT_CLEAR = U;
+inline constexpr double PATH_TAG_RISE = 4 * U;
+inline constexpr double PACK_WIDTH_BUDGET = 380.0, PACK_GAP = 2 * U, PACK_STEP = 2 * U;
 // Count attempted scalar entry, including a throwing quantizer; no arithmetic replay.
 inline double gsnap(double v, QuantizationCounts* counts) {
     return schematic_grid::gsnap(v, U, counts);
@@ -88,6 +94,12 @@ struct Leg { std::string ref, a, b; };
 struct FloatLeg { std::string ref, far, kind; };
 using FloatLegs = OrderedMap<std::vector<FloatLeg>>;
 struct ChainEnd { std::string ref, net, far, kind; };
+struct FloatChain {
+    std::string kind, root;
+    std::vector<Leg> legs;
+    RefMap hangs;
+};
+using ChainPtr = std::shared_ptr<FloatChain>;
 struct Line {
     std::string net;
     Point pin_pt;
@@ -95,13 +107,9 @@ struct Line {
     std::optional<std::pair<std::string, std::string>> attach_div;
     std::string net_class = "port", pin_etype;
     bool force_label = false;
+    std::string attach_kind;
+    ChainPtr chain;
 };
-struct FloatChain {
-    std::string kind, root;
-    std::vector<Leg> legs;
-    RefMap hangs;
-};
-using ChainPtr = std::shared_ptr<FloatChain>;
 struct TrunkDirect { Point pin_pt; std::string side; };
 struct TrunkRung {
     std::string net;
@@ -136,6 +144,13 @@ struct TipGroup { Point first; std::vector<Point> rest; };
 struct FacingPair { std::string net; Point a, b; std::vector<Point> a_extra, b_extra; };
 struct ChainScore { std::array<int, 3> score; OrderedMap<int> orient; };
 struct RungIslet { std::string trunk_net, far_net, ref; };
+struct OpenStub { std::string net; Point at; int rotation; };
+struct PathLink { std::string ref, a, b; bool multi = false; };
+struct PowerPath { Refs nets; std::vector<PathLink> links; std::optional<std::string> source, sink; };
+struct PlacementMark {
+    std::size_t parts = 0, powers = 0, hlabels = 0, llabels = 0, no_connects = 0, boxes = 0, stubs = 0;
+    OrderedMap<std::size_t> plans;
+};
 
 VisualBox body_box_page(const SymbolDef&, double ax, double ay, int rotation,
                         const std::string& kind, const std::string& owner);
@@ -169,6 +184,9 @@ public:
     std::size_t _pwr = 0, _flg = 0, _n_box_bucks = 0;
     std::set<std::string> _done, _pin_islets, _comp_starts;
     std::vector<RungIslet> _rung_islets;
+    std::vector<OpenStub> _open_stubs;
+    PowerPath _path;
+    std::set<std::string> _path_refs;
     std::vector<double> _sig_rows;
     std::map<double, std::string> _rail_row_net;
     std::vector<std::pair<std::size_t, VisualBox>> _deferred_texts;
@@ -225,15 +243,22 @@ public:
                         std::size_t box_mark, const OrderedMap<std::size_t>& plan_marks);
     bool _foreign_rows_clear(const Box4&, const std::string&, const std::set<double>& own_ys) const;
     std::pair<double, Box4> _series_inline(const Leg&, const std::string&, Point tap, int sign,
-                                          std::optional<Box4> avoid = std::nullopt);
+                                          std::optional<Box4> avoid = std::nullopt, double clear = 0.0);
     double _attach_halfw(const Line&);
     std::pair<double, double> _attach_band(const Line&);
     double _attach_column(const Line&, Point tap, double rank_y, bool downward);
     double _divider(const Line&, Point tap);
+    double _pin_overhang(const std::string& ref, const std::string& attach_net);
+    ChainPtr _side_pin_chain(const std::string& net, const std::string& ref) const;
+    std::pair<double, double> _chain_band(const FloatChain&, int sign);
+    void _attach_chain(const Line&, Point tap, double rank_y, bool downward, int sign);
+    void _divider_ladder(const std::vector<Line>& nodes, const Refs& legs, int sign);
     void _cell(const std::string&, double ax, double ay, Handled&, TrunkMap&,
                bool defer_texts = false, int drop_dir = -1);
     std::shared_ptr<Trunk> _rung_of(const std::string&, const TrunkMap&) const;
     void _build_trunk(Trunk&);
+    std::vector<double> _trunk_leg_taps(const Trunk&, double node);
+    double _trunk_chain_column(const FloatChain&, const std::vector<double>& nodes, double ty, double outside);
     void _bottom_port_drop(const std::string&, const SymbolPin&, Point, double row, int direction);
     double _rung_bar_y(const Trunk&) const;
     std::vector<double> _ladder_rung(Trunk&, const std::string&, Point, Refs legs, double bar);
@@ -321,6 +346,15 @@ public:
     void _trunk_series_columns();
     void _rung_islet_columns();
     void _rung_islet_drop(const std::string&, Point, int sign);
+    bool _label_clear(const Box4&, const std::string& name) const;
+    bool _label_open_stubs();
+    PlacementMark _mark() const;
+    void _detect_power_path();
+    SideTip _path_tip(const std::string& ref, const std::string& net, const std::string& side);
+    void _path_cell(const std::string& ref, double ax, double ay, const std::set<std::string>& rails, Handled&);
+    void _power_path_row(Handled&);
+    void _pack_since(const PlacementMark&);
+    double _clear_label_x(const std::string& name, double x, double y, double lo, double hi) const;
     void _pin_divider_columns();
     SchematicPlacement run();
 

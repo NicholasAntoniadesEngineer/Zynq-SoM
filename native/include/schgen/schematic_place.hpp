@@ -22,6 +22,8 @@ struct SchematicSpacing {
     double cluster_dy = 20.32;
     double flags_dy = 16.51;
     double flag_pitch = 10.16;
+    bool compact = false;
+    bool refine = false;
     SchematicSpacing expanded(QuantizationCounts* counts = nullptr) const;
 };
 

@@ -91,6 +91,8 @@ struct VisualResult {
 // Rejects nonfinite/inverted geometry and diagonal/zero-length wires rather
 // than allowing malformed geometry to evade predicates. A negative/nonfinite
 // clearance is also an input error; these cases throw ValidationError.
+bool wire_over_text(const VisualSegment& wire, const VisualBox& box);
+
 VisualResult check_visual_geometry(
     const SheetGeometry& geometry,
     double clearance_mm = default_engine_config.visual_clearance_mm);
