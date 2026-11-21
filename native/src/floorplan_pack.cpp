@@ -274,7 +274,15 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
     plan.spilled.clear();
     std::vector<PackEdgeBlock> edge_rows;
     for (auto& b:plan.edge_blocks) {
-        std::tie(b.w,b.h)=zbox.at(b.name); b.area=block_area(b.w,b.h, counts);
+        std::tie(b.w,b.h)=zbox.at(b.name);
+        if (b.shape_idx!=0) {
+            const auto variants=in.geometry.shapes.find(b.name);
+            if (variants==in.geometry.shapes.end()||b.shape_idx<0||static_cast<std::size_t>(b.shape_idx)>=variants->second.size())
+                throw FloorplanError("edge block "+b.name+" selects shape "+std::to_string(b.shape_idx)+" that it does not offer");
+            const auto& selected=variants->second[static_cast<std::size_t>(b.shape_idx)];
+            b.w=selected.w; b.h=selected.h;
+        }
+        b.area=block_area(b.w,b.h, counts);
         PackEdgeBlock row;
         row.name=b.name; row.w=b.w; row.h=b.h;
         if (b.order_hint) row.order_hint=*b.order_hint;
