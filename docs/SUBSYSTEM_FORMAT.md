@@ -374,7 +374,7 @@ Top-level keys, all required: `schema` (`schgen.copper_claims/1`), `plane`, `inv
 | `inventory` | `with_text`, `without_text` and `emits`, the text of the inventory line. `emits` may use `{fills}`, `{plane}`, `{rules}`, `{vias}`, `{gnd}`, `{segments}`. |
 | `claims` | Non-empty list, in report order. Each claim has `id` (unique), `title`, `assumes`, `risk`, `checks` (non-empty) and `measure`. |
 
-A claim is verified on every run, with or without a PCB. Any check that fails raises `CopperProvenanceError` naming the claim. Thermal figures, pour needs, exposed-pad via needs and isolation margins are read from `parts/part_facts.json` rows; a claim restates only the figure it asserts (`thermal_fact`) and the check fails when the row differs.
+A claim is verified on every run, with or without a PCB. Any check that fails raises `CopperProvenanceError` naming the claim. Thermal figures, pour needs, exposed-pad via needs and isolation margins are read from `parts/part_facts.json` rows. A claim states the figures it relies on (`thermal_fact`, `thermal_credit` `need`) and the check fails when a row differs.
 
 Check kinds. The sheet kinds take `scopes` (the `library` and board folder names to check; each must exist, and each listed sheet and part must exist in each listed scope) and `sheet`.
 
@@ -385,7 +385,7 @@ Check kinds. The sheet kinds take `scopes` (the `library` and board folder names
 | `part_count` | `count` | the sheet does not hold that many parts. |
 | `thermal_fact` | `refs`, `rth_ja`, `rth_ja_pour` (number or null), `pour_evidence` | the part has no `thermal` row, a figure differs, or the row has no citation. |
 | `part_fact` | `refs`, `section` (`ep_vias` or `isolation`) | the part has no row in that section. |
-| `thermal_credit` | `part` (MPN) | the thermal, `thermal_copper` and `regulators` rows of the part, the thermal pour need and the emitter pour need disagree, or the pour field is short of the need. |
+| `thermal_credit` | `part` (MPN), `need` (`min_vias`, `radius_mm`, `pour_layers`: the copper the claim states) | the part's `thermal_copper` need, the thermal pour need or the emitter pour need differs from the claim's `need`, the pour field is short of it or lacks a citation, or the part has no pour credit. |
 | `emission_via` | `size_mm`, `drill_mm` | the emitter's thermal via differs. |
 | `emission_ground_layer` | `layer` | the emitter's ground layer differs. |
 | `isolation_margins` | none | the isolation facts are empty or one has no positive margin. |

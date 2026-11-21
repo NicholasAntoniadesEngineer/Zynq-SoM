@@ -23,7 +23,7 @@ const std::map<std::string, std::set<std::string>> check_keys{
     {"part_count", {"kind", "scopes", "sheet", "count"}},
     {"thermal_fact", {"kind", "scopes", "sheet", "refs", "rth_ja", "rth_ja_pour", "pour_evidence"}},
     {"part_fact", {"kind", "scopes", "sheet", "refs", "section"}},
-    {"thermal_credit", {"kind", "part"}},
+    {"thermal_credit", {"kind", "part", "need"}},
     {"emission_via", {"kind", "size_mm", "drill_mm"}},
     {"emission_ground_layer", {"kind", "layer"}},
     {"isolation_margins", {"kind"}},
@@ -183,6 +183,11 @@ CopperCheck parse_check(const JsonNode& n,const std::string& base) {
         if(!fact_sections.count(k.section)) refuse(where,"unknown fact section '"+k.section+"'");
     } else if(k.kind=="thermal_credit") {
         k.part=text_of(n,"part",where);
+        const auto& need=member(n,"need",JsonKind::Object,where);
+        reject_unknown_keys(need,{"min_vias","radius_mm","pour_layers"},where+" need");
+        k.need.min_vias=whole_of(need,"min_vias",where+" need");
+        k.need.radius_mm=number_of(need,"radius_mm",where+" need");
+        k.need.pour_layers=texts_of(need,"pour_layers",where+" need");
     } else if(k.kind=="emission_via") {
         k.size_mm=number_of(n,"size_mm",where); k.drill_mm=number_of(n,"drill_mm",where);
     } else if(k.kind=="emission_ground_layer") {
@@ -297,24 +302,27 @@ void verify_sheet_check(const CopperDebtSources& sources,const std::string& id,c
         }
     }
 }
-void verify_thermal_credit(const CopperDebtSources& s,const std::string& id,const std::string& mpn) {
+void verify_thermal_credit(const CopperDebtSources& s,const std::string& id,const CopperCheck& k) {
+    const auto& mpn=k.part;
+    const auto& want=k.need;
     const auto& spec=row_of(s.thermal.specs,mpn,"thermal",id);
     claim(spec.rth_ja_pour && !spec.pour_evidence.empty(),id,"thermal policy of "+mpn+" grants no pour credit");
     const auto& need=row_of(s.emission.thermal_copper,mpn,"thermal_copper",id).need;
+    claim(need.min_vias==want.min_vias && need.radius_mm==want.radius_mm && need.pour_layers==want.pour_layers,id,"thermal copper need of "+mpn+" differs from claim");
     const auto& label=row_of(s.regulators,mpn,"regulators",id).label;
     const auto n=std::find_if(s.thermal.pour_needs.begin(),s.thermal.pour_needs.end(),[&](const auto& x){return x.first==spec.pour_evidence;});
-    claim(n!=s.thermal.pour_needs.end() && n->second.value_prefix==label && n->second.min_vias==need.min_vias &&
-        n->second.radius_mm==need.radius_mm && n->second.pour_layers==need.pour_layers,id,"thermal evidence requirement differs from the part facts");
+    claim(n!=s.thermal.pour_needs.end() && n->second.value_prefix==label && n->second.min_vias==want.min_vias &&
+        n->second.radius_mm==want.radius_mm && n->second.pour_layers==want.pour_layers,id,"thermal evidence requirement differs from claim");
     const auto e=std::find_if(s.emission.thermal_credit_needs.begin(),s.emission.thermal_credit_needs.end(),
         [&](const auto& x){return x.value_prefix==label;});
-    claim(e!=s.emission.thermal_credit_needs.end() && e->min_vias==need.min_vias &&
-        e->radius_mm==need.radius_mm && e->pour_layers==need.pour_layers,id,"emitter and thermal evidence policies disagree");
+    claim(e!=s.emission.thermal_credit_needs.end() && e->min_vias==want.min_vias &&
+        e->radius_mm==want.radius_mm && e->pour_layers==want.pour_layers,id,"emitter and thermal evidence policies disagree with claim");
     const auto* c=thermal_field_for(s.emission.thermal_copper,s.emission.regulators,label);
-    claim(c && c->max_vias>=need.min_vias && c->pour_layers==need.pour_layers && !c->cite.empty(),id,"thermal copper emission intent missing");
+    claim(c && c->max_vias>=want.min_vias && c->pour_layers==want.pour_layers && !c->cite.empty(),id,"thermal copper emission intent missing");
 }
 void verify_check(const CopperDebtSources& s,const std::string& id,const CopperCheck& k) {
     if(sheet_kinds.count(k.kind)) verify_sheet_check(s,id,k);
-    else if(k.kind=="thermal_credit") verify_thermal_credit(s,id,k.part);
+    else if(k.kind=="thermal_credit") verify_thermal_credit(s,id,k);
     else if(k.kind=="emission_via") claim(s.emission.thermal_via_size==k.size_mm && s.emission.thermal_via_drill==k.drill_mm,id,"thermal via geometry differs from claim");
     else if(k.kind=="emission_ground_layer") claim(s.emission.ground_layer==k.layer,id,"isolation/reference-layer policy differs from claim");
     else if(k.kind=="isolation_margins") claim(!s.emission.isolation.empty() &&

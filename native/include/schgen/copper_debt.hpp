@@ -10,6 +10,11 @@ public:
 struct CopperPinNet {
     std::string pin, net, net_prefix;
 };
+struct CopperNeed {
+    int min_vias = 0;
+    double radius_mm = 0.0;
+    std::vector<std::string> pour_layers;
+};
 struct CopperCheck {
     std::string kind, sheet, net, section, part, layer, pour_evidence;
     std::vector<std::string> scopes, refs;
@@ -20,6 +25,7 @@ struct CopperCheck {
     int count = 0, impedance = 0;
     double rth_ja = 0.0, size_mm = 0.0, drill_mm = 0.0;
     std::optional<double> rth_ja_pour;
+    CopperNeed need;
 };
 struct CopperMeasure {
     std::string kind;

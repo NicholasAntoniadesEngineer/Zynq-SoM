@@ -146,6 +146,34 @@ int main(int argc,char** argv) {
         claims_reject(sources,document,[](auto& d){member(member(claim_node(d,"CD-01"),"checks").array_value[0],"scopes").array_value.push_back(text_node("no_such_board"));},"claim names an absent scope");
         claims_reject(sources,document,[](auto& d){member(member(claim_node(d,"CD-01"),"checks").array_value[1],"rth_ja")=[]{JsonNode n;n.kind=JsonKind::Number;n.number_value=1.0;return n;}();},"thermal figure differs from the part facts");
         claims_reject(sources,document,[](auto& d){member(member(claim_node(d,"CD-01"),"checks").array_value[2],"part")=text_node("NO-SUCH-PART");},"thermal credit for an unknown part");
+        for(const auto* mpn:{"LM61460AANRJRR","TLV75725PDYDR"}) {
+            rejects(sources,[&](auto& s){s.emission.thermal_copper.at(mpn).need.min_vias+=1;},"thermal copper need row changed alone");
+            rejects(sources,[&](auto& s){s.emission.thermal_copper.at(mpn).need.radius_mm+=0.1;},"thermal copper need radius changed alone");
+            rejects(sources,[&](auto& s){s.emission.thermal_copper.at(mpn).need.pour_layers.push_back("In2.Cu");},"thermal copper need layers changed alone");
+        }
+        for(const char* id:{"CD-01","CD-02"}) {
+            claims_reject(sources,document,[&](auto& d){auto& need=member(member(claim_node(d,id),"checks").array_value[2],"need");member(need,"min_vias").number_value+=1;},"claim need vias changed alone");
+            claims_reject(sources,document,[&](auto& d){auto& need=member(member(claim_node(d,id),"checks").array_value[2],"need");member(need,"radius_mm").number_value+=0.1;},"claim need radius changed alone");
+            claims_reject(sources,document,[&](auto& d){auto& need=member(member(claim_node(d,id),"checks").array_value[2],"need");member(need,"pour_layers").array_value.push_back(text_node("In2.Cu"));},"claim need layers changed alone");
+        }
+        rejects(sources,[](auto& s){for(auto& n:s.thermal.pour_needs)n.second.min_vias+=1;},"thermal pour need changed alone");
+        rejects(sources,[](auto& s){for(auto& n:s.emission.thermal_credit_needs)n.radius_mm+=0.1;},"emitter pour need changed alone");
+        {
+            std::size_t measured=0;
+            for(const auto& row:fixture.array_value) {
+                const auto name=at(row,"name").string_value;
+                if(name=="unmeasured")continue;
+                const auto copper=scan_thermal_copper(root/"native/tests/data/pcb_emit"/(name+".kicad_pcb"));
+                const auto real=analyze_copper_debt(&copper,sources);
+                if(real.entries[6].status!="EMITTED")continue;
+                auto other=sources;other.claims.plane.net="NO_SUCH_PLANE_NET";
+                const auto got=analyze_copper_debt(&copper,other);
+                for(const std::size_t i:{0,1,6,7})require(got.entries[i].status=="NOTHING",name+": plane net absent, "+got.entries[i].eid);
+                require(got.entries[2].status!="EMITTED",name+": exposed-pad claim without plane net");
+                ++measured;
+            }
+            require(measured>0,"a fixture with the ground plane");
+        }
         ThermalCopper empty; const auto r=analyze_copper_debt(&empty,sources);
         for(const auto& e:r.entries)require(e.status=="NOTHING","empty PCB granted evidence");
         std::cout<<checks<<" copper-debt contracts PASS (Python baseline fields + live provenance mutations)\n";

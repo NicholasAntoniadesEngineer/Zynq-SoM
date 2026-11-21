@@ -29,7 +29,7 @@
           ]
         },
         {"kind": "thermal_fact", "scopes": ["library", "carrier", "devkit_mini"], "sheet": "power", "refs": ["U1", "U2"], "rth_ja": 58.7, "rth_ja_pour": 35.0, "pour_evidence": "LM61460"},
-        {"kind": "thermal_credit", "part": "LM61460AANRJRR"},
+        {"kind": "thermal_credit", "part": "LM61460AANRJRR", "need": {"min_vias": 6, "radius_mm": 5.2, "pour_layers": ["F.Cu", "B.Cu"]}},
         {"kind": "emission_via", "size_mm": 0.6, "drill_mm": 0.3}
       ],
       "measure": {"kind": "thermal_via_field", "part": "LM61460AANRJRR", "emits": "In1.Cu GND plane: {plane}; {rows}", "row": "{ref}: {count} GND vias<={radius}mm", "pour": ", {layer} pour {state}"}
@@ -51,7 +51,7 @@
           ]
         },
         {"kind": "thermal_fact", "scopes": ["carrier"], "sheet": "fmc", "refs": ["U1"], "rth_ja": 231.0, "rth_ja_pour": 92.5, "pour_evidence": "TLV75725_DYD"},
-        {"kind": "thermal_credit", "part": "TLV75725PDYDR"}
+        {"kind": "thermal_credit", "part": "TLV75725PDYDR", "need": {"min_vias": 2, "radius_mm": 3.0, "pour_layers": ["F.Cu"]}}
       ],
       "measure": {"kind": "thermal_via_field", "part": "TLV75725PDYDR", "emits": "In1.Cu GND plane: {plane}; {rows}", "row": "{ref}: {count} GND vias<={radius}mm", "pour": ", {layer} pour {state}"}
     },
