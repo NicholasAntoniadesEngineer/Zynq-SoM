@@ -347,6 +347,26 @@ void stated_checks_come_from_data(const std::filesystem::path& dir){
     try{(void)extract_spice_checks(board,legacy,reference_roles(board,false));}catch(const ModelCheckError& error){thrown=std::string(error.what()).find("has no checks.iset_window_ma in its subsystem file")!=std::string::npos;}
     require(thrown,"an LED boost regulator on a sheet that states no ISET window is refused");
 }
+void series_leg_dividers(const std::filesystem::path& dir){
+    const auto base=fixture_sheets(dir/"003_HDMI_RX_5V_DET_10k_10k.json");
+    auto legged=base;auto& circuit=legged.front().circuit;
+    auto leg=circuit.parts.front();leg.ref="RLEG";circuit.parts.push_back(leg);
+    for(auto& net:circuit.nets)if(net.name=="HDMI_RX_5V_DET")net.pins.push_back({"RLEG","1"});
+    circuit.nets.push_back({"LEG_PIN","port",{{"RLEG","2"}}});
+    const auto plain=extract_stated(base,legacy),stated=extract_stated(legged,legacy);
+    const auto named=[](const SpiceResult& r,const std::string& name){return std::find_if(r.checks.begin(),r.checks.end(),[&](const auto& c){return c.name==name;});};
+    const std::string check="divider HDMI_RX_5V_DET [bank abs-max at 5.25 V cable]";
+    const auto with_leg=named(stated,check),without_leg=named(plain,check);
+    require(with_leg!=stated.checks.end()&&without_leg!=plain.checks.end(),"a stated divider with an unloaded series leg is extracted");
+    require(with_leg->value==without_leg->value&&with_leg->ok(),"the unloaded series leg does not change the divider ratio");
+    require(with_leg->detail.find("RLEG=10000R to LEG_PIN, whose only resistor it is, carries no divider current")!=std::string::npos,"the report names the series leg it treated as unloaded");
+    auto silent=reference_roles(legged);silent.begin()->second.checks.dividers.clear();
+    const auto unstated=extract_spice_checks(legged,legacy,silent);
+    require(std::none_of(unstated.checks.begin(),unstated.checks.end(),[](const auto& c){return c.name.rfind("divider HDMI_RX_5V_DET",0)==0;}),"a net with three resistors that no data row names is not read as a divider");
+    auto loaded=legged;auto load=loaded.front().circuit.parts.front();load.ref="RLOAD";loaded.front().circuit.parts.push_back(load);
+    for(auto& net:loaded.front().circuit.nets){if(net.name=="LEG_PIN")net.pins.push_back({"RLOAD","1"});if(net.name=="GND")net.pins.push_back({"RLOAD","2"});}
+    rejects_divider(loaded,"required divider HDMI_RX_5V_DET: topology could not be extracted");
+}
 int main(int argc,char** argv) {
     if(argc==3&&std::string(argv[1])=="-b") {
         const auto* mode=std::getenv("SCHGEN_SELFTEST_PROCESS_MODE");const std::string test=mode?mode:"";
@@ -370,7 +390,7 @@ int main(int argc,char** argv) {
     }
     try {
         require(argc==2,"usage: spice_contracts <fixture-directory>");const std::filesystem::path dir(argv[1]);legacy=legacy_power_policy((dir/"../../../..").lexically_normal());
-        numeric_safety();empty_coverage();required_divider_coverage(dir);stated_checks_come_from_data(dir);incomplete_model_coverage(dir);divider_threshold_precision(dir);remaining_threshold_precision(dir);direct_enable_topology(dir);
+        numeric_safety();empty_coverage();required_divider_coverage(dir);stated_checks_come_from_data(dir);incomplete_model_coverage(dir);divider_threshold_precision(dir);remaining_threshold_precision(dir);direct_enable_topology(dir);series_leg_dividers(dir);
         const auto manifest=parse_json_file((dir/"manifest.json").string());std::size_t passed=0,live=0;
         const auto ngspice=ngspice_available();std::size_t corrected_empty=0,corrected_required=0,corrected_models=0,corrected_device=0;
         for(const auto& file:field(manifest,"cases").array_value) {
