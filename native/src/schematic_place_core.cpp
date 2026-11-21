@@ -20,7 +20,7 @@ SchematicSpacing SchematicSpacing::expanded(QuantizationCounts* counts) const {
     if (!counts) counts = &owned_counts;
     auto up = [counts](double v) { return schematic_place::gceil(v * 1.25, counts); };
     return {up(port_run), label_tap_gap, hang_stub, up(stagger_extra), up(cap_pitch),
-            up(cluster_dx), up(cluster_dy), up(flags_dy), up(flag_pitch)};
+            up(cluster_dx), up(cluster_dy), up(flags_dy), up(flag_pitch), compact, refine};
 }
 
 void SchematicPlacement::plan(const std::string& net, const std::vector<RoutePoint>& points) {
@@ -446,7 +446,8 @@ ChainPtr Engine::_linearise(const std::set<std::string>& component, const FloatL
     std::stable_sort(bottoms.begin(), bottoms.end(), [&](const auto& a, const auto& b) {
         return std::make_pair(a.kind != "gnd", cap(a.ref)) < std::make_pair(b.kind != "gnd", cap(b.ref));
     });
-    if (bottoms.empty()) return _linearise_port_strap(component, legs, ends);
+    const bool port_tail = bottoms.empty() && top.kind == "trunk";
+    if (bottoms.empty() && !port_tail) return _linearise_port_strap(component, legs, ends);
     auto chain = std::make_shared<FloatChain>();
     chain->root = top.far;
     chain->legs.push_back({top.ref, top.far, top.net});
@@ -461,6 +462,7 @@ ChainPtr Engine::_linearise(const std::set<std::string>& component, const FloatL
             used.insert(next->ref); chain->legs.push_back({next->ref, cur, next->far});
             cur = next->far; continue;
         }
+        if (port_tail && net(cur).net_class == "port") break;
         const auto tail = std::find_if(bottoms.begin(), bottoms.end(), [&](const auto& end) {
             return end.net == cur && !used.count(end.ref);
         });

@@ -153,7 +153,7 @@ std::optional<Leg> Engine::_series_of(const std::string& name) const {
     return result;
 }
 std::pair<double, Box4> Engine::_series_inline(const Leg& leg, const std::string& name,
-        Point tap, int sign, std::optional<Box4> avoid) {
+        Point tap, int sign, std::optional<Box4> avoid, double clear) {
     // Callers may pass a series-vector element; removing it later invalidates it.
     const Leg item = leg;
     const auto& far = item.a == name ? item.b : item.a;
@@ -169,9 +169,9 @@ std::pair<double, Box4> Engine::_series_inline(const Leg& leg, const std::string
             shift = gceil(std::max(0.0, (want - lx0) * sign));
         }
     }
-    const double ax = tap.first + sign * (2 * U + shift + off);
+    const double ax = tap.first + sign * (2 * U + shift + clear + off);
     _horizontal_2pin(item.ref, ax, tap.second, sign < 0 ? far : name, sign < 0 ? "right" : "left");
-    const Point near_tip{py_round(tap.first + sign * 2 * U, 3), tap.second};
+    const Point near_tip{py_round(tap.first + sign * (2 * U + (clear > 0 ? shift + clear : 0.0)), 3), tap.second};
     const Point far_tip{py_round(ax + sign * off, 3), tap.second};
     pl.plan(name, {tap, near_tip});
     const double lx = py_round(far_tip.first + sign * 2 * U, 3);
@@ -223,6 +223,105 @@ double Engine::_divider(const Line& line, Point tap) {
         power(far, far_pt.first, far_pt.second, _power_rot(far, downward));
     }
     return _attach_halfw(line);
+}
+ChainPtr Engine::_side_pin_chain(const std::string& name, const std::string& ref) const {
+    const auto& n = net(name);
+    if (n.net_class != "signal") return {};
+    std::size_t owners = 0;
+    for (const auto& p : n.pins) if (has(multi, p.ref)) { if (p.ref != ref) return {}; ++owners; }
+    if (owners != 1) return {};
+    for (const auto& chain : float_chains) {
+        if (!chain || chain->kind != "pin" || chain->root != name || !chain->hangs.empty()) continue;
+        if (std::any_of(chain->legs.begin(), chain->legs.end(), [&](const Leg& leg) { return _done.count(leg.ref) != 0; })) continue;
+        return chain;
+    }
+    return {};
+}
+std::pair<double, double> Engine::_chain_band(const FloatChain& chain, int sign) {
+    double half = 0, text = 0, tag = 0;
+    for (const auto& leg : chain.legs) {
+        const auto& p = part(leg.ref);
+        for (const auto v : lib.get(p.lib_id).body) half = std::max(half, std::fabs(v));
+        text = std::max({text, text_wh(leg.ref).first, text_wh(p.value).first});
+        for (const auto& name : {leg.a, leg.b})
+            if (name != chain.root && net(name).net_class == "port") tag = std::max(tag, 2 * U + _glabel_len(name));
+    }
+    const double texts = half + TEXT_GAP + text;
+    if (tag == 0) return {half, texts};
+    return sign < 0 ? std::pair{std::max(half, tag), texts} : std::pair{texts, std::max(half, tag)};
+}
+void Engine::_attach_chain(const Line& line, Point tap, double rank_y, bool downward, int sign) {
+    require(bool(line.chain), line.net + ": chain is missing");
+    pl.plan(line.net, {tap, {tap.first, rank_y}});
+    Point cur{tap.first, rank_y};
+    std::string current = line.net;
+    bool tagged = false;
+    for (const auto& leg : line.chain->legs) for (const auto& name : {leg.a, leg.b})
+        tagged |= name != line.net && net(name).net_class == "port";
+    const std::string text_side = tagged && sign > 0 ? "left" : "right";
+    for (const auto& leg : line.chain->legs) {
+        const auto next = _vertical_2pin(leg.ref, tap.first, cur.second, leg.a == current ? leg.a : leg.b, downward, text_side);
+        cur = next.first; current = next.second;
+        if (sign < 0) _chain_mid_features_left(*line.chain, current, cur);
+        else _chain_mid_features(*line.chain, current, cur);
+    }
+    require(rail(net(current)), line.net + ": side-pin chain does not end on a rail");
+    power(current, cur.first, cur.second, _power_rot(current, downward));
+}
+void Engine::_divider_ladder(const std::vector<Line>& nodes, const Refs& legs, int sign) {
+    require(nodes.size() >= 2 && legs.size() == nodes.size() + 1, "divider ladder: malformed node list");
+    const std::string text_side = sign < 0 ? "left" : "right";
+    double half = 0, text = 0;
+    for (const auto& ref : legs) {
+        const auto& p = part(ref);
+        for (const auto v : lib.get(p.lib_id).body) half = std::max(half, std::fabs(v));
+        text = std::max({text, text_wh(ref).first, text_wh(p.value).first});
+    }
+    const double outer = half + TEXT_GAP + text;
+    const double inner = static_cast<double>(nodes.size() - 1) * LADDER_JOG_PITCH + U;
+    const double row = nodes.front().pin_pt.second;
+    const double top = row - PASSIVE_SPAN - RAIL_SYMBOL_SPAN;
+    const double bottom = row + static_cast<double>(nodes.size()) * PASSIVE_SPAN + RAIL_SYMBOL_SPAN;
+    std::set<std::string> own;
+    for (const auto& node : nodes) own.insert(node.net);
+    double x = py_round(nodes.front().pin_pt.first + sign * (sp.port_run + inner), 3);
+    bool seated = false;
+    for (int k = 0; k < SEAT_SEARCH_STEPS && !seated; ++k) {
+        const double xo = x + sign * outer, xi = x - sign * inner;
+        seated = _spot_free({std::min(xo, xi), top, std::max(xo, xi), bottom}, 0.0) && _vband_stem_free(x, top, bottom, own);
+        for (std::size_t i = 0; seated && i < nodes.size(); ++i)
+            seated = _corridor_free(nodes[i].pin_pt.second, nodes[i].pin_pt.first + sign * PIN_CLEAR,
+                                    x - sign * LADDER_JOG_PITCH * static_cast<double>(i), {nodes[i].net});
+        if (!seated) x = py_round(x + sign * 2 * U, 3);
+    }
+    require(seated, "divider ladder " + nodes.front().net + ": no free column beside the pins");
+    const auto [top_pt, top_net] = _vertical_2pin(legs.front(), x, row, nodes.front().net, false, text_side);
+    power(top_net, top_pt.first, top_pt.second, _power_rot(top_net, false));
+    double y = row;
+    for (std::size_t i = 0; i < nodes.size(); ++i) {
+        const auto& node = nodes[i];
+        require(y > node.pin_pt.second - 1e-6, "divider ladder " + node.net + ": tap row lies below its node");
+        if (std::fabs(y - node.pin_pt.second) < 1e-6) pl.plan(node.net, {node.pin_pt, {x, y}});
+        else {
+            const double jog = py_round(x - sign * LADDER_JOG_PITCH * static_cast<double>(i), 3);
+            pl.plan(node.net, {node.pin_pt, {jog, node.pin_pt.second}, {jog, y}, {x, y}});
+        }
+        const auto [far_pt, far] = _vertical_2pin(legs[i + 1], x, y, node.net, true, text_side);
+        if (i + 1 < nodes.size()) {
+            require(far == nodes[i + 1].net, legs[i + 1] + ": divider ladder leg does not reach " + nodes[i + 1].net);
+            const auto found = std::find_if(series.begin(), series.end(), [&](const Leg& leg) { return leg.ref == legs[i + 1]; });
+            require(found != series.end(), legs[i + 1] + ": series leg no longer exists");
+            series.erase(found); y = far_pt.second;
+        } else power(far, far_pt.first, far_pt.second, _power_rot(far, true));
+    }
+}
+double Engine::_pin_overhang(const std::string& ref, const std::string& attach_net) {
+    const auto& symbol = lib.get(part(ref).lib_id);
+    const auto& attached = pin(symbol, _pin_of_net(ref, attach_net));
+    const auto tip = pin_page_position(attached, 0.0, 0.0, 0);
+    const auto body = body_box_page(symbol, 0.0, 0.0, 0, "body", ref);
+    if (std::fabs(tip.second) > 1e-6) return tip.second < 0 ? tip.second - body.y0 : body.y1 - tip.second;
+    return tip.first < 0 ? tip.first - body.x0 : body.x1 - tip.first;
 }
 int Engine::_power_rot(const std::string& name, bool downward) const {
     return (net(name).net_class == "ground") == downward ? 0 : 180;
@@ -455,11 +554,12 @@ void Engine::_fan_side(const std::string& ref, const std::string& side, const st
             line.attach_div = {pulls.front().first, hangs.front()}; pull.erase(n->name); hang.erase(n->name);
         } else if (!pulls.empty()) {
             require(pulls.size() <= 1, "net " + n->name + ": multiple pull-ups — extend the engine");
-            line.attach = pulls.front().first; pull.erase(n->name);
+            line.attach = pulls.front().first; line.attach_kind = "pull"; pull.erase(n->name);
         } else if (!hangs.empty()) {
             require(hangs.size() <= 1, "net " + n->name + ": multiple filter caps — extend the engine");
-            line.attach = hangs.front(); hang.erase(n->name);
-        }
+            line.attach = hangs.front(); line.attach_kind = "hang"; hang.erase(n->name);
+        } else if (!comb) line.chain = _side_pin_chain(n->name, ref);
+        if (n->net_class == "signal" && n->pins.size() == 1) line.force_label = true;
         lines.push_back(std::move(line));
     }
     const auto finish_rails = [&] {
@@ -469,7 +569,7 @@ void Engine::_fan_side(const std::string& ref, const std::string& side, const st
     if (lines.empty()) { finish_rails(); return; }
     int hang_sign = side == "left" ? -1 : 1;
     std::vector<double> attach_rows, side_rows;
-    for (const auto& line : lines) if (line.attach) attach_rows.push_back(line.pin_pt.second);
+    for (const auto& line : lines) if (line.attach || line.chain) attach_rows.push_back(line.pin_pt.second);
     for (const auto& pt : rows) side_rows.push_back(pt.second);
     if (!attach_rows.empty() && side_rows.size() > 1) {
         const double first = *std::min_element(attach_rows.begin(), attach_rows.end());
@@ -497,14 +597,54 @@ void Engine::_fan_side(const std::string& ref, const std::string& side, const st
     double inner_length = 0;
     for (std::size_t i = 0; i < lines.size(); ++i) {
         const auto& line = lines[i];
-        if (!labeled(line) || line.attach || line.attach_div) { previous_y.reset(); continue; }
+        if (!labeled(line) || line.attach || line.attach_div || line.chain) { previous_y.reset(); continue; }
         const bool out = previous_y && std::fabs(line.pin_pt.second - *previous_y) < GLABEL_H * TEXT_SIZE + 0.5 && !previous_outer;
         outer[i] = out; previous_outer = out; previous_y = line.pin_pt.second;
         if (!out) inner_length = std::max(inner_length, label_length(line));
     }
+    struct Ladder { std::vector<std::size_t> nodes; Refs legs; bool drawn = false; };
+    std::vector<Ladder> ladders;
+    std::map<std::size_t, std::size_t> ladder_of;
+    for (std::size_t i = 0; i < lines.size(); ++i) {
+        if (!lines[i].attach || lines[i].attach_kind != "pull" || labeled(lines[i]) || ladder_of.count(i)) continue;
+        Ladder ladder; ladder.nodes = {i}; ladder.legs = {*lines[i].attach};
+        std::set<std::string> walked;
+        bool closed = false, valid = true;
+        while (valid && !closed) {
+            const auto& cur = lines[ladder.nodes.back()].net;
+            std::vector<Leg> next;
+            for (const auto& leg : series) if (touches(leg, cur) && !walked.count(leg.ref)) next.push_back(leg);
+            if (next.size() != 1) { valid = false; break; }
+            const auto& far = next.front().a == cur ? next.front().b : next.front().a;
+            const auto found = std::find_if(lines.begin(), lines.end(), [&](const Line& l) { return l.net == far; });
+            if (found == lines.end() || labeled(*found) || found->attach_div || found->chain
+                || found->pin_pt.second <= lines[ladder.nodes.back()].pin_pt.second) { valid = false; break; }
+            walked.insert(next.front().ref); ladder.legs.push_back(next.front().ref);
+            ladder.nodes.push_back(static_cast<std::size_t>(found - lines.begin()));
+            if (found->attach) {
+                valid = found->attach_kind == "hang";
+                const auto extra = std::count_if(series.begin(), series.end(), [&](const Leg& leg) {
+                    return touches(leg, far) && !walked.count(leg.ref); });
+                valid = valid && extra == 0;
+                ladder.legs.push_back(*found->attach); closed = true;
+            }
+        }
+        if (!valid || !closed) continue;
+        for (const auto node : ladder.nodes) ladder_of[node] = ladders.size();
+        ladders.push_back(std::move(ladder));
+    }
     std::optional<Box4> previous_box;
     for (std::size_t i = 0; i < lines.size(); ++i) {
         const auto& line = lines[i]; const auto [px, py] = line.pin_pt;
+        if (const auto member = ladder_of.find(i); member != ladder_of.end()) {
+            auto& ladder = ladders[member->second];
+            if (!ladder.drawn) {
+                std::vector<Line> nodes;
+                for (const auto node : ladder.nodes) nodes.push_back(lines[node]);
+                _divider_ladder(nodes, ladder.legs, sign); ladder.drawn = true;
+            }
+            continue;
+        }
         double lx = px + sign * sp.port_run;
         if (outer.count(i) && outer.at(i)) lx += sign * gceil(inner_length + 1.27);
         if (previous_box) {
@@ -518,9 +658,10 @@ void Engine::_fan_side(const std::string& ref, const std::string& side, const st
         }
         const bool is_labeled = labeled(line);
         Point tap{lx, py};
-        if (line.attach || line.attach_div) {
-            const auto [left, right] = _attach_band(line);
-            const double depth = 12 * U;
+        if (line.attach || line.attach_div || line.chain) {
+            const auto [left, right] = line.chain ? _chain_band(*line.chain, sign) : _attach_band(line);
+            const double depth = line.chain
+                ? static_cast<double>(line.chain->legs.size()) * PASSIVE_SPAN + RAIL_SYMBOL_SPAN + sp.hang_stub : 12 * U;
             const double b0 = line.attach_div ? py - depth : hang_sign < 0 ? rank_y - depth : std::min(py, rank_y);
             const double b1 = line.attach_div ? py + depth : hang_sign < 0 ? std::max(py, rank_y) : rank_y + depth;
             double tx = is_labeled ? lx - sign * sp.label_tap_gap : lx;
@@ -535,9 +676,17 @@ void Engine::_fan_side(const std::string& ref, const std::string& side, const st
         for (const auto& [a, b] : _escape_run_legs(line.net, px, py, tap.first)) pl.plan(line.net, {a, b});
         if (line.attach_div) _divider(line, tap);
         else if (line.attach) _attach_column(line, tap, rank_y, hang_sign > 0);
+        else if (line.chain) _attach_chain(line, tap, rank_y, hang_sign > 0, sign);
         if (!is_labeled) {
             const auto leg = line.net_class == "signal" ? _series_of(line.net) : std::nullopt;
-            if (leg) previous_box = _series_inline(*leg, line.net, tap, sign, previous_box).second;
+            if (leg) {
+                const auto& inline_part = part(leg->ref);
+                const double clear = sp.refine && (line.attach || line.attach_div || line.chain)
+                    ? gceil(std::max(text_wh(inline_part.ref).first, text_wh(inline_part.value).first)) : 0.0;
+                previous_box = _series_inline(*leg, line.net, tap, sign, previous_box, clear).second;
+            }
+            if (line.net_class == "signal")
+                _open_stubs.push_back({line.net, leg ? Point{py_round(px + sign * U, 3), py} : tap, side == "left" ? 180 : 0});
             continue;
         }
         if (tap != Point{lx, py}) pl.plan(line.net, {tap, {lx, py}});
@@ -709,8 +858,20 @@ void Engine::_build_trunk(Trunk& trunk) {
         const double bar = gceil(max_y + 4 * U);
         ty = std::max(ty, py_round(bar + 7.62 * max_legs, 3));
     }
+    const bool passive_node = sp.refine && trunk.direct.empty() && trunk.rungs.empty() && pull.contains(trunk.net);
+    if (passive_node) ty = gceil(ty + PASSIVE_SPAN + 2 * RAIL_SYMBOL_SPAN);
     trunk.y = ty;
     std::vector<double> nodes;
+    if (passive_node) {
+        double x = gsnap(extent.x0 + 8 * U);
+        for (const auto& [ref, rail_name] : take(pull, trunk.net)) {
+            nodes.push_back(x);
+            const auto [top, far] = _vertical_2pin(ref, x, ty, trunk.net, false);
+            require(far == rail_name, ref + ": pull-up does not reach " + rail_name);
+            power(far, top.first, top.second, _power_rot(far, false));
+            x = gceil(x + sp.cap_pitch);
+        }
+    }
     struct Job { std::string kind; Point pt; int sign; std::string far; Refs legs; };
     std::vector<Job> jobs;
     for (const auto& d : trunk.direct) {
@@ -762,11 +923,18 @@ void Engine::_build_trunk(Trunk& trunk) {
             pl.plan(trunk.net, {pt, {fx, ty}}); nodes.push_back(fx);
         }
     }
-    for (const auto& chain : trunk.chains) {
+    const auto port_tail = [&](const ChainPtr& chain) {
         require(bool(chain), "null trunk chain");
+        return !chain->legs.empty() && net(chain->legs.back().b).net_class == "port";
+    };
+    const auto draw_chain = [&](const ChainPtr& chain) {
         const auto extent_b = _extent();
-        const double edge = _band_edge(ty - 2, ty + 24.0, -1, extent_b.x0), x = gfloor(edge - 4 * U);
+        const double edge = _band_edge(ty - 2, ty + 24.0, -1, extent_b.x0);
+        const double x = _trunk_chain_column(*chain, nodes, ty, gfloor(edge - 4 * U));
         nodes.push_back(x); Point cur{x, ty}; std::string name = trunk.net;
+        if (const double over = chain->legs.empty() ? 0.0 : _pin_overhang(chain->legs.front().ref, trunk.net); sp.refine && over > 0) {
+            cur = {x, py_round(ty + gceil(over), 3)}; pl.plan(trunk.net, {{x, ty}, cur});
+        }
         for (const auto& leg : chain->legs) {
             const auto next = _vertical_2pin(leg.ref, x, cur.second, leg.a == name ? leg.a : leg.b, true, "right");
             cur = next.first; name = next.second; _chain_mid_features_left(*chain, name, cur);
@@ -775,7 +943,8 @@ void Engine::_build_trunk(Trunk& trunk) {
             const Point end{cur.first, py_round(cur.second + 2 * U, 3)}; pl.plan(name, {cur, end});
             power(name, end.first, end.second, _power_rot(name, true));
         }
-    }
+    };
+    for (const auto& chain : trunk.chains) if (!port_tail(chain)) draw_chain(chain);
     for (const auto& ref : take(hang, trunk.net)) {
         const auto ext = _extent();
         const double right = gceil(_band_edge(ty - 2 * U, ty + 10 * U, 1,
@@ -786,8 +955,10 @@ void Engine::_build_trunk(Trunk& trunk) {
         const double x = grow_l < grow_r ? left : right; nodes.push_back(x);
         const auto [pt, far] = _vertical_2pin(ref, x, ty, trunk.net, true); power(far, pt.first, pt.second);
     }
+    for (const auto& chain : trunk.chains) if (port_tail(chain)) draw_chain(chain);
     std::set<double> unique;
     for (const double x : nodes) unique.insert(py_round(x, 3));
+    if (unique.size() == 1) for (const double x : _trunk_leg_taps(trunk, *unique.begin())) unique.insert(py_round(x, 3));
     nodes.assign(unique.begin(), unique.end());
     require(nodes.size() >= 2, "trunk " + trunk.net + ": fewer than 2 taps after build");
     if (_needs_flag(trunk.net)) {
@@ -819,6 +990,50 @@ void Engine::_build_trunk(Trunk& trunk) {
     llabel(trunk.net, nodes.back(), ty, 0);
 }
 
+double Engine::_trunk_chain_column(const FloatChain& chain, const std::vector<double>& nodes, double ty, double outside) {
+    if (!sp.compact || nodes.empty()) return outside;
+    auto [left, right] = _chain_band(chain, -1);
+    left += U; right += U;
+    const double depth = static_cast<double>(chain.legs.size()) * PASSIVE_SPAN + RAIL_SYMBOL_SPAN + 2 * U;
+    const double lo = *std::min_element(nodes.begin(), nodes.end()), hi = *std::max_element(nodes.begin(), nodes.end());
+    for (double x = gceil(lo + 4 * U); x < hi; x = py_round(x + 2 * U, 3)) {
+        if (std::any_of(nodes.begin(), nodes.end(), [&](double n) { return std::fabs(n - x) < 2 * U; })) continue;
+        if (_spot_free({x - left, ty + U, x + right, ty + depth}, 0.0)) return x;
+    }
+    return outside;
+}
+std::vector<double> Engine::_trunk_leg_taps(const Trunk& trunk, double node) {
+    std::vector<Leg> legs;
+    for (const auto& leg : series) {
+        if (!touches(leg, trunk.net) || _done.count(leg.ref)) continue;
+        const auto& far = leg.a == trunk.net ? leg.b : leg.a;
+        if (pl.label_bridged.count(far) && net(far).net_class == "signal") legs.push_back(leg);
+    }
+    if (legs.empty()) return {};
+    require(trunk.zone == "below", "trunk " + trunk.net + ": series-leg taps above the sheet — extend the engine");
+    double width = 0;
+    for (const auto& leg : legs) width = std::max(width, text_wh(leg.a == trunk.net ? leg.b : leg.a).first);
+    const double pitch = gceil(width + 4 * U), span = pitch * static_cast<double>(legs.size() - 1);
+    const double y0 = trunk.y - 2 * U, y1 = trunk.y + PASSIVE_SPAN + RAIL_SYMBOL_SPAN;
+    const auto extent = _extent();
+    const double right = gceil(_band_edge(y0, y1, 1, node) + 4 * U);
+    const double left = gfloor(_band_edge(y0, y1, -1, node) - pitch - span);
+    const double grow_right = std::max(0.0, right + span + pitch - extent.x1), grow_left = std::max(0.0, extent.x0 - left);
+    double x = grow_left < grow_right ? left : right;
+    std::vector<double> columns;
+    for (const auto& leg : legs) {
+        const auto [foot, far] = _vertical_2pin(leg.ref, x, trunk.y, trunk.net, true);
+        const Point knee{x, py_round(foot.second + 2 * U, 3)}, elbow{py_round(x + 2 * U, 3), knee.second};
+        pl.plan(far, {foot, knee}); pl.plan(far, {knee, elbow}); llabel(far, elbow.first, elbow.second);
+        columns.push_back(x); x = py_round(x + pitch, 3);
+    }
+    for (const auto& leg : legs) {
+        const auto found = std::find_if(series.begin(), series.end(), [&](const Leg& s) { return s.ref == leg.ref; });
+        require(found != series.end(), leg.ref + ": series leg no longer exists");
+        series.erase(found);
+    }
+    return columns;
+}
 double Engine::_rung_bar_y(const Trunk& trunk) const {
     std::optional<double> row;
     for (const auto& rung : trunk.rungs) if (rung.kind == "bottom_far") row = row ? std::max(*row, rung.pin_pt.second) : rung.pin_pt.second;
@@ -958,7 +1173,19 @@ std::vector<Point> Engine::_bfs_escape(Point pt, double ty, const std::string& n
     segments.insert(segments.end(), stems.begin(), stems.end());
     const auto result = bfs_escape(pt.first, pt.second, ty, U, extent.x0, extent.y0, extent.x1, extent.y1, 16.0, _boxes(), segments, 0.3, counts);
     if (!result) throw SchematicPlaceError(name + ": no free escape lane from " + point_text(pt));
-    return *result;
+    const auto over_text = [&](const std::vector<Point>& path) {
+        for (std::size_t i = 1; i < path.size(); ++i) {
+            const VisualSegment wire{path[i - 1].first, path[i - 1].second, path[i].first, path[i].second, name};
+            for (const auto& box : pl.boxes) if (wire_over_text(wire, box)) return true;
+        }
+        return false;
+    };
+    if (!sp.refine || !over_text(*result)) return *result;
+    auto guarded = _boxes();
+    for (const auto& box : pl.boxes) if (box.kind == "value" || box.kind == "reference" || box.kind == "label")
+        guarded.push_back({box.x0 - ESCAPE_TEXT_CLEAR, box.y0 - ESCAPE_TEXT_CLEAR, box.x1 + ESCAPE_TEXT_CLEAR, box.y1 + ESCAPE_TEXT_CLEAR});
+    const auto wide = bfs_escape(pt.first, pt.second, ty, U, extent.x0, extent.y0, extent.x1, extent.y1, 16.0, guarded, segments, 0.3, counts);
+    return wide && !over_text(*wide) ? *wide : *result;
 }
 void Engine::_collect_trunk_pins(const std::string& ref, double ax, double ay, TrunkMap& jobs, const Handled& rung_keys) {
     for (const auto& [name, trunk] : jobs) {
