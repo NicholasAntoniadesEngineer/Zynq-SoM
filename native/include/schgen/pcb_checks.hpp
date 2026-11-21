@@ -1,15 +1,18 @@
 #pragma once
 
 #include "schgen/link.hpp"
+#include "schgen/power_checks.hpp"
 #include "schgen/part_facts.hpp"
 #include "schgen/execution_accounting.hpp"
 #include "schgen/pcb_scan.hpp"
 #include "schgen/project.hpp"
+#include "schgen/sheet_roles.hpp"
 #include "schgen/som_interface.hpp"
 
 #include <map>
 #include <memory>
 #include <optional>
+#include <set>
 #include <string_view>
 
 namespace schgen {
@@ -37,6 +40,8 @@ struct PcbCheckInstance {
     std::optional<PartClass> part_class;
     std::optional<PartHeight> height;
     bool at_module = false;
+    std::string module_connector;
+    bool under_module = false;
 };
 PartClass part_class_of(const PcbCheckInstance& instance);
 const PartHeight& part_height_of(const PcbCheckInstance& instance);
@@ -80,6 +85,8 @@ struct PcbCheckModel {
     // nullopt means no metadata, "" means present metadata missing the hash.
     std::optional<std::string> escape_interface_sha256;
     ConnectorFacts connectors;
+    IsolationFacts isolation;
+    std::set<std::string> module_connectors;
 };
 struct PcbCheckGeometry {
     std::optional<Box4> courtyard, pad_bbox;
@@ -165,9 +172,10 @@ struct PcbFanoutResult {
     std::vector<PcbFanoutRecord> records;
     std::string summary() const;
 };
-bool pcb_is_df40_part(const std::string& sheet, int pins);
+bool pcb_is_df40_part(const std::string& module_connector, int pins);
+std::set<std::string> pcb_module_sheets(const PcbCheckModel& model);
 bool pcb_counts_as_crowder(const std::string& ref, const std::string& sheet,
-    int pins, const std::string& footprint, const std::string& subject_sheet);
+    const std::string& module_connector, int pins, const std::string& footprint, const std::string& subject_sheet);
 std::pair<double, std::string> pcb_fanout_need(int pins);
 std::pair<double, std::string> pcb_escape_need(int nets);
 inline constexpr const char* pcb_ground_plane_net = "GND";
@@ -293,7 +301,7 @@ struct RailAmpacityResult {
     bool ok() const { return errors.empty(); }
     std::string report() const;
 };
-RailAmpacityResult analyze_rail_ampacity(const std::vector<ProjectCircuit>&,
-    const SomInterface&, const LinkMapping&);
+RailAmpacityResult analyze_rail_ampacity(const std::vector<ProjectCircuit>&, const SheetRoles&,
+    const SomInterface&, const LinkMapping&, const PowerPolicy&);
 
 } // namespace schgen

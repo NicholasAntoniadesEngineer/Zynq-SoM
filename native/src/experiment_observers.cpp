@@ -116,6 +116,8 @@ PcbPlacementObservation capture_pcb_experiment_frame(const PcbExperimentFrame &f
         inst.sheet = part.sheet;
         inst.footprint = part.footprint;
         inst.value = part.value;
+        inst.module_connector = part.module_connector;
+        inst.under_module = part.under_module;
         inst.mod = mod;
         inst.side = result.fixed.count(ref) ? "top" : frame.side_of.at(ref);
         const auto rotation = frame.rotations.find(ref);

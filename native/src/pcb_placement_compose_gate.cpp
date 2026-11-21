@@ -217,7 +217,7 @@ PcbComposeReport report_pcb_composition(const PcbCheckInput &in, const Floorplan
         managed[{c.ref, c.sheet}] = c.verdict;
     for (std::size_t k = 0; k < model.insts.size(); ++k) {
         const auto &i = model.insts[k];
-        if (starts(i.sheet, "som_j") || !i.mod)
+        if (!i.module_connector.empty() || !i.mod)
             continue;
         const auto &boxes = in.geometry_at(k).pad_boxes;
         std::optional<std::string> hit;
@@ -253,6 +253,7 @@ PcbComposeReport report_pcb_composition(const PcbCheckInput &in, const Floorplan
     std::sort(out.unmanaged.begin(), out.unmanaged.end());
     std::sort(out.managed.begin(), out.managed.end());
     out.cross_airwires = pcb_cross_airwires_by_pair(model, nets, edges);
+    out.module_sheets = pcb_module_sheets(model);
     return out;
 }
 std::string PcbComposeReport::text() const {
@@ -312,7 +313,7 @@ std::string PcbComposeReport::text() const {
     std::vector<Row> pairs;
     for (const auto &entry : cross_airwires)
         if (channel_demand_mm(entry.second.first, 6, 2, .2) > 0 &&
-            !starts(entry.first.first, "som_j") && !starts(entry.first.second, "som_j"))
+            !module_sheets.count(entry.first.first) && !module_sheets.count(entry.first.second))
             pairs.push_back(entry);
     std::sort(pairs.begin(), pairs.end(), [](const auto &a, const auto &b) {
         return a.second.first != b.second.first ? a.second.first > b.second.first

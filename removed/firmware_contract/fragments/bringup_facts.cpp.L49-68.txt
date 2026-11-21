@@ -1,0 +1,20 @@
+std::vector<std::string> dip_switch_refs(const CircuitSheetIr& c) {return Index(c).matching("DSHP");}
+std::vector<DipPosition> dip_positions(const CircuitSheetIr& c,const std::string& ref,const std::vector<std::string>& common) {
+    Index ix(c);const int total=static_cast<int>(ix.part(ref).pin_numbers.size());
+    std::map<int,std::vector<const CircuitNetIr*>> candidates;
+    for(const auto* n:ix.nets(ref)) for(const auto& p:n->pins) if(p.ref==ref) {
+        const int pin=std::stoi(p.pin);candidates[std::min(pin,total+1-pin)].push_back(n);
+    }
+    std::vector<DipPosition> out;
+    for(auto& [pos,nets]:candidates) {
+        nets.erase(std::remove_if(nets.begin(),nets.end(),[&](const auto* n){return contains(common,n->name);}),nets.end());
+        if(nets.empty())continue;
+        std::stable_sort(nets.begin(),nets.end(),[](const auto* a,const auto* b){return std::make_pair(a->net_class!="port",a->name)<std::make_pair(b->net_class!="port",b->name);});
+        out.push_back({ref,pos,nets.front()->name});
+    }return out;
+}
+std::vector<EnCell> en_cells(const CircuitSheetIr& c) {
+    Index ix(c);std::vector<EnCell> out;
+    for(const auto& ref:ix.matching("74LVC1G08"))out.push_back({c.name,ref,ix.at(ref,"1").value_or("?"),ix.at(ref,"2").value_or("?"),ix.at(ref,"4").value_or("?")});
+    return out;
+}

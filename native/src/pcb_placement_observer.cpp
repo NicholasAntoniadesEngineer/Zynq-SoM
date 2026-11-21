@@ -8,7 +8,8 @@ void Placer::observe_checkpoint(const std::string &stage) const {
         for (const auto &[ref, key] : geometry.resolvable) {
             if (!pos.count(ref)) continue;
             const auto &p = ctx.by_ref.at(ref);
-            parts.emplace(ref, PcbExperimentPart{p.sheet, p.footprint, p.value});
+            const SheetRole &role = sheet_role(ctx.in.floorplan.roles, p.sheet);
+            parts.emplace(ref, PcbExperimentPart{p.sheet, p.footprint, p.value, role.module_connector, role.region == SheetRegion::under_module});
             resolved.emplace(ref, ctx.pool.at(key));
         }
         std::set<std::string> mounting_holes(geometry.mh_refs.begin(), geometry.mh_refs.end()), jacks;

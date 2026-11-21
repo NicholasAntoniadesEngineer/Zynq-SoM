@@ -1,4 +1,6 @@
 #include "board_pipeline_internal.hpp"
+#include "legacy_power_policy.hpp"
+#include "sheet_roles_fixture.hpp"
 #include "execution_timing_contracts.hpp"
 #include "precision_receipt_contracts.hpp"
 #include "schgen/selftest_full.hpp"
@@ -233,10 +235,10 @@ void board_search_accounting(){
 void final_manifest(const fs::path& root){
     Temp tmp;ProjectPaths p;p.repository_root=root;p.project_root=tmp.path/"source";
     BoardPipelineOptions o;o.output_root=tmp.path/"out";
-    Context c(p,o);c.manifest_input=ManufacturingManifestInput{};c.manifest_input->file_stem="Fixture_Board";
+    Context c(p,o);c.manifest_input=ManufacturingManifestInput{};c.manifest_input->file_stem="Fixture_Board";c.power_policy=legacy_power_policy(root);
     c.gate("manifest",true,"prepared");
     publish_text(c.reports/"gates.txt","old run");
-    run_manufacturing_manifest(*c.manifest_input,c.out,c.out/"manifest.json");
+    run_manufacturing_manifest(*c.manifest_input,c.out,c.out/"manifest.json",c.require_power_policy());
     c.report("late_audit.txt","new evidence");c.result.timing_seconds={{"fixture",1.25}};
     publish_final_reports(c);
     const auto check=[&]{
@@ -253,7 +255,7 @@ void final_manifest(const fs::path& root){
     c.result.timing_seconds={{"fixture",2.5}};publish_final_reports(c);check();
     require(read(c.out/"manifest.json")!=first,"changed final summary rehashed");
     o.output_root=tmp.path/"failed";Context failed(p,o);
-    failed.manifest_input=ManufacturingManifestInput{};failed.manifest_input->file_stem="Fixture_Board";failed.gate("manifest",true,"prepared");
+    failed.manifest_input=ManufacturingManifestInput{};failed.manifest_input->file_stem="Fixture_Board";failed.power_policy=c.power_policy;failed.gate("manifest",true,"prepared");
     fs::create_directory(failed.out/"manifest.json");
     publish_final_reports(failed);
     const auto& last=failed.result.gates.back();
@@ -298,7 +300,6 @@ void failed_inputs(const fs::path& root){
     for(std::size_t i=0;i<policy_result.gates.size();++i){auto mutation=policy_result;mutation.gates[i].status=BoardGateStatus::failed;mutation.gates[i].mandatory=false;
         require(!mutation.ok(),"mandatory status cannot be downgraded by caller bool: "+mutation.gates[i].name);
         mutation=policy_result;mutation.gates.erase(mutation.gates.begin()+static_cast<std::ptrdiff_t>(i));require(!mutation.ok(),"missing mandatory stage fails");}
-    for(const auto* name:{"manual","scfw"}){auto mutation=policy_result;for(auto& g:mutation.gates)if(g.name==name)g.status=BoardGateStatus::skipped;require(mutation.ok(),"only explicit absent-input document skips allowed");}
     auto advisory=policy_result;advisory.gates.push_back({"return_path",false,BoardGateStatus::failed,"fixed SoM interface"});require(advisory.ok(),"legacy v1 return-path remains advisory");
     advisory.gates.push_back({"golden",false,BoardGateStatus::unavailable,"native capability missing"});require(advisory.ok()&&!advisory.complete(),"missing advisory remains explicit, not a fake PASS");
     advisory.gates.push_back(advisory.gates.front());require(!advisory.ok(),"duplicate result cannot mask gate");
@@ -311,7 +312,7 @@ void live_schematic(const fs::path& root){
     o.netlist_workers=1;
     Context c(paths,o);auto circuit=selftest_rc_fixture();auto second=circuit;second.name="parallel_rc";
     c.circuits={{circuit.name,tmp.path/"circuit.json",circuit},{second.name,tmp.path/"second.json",second}};
-    c.sheets={circuit,second};c.index={{circuit.name,1},{second.name,2}};
+    c.sheets={circuit,second};c.index={{circuit.name,1},{second.name,2}};c.roles=explicit_sheet_roles(c.sheets);
     schematic_stage(c);
     for(const auto* name:{"sheet_gates","cc","board_schematic"}){const auto p=std::find_if(c.result.gates.begin(),c.result.gates.end(),[&](const auto& g){return g.name==name;});require(p!=c.result.gates.end()&&p->status==BoardGateStatus::passed,"live native stage "+std::string(name)+(p==c.result.gates.end()?" missing":": "+p->report));}
     require(fs::is_regular_file(o.output_root/"Zynq_Carrier.kicad_sch"),"actual hierarchy emitted in temporary tree");
@@ -322,7 +323,7 @@ void live_schematic(const fs::path& root){
     require(fs::is_regular_file(single.schematic)&&fs::is_regular_file(tmp.path/"single"/(circuit.name+".gates.txt")),
             "single-sheet build publishes independently checked artifacts");
     auto parallel_options=o;parallel_options.output_root=tmp.path/"parallel";parallel_options.netlist_workers=4;
-    Context parallel(paths,parallel_options);parallel.circuits=c.circuits;parallel.sheets=c.sheets;parallel.index=c.index;
+    Context parallel(paths,parallel_options);parallel.circuits=c.circuits;parallel.sheets=c.sheets;parallel.index=c.index;parallel.roles=c.roles;
     schematic_stage(parallel);
     for(const auto* name:{"sheet_gates","cc"}){
         const auto gate=[&](const Context& context)->const BoardPipelineGate&{
@@ -338,19 +339,20 @@ void live_electrical(const fs::path& root){
     Temp tmp;const auto paths=resolve_project_paths(root,fs::path("devkit_mini"));
     BoardPipelineOptions o;o.output_root=tmp.path/"out";o.no_render=true;o.spice.allow_ngspice=false;
     Context c(paths,o);c.circuits=load_project_circuits(paths);for(const auto& s:c.circuits)c.sheets.push_back(s.circuit);
-    c.som=load_som_interface(paths.som_interface_file);c.link=link_sheets(c.sheets,parse_json_file(paths.som_interface_file.string()),parse_json_file((paths.project_root/"som_mapping.json").string()), paths.module.do_not_load_straps);
+    c.roles=load_sheet_roles(paths,c.circuits);c.som=load_som_interface(paths.som_interface_file);c.link=link_sheets(c.sheets,sheet_module_connectors(*c.roles),parse_json_file(paths.som_interface_file.string()),parse_json_file((paths.project_root/"som_mapping.json").string()), paths.module.do_not_load_straps);
+    c.power_policy=load_board_power_policy(paths,c.circuits,*c.roles);
     electrical_stages(c);
     require(c.result.gates.size()==10,"composed electrical family executes every report");
     for(const auto& g:c.result.gates)if(g.mandatory)require(g.status==BoardGateStatus::passed,"live devkit electrical gate "+g.name+": "+g.report);
     require(c.power&&c.testpoints&&c.spice,"computed results retained for dependent docs; no recomputation required");
-    Context no_checks(paths,o);electrical_stages(no_checks);
+    Context no_checks(paths,o);no_checks.power_policy=c.power_policy;electrical_stages(no_checks);
     const auto uncovered=std::find_if(no_checks.result.gates.begin(),no_checks.result.gates.end(),[](const auto& g){return g.name=="spice";});
     require(uncovered!=no_checks.result.gates.end()&&uncovered->mandatory&&uncovered->status==BoardGateStatus::failed&&
             uncovered->report.find("SPICE GATE: UNVERIFIED (0 checks)")!=std::string::npos,
             "board pipeline accepted missing SPICE coverage or concealed its reason");
     // Passing live-board checks must not mask one detected, unmodelled clamp.
     auto unsupported_options=o;unsupported_options.output_root=tmp.path/"unsupported-model";
-    Context unsupported(paths,unsupported_options);unsupported.circuits=c.circuits;
+    Context unsupported(paths,unsupported_options);unsupported.circuits=c.circuits;unsupported.power_policy=legacy_power_policy(root);
     const auto fixture=parse_json_file((root/"native/tests/data/spice/046_buck_en_unknown_zener.json").string());
     for(const auto& sheet:field(fixture,"sheets").array_value)
         unsupported.circuits.push_back({field(sheet,"name").string_value,{},decode_intermediate_circuit_ir(field(sheet,"circuit"))});

@@ -39,6 +39,24 @@
       {"connector": "J3", "rail": "+3V3", "amps": 0.01, "note": "Zynq bank 34 VCCO (LCD LVCMOS33 bus drive)"}
     ]
   },
+  "power": {
+    "sources": [
+      {"rail": "+VBUS_IN", "volts": 20.0, "amps": 3.0, "basis": "USB-C PD sink contract 20 V / 3 A at the receptacle (pd_input J1; +VIN sits behind the TPS26631 eFuse, round 5)"},
+      {"rail": "+3V3_SC", "supplier": "module"},
+      {"rail": "+5V_DBG", "volts": 5.0, "amps": 0.5, "basis": "debug USB-C VBUS (usb_jtag_connector J1) — host-supplied 5 V / 0.5 A USB2 default; feeds the usb_jtag AP2112K-3.3 debug-island LDO; isolated from carrier +5V"}
+    ],
+    "rails": [
+      {"rail": "+5V_REG", "volts": 5.0, "basis": "LM61460 power:U1 set-point target; its FB divider R1/R2 = 40k2/10k sets 1.0 V x (1 + 40200/10000) = 5.02 V, checked against this target by the spice fb_divider gate (+/-3 %)"},
+      {"rail": "+3V3_REG", "volts": 3.3, "basis": "LM61460 power:U2 set-point target; its FB divider R4/R5 = 23k2/10k sets 1.0 V x (1 + 23200/10000) = 3.32 V, checked against this target by the spice fb_divider gate (+/-3 %)"},
+      {"rail": "+5V_SOM", "volts": 4.65, "basis": "LM61460 power_som:U4 set-point target: the regulated 4.65 V SoM input (P0 rebind); its FB divider R14/R15 = 47k5/13k sets 1.0 V x (1 + 47500/13000) = 4.654 V, checked against this target by the spice fb_divider gate (+/-3 %)"},
+      {"rail": "HDMI_RX_5V", "volts": 5.0, "basis": "HDMI source +5 V delivered by the cable on the hdmi_rx receptacle J1.18 (connector-supplied); feeds the 5 V detect divider"},
+      {"rail": "HDMI_TX_CON_5V0", "volts": 5.0, "basis": "hdmi_tx TPD12S016 U1 current-limited 5 V output to the receptacle J1.18, fed from +5V_HDMI_TX; the TPD12S016 has no regulators row, so the tool cannot derive it"},
+      {"rail": "LCD_VLED_P", "volts": 30.0, "basis": "lcd SY7201 U1 LED-string anode: the boost is current-mode (no fixed output); 30 V is its open-LED OVP clamp, the worst case the string capacitor sees (lcd_backlight.md; string ~9.6 V continuous)"},
+      {"rail": "USB_UART_VBUS", "volts": 5.0, "basis": "host-supplied USB VBUS of the UART USB-C receptacle (usb_uart_connector J1); feeds the CP2102N VBUS-sense divider on uart_bridge"},
+      {"rail": "USB_VBUS", "volts": 5.0, "basis": "usbc_otg TPS2051C U1 current-limited 5 V switch output to the OTG receptacle J2, fed from +5V_USB; the TPS2051C has no regulators row, so the tool cannot derive it"}
+    ],
+    "inlet": {"rail": "+VBUS_IN", "bulk": "+VIN"}
+  },
   "sheets": [
     {"name": "board_aux"},
     {"name": "board_qwiic"},

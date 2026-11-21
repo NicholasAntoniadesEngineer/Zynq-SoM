@@ -11,8 +11,8 @@ namespace {
 using namespace schgen;
 
 namespace fixture {
-const std::string head = "{\"schema\": \"schgen.part_facts/3\", \"classes\": {\"P1:P1\": \"connector\", \"Device:R\": \"resistor\"}, ";
-const std::string tail = ", \"stated_heights\": {}, \"thermal\": {}, \"thermal_copper\": {}, \"ep_vias\": {}, \"isolation\": {}, \"regulators\": {}, \"zeners\": {}, \"reference_pins\": {}, \"control_grid\": {}, \"model_overrides\": {}, \"footprint_aliases\": {}}";
+const std::string head = "{\"schema\": \"schgen.part_facts/4\", \"classes\": {\"P1:P1\": \"connector\", \"Device:R\": \"resistor\"}, ";
+const std::string tail = ", \"stated_heights\": {}, \"thermal\": {}, \"thermal_copper\": {}, \"ep_vias\": {}, \"isolation\": {}, \"regulators\": {}, \"zeners\": {}, \"reference_pins\": {}, \"control_grid\": {}, \"model_overrides\": {}, \"footprint_aliases\": {}, \"i2c_devices\": {}, \"i2c_bridges\": {}}";
 const std::string good_entry =
     "{\"mating_face\": \"-X\", \"edge_pinned\": true, \"overmold\": false, \"pad_row_face_check\": true, "
     "\"description\": \"fixture socket\", \"numbered_label\": \"SOCK\", \"pair_label\": \"PAIR\"}";

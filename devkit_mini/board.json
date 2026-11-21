@@ -12,6 +12,19 @@
       {"connector": "J3", "rail": "+3V3", "amps": 0.02, "note": "Zynq banks 34+35 VCCO static (both +3V3 on this board; bank 35 unused, no LVDS load)"}
     ]
   },
+  "power": {
+    "sources": [
+      {"rail": "+VBUS_IN", "volts": 20.0, "amps": 3.0, "basis": "USB-C PD sink contract 20 V / 3 A at the receptacle (pd_input J1; +VIN sits behind the TPS26631 eFuse, round 5)"},
+      {"rail": "+3V3_SC", "supplier": "module"}
+    ],
+    "rails": [
+      {"rail": "+5V_REG", "volts": 5.0, "basis": "LM61460 power:U1 set-point target; its FB divider R1/R2 = 40k2/10k sets 1.0 V x (1 + 40200/10000) = 5.02 V, checked against this target by the spice fb_divider gate (+/-3 %)"},
+      {"rail": "+3V3_REG", "volts": 3.3, "basis": "LM61460 power:U2 set-point target; its FB divider R4/R5 = 23k2/10k sets 1.0 V x (1 + 23200/10000) = 3.32 V, checked against this target by the spice fb_divider gate (+/-3 %)"},
+      {"rail": "+5V_SOM", "volts": 4.65, "basis": "LM61460 power_som:U4 set-point target: the regulated 4.65 V SoM input (P0 rebind); its FB divider R14/R15 = 47k5/13k sets 1.0 V x (1 + 47500/13000) = 4.654 V, checked against this target by the spice fb_divider gate (+/-3 %)"},
+      {"rail": "USB_UART_VBUS", "volts": 5.0, "basis": "host-supplied USB VBUS of the UART USB-C receptacle (usb_uart_connector J1); feeds the CP2102N VBUS-sense divider on uart_bridge"}
+    ],
+    "inlet": {"rail": "+VBUS_IN", "bulk": "+VIN"}
+  },
   "sheets": [
     {
       "name": "debug_boot",

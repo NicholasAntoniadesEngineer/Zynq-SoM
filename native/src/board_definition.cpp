@@ -113,6 +113,44 @@ BoardSheet sheet_of(const JsonNode& row, const std::string& where) {
     return sheet;
 }
 
+double volts_of(const JsonNode& node, const std::string& where) {
+    const double value = member(node, "volts", JsonKind::Number, where).number_value;
+    if (!std::isfinite(value)) fail(where, "field 'volts' is not a finite number");
+    return value;
+}
+
+PowerSupply supply_of(const JsonNode& row, const std::string& where) {
+    reject_unknown_keys(row, {"rail", "volts", "amps", "basis"}, where + " supply");
+    return {text(row, "rail", where), volts_of(row, where), positive(row, "amps", where), text(row, "basis", where)};
+}
+
+BoardSource source_of(const JsonNode& row, const std::string& where) {
+    BoardSource source;
+    if (object_field(row, "supplier")) {
+        reject_unknown_keys(row, {"rail", "supplier"}, where + " source");
+        source.rail = text(row, "rail", where);
+        if (text(row, "supplier", where) != "module") fail(where, "source " + source.rail + " supplier is not 'module'");
+        source.from_module = true;
+        return source;
+    }
+    reject_unknown_keys(row, {"rail", "volts", "amps", "basis"}, where + " source");
+    const PowerSupply own = supply_of(row, where);
+    source.rail = own.rail;
+    source.volts = own.volts;
+    source.amps = own.amps;
+    source.basis = own.basis;
+    return source;
+}
+
+BoardRail rail_of(const JsonNode& row, const std::string& where) {
+    reject_unknown_keys(row, {"rail", "volts", "basis"}, where + " rail");
+    BoardRail rail{text(row, "rail", where), std::nullopt, text(row, "basis", where)};
+    const JsonNode* volts = object_field(row, "volts");
+    if (!volts) fail(where, "rail " + rail.rail + " has no 'volts' (state null for a rail with no voltage)");
+    if (volts->kind != JsonKind::Null) rail.volts = volts_of(row, where + " rail " + rail.rail);
+    return rail;
+}
+
 BoardFiles files_of(const JsonNode& node, const std::string& where) {
     reject_unknown_keys(node, {"stem"}, where + " files");
     BoardFiles files;
@@ -121,6 +159,32 @@ BoardFiles files_of(const JsonNode& node, const std::string& where) {
     return files;
 }
 
+}
+
+BoardPower parse_board_power(const JsonNode& node, const std::string& where) {
+    if (node.kind != JsonKind::Object) fail(where, "field 'power' is not an object");
+    reject_unknown_keys(node, {"sources", "rails", "inlet"}, where + " power");
+    BoardPower power;
+    std::set<std::string> seen;
+    const auto once = [&](const std::string& rail) {
+        if (!seen.insert(rail).second) fail(where, "power rail " + rail + " is listed twice in sources and rails");
+    };
+    for (const JsonNode& row : rows(node, "sources", where + " power")) {
+        power.sources.push_back(source_of(row, where + " power.sources"));
+        once(power.sources.back().rail);
+    }
+    for (const JsonNode& row : rows(node, "rails", where + " power")) {
+        power.rails.push_back(rail_of(row, where + " power.rails"));
+        once(power.rails.back().rail);
+    }
+    const JsonNode* inlet = object_field(node, "inlet");
+    if (!inlet) fail(where, "power has no 'inlet' (state null for a board with no inlet audit)");
+    if (inlet->kind != JsonKind::Null) {
+        if (inlet->kind != JsonKind::Object) fail(where, "power.inlet is neither an object nor null");
+        reject_unknown_keys(*inlet, {"rail", "bulk"}, where + " power.inlet");
+        power.inlet = BoardInlet{text(*inlet, "rail", where + " power.inlet"), text(*inlet, "bulk", where + " power.inlet")};
+    }
+    return power;
 }
 
 const BoardSheet& BoardDefinition::sheet(const std::string& wanted) const {
@@ -149,13 +213,16 @@ BoardHeader load_board_header(const std::filesystem::path& board_root) {
 ModuleDefinition parse_module(const JsonNode& document, const std::string& file) {
     const std::string source = "module file " + file;
     if (document.kind != JsonKind::Object) fail(source, "the document is not an object");
-    reject_unknown_keys(document, {"schema", "schematic", "pcb", "connector_part", "draw", "sdio_level_v", "sd_bus", "pairs",
-                                   "escape_population", "escape_triage", "do_not_load_straps"}, source);
+    reject_unknown_keys(document, {"schema", "schematic", "pcb", "connector_part", "controller_ref", "fpga_ref", "draw", "sdio_level_v", "sd_bus", "pairs",
+                                   "escape_population", "escape_triage", "do_not_load_straps", "supplies", "regulated_rails"}, source);
     if (text(document, "schema", source) != module_schema) fail(source, std::string("schema is not ") + module_schema);
     ModuleDefinition module;
     module.schematic = folder_name(document, "schematic", source);
     module.pcb = folder_name(document, "pcb", source);
     module.connector_part = text(document, "connector_part", source);
+    module.controller_ref = text(document, "controller_ref", source);
+    module.fpga_ref = text(document, "fpga_ref", source);
+    if (module.controller_ref == module.fpga_ref) fail(source, "controller_ref and fpga_ref name the same reference " + module.controller_ref);
     module.draw = load_of(member(document, "draw", JsonKind::Object, source), source);
     module.sdio_level_v = positive(document, "sdio_level_v", source);
     module.sd_bus = names(document, "sd_bus", source);
@@ -180,6 +247,15 @@ ModuleDefinition parse_module(const JsonNode& document, const std::string& file)
     }
     if (module.escape_triage.empty()) fail(source, "field 'escape_triage' is empty");
     module.do_not_load_straps = names(document, "do_not_load_straps", source);
+    std::set<std::string> supplied;
+    for (const JsonNode& row : rows(document, "supplies", source)) {
+        module.supplies.push_back(supply_of(row, source + " supplies"));
+        if (!supplied.insert(module.supplies.back().rail).second) fail(source, "supplies lists " + module.supplies.back().rail + " twice");
+    }
+    const JsonNode& regulated = member(document, "regulated_rails", JsonKind::Object, source);
+    reject_unknown_keys(regulated, {"rails", "basis"}, source + " regulated_rails");
+    module.regulated_rails = names(regulated, "rails", source + " regulated_rails");
+    module.regulated_rails_basis = text(regulated, "basis", source + " regulated_rails");
     return module;
 }
 
@@ -204,7 +280,7 @@ ModuleDefinition load_board_module(const std::filesystem::path& board_root) {
 BoardDefinition parse_board(const JsonNode& document, const std::string& file, ModuleDefinition module_definition) {
     const std::string source = "board file " + file;
     if (document.kind != JsonKind::Object) fail(source, "the document is not an object");
-    reject_unknown_keys(document, {"schema", "name", "files", "root_readme", "owned_groups", "module", "sheets"}, source);
+    reject_unknown_keys(document, {"schema", "name", "files", "root_readme", "owned_groups", "module", "power", "sheets"}, source);
     if (text(document, "schema", source) != board_schema) fail(source, std::string("schema is not ") + board_schema);
     BoardDefinition board;
     board.name = text(document, "name", source);
@@ -213,6 +289,7 @@ BoardDefinition parse_board(const JsonNode& document, const std::string& file, M
     board.flags = header.flags;
     board.module = module_of(member(document, "module", JsonKind::Object, source), source);
     board.module_definition = std::move(module_definition);
+    board.power = parse_board_power(member(document, "power", JsonKind::Object, source), source);
     std::set<std::string> seen;
     for (const JsonNode& row : rows(document, "sheets", source)) {
         board.sheets.push_back(sheet_of(row, source));

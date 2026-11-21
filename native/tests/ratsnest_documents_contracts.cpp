@@ -1,4 +1,5 @@
 #include "schgen/ratsnest_documents.hpp"
+#include "sheet_roles_fixture.hpp"
 #include "schgen/ratsnest_gate.hpp"
 #include "schgen/pcb_emit.hpp"
 #include "schgen/atomic_file.hpp"
@@ -38,7 +39,7 @@ void check_image(const RatsnestImage& im,const JsonNode& expected,const fs::path
     require(pcb_sha256(im.png)==str(expected,"png_sha256"),"PNG bytes differ: "+im.filename);
 }
 void test_case(const PcbModel& model,const JsonNode& expected,const fs::path& output){
-    std::set<std::string> names;for(const auto& inst:model.insts)names.insert(inst.sheet);const auto colors=ratsnest_palette({names.begin(),names.end()});
+    std::set<std::string> names;for(const auto& inst:model.insts)names.insert(inst.sheet);const auto colors=ratsnest_palette({names.begin(),names.end()},pcb_module_sheets(model));
     require(colors.size()==field(expected,"palette").object_value.size(),"palette count");for(const auto& [name,c]:field(expected,"palette").object_value)for(std::size_t i=0;i<3;++i)require(colors.at(name)[i]==c.array_value[i].number_value,"palette color");
     const auto result=render_ratsnest_documents(model);write(output/"RATSNEST.svg",result.svg);
     require(pcb_sha256(result.svg)==str(expected,"svg_sha256"),"SVG bytes differ: "+(output/"RATSNEST.svg").string());
@@ -52,7 +53,7 @@ void boundaries(PcbModel m,const fs::path& scratch){
     const auto supplied=render_ratsnest_documents(m,&nets,&edges);require(supplied.svg==original.svg&&supplied.images[0].png==original.images[0].png,"supplied nets and edges preserved");
     std::set<std::string> names;std::map<std::string,std::set<std::string>> by_sheet;std::set<std::string> som;
     for(const auto& inst:m.insts){names.insert(inst.sheet);by_sheet[inst.sheet].insert(inst.ref);if(inst.sheet.compare(0,4,"som_")==0)som.insert(inst.ref);}
-    const auto palette=ratsnest_palette({names.begin(),names.end()});require(render_ratsnest_board_image(m,palette,"top",nets,edges).png==original.images[0].png,"individual board image exact");
+    const auto palette=ratsnest_palette({names.begin(),names.end()},pcb_module_sheets(m));require(render_ratsnest_board_image(m,palette,"top",nets,edges).png==original.images[0].png,"individual board image exact");
     const auto subsystems=render_ratsnest_subsystem_images(m,nets,edges);require(subsystems.size()+2==original.images.size(),"subsystem API inventory");
     for(std::size_t i=0;i<subsystems.size();++i){const auto& im=subsystems[i];require(im.png==original.images[i+2].png,"subsystem API image exact");const auto name=fs::path(im.filename).stem().string();
         require(render_ratsnest_sheet_image(m,name,name=="som"?som:by_sheet.at(name),nets,edges,name=="som"?std::set<std::string>{}:som).png==im.png,"individual sheet image exact");}
@@ -111,9 +112,9 @@ int main(int argc,char** argv){try{
     const auto summary_path=root/"native/tests/data/ratsnest_documents/summary.json";
     require(pcb_sha256(read(summary_path))=="6e9db9806c3b38e0c6199e90ec0129882ddb2eb668bcf2e83e0240406d802907","immutable summary fixture");
     const auto summaries=parse_json_file(summary_path.string());
-    const auto fps=pool(field(fixture,"footprints"));for(const auto& row:field(fixture,"mutations").array_value){auto m=pcb_model_from_json(field(row,"model"),fps);test_case(m,row,scratch/str(row,"name"));
+    const auto fps=pool(field(fixture,"footprints"));for(const auto& row:field(fixture,"mutations").array_value){auto m=pcb_model_from_json(field(row,"model"),fps, explicit_sheet_roles(field(row,"model")));test_case(m,row,scratch/str(row,"name"));
         RatsnestPublication r;r.png_top="/repo/board/renders/ratsnest_top.png";r.png_bottom="/repo/board/renders/ratsnest_bottom.png";r.svg="/repo/board/docs/RATSNEST.svg";r.board_w=m.board_w;r.board_h=m.board_h;r.n_top=m.n_top;r.n_bottom=m.n_bottom;r.cross_mm=num(row,"cross_mm");r.total_mm=num(row,"total_mm");r.n_cross=static_cast<int>(num(row,"n_cross"));require(ratsnest_document_summary(r,"/repo")==str(summaries,str(row,"name")),"summary exact");}
-    for(const auto& expected:field(fixture,"projects").array_value){const auto name=str(expected,"name");const auto raw=parse_json_file((root/"native/tests/data/pcb_emit"/(name+".json")).string());test_case(pcb_model_from_json(field(raw,"model"),pool(field(raw,"footprints"))),expected,scratch/name);}
-    boundaries(pcb_model_from_json(field(field(fixture,"mutations").array_value.front(),"model"),fps),scratch);
+    for(const auto& expected:field(fixture,"projects").array_value){const auto name=str(expected,"name");const auto raw=parse_json_file((root/"native/tests/data/pcb_emit"/(name+".json")).string());test_case(pcb_model_from_json(field(raw,"model"),pool(field(raw,"footprints")), explicit_sheet_roles(field(raw,"model"))),expected,scratch/name);}
+    boundaries(pcb_model_from_json(field(field(fixture,"mutations").array_value.front(),"model"),fps, explicit_sheet_roles(field(field(fixture,"mutations").array_value.front(),"model"))),scratch);
     std::cout<<assertions<<" ratsnest document assertions passed\n";return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<"\n";return 1;}}

@@ -1,5 +1,12 @@
 # Frozen floorplan contracts
 
+Notes removal (2026-11-21): the hand-typed placement notes left the tool (task R5,
+archived in `removed/floorplan_prose/`). `carrier.json` and `devkit_mini.json` lost
+their `expected.notes` array; the four `.md` and `.svg` expectations lost the note
+badges, the legend, the notes text, the "Placement notes" and "Honest limits"
+sections and the framing sentences (the Markdown title is now "Floorplan"). Nothing
+else in them changed. The `SHA256SUMS` lines for these six files were recomputed.
+
 Stack-up refresh (2026-11-19): the board moved to the six-layer JLC06161H-3313
 stack-up, so the two Markdown expectations now name it and carry its differential
 pair widths (90 ohm 0.1455 mm, 100 ohm 0.1148 mm). Only those lines changed; captured

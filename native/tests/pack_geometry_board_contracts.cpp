@@ -69,7 +69,7 @@ void scalars(){
  }
  // Large valid grid whose old integer addition would overflow: division rewrite,
  // not a claim of equality against undefined original arithmetic.
- const auto large=som_decoupling_grid(20,20,INT32_MAX,0);
+ const auto large=under_module_grid(20,20,INT32_MAX,0);
  const int c=std::get<2>(large),rows=std::get<3>(large);
  require(rows==(static_cast<std::int64_t>(INT32_MAX)+c-1)/c,"large row count");
  std::array<QuantizationCounts,2> owned;

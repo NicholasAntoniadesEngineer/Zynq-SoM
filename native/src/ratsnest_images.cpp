@@ -67,9 +67,9 @@ std::vector<RatsnestImage> images(const PcbModel& m,const RatsnestPalette* palet
         jobs.emplace_back([&]{return board(m,geo,*palette,nets,edges,"top");});
         jobs.emplace_back([&]{return board(m,geo,*palette,nets,edges,"bottom");});
     }
-    std::map<std::string,std::set<std::string>> sheets;std::set<std::string> som;
-    for(const auto& inst:m.insts){sheets[inst.sheet].insert(inst.ref);if(starts(inst.sheet,"som_"))som.insert(inst.ref);}
-    for(const auto& [name,refs]:sheets)if(!starts(name,"som_"))jobs.emplace_back([&,name=name,refs=refs]{return sheet(m,geo,name,refs,som,nets,edges);});
+    std::map<std::string,std::set<std::string>> sheets;std::set<std::string> som,som_sheets;
+    for(const auto& inst:m.insts){sheets[inst.sheet].insert(inst.ref);if(!inst.module_connector.empty()||inst.under_module){som.insert(inst.ref);som_sheets.insert(inst.sheet);}}
+    for(const auto& [name,refs]:sheets)if(!som_sheets.count(name))jobs.emplace_back([&,name=name,refs=refs]{return sheet(m,geo,name,refs,som,nets,edges);});
     if(!som.empty())jobs.emplace_back([&]{return sheet(m,geo,"som",som,{},nets,edges);});
     std::vector<RatsnestImage> out(jobs.size());
     const auto workers=std::min<std::size_t>({4,jobs.size(),std::max(1u,std::thread::hardware_concurrency())});

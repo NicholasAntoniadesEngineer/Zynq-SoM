@@ -1,4 +1,5 @@
 #include "schgen/run_config.hpp"
+#include "sheet_roles_fixture.hpp"
 #include "pcb_placement_fixture.hpp"
 #include "schgen/compose_repair.hpp"
 #include "schgen/atomic_file.hpp"
@@ -37,7 +38,7 @@ QuantizationCounts projection(const PcbPlacementInput& input, const PcbModel& mo
 }
 void measurements(const std::filesystem::path& root, const std::string& project) {
     auto f = load(root, project);
-    const auto base = pcb_model_from_json(f.model, f.expected_pool);
+    const auto base = pcb_model_from_json(f.model, f.expected_pool, explicit_sheet_roles(f.model));
     const auto oracle = parse_json_file((root / "native/tests/data/compose_repair" /
                                        (project + "_strict.json")).string());
     for (const auto& row : field(oracle, "rows").array_value) {
@@ -84,7 +85,7 @@ void publish(const std::filesystem::path& path, const std::string& bytes) {
 }
 void commands(const std::filesystem::path& root) {
     auto f = load(root, "devkit_mini");
-    const auto base = pcb_model_from_json(f.model, f.expected_pool);
+    const auto base = pcb_model_from_json(f.model, f.expected_pool, explicit_sheet_roles(f.model));
     auto initial = base;
     initial.insts.erase(std::remove_if(initial.insts.begin(), initial.insts.end(),
         [](const auto& i) { return i.sheet != "uart_bridge" && i.sheet != "usb_uart_connector"; }), initial.insts.end());

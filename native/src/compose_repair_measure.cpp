@@ -61,10 +61,10 @@ ComposeDocument measure_compose_ledger(const PcbPlacementInput &input,const PcbM
     set(d.data,"law5",jo({{"ok",jb(rats.ok)},{"cross_mm",j(rats.cross_mm)},{"budget_mm",j(rats.cross_budget_mm)},{"slack_mm",j(py_round(slack,1))},{"slack_pct",j(pct)},{"off_board",j(static_cast<double>(rats.off_board.size()))},{"dispersed",j(static_cast<double>(rats.dispersed.size()))},{"dispersion_by_sheet",dispersion}}));
     auto violations=jo();for(const auto &[s,r]:check_all_pcb_placement_contracts(checked,policy))set(violations,s,j(static_cast<double>(r.violations.size())));
     set(d.data,"contract_violations",violations);
-    auto hotspots=jo();
+    auto hotspots=jo();const auto module_sheets=pcb_module_sheets(model);
     for(const auto &[pair,count]:pcb_cross_airwires_by_pair(model)) {
         const auto demand=channel_demand_mm(count.first,6,2.,.2);
-        if(demand>0.&&pair.first.compare(0,5,"som_j")!=0&&pair.second.compare(0,5,"som_j")!=0)set(hotspots,pair.first+"|"+pair.second,jo({{"airwires",j(count.first)},{"mm",j(count.second)},{"corridor_mm",j(demand)}}));
+        if(demand>0.&&!module_sheets.count(pair.first)&&!module_sheets.count(pair.second))set(hotspots,pair.first+"|"+pair.second,jo({{"airwires",j(count.first)},{"mm",j(count.second)},{"corridor_mm",j(demand)}}));
     }
     set(d.data,"channel_hotspots",hotspots);
     if(pct<5.)triggers.push_back("law5 cross slack "+pyfloat(pct)+"% < floor 5.0%");

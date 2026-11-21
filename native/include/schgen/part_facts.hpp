@@ -19,7 +19,9 @@ namespace schgen {
 namespace part_fact_constants {
 inline constexpr NamedConstant vrml_unit{"vrml_unit", 2.54, "mm", "physical",
     "KiCad reads one VRML model unit as a tenth of an inch, and the part importer writes its models in that unit"};
-inline constexpr std::array part_fact_registry{vrml_unit};
+inline constexpr NamedConstant i2c_address_max{"i2c_address_max", 127.0, "address", "physical",
+    "an I2C target address has seven bits, so the highest is 127 (NXP UM10204, 3.1.10)"};
+inline constexpr std::array part_fact_registry{vrml_unit, i2c_address_max};
 }
 
 enum class PartClass : std::uint8_t {
@@ -103,10 +105,12 @@ struct IsolationFact {
 struct RegulatorDirectEnable {
     std::string en_pin;
     std::vector<std::string> vin_pins;
+    std::string cite;
 };
 
 struct RegulatorEnableNetwork {
     double ihys_a = 0, recommended_max_v = 0, threshold_v = 0;
+    std::string cite;
 };
 
 struct RegulatorEnableFact {
@@ -115,14 +119,14 @@ struct RegulatorEnableFact {
 };
 
 struct RegulatorFact {
-    std::string kind;
+    std::string kind, label;
     std::optional<double> limit_a;
     double eff = 0;
     std::string in_pin, out_pin;
     std::optional<std::string> iset_pin;
     double ilim_num = 0;
     std::string note;
-    std::optional<double> fb_vref, iset_v;
+    std::optional<double> fb_vref, iset_v, out_v;
     std::optional<RegulatorEnableFact> enable;
 };
 
@@ -131,7 +135,7 @@ struct ZenerFact {
 };
 
 struct ReferencePinFact {
-    std::string vref1_pin, vref2_pin;
+    std::string label, vref1_pin, vref2_pin;
 };
 
 struct ControlGridFact {
@@ -147,6 +151,29 @@ struct FootprintAliasFact {
     std::string footprint;
 };
 
+struct I2cPinFact {
+    std::string name, number;
+};
+
+struct I2cStrapFact {
+    I2cPinFact pin;
+    std::vector<std::pair<I2cPinFact, int>> selects;
+};
+
+struct I2cDeviceFact {
+    std::string label;
+    int base = 0;
+    I2cPinFact data, clock;
+    std::vector<I2cStrapFact> straps;
+    std::string cite;
+};
+
+struct I2cBridgeFact {
+    std::vector<std::pair<I2cPinFact, I2cPinFact>> joins;
+    bool shares_addresses = false;
+    std::string cite;
+};
+
 using ThermalFacts = std::map<std::string, ThermalFact>;
 using ThermalCopperFacts = std::map<std::string, ThermalCopperFact>;
 using EpViaFacts = std::map<std::string, EpViaFact>;
@@ -157,11 +184,19 @@ using ReferencePinFacts = std::map<std::string, ReferencePinFact>;
 using ControlGridFacts = std::map<std::string, ControlGridFact>;
 using ModelOverrideFacts = std::map<std::string, ModelOverrideFact>;
 using FootprintAliasFacts = std::map<std::string, FootprintAliasFact>;
+using I2cDeviceFacts = std::map<std::string, I2cDeviceFact>;
+using I2cBridgeFacts = std::map<std::string, I2cBridgeFact>;
 
 template <typename Fact>
 const Fact* part_fact(const std::map<std::string, Fact>& section, const std::string& name) {
     const auto found = section.find(name);
     return found == section.end() ? nullptr : &found->second;
+}
+
+template <typename Fact>
+const Fact* part_fact_for(const std::map<std::string, Fact>& section, const std::string& value, const std::string& footprint) {
+    if (const Fact* fact = part_fact(section, value)) return fact;
+    return part_fact(section, footprint.substr(footprint.find_last_of(':') + 1));
 }
 
 template <typename Fact>
@@ -186,6 +221,8 @@ struct PartFacts {
     ControlGridFacts control_grid;
     ModelOverrideFacts model_overrides;
     FootprintAliasFacts footprint_aliases;
+    I2cDeviceFacts i2c_devices;
+    I2cBridgeFacts i2c_bridges;
 };
 
 struct ModelRoots {
@@ -202,6 +239,10 @@ std::pair<int, int> mating_face_vector(const ConnectorFact& fact);
 ConnectorFacts load_connector_facts(const std::filesystem::path& parts_directory);
 
 PartFacts load_part_facts(const std::filesystem::path& file);
+PartFacts load_part_facts_in(const std::filesystem::path& parts_directory);
+const ThermalFieldFact* thermal_field_for(const ThermalCopperFacts& rows, const RegulatorFacts& regulators, const std::string& value);
+const EpViaFact* ep_via_for(const EpViaFacts& rows, const RegulatorFacts& regulators, const std::string& value);
+const PartFacts& default_part_facts();
 PartClass symbol_class(const PartFacts& facts, const std::string& symbol, const std::string& part);
 double model_top(const std::string& text, const std::string& extension, const std::string& model);
 PartHeight footprint_height(const PartFacts& facts, const std::string& footprint, const Sexpr& document,

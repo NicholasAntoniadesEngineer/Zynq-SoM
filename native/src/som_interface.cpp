@@ -459,6 +459,12 @@ SomInterface som_interface_from_json(const JsonNode& root, const std::string& so
     return result;
 }
 
+std::vector<std::string> som_interface_refs(const SomInterface& data) {
+    std::vector<std::string> refs;
+    for (const auto& [ref, connector] : data.connectors) { (void)connector; refs.push_back(ref); }
+    return refs;
+}
+
 std::string som_interface_json(const SomInterface& data) {
     auto root = object(), connectors = object();
     for (const auto& [ref, conn] : data.connectors) {

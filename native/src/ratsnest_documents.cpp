@@ -23,7 +23,7 @@ void validate(const PcbModel& m,const RatsnestNets& nets,const RatsnestEdges& ed
             throw ProjectError("ratsnest: invalid reference label");
         if(!refs.insert(inst.ref).second)throw ProjectError("ratsnest: duplicate reference "+inst.ref);
         if(inst.side!="top"&&inst.side!="bottom")throw ProjectError("ratsnest: invalid side "+inst.side);
-        safe_sheet(inst.sheet);som|=starts(inst.sheet,"som_");plain_som|=inst.sheet=="som";
+        safe_sheet(inst.sheet);som|=!inst.module_connector.empty()||inst.under_module;plain_som|=inst.sheet=="som";
         const auto box=geometry.courtyard_at(i);for(auto v:{box.x0,box.y0,box.x1,box.y1})bounded(v);
     }
     if(som&&plain_som)throw ProjectError("ratsnest: colliding som.png sheet names");
@@ -37,8 +37,8 @@ void validate(const PcbModel& m,const RatsnestNets& nets,const RatsnestEdges& ed
     }
 }
 }
-RatsnestPalette ratsnest_palette(const std::vector<std::string>& sheets) {
-    std::vector<std::string> real;for(const auto& s:sheets)if(!starts(s,"som_j"))real.push_back(s);
+RatsnestPalette ratsnest_palette(const std::vector<std::string>& sheets,const std::set<std::string>& module_sheets) {
+    std::vector<std::string> real;for(const auto& s:sheets)if(!module_sheets.count(s))real.push_back(s);
     std::sort(real.begin(),real.end());RatsnestPalette out;const auto n=std::max<std::size_t>(1,real.size());
     for(std::size_t i=0;i<real.size();++i){const double h=static_cast<double>(i)/n,s=i%2?.78:.55,v=i%3?.92:.74;
         const double hf=h*6;const int sector=static_cast<int>(hf);const double fraction=hf-sector;
@@ -48,7 +48,7 @@ RatsnestPalette ratsnest_palette(const std::vector<std::string>& sheets) {
             case 3:rgb={p,q,v};break;case 4:rgb={t,p,v};break;default:rgb={v,p,q};break;}
         out[real[i]]={static_cast<unsigned char>(rgb[0]*255),static_cast<unsigned char>(rgb[1]*255),static_cast<unsigned char>(rgb[2]*255)};
     }
-    for(const auto& s:sheets)if(starts(s,"som_j"))out[s]={201,148,32};return out;
+    for(const auto& s:sheets)if(module_sheets.count(s))out[s]={201,148,32};return out;
 }
 std::vector<RatsnestAirwire> ratsnest_airwires(const PcbModel& m,const RatsnestNets& nets,
         const RatsnestEdges& edges,const std::optional<std::string>& side) {
@@ -96,7 +96,7 @@ RatsnestDocuments render_ratsnest_documents(const PcbModel& m,const RatsnestNets
         if(!std::isfinite(x)||!std::isfinite(y)||std::abs(x)>1e6||std::abs(y)>1e6)throw ProjectError("ratsnest: coordinate out of range");}}
     const auto computed=supplied_edges?RatsnestEdges{}:ratsnest_mst(nets);const auto& edges=supplied_edges?*supplied_edges:computed;
     validate(m,nets,edges);std::set<std::string> sheets;for(const auto& inst:m.insts)sheets.insert(inst.sheet);
-    const auto palette=ratsnest_palette({sheets.begin(),sheets.end()});RatsnestDocuments out;
+    const auto palette=ratsnest_palette({sheets.begin(),sheets.end()},pcb_module_sheets(m));RatsnestDocuments out;
     out.svg=render_ratsnest_svg(m,palette,nets,edges);out.images=render_ratsnest_images(m,palette,nets,edges);
     std::tie(out.cross_mm,out.total_mm,out.n_cross)=ratsnest_lengths(nets,edges);
     out.board_w=m.board_w;out.board_h=m.board_h;out.n_top=m.n_top;out.n_bottom=m.n_bottom;return out;

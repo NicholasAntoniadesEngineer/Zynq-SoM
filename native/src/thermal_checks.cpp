@@ -4,28 +4,27 @@
 namespace schgen {
 using namespace model_checks;
 
-const ThermalPolicy& default_thermal_policy() {
-    static const ThermalPolicy policy{50.0,10.0,
-        {
-        {"TPS54302", {118.9, 125.0, 0.0, 0.85, "SOT-23-THIN-6 (DDC, no EP)", "TI SLVSDG6C 5.4 Thermal Information (RthJA 118.9 C/W JESD51-7; EVM 57.2 C/W) + 5.3 Rec-Op Tj-max 125 C (abs-max 150 C); no EP; eff floor 0.85 (DS plots 88-92%)", std::nullopt, "", ""}},
-        {"LM61460", {58.7, 150.0, 0.0, 0.85, "VQFN-HR-14 (RJR, PGND pads->GND pour)", "TI SNVSBD5D LM61460 (VQFN-HR RthJA 58.7 C/W JESD51-7 bare; Tj op-max 150 C); eff floor 0.85 (DS plots ~88-91%)", 35.0, "DS 7.3: bare 58.7 C/W (JESD51-7) vs 25 C/W on a 4-layer PCB (DS note + LM61460-Q1 EVM). Credit gated on EMITTED copper, verified in the .kicad_pcb per build: In1.Cu GND plane + 8-via PGND field + local F.Cu/B.Cu pours (SNVSBD5D 11.1.1). Credited 35 C/W — 10 C/W above the DS 4-layer 25, ~30% of the bare->4L delta held back (0.5-oz inner plane, modest pours vs the EVM, 3-buck mutual heating)", "LM61460"}},
-        {"AP2112K", {250.0, 125.0, 0.0, 0.85, "SOT-23-5", "Diodes AP2112 DS (SOT-23-5 RthJA ~250 C/W; Tj_max 125 C)", std::nullopt, "", ""}},
-        {"TLV75725", {231.0, 125.0, 0.0, 0.85, "SOT-23-5 (DBV, no pad)", "TI TLV757P DS / fmc.md section 3 (DBV RthJA 231 C/W; Tj_max 125 C) — the HOT default; DYD pad variant below", std::nullopt, "", ""}},
-        {"SY6280", {250.0, 150.0, 0.095, 0.85, "SOT-23-5", "Silergy SY6280 DS (SOT-23-5 RthJA ~250 C/W; Rds_on ~95 mohm; Tj_max 150 C)", std::nullopt, "", ""}},
-        {"TPS26631", {33.6, 125.0, 0.031, 0.85, "HTSSOP-20 (PWP)", "TI SLVSE94 (HTSSOP-20 PowerPAD RthJA ~33.6 C/W 2s2p; FET Rds_on 31 mohm; Tj op-max 125 C)", std::nullopt, "", ""}}
-    },
-        {{"TLV75725","DYD",{231.0, 125.0, 0.0, 0.85, "SOT-23-5 (DYD, EP+vias->In1 plane)", "TI TLV757P DS / fmc.md section 3 + PWR-3 (DYD thermal-pad RthJA ~92.5 C/W JESD51-7 WITH JESD51-5 vias; Tj_max 125 C); no-copper fallback = DBV bare 231 C/W", 92.5, "DS DYD RthJA 92.5 C/W presumes the JESD51-5 stackup (thermal pad soldered + vias into a buried plane). Credit gated on EMITTED copper, verified per build: In1.Cu GND plane + >=2 GND vias beside the pad + local F.Cu pour. Fallback without it: DBV bare 231 C/W (no pad benefit claimable)", "TLV75725_DYD"}}},
-        {
-        {"LM61460", {"LM61460", 6, 5.2, {"F.Cu", "B.Cu"}}},
-        {"TLV75725_DYD", {"TLV75725", 2, 3.0, {"F.Cu"}}}
+ThermalPolicy thermal_policy_from(const PartFacts& facts) {
+    ThermalPolicy policy;
+    for(const auto& [part,fact]:facts.thermal) {
+        ThermalSpec spec;spec.rth_ja=fact.rth_ja;spec.tj_max=fact.tj_max;spec.rds_on=fact.rds_on;spec.eff=fact.eff;spec.package=fact.package;spec.cite=fact.cite;
+        if(fact.pour) {
+            spec.rth_ja_pour=fact.pour->rth_ja;spec.pour_cite=fact.pour->cite;spec.pour_evidence=fact.pour->evidence;
+            const auto& need=part_fact_of(facts.thermal_copper,part,"thermal_copper").need;
+            if(find(policy.pour_needs,fact.pour->evidence))throw ModelCheckError("thermal facts: pour evidence "+fact.pour->evidence+" is named by two parts");
+            policy.pour_needs.push_back({fact.pour->evidence,{part_fact_of(facts.regulators,part,"regulators").label,need.min_vias,need.radius_mm,need.pour_layers}});
+        }
+        policy.specs.emplace(part,spec);
     }
-    };
+    return policy;
+}
+const ThermalPolicy& default_thermal_policy() {
+    static const ThermalPolicy policy=thermal_policy_from(default_part_facts());
     return policy;
 }
 
-const ThermalSpec* thermal_spec_for(const std::string& value,const std::string& footprint,const ThermalPolicy& policy) {
-    for(const auto& fp:policy.footprint_specs)if(starts(value,fp.value_prefix)&&footprint.find(fp.footprint_contains)!=std::string::npos)return &fp.spec;
-    for(const auto& [prefix,s]:policy.specs)if(starts(value,prefix))return &s;return nullptr;
+const ThermalSpec* thermal_spec_for(const CircuitPartIr& part,const ThermalPolicy& policy) {
+    const auto found=policy.specs.find(catalogue_part_number(part));return found==policy.specs.end()?nullptr:&found->second;
 }
 double thermal_dissipation(const std::string& kind,double vin,double vout,double iout,const ThermalSpec& spec) {
     if(kind=="ldo")return std::max(0.0,vin-vout)*iout;
@@ -85,8 +84,19 @@ std::size_t ThermalCopper::gnd_vias_within(double x,double y,double radius)const
 bool ThermalCopper::pour_at(double x,double y,const std::string& layer,const std::string& net)const {
     return std::any_of(zones.begin(),zones.end(),[&](const auto& z){return zone_on(z,net,layer)&&z.bbox[0]<=x&&x<=z.bbox[2]&&z.bbox[1]<=y&&y<=z.bbox[3];});
 }
-ThermalCopper scan_thermal_copper(const Sexpr& board,const std::string& source) {
+namespace {
+std::vector<std::string> pad_scanned_prefixes(const PartFacts& facts) {
+    std::set<std::string> parts;
+    for(const auto& entry:facts.thermal_copper)parts.insert(entry.first);
+    for(const auto& entry:facts.ep_vias)parts.insert(entry.first);
+    std::vector<std::string> out;
+    for(const auto& part:parts)out.push_back(part_fact_of(facts.regulators,part,"regulators").label);
+    return out;
+}
+}
+ThermalCopper scan_thermal_copper(const Sexpr& board,const std::string& source,const PartFacts& facts) {
     auto doc=list(board);if(!doc)throw ModelCheckError("thermal copper: board must be an s-expression list");
+    const auto scanned=pad_scanned_prefixes(facts);
     ThermalCopper bc;bc.path=source;std::map<std::string,std::string> nets;
     for(const auto& node:*doc) {
         auto ns=list(node);if(!ns||ns->empty())continue;
@@ -112,7 +122,7 @@ ThermalCopper scan_thermal_copper(const Sexpr& board,const std::string& source) 
             for(const auto& n:*ns)if(auto p=list(n);p&&tag(*p,"property")&&p->size()>2) {
                 if(atom_eq((*p)[1],"Reference"))fp.ref=atom((*p)[2]);else if(atom_eq((*p)[1],"Value"))fp.value=atom((*p)[2]);
             }
-            if(starts(fp.value,"LM61460")||starts(fp.value,"TLV75725")||starts(fp.value,"TPS26631"))
+            if(std::any_of(scanned.begin(),scanned.end(),[&](const auto& prefix){return starts(fp.value,prefix);}))
                 for(const auto& n:*ns)if(auto p=list(n);p&&tag(*p,"pad")) {
                     auto pat=child(*p,"at"),dr=child(*p,"drill");double drill=0;
                     if(dr&&dr->size()>1&&(std::holds_alternative<double>((*dr)[1].v)||std::holds_alternative<bool>((*dr)[1].v)))drill=num((*dr)[1]);
@@ -124,7 +134,7 @@ ThermalCopper scan_thermal_copper(const Sexpr& board,const std::string& source) 
     for(auto& via:bc.vias)if(auto it=nets.find(via.net_name);it!=nets.end())via.net_name=it->second;
     return bc;
 }
-ThermalCopper scan_thermal_copper(const std::filesystem::path& path){return scan_thermal_copper(sexpr_loads(read(path)),path.string());}
+ThermalCopper scan_thermal_copper(const std::filesystem::path& path,const PartFacts& facts){return scan_thermal_copper(sexpr_loads(read(path)),path.string(),facts);}
 std::pair<bool,std::string> thermal_pour_evidence(const ThermalCopper* copper,const ThermalPourNeed& need) {
     if(!copper)return {false,"no emitted-board scan (fail-closed: credit withheld)"};
     if(!copper->gnd_plane())return {false,"In1.Cu GND plane NOT emitted"};
@@ -141,15 +151,15 @@ std::pair<bool,std::string> thermal_pour_evidence(const ThermalCopper* copper,co
     return {all,"In1 GND plane + "+join(rows,"; ")};
 }
 
-ThermalCheckResult analyze_thermal(const std::vector<ProjectCircuit>& sheets,const PowerCheckResult& power,const ThermalCopper* copper,const std::string& source,const ThermalPolicy& policy,const PowerPolicy& pp) {
+ThermalCheckResult analyze_thermal(const std::vector<ProjectCircuit>& sheets,const PowerCheckResult& power,const PowerPolicy& pp,const ThermalCopper* copper,const std::string& source,const ThermalPolicy& policy) {
     ThermalCheckResult res;res.ta=policy.ambient_c;res.margin=policy.margin_c;res.waived=waivers(sheets,"thermal_waivers");res.copper_src=copper?source:"";
     std::vector<std::pair<std::string,std::pair<bool,std::string>>> ev;
     for(const auto& [key,need]:policy.pour_needs)ev.emplace_back(key,thermal_pour_evidence(copper,need));
-    std::map<std::pair<std::string,std::string>,std::string> fps;
-    for(const auto& s:sheets)for(const auto& p:s.circuit.parts)fps[{s.name,p.ref}]=p.footprint;
+    std::map<std::pair<std::string,std::string>,const CircuitPartIr*> placed;
+    for(const auto& s:sheets)for(const auto& p:s.circuit.parts)placed[{s.name,p.ref}]=&p;
     for(auto r:sorted_regs(power)) {
-        auto it=fps.find({r->sheet,r->ref});auto fp=it==fps.end()?std::string{}:it->second;
-        auto spec=thermal_spec_for(r->value,fp,policy);auto key=r->sheet+":"+r->ref;
+        auto it=placed.find({r->sheet,r->ref});auto fp=it==placed.end()?std::string{}:it->second->footprint;
+        auto spec=it==placed.end()?nullptr:thermal_spec_for(*it->second,policy);auto key=r->sheet+":"+r->ref;
         if(!spec){res.findings.push_back("UNSPECED: "+key+" ("+r->value+", fp "+(fp.empty()?"<none>":fp)+") has no thermal spec — add a THERMAL_SPECS/FOOTPRINT_SPECS row with its datasheet RthJA + Tj_max before its Tj can be proven");continue;}
         double vin=rail_volts(r->vin,pp).value_or(0),vout=rail_volts(r->vout,pp).value_or(0),pd=thermal_dissipation(r->kind,vin,vout,r->i_out,*spec);
         auto evidence=spec->rth_ja_pour?find(ev,spec->pour_evidence):nullptr;
@@ -165,8 +175,8 @@ ThermalCheckResult analyze_thermal(const std::vector<ProjectCircuit>& sheets,con
     }
     return res;
 }
-ThermalCheckResult analyze_thermal(const std::vector<ProjectCircuit>& sheets,const ThermalCopper* copper,const std::string& source,const ThermalPolicy& policy,const PowerPolicy& pp) {
-    return analyze_thermal(sheets,analyze_power(sheets,pp),copper,source,policy,pp);
+ThermalCheckResult analyze_thermal(const std::vector<ProjectCircuit>& sheets,const PowerPolicy& pp,const ThermalCopper* copper,const std::string& source,const ThermalPolicy& policy) {
+    return analyze_thermal(sheets,analyze_power(sheets,pp),pp,copper,source,policy);
 }
 
 std::string thermal_report(const ThermalCheckResult& res) {
@@ -203,7 +213,7 @@ std::string thermal_report(const ThermalCheckResult& res) {
     auto hotstr=hot?"; hottest "+hot->sheet+":"+hot->ref+" ("+hot->value+") Tj "+f(hot->tj,1)+" C":"";
     ls.insert(ls.end(),{"",std::string("THERMAL: ")+(res.ok()?"PASS":"FAIL")+" ("+std::to_string(res.devices.size())+" devices speced, "+std::to_string(res.errors.size())+" over-limit, "+std::to_string(res.findings.size())+" unspeced, "+std::to_string(res.waived.size())+" waived)"+hotstr});return join(ls);
 }
-ThermalCheckResult run_thermal_checks(const std::vector<ProjectCircuit>& sheets,const std::filesystem::path& dir,const PowerCheckResult* power,const std::optional<std::filesystem::path>& pcb,const std::filesystem::path& repository_root,const ThermalPolicy& policy,const PowerPolicy& pp) {
+ThermalCheckResult run_thermal_checks(const std::vector<ProjectCircuit>& sheets,const std::filesystem::path& dir,const PowerPolicy& pp,const PowerCheckResult* power,const std::optional<std::filesystem::path>& pcb,const std::filesystem::path& repository_root,const ThermalPolicy& policy) {
     std::optional<ThermalCopper> copper;std::string source;
     if(pcb&&std::filesystem::exists(*pcb)) {
         copper=scan_thermal_copper(*pcb);source=pcb->string();
@@ -212,7 +222,7 @@ ThermalCheckResult run_thermal_checks(const std::vector<ProjectCircuit>& sheets,
             if(!rel.empty()&&*rel.begin()!="..")source=rel.string();
         }
     }
-    auto res=power?analyze_thermal(sheets,*power,copper?&*copper:nullptr,source,policy,pp):analyze_thermal(sheets,copper?&*copper:nullptr,source,policy,pp);
+    auto res=power?analyze_thermal(sheets,*power,pp,copper?&*copper:nullptr,source,policy):analyze_thermal(sheets,pp,copper?&*copper:nullptr,source,policy);
     publish(dir/"thermal.txt",thermal_report(res)+"\n");return res;
 }
 JsonNode thermal_result_json(const ThermalCheckResult& res) {

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "schgen/sheet_roles.hpp"
+
 #include <optional>
 #include <string>
 #include <tuple>
@@ -54,12 +56,13 @@ std::vector<std::pair<std::string, std::string>> j_edge_map(
     double som_w, double som_h);
 std::optional<std::string> dominant_j(
     const std::vector<std::pair<std::string, int>>& affinity);
-std::vector<std::string> affinity_j_from_expect(const std::string& expect);
-std::optional<std::string> affinity_j_from_target(const std::string& target);
+std::vector<std::string> affinity_j_from_expect(const std::string& expect, const SheetRoles& roles);
+std::optional<std::string> affinity_j_from_target(const std::string& target, const SheetRoles& roles);
 std::vector<std::pair<std::string, std::vector<std::pair<std::string, int>>>>
 j_affinity(
     const std::vector<std::string>& sheets,
     const std::vector<std::tuple<std::string, bool, std::string,
-                                 std::vector<std::string>>>& bindings);
+                                 std::vector<std::string>>>& bindings,
+    const SheetRoles& roles);
 
 }  // namespace schgen

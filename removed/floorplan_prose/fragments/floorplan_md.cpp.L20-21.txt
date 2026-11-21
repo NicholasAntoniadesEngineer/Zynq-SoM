@@ -1,0 +1,2 @@
+    std::map<std::string,std::vector<std::string>> note_of;
+    for(const auto& n:notes)if(!n.block.empty())note_of[n.block].push_back("("+std::to_string(n.n)+")");

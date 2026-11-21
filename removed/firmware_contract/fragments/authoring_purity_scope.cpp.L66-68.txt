@@ -1,0 +1,3 @@
+        "native/src/bringup_internal.hpp::schgen::bringup_detail::sheet | const schgen::CircuitSheetIr *(const schgen::FirmwareDocsInput &, const std::string &)",
+        "native/src/bringup_internal.hpp::schgen::bringup_detail::required | const schgen::CircuitSheetIr &(const schgen::FirmwareDocsInput &, const std::string &)",
+        "native/src/bringup_internal.hpp::schgen::bringup_detail::sheets | std::map<std::string, const schgen::CircuitSheetIr *> (const schgen::FirmwareDocsInput &)",

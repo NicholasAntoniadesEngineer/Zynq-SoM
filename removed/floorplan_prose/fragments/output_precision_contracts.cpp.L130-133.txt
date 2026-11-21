@@ -1,0 +1,4 @@
+    std::vector<FloorplanNote> notes;
+    for(const auto& n:placement_fixture::field(placement_fixture::field(floor,"expected"),"notes").array_value)
+        notes.push_back({static_cast<int>(placement_fixture::number(n,"n")),placement_fixture::string(n,"block"),
+                         placement_fixture::string(n,"short"),placement_fixture::string(n,"long")});

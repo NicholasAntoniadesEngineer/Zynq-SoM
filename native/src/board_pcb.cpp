@@ -68,14 +68,15 @@ BoardPcbStage prepare_board_pcb(const ProjectPaths& paths,
         validate_circuit(source.circuit, library);
         sheets.push_back(source.circuit);
     }
-    const auto link = link_sheets(sheets, parse_json_file(paths.som_interface_file.string()),
+    const auto roles = load_sheet_roles(paths, circuits);
+    const auto link = link_sheets(sheets, sheet_module_connectors(roles), parse_json_file(paths.som_interface_file.string()),
         parse_json_file((paths.project_root / "som_mapping.json").string()), paths.module.do_not_load_straps);
     if (!link.ok()) throw ProjectError(link.report());
     const auto nets = extract_netlist(schematic.empty()?paths.project_root / board_file_name(paths.file_stem, BoardFileKind::Schematic):schematic, extraction);
     validate_board_input_connectivity(circuits,load_sheet_index(paths),nets);
     BoardPcbStage out;
     out.circuits = circuits;
-    out.inputs = load_board_inputs(paths, circuits, link, nets, options);
+    out.inputs = load_board_inputs(paths, circuits, roles, link, nets, options);
     out.placement = build_pcb_model(out.inputs);
     const auto policy = pcb_emit_policy(out.inputs.floorplan.project);
     std::optional<labels::LabelSeating> seats;

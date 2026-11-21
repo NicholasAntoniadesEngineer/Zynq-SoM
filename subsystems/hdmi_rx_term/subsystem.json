@@ -3,6 +3,8 @@
   "name": "hdmi_rx_term",
   "title": "HDMI-RX TMDS sink termination (8x49.9R to AVCC=+3V3)",
   "interface": ["HDMI_RX_D2_P", "+3V3", "HDMI_RX_D2_N", "HDMI_RX_D1_P", "HDMI_RX_D1_N", "HDMI_RX_D0_P", "HDMI_RX_D0_N", "HDMI_RX_CLK_P", "HDMI_RX_CLK_N", "GND"],
+  "placement": {"region": "board", "silk_label": null, "far_guard_mm": null, "escape_basis": null, "escape_escalates": false, "reserves_edge": false},
+  "checks": {"dividers": [], "divider_sources": [], "iset_window_ma": null},
   "parts": [
     {
       "ref": "R1",

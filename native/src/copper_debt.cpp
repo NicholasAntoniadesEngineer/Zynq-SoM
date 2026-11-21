@@ -64,7 +64,7 @@ void verify_sources(const CopperDebtSources& s) {
     const auto thermal = [&](const std::string& id,const CircuitPartIr& p,const std::string& prefix,
                              double bare,std::optional<double> poured,const std::string& evidence) {
         claim(starts(p.value,prefix),id,"live component identity differs from claim");
-        const auto* spec = thermal_spec_for(p.value,p.footprint,s.thermal);
+        const auto* spec = thermal_spec_for(p,s.thermal);
         claim(spec && spec->rth_ja == bare && spec->rth_ja_pour == poured &&
             spec->pour_evidence == evidence && !spec->cite.empty(),id,"live thermal policy differs from claim");
     };
@@ -77,7 +77,10 @@ void verify_sources(const CopperDebtSources& s) {
                 claim(net_of(power,ref,pin)=="GND","CD-01","buck ground pad is not on GND");
         }
         const auto& pd = sheet(s,scope,"pd_input");
-        thermal("CD-03",part(pd,"U1","CD-03"),"TPS26631",33.6,std::nullopt,"");
+        const char* const efuse_claim="CD-03";
+        const auto& efuse=part(pd,"U1",efuse_claim);
+        thermal(efuse_claim,efuse,"TPS26631",33.6,std::nullopt,"");
+        claim(ep_via_for(s.ep_vias,s.regulators,efuse.value)!=nullptr,efuse_claim,"exposed-pad via requirement missing from the part data");
     }
     const auto& fmc = sheet(s,"carrier","fmc");
     thermal("CD-02",part(fmc,"U1","CD-02"),"TLV75725",231.0,92.5,"TLV75725_DYD");
@@ -93,10 +96,8 @@ void verify_sources(const CopperDebtSources& s) {
             [&](const auto& x){return x.value_prefix==prefix;});
         claim(e!=s.emission.thermal_credit_needs.end() && e->min_vias==count &&
             e->radius_mm==radius && e->pour_layers==layers,id,"emitter and thermal evidence policies disagree");
-        const auto c = std::find_if(s.emission.thermal_copper.begin(),s.emission.thermal_copper.end(),
-            [&](const auto& x){return x.first==prefix;});
-        claim(c!=s.emission.thermal_copper.end() && c->second.max_vias>=static_cast<std::size_t>(count) &&
-            c->second.pour_layers==layers && !c->second.cite.empty(),id,"thermal copper emission intent missing");
+        const auto* c = thermal_field_for(s.emission.thermal_copper,s.emission.regulators,prefix);
+        claim(c && c->max_vias>=count && c->pour_layers==layers && !c->cite.empty(),id,"thermal copper emission intent missing");
     };
     need("CD-01","LM61460","LM61460",6,5.2,{"F.Cu","B.Cu"});
     need("CD-02","TLV75725_DYD","TLV75725",2,3.0,{"F.Cu"});
@@ -140,11 +141,11 @@ void verify_sources(const CopperDebtSources& s) {
             "CD-05","Bob-Smith chassis return changed");
         const auto& jack=part(sheet(s,scope,"rj45_connector"),"J1","CD-06");
         for(const auto* p:{&transformer,&jack}) claim(
-            std::any_of(s.emission.isolation_prefixes.begin(),s.emission.isolation_prefixes.end(),
-                [&](const auto& prefix){return !prefix.empty() && starts(p->value,prefix);}),
+            part_fact_for(s.emission.isolation,p->value,p->footprint)!=nullptr,
             "CD-06","live magnetics/jack omitted by isolation policy");
     }
-    claim(s.emission.ground_layer=="In1.Cu" && s.emission.isolation_margin>0,
+    claim(s.emission.ground_layer=="In1.Cu" && !s.emission.isolation.empty() &&
+        std::all_of(s.emission.isolation.begin(),s.emission.isolation.end(),[](const auto& row){return row.second.margin_mm>0;}),
         "CD-06","isolation/reference-layer policy differs from claim");
     for(const auto impedance:{90,100}) {
         const auto g=std::find_if(s.geometry.begin(),s.geometry.end(),[&](const auto& x){return x.impedance==impedance;});
@@ -160,6 +161,9 @@ CopperDebtSources author_copper_debt_sources(const std::filesystem::path& reposi
     s.basis=load_component_basis_policy(repository); s.basis_scopes=component_basis_scopes(repository);
     s.circuits=author_component_basis_inputs(repository,s.basis);
     s.thermal=default_thermal_policy(); s.emission=default_pcb_emit_policy();
+    const PartFacts facts=load_part_facts_in(repository/"parts");
+    s.emission.isolation=facts.isolation; s.emission.thermal_copper=facts.thermal_copper; s.emission.regulators=facts.regulators;
+    s.regulators=facts.regulators; s.ep_vias=facts.ep_vias;
     for(const int impedance:{90,100}) {
         const auto* g=differential_geometry(impedance);
         if(!g) throw CopperProvenanceError("missing native differential geometry");
@@ -186,9 +190,11 @@ CopperDebtResult analyze_copper_debt(const ThermalCopper* c,const CopperDebtSour
         for(const auto* f:instances) {
             if(!rows.empty()) rows+="; ";
             if(i==2) {
+                const auto* ep=ep_via_for(s.ep_vias,s.regulators,f->value);
+                if(!ep) throw CopperProvenanceError("copper debt: "+f->value+" has no ep_vias entry in the part facts");
                 std::size_t n=0;
-                for(const auto& p:f->pads) if(p.drill>0 && p.net_name=="GND" && std::hypot(p.dx,p.dy)<=1.5) ++n;
-                all=all && n>=4; partial=true;
+                for(const auto& p:f->pads) if(p.drill>0 && p.net_name=="GND" && std::hypot(p.dx,p.dy)<=ep->radius_mm) ++n;
+                all=all && n>=static_cast<std::size_t>(ep->min_pads); partial=true;
                 rows+=f->ref+": "+std::to_string(n)+" in-footprint EP via-pads (GND, PTH)";
             } else {
                 const auto n=c->gnd_vias_within(f->x,f->y,i==0?5.2:3.0);

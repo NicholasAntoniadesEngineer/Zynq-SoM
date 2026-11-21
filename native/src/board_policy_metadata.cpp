@@ -85,7 +85,7 @@ std::vector<CppAuditSource> native_board_policy_audit_sources(){
         "quantize.cpp","native_audit_quantize.cpp","precision_ops.cpp","occupancy_precision.cpp","legalize_precision.cpp","stage_precision.cpp","placement_precision.cpp","output_precision.cpp","pack_precision.cpp","pack_geometry_precision.cpp","pack_search_precision.cpp","pack_plain_precision.cpp","pack_grid_precision.cpp",
         "floorplan_internal.hpp","floorplan_geometry.cpp","floorplan_cross.cpp",
         "floorplan_pack.cpp","edge_translation_internal.hpp","floorplan_compose.cpp","floorplan_build.cpp",
-        "floorplan_notes.cpp","floorplan_svg.cpp","floorplan_md.cpp","floorplan_ledger.cpp",
+        "floorplan_svg.cpp","floorplan_md.cpp","floorplan_ledger.cpp",
         "pcb_stage_internal.hpp","pcb_stage_geometry.cpp","pcb_stage_search.cpp",
         "pcb_stage_power.cpp","pcb_stage_zone.cpp","pcb_placement_internal.hpp",
         "pcb_placement_inputs.cpp","pcb_placement_pack.cpp","pcb_placement_variants.cpp",

@@ -1,4 +1,5 @@
 #include "schgen/pcb_owned_groups.hpp"
+#include "sheet_roles_fixture.hpp"
 #include "schgen/placement_requirements.hpp"
 #include "schgen/board_pcb.hpp"
 #include "schgen/board_schematic.hpp"
@@ -15,11 +16,11 @@ int main(int argc,char** argv) {
         stage.circuits=load_project_circuits(paths);
         std::vector<CircuitSheetIr> sheets;
         for(const auto& source:stage.circuits)sheets.push_back(source.circuit);
-        const auto link=link_sheets(sheets,parse_json_file(paths.som_interface_file.string()),
+        const auto link=link_sheets(sheets, sheet_module_connectors(explicit_sheet_roles(sheets)),parse_json_file(paths.som_interface_file.string()),
             parse_json_file((paths.project_root/"som_mapping.json").string()), paths.module.do_not_load_straps);
         if(!link.ok())throw std::runtime_error(link.report());
         const auto schematic=test::fresh_project_schematic(paths,stage.circuits);
-        stage.inputs=load_board_inputs(paths,stage.circuits,link,extract_netlist(schematic));
+        stage.inputs=load_board_inputs(paths,stage.circuits,schgen::load_sheet_roles(paths, stage.circuits), link,extract_netlist(schematic));
         stage.placement=build_pcb_model(stage.inputs);
         const PcbCheckInput all(stage.placement.model);
         const auto index=load_sheet_index(paths);

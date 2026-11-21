@@ -1,4 +1,5 @@
 #include "floorplan_internal.hpp"
+#include "sheet_roles_fixture.hpp"
 #include "multiscale_outline_internal.hpp"
 #include <iostream>
 #include <cmath>
@@ -8,7 +9,7 @@ namespace {
 void require(bool ok,const char* why){if(!ok)throw std::runtime_error(why);}
 FloorplanInput fixture() {
     FloorplanInput in;in.som.w=in.som.h=20;in.compact_search=true;
-    CircuitSheetIr sheet;sheet.name="edge";in.sheets.push_back(sheet);
+    CircuitSheetIr sheet;sheet.name="edge";in.sheets.push_back(sheet);in.roles=explicit_sheet_roles(in.sheets);
     in.geometry.zone_box["edge"]={30,10};in.spec.emplace();in.spec->edges["N"]={"edge"};
     return in;
 }

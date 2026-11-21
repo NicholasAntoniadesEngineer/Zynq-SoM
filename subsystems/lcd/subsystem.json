@@ -3,6 +3,8 @@
   "name": "lcd",
   "title": "40-pin TTL RGB LCD + SY7201 backlight boost",
   "interface": ["+VBOOST_IN", "+VDD_LCD", "+VDD_TP_CLAMP", "GND", "LCD_R0", "LCD_R1", "LCD_R2", "LCD_R3", "LCD_R4", "LCD_R5", "LCD_R6", "LCD_R7", "LCD_G0", "LCD_G1", "LCD_G2", "LCD_G3", "LCD_G4", "LCD_G5", "LCD_G6", "LCD_G7", "LCD_B0", "LCD_B1", "LCD_B2", "LCD_B3", "LCD_B4", "LCD_B5", "LCD_B6", "LCD_B7", "LCD_DISP", "LCD_HSYNC", "LCD_VSYNC", "LCD_DE", "TP_SDA", "TP_SCL", "TP_RST", "TP_INT", "LCD_PCLK", "BL_PWM"],
+  "placement": {"region": "board", "silk_label": null, "far_guard_mm": null, "escape_basis": null, "escape_escalates": false, "reserves_edge": false},
+  "checks": {"dividers": [], "divider_sources": [], "iset_window_ma": null},
   "parts": [
     {"ref": "J1", "part": "AFC07-S40FCA-00"},
     {"ref": "U1", "part": "SY7201ABC"},

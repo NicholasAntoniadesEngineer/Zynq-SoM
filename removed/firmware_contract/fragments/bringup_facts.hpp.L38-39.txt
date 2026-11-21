@@ -1,0 +1,2 @@
+std::optional<double> bringup_parse_value_ohms(const std::string&);
+std::string bringup_c_ident(const std::string&);

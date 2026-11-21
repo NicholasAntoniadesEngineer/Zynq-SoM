@@ -38,8 +38,9 @@ RatsnestGateResult check_ratsnest(const PcbCheckInput& input, const RatsnestNets
         if(inst.at_module)continue;
         by_sheet[inst.sheet].push_back(c);
     }
+    const auto module_sheets=pcb_module_sheets(m);
     for(const auto& [name,boxes]:by_sheet) {
-        if(starts(name,"som_j"))continue;
+        if(module_sheets.count(name))continue;
         ++res.n_subsystems;auto hull=boxes.front();double total=0;
         for(auto b:boxes){hull=united(hull,b);total+=(b.x1-b.x0)*(b.y1-b.y0);}
         const double area=(hull.x1-hull.x0)*(hull.y1-hull.y0),disp=area/(total?total:1);

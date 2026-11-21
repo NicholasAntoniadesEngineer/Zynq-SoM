@@ -1,4 +1,5 @@
 #include "schgen/run_config.hpp"
+#include "sheet_roles_fixture.hpp"
 #include "schgen/atomic_file.hpp"
 #include "schgen/pcb_emit.hpp"
 #include "connector_facts_fixture.hpp"
@@ -127,6 +128,10 @@ PcbEmitPolicy policy(const JsonNode &n) {
     auto p = default_pcb_emit_policy();
     p.board_stem = "Zynq_Carrier";
     p.connectors = repository_connector_facts();
+    p.isolation = repository_part_facts().isolation;
+    p.thermal_copper = repository_part_facts().thermal_copper;
+    p.regulators = repository_part_facts().regulators;
+    p.footprint_aliases = repository_part_facts().footprint_aliases;
     for (const auto &[k, v] : field(n, "header_descriptions").object_value)
         p.header_descriptions.emplace_back(k, v.string_value);
     for (const auto &[k, v] : field(n, "switch_descriptions").object_value)
@@ -136,12 +141,12 @@ PcbEmitPolicy policy(const JsonNode &n) {
 void project(const fs::path &fixtures, const fs::path &output, const std::string &name) {
     auto raw = parse_json_file((fixtures / (name + ".json")).string());
     auto pool = footprints(field(raw, "footprints"));
-    auto m = pcb_model_from_json(field(raw, "model"), pool);
+    auto m = pcb_model_from_json(field(raw, "model"), pool, explicit_sheet_roles(field(raw, "model")));
     auto p = policy(raw);
     auto result = render_pcb(m, p);
     equal(result.pcb, read(fixtures / (name + ".kicad_pcb")), name + " exact board", output);
     auto repaired_policy = p;
-    repaired_policy.model_overrides = project_pcb_model_overrides();
+    repaired_policy.model_overrides = repository_part_facts().model_overrides;
     const auto repaired = render_pcb(m, repaired_policy);
     if (name == "carrier") {
         auto expected = result.document;
@@ -162,15 +167,15 @@ void project(const fs::path &fixtures, const fs::path &output, const std::string
         replace_model(replace_model, expected);
         require(replaced == 1, "independent model-only correction has exactly one target");
         equal(sexpr_dumps(repaired.document), sexpr_dumps(expected), name + " repair preserves all copper and other models", output);
-        repaired_policy.model_overrides.front().value = "different-part";
+        repaired_policy.model_overrides = {{"different-part", repository_part_facts().model_overrides.begin()->second}};
         equal(render_pcb(m, repaired_policy).pcb, result.pcb, name + " model repair is part-specific", output);
-        repaired_policy.model_overrides = project_pcb_model_overrides();
-        repaired_policy.model_overrides.front().footprint = "different-footprint";
+        repaired_policy.model_overrides = repository_part_facts().model_overrides;
+        repaired_policy.model_overrides.begin()->second.footprint = "different-footprint";
         equal(render_pcb(m, repaired_policy).pcb, result.pcb, name + " model repair is footprint-specific", output);
     } else {
         equal(repaired.pcb, result.pcb, name + " no irrelevant model repair", output);
     }
-    auto restored = pcb_model_from_json(pcb_model_json(m), pool);
+    auto restored = pcb_model_from_json(pcb_model_json(m), pool, explicit_sheet_roles(pcb_model_json(m)));
     equal(render_pcb(restored, p).pcb, result.pcb, name + " transport preserves emission", output);
     const auto transported = pcb_model_json(m);
     for (const auto &key :
@@ -220,11 +225,11 @@ void mutations(const fs::path &fixtures, const fs::path &output, const std::stri
     auto pool = footprints(field(raw, "footprints"));
     for (const auto &row : field(raw, "cases").array_value) {
         auto name = field(row, "name").string_value;
-        auto m = pcb_model_from_json(field(row, "model"), pool);
+        auto m = pcb_model_from_json(field(row, "model"), pool, explicit_sheet_roles(field(row, "model")));
         auto p = policy(row);
         auto result = render_pcb(m, p);
         equal(result.pcb, field(row, "pcb").string_value, name + " board", output);
-        auto restored = pcb_model_from_json(pcb_model_json(m), pool);
+        auto restored = pcb_model_from_json(pcb_model_json(m), pool, explicit_sheet_roles(pcb_model_json(m)));
         equal(render_pcb(restored, p).pcb, result.pcb, name + " model round trip", output);
         auto stats = field(row, "stats");
         require(result.hidden_bottom_references == field(stats, "hidden").number_value,
@@ -301,8 +306,13 @@ void thermal_world_obstacles() {
     model.insts.push_back(subject);
     auto policy = default_pcb_emit_policy();
     policy.thermal_credit_needs.clear();
-    policy.thermal_copper = {{"THERMAL_TEST", {{{0, 0}, {4, 0}}, 1,
-        {-5, -5, 5, 5}, {"F.Cu", "B.Cu"}, "synthetic test geometry"}}};
+    const std::string thermal_part = "THERMAL_TEST_PART";
+    RegulatorFact thermal_regulator = repository_part_facts().regulators.begin()->second;
+    thermal_regulator.label = "THERMAL_TEST";
+    policy.regulators = {{thermal_part, thermal_regulator}};
+    ThermalCopperFact thermal_row;
+    thermal_row.field = {{{0, 0}, {4, 0}}, 1, {-5, -5, 5, 5}, {"F.Cu", "B.Cu"}, "synthetic test geometry"};
+    policy.thermal_copper = {{thermal_part, thermal_row}};
     auto sites = [&](const PcbModel &m) {
         PcbEmissionResult result;
         auto nodes = pcb_emission::thermal_nodes(m, policy,
@@ -388,7 +398,7 @@ void thermal_world_obstacles() {
     auto mirrored = model;
     mirrored.insts.front().mirror = true;
     mirrored.insts.front().side = "bottom";
-    policy.thermal_copper.front().second.via_sites = {{1,2}};
+    policy.thermal_copper.begin()->second.field.via_offsets_mm = {{1,2}};
     for (int rotation : {0,90,180,270}) {
         mirrored.insts.front().rotation=rotation;
         require(sites(mirrored)==world_turned_point(100,100,1,-2,rotation,3),
@@ -495,8 +505,8 @@ void thermal_selection_contracts() {
 void boundaries(const fs::path &fixtures, const fs::path &output) {
     auto raw = parse_json_file((fixtures / "devkit_mini.json").string());
     auto pool = footprints(field(raw, "footprints"));
-    auto model = pcb_model_from_json(field(raw, "model"), pool);
-    rejects([&] { pcb_model_from_json(field(raw, "model"), {}); }, "unresolved footprint snapshot");
+    auto model = pcb_model_from_json(field(raw, "model"), pool, explicit_sheet_roles(field(raw, "model")));
+    rejects([&] { pcb_model_from_json(field(raw, "model"), {}, explicit_sheet_roles(field(raw, "model"))); }, "unresolved footprint snapshot");
     auto stemmed = default_pcb_emit_policy();
     stemmed.board_stem = "Zynq_Carrier";
     auto bad = model;
@@ -544,7 +554,7 @@ void boundaries(const fs::path &fixtures, const fs::path &output) {
                                                     return field.first == "som_interface_sha256";
                                                 }),
                                  v.object_value.end());
-    auto missing_hash = pcb_model_from_json(transport, pool);
+    auto missing_hash = pcb_model_from_json(transport, pool, explicit_sheet_roles(transport));
     require(missing_hash.escape_interface_sha256 && missing_hash.escape_interface_sha256->empty(),
             "missing hash remains distinguishable from absent metadata");
     require(same_json(field(pcb_model_json(missing_hash), "escape_meta"),
@@ -553,7 +563,7 @@ void boundaries(const fs::path &fixtures, const fs::path &output) {
     for (auto &[k, v] : transport.object_value)
         if (k == "placed")
             v.number_value = .5;
-    rejects([&] { pcb_model_from_json(transport, pool); }, "invalid integer");
+    rejects([&] { pcb_model_from_json(transport, pool, explicit_sheet_roles(transport)); }, "invalid integer");
     ProjectConfig config;
     config.header_desc = {{"J_CUSTOM", "Custom header"}};
     config.switch_desc = {{"SW_CUSTOM", "Custom switch"}};

@@ -2,6 +2,7 @@
 #include "schgen/execution_accounting.hpp"
 
 #include <cstdint>
+#include <map>
 #include <optional>
 #include <string>
 #include <tuple>
@@ -201,10 +202,10 @@ std::vector<Comp> edge_components(char edge, double block_x, double block_y,
                                   double board_w, double board_h,
                                   int punch_mask,
                                   const std::vector<Comp>& comps, QuantizationCounts* counts = nullptr);
-std::tuple<double, double, int, int> som_decoupling_grid(double som_w,
+std::tuple<double, double, int, int> under_module_grid(double som_w,
                                                          double som_h, int n,
                                                          double inset, QuantizationCounts* counts = nullptr);
-std::vector<std::pair<double, double>> som_decoupling_cells(
+std::vector<std::pair<double, double>> under_module_cells(
     double som_x, double som_y, double som_w, double som_h, int n,
     double inset, QuantizationCounts* counts = nullptr);
 std::vector<Comp> som_components(
@@ -507,10 +508,11 @@ Box4 legalize_som_rect(double som_x, double som_y, double som_w, double som_h,
 std::vector<Box4> legalize_mh_corners(double board_w, double board_h,
                                       double mh_ko);
 std::vector<std::tuple<std::string, double, double, double, double>>
-som_jack_rects(
+module_connector_rects(
     double som_x, double som_y,
     const std::vector<std::tuple<std::string, double, double, double, double>>&
-        jacks);
+        jacks,
+    const std::map<std::string, std::string>& sheet_of_connector);
 Box4 grow_rect(const Box4& box, double margin);
 Box4 offset_rect(const Box4& box, double dx, double dy);
 bool rect_covers(const Box4& outer, const Box4& inner);

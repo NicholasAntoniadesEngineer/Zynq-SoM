@@ -3,6 +3,8 @@
 #include "schgen/power_checks.hpp"
 #include "schgen/sexpr.hpp"
 
+#include <map>
+
 namespace schgen {
 
 inline constexpr double thermal_ambient_c = 50.0, thermal_margin_c = 10.0, thermal_buck_eff = 0.85;
@@ -19,15 +21,14 @@ struct ThermalPourNeed {
     double radius_mm = 0.0;
     std::vector<std::string> pour_layers;
 };
-struct ThermalFootprintSpec { std::string value_prefix, footprint_contains; ThermalSpec spec; };
 struct ThermalPolicy {
     double ambient_c = thermal_ambient_c, margin_c = thermal_margin_c;
-    std::vector<std::pair<std::string, ThermalSpec>> specs;
-    std::vector<ThermalFootprintSpec> footprint_specs;
+    std::map<std::string, ThermalSpec> specs;
     std::vector<std::pair<std::string, ThermalPourNeed>> pour_needs;
 };
+ThermalPolicy thermal_policy_from(const PartFacts& facts);
 const ThermalPolicy& default_thermal_policy();
-const ThermalSpec* thermal_spec_for(const std::string& value, const std::string& footprint,
+const ThermalSpec* thermal_spec_for(const CircuitPartIr& part,
     const ThermalPolicy& policy = default_thermal_policy());
 double thermal_dissipation(const std::string& kind, double v_in, double v_out, double i_out, const ThermalSpec&);
 std::vector<std::string> thermal_pour_layers(const ThermalPourNeed&, const std::string& footprint_layer);
@@ -60,8 +61,9 @@ struct ThermalCopper {
 };
 // Same emitted zone/footprint/via scan as copper_debt.scan_board. This does not
 // infer connectivity or copper area beyond the baseline's filled-zone bbox.
-ThermalCopper scan_thermal_copper(const Sexpr& board, const std::string& source = "");
-ThermalCopper scan_thermal_copper(const std::filesystem::path& pcb_path);
+ThermalCopper scan_thermal_copper(const Sexpr& board, const std::string& source = "",
+    const PartFacts& facts = default_part_facts());
+ThermalCopper scan_thermal_copper(const std::filesystem::path& pcb_path, const PartFacts& facts = default_part_facts());
 std::pair<bool, std::string> thermal_pour_evidence(const ThermalCopper*, const ThermalPourNeed&);
 
 struct ThermalDevice {
@@ -87,17 +89,17 @@ struct ThermalCheckResult {
     bool ok() const { return errors.empty(); }
 };
 ThermalCheckResult analyze_thermal(const std::vector<ProjectCircuit>& sheets,
-    const PowerCheckResult& power, const ThermalCopper* copper = nullptr, const std::string& copper_src = "",
-    const ThermalPolicy& policy = default_thermal_policy(), const PowerPolicy& power_policy = default_power_policy());
-ThermalCheckResult analyze_thermal(const std::vector<ProjectCircuit>& sheets,
+    const PowerCheckResult& power, const PowerPolicy& power_policy, const ThermalCopper* copper = nullptr,
+    const std::string& copper_src = "", const ThermalPolicy& policy = default_thermal_policy());
+ThermalCheckResult analyze_thermal(const std::vector<ProjectCircuit>& sheets, const PowerPolicy& power_policy,
     const ThermalCopper* copper = nullptr, const std::string& copper_src = "",
-    const ThermalPolicy& policy = default_thermal_policy(), const PowerPolicy& power_policy = default_power_policy());
+    const ThermalPolicy& policy = default_thermal_policy());
 std::string thermal_report(const ThermalCheckResult&);
 ThermalCheckResult run_thermal_checks(const std::vector<ProjectCircuit>& sheets,
-    const std::filesystem::path& reports_dir, const PowerCheckResult* power = nullptr,
+    const std::filesystem::path& reports_dir, const PowerPolicy& power_policy, const PowerCheckResult* power = nullptr,
     const std::optional<std::filesystem::path>& pcb_path = std::nullopt,
     const std::filesystem::path& repository_root = {},
-    const ThermalPolicy& policy = default_thermal_policy(), const PowerPolicy& power_policy = default_power_policy());
+    const ThermalPolicy& policy = default_thermal_policy());
 JsonNode thermal_result_json(const ThermalCheckResult&);
 JsonNode thermal_copper_json(const ThermalCopper&);
 ThermalCheckResult thermal_result_from_json(const JsonNode&);

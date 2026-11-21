@@ -1,4 +1,6 @@
 #include "schgen/pcb_checks.hpp"
+#include "sheet_roles_fixture.hpp"
+#include "legacy_power_policy.hpp"
 #include <algorithm>
 #include <cmath>
 #include <fstream>
@@ -25,7 +27,9 @@ double num(const Sexpr& n,std::size_t i){return std::get<double>(ls(n).at(i).v);
 std::string prop(const Sexpr& fp,const std::string& key){for(const auto& c:ls(fp))if(tag(c,"property")&&atom(ls(c).at(1))==key)return atom(ls(c).at(2));return {};}
 const JsonNode& field(const JsonNode& n,const std::string& k){auto p=object_field(n,k);if(!p)throw std::runtime_error("fixture field missing "+k);return *p;}
 PcbCheckFootprintPtr small(){return pcb_check_footprint("fixture.kicad_mod",R"((footprint "fixture" (fp_rect (start -1 -1) (end 1 1) (layer "F.CrtYd")) (pad "1" smd rect (at -0.5 0) (size 0.3 0.6)) (pad "2" smd rect (at 0.5 0) (size 0.3 0.6))))");}
-PcbCheckInstance part(std::string ref,double x,double y,int pins,std::string sheet="s"){PcbCheckInstance i;i.ref=ref;i.x=x;i.y=y;i.sheet=sheet;i.mod=small();for(int n=1;n<=pins;++n)i.pad_nets[std::to_string(n)]={n,"N"+std::to_string(n)};return i;}
+schgen::PowerPolicy legacy;
+SheetRoles rail_roles(const std::vector<ProjectCircuit>& sheets){std::vector<std::string> names;for(const auto& sc:sheets)names.push_back(sc.name);return explicit_sheet_roles(names);}
+PcbCheckInstance part(std::string ref,double x,double y,int pins,std::string sheet="s"){PcbCheckInstance i;i.ref=ref;i.x=x;i.y=y;i.sheet=sheet;i.module_connector=explicit_sheet_roles(std::vector<std::string>{sheet}).at(sheet).module_connector;i.mod=small();for(int n=1;n<=pins;++n)i.pad_nets[std::to_string(n)]={n,"N"+std::to_string(n)};return i;}
 void synthetic(const ConnectorFacts& connectors){
     equal(pcb_sha256(""),"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855","empty SHA-256");equal(pcb_sha256("abc"),"ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad","abc SHA-256");equal(pcb_sha256(std::string(1000000,'a')),"cdc76e5c9914fb9281a1c7e284d73e67f1809a48a497200e046d39ccc7112cd0","multi-block SHA-256");
     PcbCheckModel m;m.connectors=connectors;m.board_w=100;m.board_h=100;m.insts={part("J1",50,124,2)};m.insts[0].value="HDMI-019S";
@@ -40,7 +44,7 @@ void synthetic(const ConnectorFacts& connectors){
     m.insts[0].mod=pcb_check_footprint("tail",R"((footprint "tail" (pad "1" smd rect (at 0 2) (size 1 1)) (pad "2" smd rect (at 1 2) (size 1 1)) (pad "3" smd rect (at 0 -2) (size 1 1))))");require(check_connector_models(m).geom_conflicts.size()==1,"dense tail sign mutant");
     auto reversed=connectors;reversed.at("HDMI-019S").mating_face="-Y";require(check_connector_models(m,reversed).geom_conflicts.empty(),"explicit mating-face policy respected");
     require(check_connector_models(m,connectors).geom_conflicts.size()==1,"policy mutation remains detectable");
-    m.insts={part("U1",10,10,8),part("R2",12.5,10,2,"other")};auto fan=check_fanout(PcbCheckInput(m),0);require(!fan.ok&&fan.n_starved==1&&fan.records[0].clearance==0.5,"fanout foreign passive");m.insts[1].sheet="s";require(check_fanout(PcbCheckInput(m),0).ok,"own cluster ignored");m.insts[1].sheet="other";m.insts[1].side="bottom";require(check_fanout(PcbCheckInput(m),0).ok,"opposite side ignored");m.insts[1].side="top";m.insts[1].ref="TP2";require(check_fanout(PcbCheckInput(m),0).ok,"TP excluded");m.insts[1].ref="R2";require(check_fanout(PcbCheckInput(m),std::nullopt).ok,"first-run ratchet");require(pcb_fanout_ratchet(5,3)==3&&pcb_fanout_ratchet(1,3)==1,"ratchet never increases");require(pcb_is_df40_part("som_j7",40)&&!pcb_is_df40_part("x",40)&&!pcb_is_df40_part("som_j7",1)&&!pcb_is_df40_part("som_jx",40),"DF40 recognition");
+    m.insts={part("U1",10,10,8),part("R2",12.5,10,2,"other")};auto fan=check_fanout(PcbCheckInput(m),0);require(!fan.ok&&fan.n_starved==1&&fan.records[0].clearance==0.5,"fanout foreign passive");m.insts[1].sheet="s";require(check_fanout(PcbCheckInput(m),0).ok,"own cluster ignored");m.insts[1].sheet="other";m.insts[1].side="bottom";require(check_fanout(PcbCheckInput(m),0).ok,"opposite side ignored");m.insts[1].side="top";m.insts[1].ref="TP2";require(check_fanout(PcbCheckInput(m),0).ok,"TP excluded");m.insts[1].ref="R2";require(check_fanout(PcbCheckInput(m),std::nullopt).ok,"first-run ratchet");require(pcb_fanout_ratchet(5,3)==3&&pcb_fanout_ratchet(1,3)==1,"ratchet never increases");require(pcb_is_df40_part("J7",40)&&!pcb_is_df40_part("",40)&&!pcb_is_df40_part("J7",1),"DF40 recognition");
     for(int pins:{39,40,64,100}) {
         m.insts={part("U1",10,10,pins,"logic"),part("R2",12.5,10,2,"other")};
         const auto dense=check_fanout(PcbCheckInput(m),0);
@@ -55,7 +59,7 @@ void synthetic(const ConnectorFacts& connectors){
     PcbCheckModel empty;auto missing=check_escape_lanes(empty,{},"contract");require(!missing.ok&&missing.violations.size()==1,"absent escape plan is red");
     auto signed_zero=PcbCheckModel{};signed_zero.insts={part("J1",1000000,0,1,"som_j1")};auto zero_key=pcb_escape_content_key(signed_zero,"contract");signed_zero.insts[0].rotation=-0.0;require(pcb_escape_content_key(signed_zero,"contract")==zero_key,"rotation or-zero content-key convention");
     PcbEscapePlan plan;plan.lanes["J1"]={{1,0,"outward","A",0,0,0.2,{}},{1,1,"outward","B",1,0,0.2,{}},{1,2,"outward","C",2,0,0.2,{}}};plan.netted_counts["J1"]=3;plan.pairs={{"X_*","J1","GENUINE",true,2}};plan.genuine_pairs={"X_*"};empty.escape_plan=plan;empty.escape_plan->content_key=pcb_escape_content_key(empty,"contract");PcbEscapePopulation pop;pop.netted_contacts=std::map<std::string,int>{{"J1",3}};pop.genuine_pairs=1;require(check_escape_lanes(empty,pop,"contract").ok,"escape baseline");auto em=empty;em.escape_plan->pairs[0].delta_lane=3;require(has(check_escape_lanes(em,pop,"contract").violations,"hard terms"),"pair separation mutant");em=empty;em.escape_plan->lanes["J1"][1].port_x=3;require(has(check_escape_lanes(em,pop,"contract").violations,"ports not monotonic"),"lane port order mutant");em=empty;em.escape_plan->lanes["J1"][0].width=0.4;require(has(check_escape_lanes(em,pop,"contract").violations,"adjacent-lane gap"),"lane width mutant");require(has(check_escape_lanes(empty,pop,"changed").violations,"STALE"),"interface byte mutation");require(!check_escape_lanes(empty,{},"contract").ok,"unbooked population cannot pass");
-    SomInterface iface;SomConnector conn;conn.pins={{"1","+5V"},{"2","+5V"}};iface.connectors={{"J1",conn}};ProjectCircuit sc;sc.name="som_j1";sc.circuit.loads={{"+5V",0.4,"test"}};auto rail=analyze_rail_ampacity({sc},iface,{});require(rail.ok()&&rail.rails[0].capacity_a()==0.48,"rated contact capacity");sc.circuit.loads[0].amps=0.49;require(!analyze_rail_ampacity({sc},iface,{}).ok(),"over-current mutant");sc.name="carrier_load";require(analyze_rail_ampacity({sc},iface,{}).findings.size()==1,"only delivered loads");
+    SomInterface iface;SomConnector conn;conn.pins={{"1","+5V"},{"2","+5V"}};iface.connectors={{"J1",conn}};ProjectCircuit sc;sc.name="som_j1";sc.circuit.loads={{"+5V",0.4,"test"}};auto rail=analyze_rail_ampacity({sc},rail_roles({sc}),iface,{},legacy);require(rail.ok()&&rail.rails[0].capacity_a()==0.48,"rated contact capacity");sc.circuit.loads[0].amps=0.49;require(!analyze_rail_ampacity({sc},rail_roles({sc}),iface,{},legacy).ok(),"over-current mutant");sc.name="carrier_load";require(analyze_rail_ampacity({sc},rail_roles({sc}),iface,{},legacy).findings.size()==1,"only delivered loads");
 }
 
 struct Live {
@@ -84,14 +88,14 @@ Live load_live(const fs::path& root,const std::string& project,bool historical){
     for(const auto& n:ls(live.board.document)){
         if(tag(n,"net"))live.model.net_numbers[atom(ls(n)[2])]=static_cast<int>(num(n,1));
         if(tag(n,"gr_line")){auto layer=sub(n,"layer");if(layer&&atom(ls(*layer)[1])=="Edge.Cuts")for(auto key:{"start","end"}){auto p=sub(n,key);xmax=std::max(xmax,num(*p,1));ymax=std::max(ymax,num(*p,2));}}
-        if(!tag(n,"footprint"))continue;PcbCheckInstance inst;inst.ref=prop(n,"Reference");inst.value=prop(n,"Value");inst.footprint=atom(ls(n)[1]);auto at=sub(n,"at");inst.x=num(*at,1);inst.y=num(*at,2);inst.rotation=ls(*at).size()>3?num(*at,3):0;inst.side=atom(ls(*sub(n,"layer"))[1])=="B.Cu"?"bottom":"top";inst.mod=footprint(inst.footprint);std::smatch match;if(std::regex_search(inst.ref,match,std::regex("[0-9]+$"))){auto b=bands.find(std::stoi(match.str())/1000);if(b!=bands.end())inst.sheet=b->second;}
+        if(!tag(n,"footprint"))continue;PcbCheckInstance inst;inst.ref=prop(n,"Reference");inst.value=prop(n,"Value");inst.footprint=atom(ls(n)[1]);auto at=sub(n,"at");inst.x=num(*at,1);inst.y=num(*at,2);inst.rotation=ls(*at).size()>3?num(*at,3):0;inst.side=atom(ls(*sub(n,"layer"))[1])=="B.Cu"?"bottom":"top";inst.mod=footprint(inst.footprint);std::smatch match;if(std::regex_search(inst.ref,match,std::regex("[0-9]+$"))){auto b=bands.find(std::stoi(match.str())/1000);if(b!=bands.end())inst.sheet=b->second;}inst.module_connector=explicit_sheet_roles(std::vector<std::string>{inst.sheet}).at(inst.sheet).module_connector;
         // The source PcbModel books every numbered pad, including NC pads
         // that KiCad omits from emitted (net ...) clauses.
         if(inst.footprint.find("Fiducial")==std::string::npos)for(const auto& p:inst.mod->pads)if(!std::get<0>(p).empty())inst.pad_nets[std::get<0>(p)]={0,""};
         for(const auto& p:ls(n))if(tag(p,"pad")){auto net=sub(p,"net");if(net)inst.pad_nets[atom(ls(p)[1])]={static_cast<int>(num(*net,1)),atom(ls(*net)[2])};}
         live.model.insts.push_back(inst);
     }
-    live.model.board_w=xmax-25;live.model.board_h=ymax-25;
+    live.model.module_connectors={"J1","J2","J3"};live.model.board_w=xmax-25;live.model.board_h=ymax-25;
     // Pinned module-body geometry from the existing project placement contract.
     live.model.som_core=project=="carrier"?Box4{73.23,90.93,124.77,134.07}:Box4{49.23,53.43,100.77,96.57};
     if(!historical){
@@ -146,7 +150,7 @@ void real_project(const fs::path& root,const std::string& name,bool historical){
         equal(report+"\n",read(path),name+(historical?" historical ":" current ")+gate);
     };
     auto v1=check_return_path(live.iface,live.return_footprints);require(!v1.ok&&v1.n_pairs==69&&v1.n_pair_contacts==138&&v1.n_fail()==29&&v1.worst_distance==4,name+" pinned v1 failure");auto expected=read(fixture/(name+"_return_path.txt"));equal(v1.summary()+"\n",expected.substr(expected.find("RETURN-PATH GATE")),name+" return-path exact report");
-    snapshot("connector_model",check_connector_models(live.model).summary());snapshot("connector_spacing",check_connector_spacing(input).summary());snapshot("placement_mech",check_placement_mech(input).summary());snapshot("fanout",(historical?check_fanout_strict(input,0):check_fanout(input,0)).summary());snapshot("rail_ampacity",analyze_rail_ampacity(live.sheets,live.iface,live.mapping).report());
+    snapshot("connector_model",check_connector_models(live.model).summary());snapshot("connector_spacing",check_connector_spacing(input).summary());snapshot("placement_mech",check_placement_mech(input).summary());snapshot("fanout",(historical?check_fanout_strict(input,0):check_fanout(input,0)).summary());snapshot("rail_ampacity",analyze_rail_ampacity(live.sheets,rail_roles(live.sheets),live.iface,live.mapping,legacy).report());
     snapshot("escape_lanes",check_escape_lanes(live.model,live.population,live.iface_bytes).summary());auto classes=triage(v1,live.mapping);auto stitch=check_return_stitch(input,v1,classes,live.iface_bytes,live.population.return_path,&live.board);require(stitch.ok,stitch.summary());snapshot("return_stitch",stitch.summary());require(check_refdes_overlap(live.board.document).ok,name+" emitted refdes baseline");
     auto mutated=live.model;mutated.copper.clear();auto red=check_return_stitch(PcbCheckInput(mutated),v1,classes,live.iface_bytes,live.population.return_path);require(!red.ok&&red.n_contacts==29&&red.n_covered==0&&red.per_conn.at("J2").second==28,name+" remove all actual return copper");
     mutated=live.model;mutated.copper.front().net_name="SIGNAL";require(has(check_return_stitch(PcbCheckInput(mutated),v1,classes,live.iface_bytes,live.population.return_path).violations,"LAW 0"),name+" wrong copper net");
@@ -162,7 +166,7 @@ void real_project(const fs::path& root,const std::string& name,bool historical){
     auto drift=v1;drift.n_pairs=68;require(has(check_return_stitch(input,drift,classes,live.iface_bytes,live.population.return_path).violations,"v1 population drift"),name+" pinned v1 alarm");
     auto low=classes;for(auto& [net,c]:low){(void)net;c.klass="LOW";c.rank=2;}mutated=live.model;mutated.copper.clear();require(check_return_stitch(PcbCheckInput(mutated),v1,low,live.iface_bytes,live.population.return_path).n_covered==0,name+" triage never waives uncovered contacts");
     rejects([&]{check_return_stitch(input,v1,{},live.iface_bytes,live.population.return_path);},name+" missing curated class cannot silently pass");
-    auto sheets=live.sheets;for(auto& sc:sheets)if(sc.name=="som_j1")sc.circuit.loads.push_back({"+5V_SOM",10,"mutation"});require(!analyze_rail_ampacity(sheets,live.iface,live.mapping).ok(),name+" real load overload");
+    auto sheets=live.sheets;for(auto& sc:sheets)if(sc.name=="som_j1")sc.circuit.loads.push_back({"+5V_SOM",10,"mutation"});require(!analyze_rail_ampacity(sheets,rail_roles(sheets),live.iface,live.mapping,legacy).ok(),name+" real load overload");
     mutated=live.model;auto conn=std::find_if(mutated.insts.begin(),mutated.insts.end(),[](const auto& i){return i.value=="TYPE-C-31-M-12";});require(conn!=mutated.insts.end(),"actual USB connector");conn->rotation+=180;require(!check_placement_mech(PcbCheckInput(mutated)).ok,name+" real connector reversed");
     auto mod=conn->mod->document;auto model_node=mut_sub(mod,"model");auto rotate=mut_sub(*model_node,"rotate");auto xyz=mut_sub(*rotate,"xyz");std::get<SexprList>(xyz->v)[3]=Sexpr{90.};conn->mod=pcb_check_footprint(conn->mod->source,sexpr_dumps(mod),mod);require(!check_connector_models(mutated).ok,name+" actual connector model rotated 90 degrees");require(check_connector_models(live.model).ok,name+" immutable footprint sharing preserves baseline");
     mutated=live.model;std::vector<std::size_t> usb;for(std::size_t i=0;i<mutated.insts.size();++i)if(mutated.insts[i].value=="TYPE-C-31-M-12")usb.push_back(i);require(usb.size()>=2,"two actual USB connectors");mutated.insts[usb[1]].x=mutated.insts[usb[0]].x;mutated.insts[usb[1]].y=mutated.insts[usb[0]].y;mutated.insts[usb[1]].rotation=mutated.insts[usb[0]].rotation;require(has(check_connector_spacing(PcbCheckInput(mutated)).violations,"OVERLAP"),name+" actual connector stack");
@@ -170,7 +174,7 @@ void real_project(const fs::path& root,const std::string& name,bool historical){
     mutated=live.model;auto subject=std::find_if(mutated.insts.begin(),mutated.insts.end(),[](const auto& i){return i.ref[0]=='U'&&i.pad_nets.size()>=3&&i.pad_nets.size()<40;});auto crowder=std::find_if(mutated.insts.begin(),mutated.insts.end(),[&](const auto& i){return i.ref[0]=='R'&&i.sheet!=subject->sheet;});require(crowder!=mutated.insts.end(),"actual fanout crowder");crowder->x=subject->x;crowder->y=subject->y;crowder->side=subject->side;require(!check_fanout(PcbCheckInput(mutated),0).ok,name+" real fanout crowding");
     if(name=="carrier") {
         const auto verified=check_fanout(input,0);std::size_t dense_count=0;
-        for(const auto& package:live.model.insts)if(package.pad_nets.size()>=40&&!pcb_is_df40_part(package.sheet,static_cast<int>(package.pad_nets.size()))) {
+        for(const auto& package:live.model.insts)if(package.pad_nets.size()>=40&&!pcb_is_df40_part(package.module_connector,static_cast<int>(package.pad_nets.size()))) {
             ++dense_count;
             const auto row=std::find_if(verified.records.begin(),verified.records.end(),[&](const auto& r){return r.ref==package.ref;});
             require(row!=verified.records.end(),"real non-SoM dense package omitted from fanout records");
@@ -188,4 +192,4 @@ void real_project(const fs::path& root,const std::string& name,bool historical){
     std::cout<<name<<": eight exact report snapshots and real PCB/interface mutations passed\n";
 }
 }
-int main(int argc,char** argv){try{fs::path root=argc>1?argv[1]:fs::current_path();synthetic(load_connector_facts(root/"parts"));for(bool historical:{true,false})for(const auto* project:{"carrier","devkit_mini"})real_project(root,project,historical);std::cout<<"PCB checks: "<<checks<<" independent contracts passed\n";return 0;}catch(const std::exception& e){std::cerr<<"PCB checks contract FAILED: "<<e.what()<<"\n";return 1;}}
+int main(int argc,char** argv){try{fs::path root=argc>1?argv[1]:fs::current_path();legacy=legacy_power_policy(root);synthetic(load_connector_facts(root/"parts"));for(bool historical:{true,false})for(const auto* project:{"carrier","devkit_mini"})real_project(root,project,historical);std::cout<<"PCB checks: "<<checks<<" independent contracts passed\n";return 0;}catch(const std::exception& e){std::cerr<<"PCB checks contract FAILED: "<<e.what()<<"\n";return 1;}}

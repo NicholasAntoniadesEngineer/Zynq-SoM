@@ -1,4 +1,5 @@
 #include "pcb_placement_internal.hpp"
+#include "sheet_roles_fixture.hpp"
 #include "schgen/legalize.hpp"
 #include <iomanip>
 #include <iostream>
@@ -26,6 +27,7 @@ struct Fixture {
                 " circle (at "+std::to_string((k-2)*0.3)+" 0) (size 0.2 0.2) "+
                 (tht?"(drill 0.1) (layers \"*.Cu\" \"*.Mask\")":"(layers \"F.Cu\" \"F.Mask\")")+")";
         bytes+=")";
+        in.floorplan.roles.emplace(sheet,SheetRole{});
         p->ctx.by_ref[ref]={ref,ref,sheet,"probe","probe","probe"};
         p->ctx.pool[ref]=pcb_check_footprint(ref,bytes);
         p->geometry.resolvable[ref]=ref;

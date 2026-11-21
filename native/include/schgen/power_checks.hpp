@@ -2,6 +2,7 @@
 
 #include "schgen/project.hpp"
 
+#include <map>
 #include <optional>
 
 namespace schgen {
@@ -11,26 +12,31 @@ public:
     using std::runtime_error::runtime_error;
 };
 
-struct PowerRegSpec {
-    std::string kind;
-    std::optional<double> limit_a;
-    double eff = 1.0;
-    std::string in_pin, out_pin, iset_pin;
-    double ilim_num = 6800.0;
-    std::string note;
-};
 struct PowerSource { double volts = 0.0, amps = 0.0; std::string note; };
+struct PowerRail { std::optional<double> volts; std::string basis; };
+struct PowerInlet { std::string rail, bulk; };
 struct PowerPolicy {
-    // First matching regex/prefix wins, exactly as the authoring policy.
-    std::vector<std::pair<std::string, double>> voltage_patterns;
-    std::vector<std::pair<std::string, PowerRegSpec>> regulators;
+    RegulatorFacts regulators;
+    ZenerFacts zeners;
+    ReferencePinFacts reference_pins;
     std::vector<std::pair<std::string, PowerSource>> sources;
+    std::vector<std::pair<std::string, PowerRail>> rails;
+    std::optional<PowerInlet> inlet;
+    std::vector<std::string> module_sheets, module_rails;
+    std::string module_rails_basis;
     ProjectStrings known_deferred;
 };
 const PowerPolicy& default_power_policy();
+std::string catalogue_part_number(const CircuitPartIr& part);
 std::optional<double> parse_si_value(const std::string& text);
-std::optional<double> rail_volts(const std::string& name,
-    const PowerPolicy& policy = default_power_policy());
+std::optional<double> rail_volts(const std::string& name, const PowerPolicy& policy);
+
+struct FeedbackDivider {
+    std::string top_ref, bottom_ref;
+    double top_ohms = 0.0, bottom_ohms = 0.0, volts = 0.0;
+};
+std::optional<FeedbackDivider> feedback_divider(const CircuitSheetIr& circuit, const std::string& ref,
+    const std::string& vout, double vref);
 
 struct PowerReg {
     int n = 0;
@@ -58,15 +64,15 @@ struct PowerCheckResult {
 PowerCheckResult detect_power_regulators(const std::vector<ProjectCircuit>& sheets,
     const PowerPolicy& policy = default_power_policy());
 PowerCheckResult analyze_power(const std::vector<ProjectCircuit>& sheets,
-    const PowerPolicy& policy = default_power_policy());
-std::string power_report(const PowerCheckResult&,
-    const PowerPolicy& policy = default_power_policy());  // No final newline.
-std::string power_svg(const PowerCheckResult&,
-    const PowerPolicy& policy = default_power_policy());  // One final newline.
+    const PowerPolicy& policy);
+std::string power_report(const PowerCheckResult&, const std::string& board,
+    const PowerPolicy& policy);  // No final newline.
+std::string power_svg(const PowerCheckResult&, const std::string& board,
+    const PowerPolicy& policy);  // One final newline.
 // Report publication is separate from analysis and uses explicit destinations.
-PowerCheckResult run_power_checks(const std::vector<ProjectCircuit>& sheets,
+PowerCheckResult run_power_checks(const std::vector<ProjectCircuit>& sheets, const std::string& board,
     const std::filesystem::path& reports_dir, const std::filesystem::path& docs_dir,
-    const PowerPolicy& policy = default_power_policy());
+    const PowerPolicy& policy);
 JsonNode power_result_json(const PowerCheckResult&);
 // Strict, data-only inverse transport. Does not recompute any caller values.
 PowerCheckResult power_result_from_json(const JsonNode&);

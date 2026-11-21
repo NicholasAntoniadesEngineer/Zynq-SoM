@@ -18,6 +18,8 @@ struct CopperDebtSources {
     std::set<std::string> basis_scopes;
     ThermalPolicy thermal;
     PcbEmitPolicy emission;
+    RegulatorFacts regulators;
+    EpViaFacts ep_vias;
     std::vector<DifferentialGeometry> geometry;
 };
 struct CopperDebtEntry {

@@ -18,7 +18,7 @@
 namespace schgen {
 namespace {
 
-const char* const facts_schema = "schgen.part_facts/3";
+const char* const facts_schema = "schgen.part_facts/4";
 const char* const vrml_extension = ".wrl";
 const char* const step_extension = ".step";
 const std::string_view vrml_points = "point";
@@ -34,10 +34,13 @@ const std::string_view blanks = " \t\r\n";
 const std::string_view separators = " \t\r\n,";
 constexpr std::size_t axis_count = 3;
 const char* const facts_file_name = "part_facts.json";
+const char* const part_file_name = "part.json";
 const std::string_view face_signs = "+-";
 const std::string_view face_axes = "XY";
 constexpr std::size_t face_length = 2;
 constexpr std::size_t pair_length = 2;
+const char* const led_boost_kind = "led_boost";
+const std::array<std::string_view, 5> regulator_kinds{"buck", "ldo", "load_switch", "efuse", led_boost_kind};
 
 const std::pair<PartClass, std::string_view> class_names[] = {
     {PartClass::resistor, "resistor"},
@@ -409,24 +412,42 @@ IsolationFact isolation_from(const JsonNode& entry, const std::string& where) {
 }
 
 RegulatorEnableFact enable_from(const JsonNode& entry, const std::string& where) {
-    reject_unknown_keys(entry, {"en_pin", "vin_pins", "ihys_a", "recommended_max_v", "threshold_v"}, where);
+    reject_unknown_keys(entry, {"direct", "network"}, where);
     RegulatorEnableFact fact;
-    const bool pins = object_field(entry, "en_pin") || object_field(entry, "vin_pins");
-    const bool network = object_field(entry, "ihys_a") || object_field(entry, "recommended_max_v") || object_field(entry, "threshold_v");
-    if (!pins && !network) refuse(where + " must state en_pin with vin_pins or ihys_a with recommended_max_v and threshold_v");
-    if (pins) fact.direct = RegulatorDirectEnable{text_required(entry, "en_pin", where), texts_of(entry, "vin_pins", where)};
-    if (network)
-        fact.network = RegulatorEnableNetwork{number_of(entry, "ihys_a", where, true),
-                                              number_of(entry, "recommended_max_v", where, true),
-                                              number_of(entry, "threshold_v", where, true)};
+    if (!object_field(entry, "direct") && !object_field(entry, "network")) refuse(where + " must state direct or network");
+    if (object_field(entry, "direct")) {
+        const JsonNode& direct = object_required(entry, "direct", where);
+        const std::string direct_where = where + " direct";
+        reject_unknown_keys(direct, {"en_pin", "vin_pins", "cite"}, direct_where);
+        fact.direct = RegulatorDirectEnable{text_required(direct, "en_pin", direct_where), texts_of(direct, "vin_pins", direct_where),
+                                            text_required(direct, "cite", direct_where)};
+    }
+    if (object_field(entry, "network")) {
+        const JsonNode& network = object_required(entry, "network", where);
+        const std::string network_where = where + " network";
+        reject_unknown_keys(network, {"ihys_a", "recommended_max_v", "threshold_v", "cite"}, network_where);
+        fact.network = RegulatorEnableNetwork{number_of(network, "ihys_a", network_where, true),
+                                              number_of(network, "recommended_max_v", network_where, true),
+                                              number_of(network, "threshold_v", network_where, true),
+                                              text_required(network, "cite", network_where)};
+    }
     return fact;
 }
 
 RegulatorFact regulator_from(const JsonNode& entry, const std::string& where) {
-    reject_unknown_keys(entry, {"kind", "limit_a", "eff", "in_pin", "out_pin", "iset_pin", "ilim_num", "note", "fb_vref",
-                                "iset_v", "enable"}, where);
+    reject_unknown_keys(entry, {"kind", "label", "limit_a", "eff", "in_pin", "out_pin", "iset_pin", "ilim_num", "note", "fb_vref",
+                                "iset_v", "out_v", "enable"}, where);
     RegulatorFact fact;
     fact.kind = text_required(entry, "kind", where);
+    if (std::find(regulator_kinds.begin(), regulator_kinds.end(), fact.kind) == regulator_kinds.end())
+        refuse(where + ": kind " + fact.kind + " is not one of buck, ldo, load_switch, efuse, led_boost");
+    fact.label = text_required(entry, "label", where);
+    if (fact.kind == led_boost_kind) {
+        for (const char* key : {"limit_a", "eff", "in_pin", "out_pin", "iset_pin", "ilim_num", "note", "fb_vref", "out_v", "enable"})
+            if (object_field(entry, key)) refuse(where + ": " + key + " does not apply to a led_boost");
+        fact.iset_v = number_of(entry, "iset_v", where, true);
+        return fact;
+    }
     fact.limit_a = optional_number_of(entry, "limit_a", where);
     fact.eff = number_of(entry, "eff", where, true);
     if (fact.eff > 1) refuse(where + ": eff must not exceed 1");
@@ -437,6 +458,8 @@ RegulatorFact regulator_from(const JsonNode& entry, const std::string& where) {
     fact.note = text_required(entry, "note", where);
     fact.fb_vref = optional_number_of(entry, "fb_vref", where);
     fact.iset_v = optional_number_of(entry, "iset_v", where);
+    fact.out_v = optional_number_of(entry, "out_v", where);
+    if (fact.out_v && fact.fb_vref) refuse(where + ": out_v (fixed output) and fb_vref (adjustable output) exclude each other");
     if (object_field(entry, "enable")) fact.enable = enable_from(object_required(entry, "enable", where), where + " enable");
     return fact;
 }
@@ -450,8 +473,9 @@ ZenerFact zener_from(const JsonNode& entry, const std::string& where) {
 }
 
 ReferencePinFact reference_pin_from(const JsonNode& entry, const std::string& where) {
-    reject_unknown_keys(entry, {"vref1_pin", "vref2_pin"}, where);
-    ReferencePinFact fact{text_required(entry, "vref1_pin", where), text_required(entry, "vref2_pin", where)};
+    reject_unknown_keys(entry, {"label", "vref1_pin", "vref2_pin"}, where);
+    ReferencePinFact fact{text_required(entry, "label", where), text_required(entry, "vref1_pin", where),
+                          text_required(entry, "vref2_pin", where)};
     if (fact.vref1_pin == fact.vref2_pin) refuse(where + ": vref1_pin and vref2_pin must differ");
     return fact;
 }
@@ -494,6 +518,106 @@ std::map<std::string, Fact> section_from(const JsonNode& root, const std::filesy
         if (names_a_part && (!plain_folder_name(key) || !std::filesystem::is_directory(file.parent_path() / key)))
             refuse(where + " names a part with no folder in " + file.parent_path().string());
         out.emplace(key, read(entry, where));
+    }
+    return out;
+}
+
+using PinTable = std::map<std::string, std::vector<std::string>>;
+
+PinTable pin_table(const std::filesystem::path& part_file, const std::string& where) {
+    if (!std::filesystem::is_regular_file(part_file)) refuse(where + " needs the catalogue file " + part_file.string());
+    const JsonNode part = parse_json_file(part_file.string());
+    const JsonNode& pins = array_required(part, "pins", part_file.string());
+    PinTable out;
+    for (const JsonNode& pin : pins.array_value) {
+        if (pin.kind != JsonKind::Object) refuse(part_file.string() + ": every pin must be an object");
+        out[text_required(pin, "name", part_file.string())].push_back(text_required(pin, "num", part_file.string()));
+    }
+    return out;
+}
+
+I2cPinFact pin_named(const PinTable& pins, const std::string& name, const std::string& where) {
+    const auto found = pins.find(name);
+    if (found == pins.end()) refuse(where + ": the part has no pin named " + name);
+    if (found->second.size() != 1) refuse(where + ": " + std::to_string(found->second.size()) + " pins are named " + name + ", so the name does not pick one");
+    return I2cPinFact{name, found->second.front()};
+}
+
+int whole_of(const JsonNode& value, const std::string& key, const std::string& where) {
+    if (value.kind != JsonKind::Number || !std::isfinite(value.number_value) || value.number_value < 0 ||
+        std::floor(value.number_value) != value.number_value || value.number_value > part_fact_constants::i2c_address_max.value)
+        refuse(where + ": " + key + " must be a whole number from 0 to " + std::to_string(static_cast<int>(part_fact_constants::i2c_address_max.value)));
+    return static_cast<int>(value.number_value);
+}
+
+I2cDeviceFact i2c_device_from(const JsonNode& entry, const std::string& where, const PinTable& pins) {
+    reject_unknown_keys(entry, {"label", "base", "data_pin", "clock_pin", "straps", "cite"}, where);
+    I2cDeviceFact fact;
+    fact.label = text_required(entry, "label", where);
+    const JsonNode* base = object_field(entry, "base");
+    if (!base) refuse(where + ": base must be a number");
+    fact.base = whole_of(*base, "base", where);
+    fact.data = pin_named(pins, text_required(entry, "data_pin", where), where + " data_pin");
+    fact.clock = pin_named(pins, text_required(entry, "clock_pin", where), where + " clock_pin");
+    if (fact.data.number == fact.clock.number) refuse(where + ": data_pin and clock_pin must differ");
+    fact.cite = text_required(entry, "cite", where);
+    int highest = fact.base;
+    for (const JsonNode& row : array_required(entry, "straps", where).array_value) {
+        const std::string strap_where = where + " straps";
+        if (row.kind != JsonKind::Object) refuse(strap_where + ": every strap must be an object");
+        reject_unknown_keys(row, {"pin", "selects"}, strap_where);
+        I2cStrapFact strap;
+        strap.pin = pin_named(pins, text_required(row, "pin", strap_where), strap_where + " pin");
+        if (strap.pin.number == fact.data.number || strap.pin.number == fact.clock.number)
+            refuse(strap_where + ": strap pin " + strap.pin.name + " is the data or clock pin");
+        if (std::any_of(fact.straps.begin(), fact.straps.end(), [&](const I2cStrapFact& s) { return s.pin.number == strap.pin.number; }))
+            refuse(strap_where + ": strap pin " + strap.pin.name + " is listed twice");
+        const JsonNode& selects = object_required(row, "selects", strap_where);
+        if (selects.object_value.empty()) refuse(strap_where + " " + strap.pin.name + ": selects must not be empty");
+        int most = 0;
+        for (const auto& [target, value] : selects.object_value) {
+            const std::string select_where = strap_where + " " + strap.pin.name + " selects";
+            const int chosen = whole_of(value, target, select_where);
+            strap.selects.emplace_back(pin_named(pins, target, select_where), chosen);
+            most = std::max(most, chosen);
+        }
+        highest += most;
+        fact.straps.push_back(std::move(strap));
+    }
+    if (highest > part_fact_constants::i2c_address_max.value)
+        refuse(where + ": base plus the largest strap values reaches " + std::to_string(highest) + ", beyond a seven-bit address");
+    return fact;
+}
+
+I2cBridgeFact i2c_bridge_from(const JsonNode& entry, const std::string& where, const PinTable& pins) {
+    reject_unknown_keys(entry, {"joins", "shares_addresses", "cite"}, where);
+    I2cBridgeFact fact;
+    for (const JsonNode& pair : array_required(entry, "joins", where).array_value) {
+        if (pair.kind != JsonKind::Array || pair.array_value.size() != pair_length || pair.array_value.front().kind != JsonKind::String ||
+            pair.array_value.back().kind != JsonKind::String)
+            refuse(where + ": joins must hold pairs of pin names");
+        const I2cPinFact from = pin_named(pins, pair.array_value.front().string_value, where + " joins");
+        const I2cPinFact to = pin_named(pins, pair.array_value.back().string_value, where + " joins");
+        if (from.number == to.number) refuse(where + ": a join must name two different pins");
+        fact.joins.emplace_back(from, to);
+    }
+    if (fact.joins.empty()) refuse(where + ": joins must not be empty");
+    fact.shares_addresses = flag_of(entry, "shares_addresses", where);
+    fact.cite = text_required(entry, "cite", where);
+    return fact;
+}
+
+template <typename Fact, typename Read>
+std::map<std::string, Fact> pinned_section_from(const JsonNode& root, const std::filesystem::path& file, const std::string& section, Read read) {
+    const JsonNode* node = object_field(root, section);
+    if (!node || node->kind != JsonKind::Object) refuse(file.string() + " needs an object named " + section);
+    std::map<std::string, Fact> out;
+    for (const auto& [key, entry] : node->object_value) {
+        const std::string where = file.string() + " " + section + " " + key;
+        if (entry.kind != JsonKind::Object) refuse(where + " must be an object");
+        if (!plain_folder_name(key) || !std::filesystem::is_directory(file.parent_path() / key))
+            refuse(where + " names a part with no folder in " + file.parent_path().string());
+        out.emplace(key, read(entry, where, pin_table(file.parent_path() / key / part_file_name, where)));
     }
     return out;
 }
@@ -556,7 +680,7 @@ ConnectorFacts load_connector_facts(const std::filesystem::path& parts_directory
 PartFacts load_part_facts(const std::filesystem::path& file) {
     if (!std::filesystem::is_regular_file(file)) refuse("the part facts file is missing: " + file.string());
     const JsonNode root = parse_json_file(file.string());
-    reject_unknown_keys(root, {"schema", "classes", "stated_heights", "connectors", "thermal", "thermal_copper", "ep_vias", "isolation", "regulators", "zeners", "reference_pins", "control_grid", "model_overrides", "footprint_aliases"}, file.string());
+    reject_unknown_keys(root, {"schema", "classes", "stated_heights", "connectors", "thermal", "thermal_copper", "ep_vias", "isolation", "regulators", "zeners", "reference_pins", "control_grid", "model_overrides", "footprint_aliases", "i2c_devices", "i2c_bridges"}, file.string());
     if (require_string(root, "schema", false, "part facts") != facts_schema)
         refuse(file.string() + " schema must be " + facts_schema);
     PartFacts facts;
@@ -591,11 +715,43 @@ PartFacts load_part_facts(const std::filesystem::path& file) {
     facts.ep_vias = section_from<EpViaFact>(root, file, "ep_vias", true, ep_via_from);
     facts.isolation = section_from<IsolationFact>(root, file, "isolation", true, isolation_from);
     facts.regulators = section_from<RegulatorFact>(root, file, "regulators", true, regulator_from);
-    facts.zeners = section_from<ZenerFact>(root, file, "zeners", true, zener_from);
+    facts.zeners = section_from<ZenerFact>(root, file, "zeners", false, zener_from);
     facts.reference_pins = section_from<ReferencePinFact>(root, file, "reference_pins", true, reference_pin_from);
     facts.control_grid = section_from<ControlGridFact>(root, file, "control_grid", true, control_grid_from);
     facts.model_overrides = section_from<ModelOverrideFact>(root, file, "model_overrides", true, model_override_from);
     facts.footprint_aliases = section_from<FootprintAliasFact>(root, file, "footprint_aliases", false, footprint_alias_from);
+    facts.i2c_devices = pinned_section_from<I2cDeviceFact>(root, file, "i2c_devices", i2c_device_from);
+    facts.i2c_bridges = pinned_section_from<I2cBridgeFact>(root, file, "i2c_bridges", i2c_bridge_from);
+    return facts;
+}
+
+PartFacts load_part_facts_in(const std::filesystem::path& parts_directory) {
+    return load_part_facts(parts_directory / facts_file_name);
+}
+
+namespace {
+template <typename Fact>
+const Fact* fact_by_label_prefix(const std::map<std::string, Fact>& rows, const RegulatorFacts& regulators, const std::string& value) {
+    for (const auto& [part, fact] : rows) {
+        const std::string& label = part_fact_of(regulators, part, "regulators").label;
+        if (label.empty()) refuse("the part facts regulators entry of " + part + " has an empty label");
+        if (value.compare(0, label.size(), label) == 0) return &fact;
+    }
+    return nullptr;
+}
+}
+
+const ThermalFieldFact* thermal_field_for(const ThermalCopperFacts& rows, const RegulatorFacts& regulators, const std::string& value) {
+    const ThermalCopperFact* row = fact_by_label_prefix(rows, regulators, value);
+    return row ? &row->field : nullptr;
+}
+
+const EpViaFact* ep_via_for(const EpViaFacts& rows, const RegulatorFacts& regulators, const std::string& value) {
+    return fact_by_label_prefix(rows, regulators, value);
+}
+
+const PartFacts& default_part_facts() {
+    static const PartFacts facts = load_part_facts(SCHGEN_PART_FACTS);
     return facts;
 }
 

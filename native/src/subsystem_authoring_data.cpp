@@ -55,6 +55,104 @@ const std::vector<JsonNode>& rows(const JsonNode& node, const std::string& key, 
     return items;
 }
 
+const JsonNode& present(const JsonNode& node, const std::string& key, const std::string& where) {
+    const JsonNode* found = object_field(node, key);
+    if (!found) fail(where, "field '" + key + "' is missing");
+    return *found;
+}
+
+std::optional<std::string> nullable_text(const JsonNode& node, const std::string& key, const std::string& where) {
+    const JsonNode& value = present(node, key, where);
+    if (value.kind == JsonKind::Null) return std::nullopt;
+    if (value.kind != JsonKind::String || value.string_value.empty()) fail(where, "field '" + key + "' is neither null nor a name");
+    return value.string_value;
+}
+
+std::optional<double> nullable_positive(const JsonNode& node, const std::string& key, const std::string& where) {
+    const JsonNode& value = present(node, key, where);
+    if (value.kind == JsonKind::Null) return std::nullopt;
+    if (value.kind != JsonKind::Number || !(value.number_value > 0)) fail(where, "field '" + key + "' is neither null nor a number above zero");
+    return value.number_value;
+}
+
+std::optional<double> optional_number(const JsonNode& node, const std::string& key, const std::string& where) {
+    const JsonNode* found = object_field(node, key);
+    if (!found) return std::nullopt;
+    if (found->kind != JsonKind::Number) fail(where, "field '" + key + "' is not a number");
+    return found->number_value;
+}
+
+bool truth(const JsonNode& node, const std::string& key, const std::string& where) {
+    return member(node, key, JsonKind::Bool, where).bool_value;
+}
+
+SheetRegion region_of(const std::string& name, const std::string& where) {
+    if (name == sheet_region_board) return SheetRegion::board;
+    if (name == sheet_region_under_module) return SheetRegion::under_module;
+    fail(where, "field 'region' is '" + name + "', not " + sheet_region_board + " or " + sheet_region_under_module);
+}
+
+SubsystemPlacement placement_of(const JsonNode& document, const std::string& where) {
+    const std::string at = where + " placement";
+    const JsonNode& node = member(document, "placement", JsonKind::Object, where);
+    reject_unknown_keys(node, {"region", "silk_label", "far_guard_mm", "escape_basis", "escape_escalates", "reserves_edge"}, at);
+    SubsystemPlacement placement;
+    placement.region = region_of(text(node, "region", at), at);
+    placement.silk_label = nullable_text(node, "silk_label", at);
+    placement.far_guard_mm = nullable_positive(node, "far_guard_mm", at);
+    placement.escape_basis = nullable_text(node, "escape_basis", at);
+    placement.escape_escalates = truth(node, "escape_escalates", at);
+    placement.reserves_edge = truth(node, "reserves_edge", at);
+    return placement;
+}
+
+DividerLimit divider_limit_of(const JsonNode& row, const std::string& net, const std::string& where) {
+    reject_unknown_keys(row, {"volts", "lo", "hi", "tag"}, where + " divider limit");
+    DividerLimit limit;
+    limit.volts = member(row, "volts", JsonKind::Number, where).number_value;
+    limit.lo = optional_number(row, "lo", where);
+    limit.hi = optional_number(row, "hi", where);
+    limit.tag = text(row, "tag", where);
+    if (!limit.lo && !limit.hi) fail(where, "a limit of divider " + net + " states neither lo nor hi");
+    if (limit.lo && limit.hi && !(*limit.lo < *limit.hi)) fail(where, "a limit of divider " + net + " has lo not below hi");
+    return limit;
+}
+
+SubsystemDivider divider_of(const JsonNode& row, const std::string& where) {
+    reject_unknown_keys(row, {"net", "source", "limits", "why"}, where + " divider");
+    SubsystemDivider divider;
+    divider.net = text(row, "net", where);
+    divider.source = text(row, "source", where);
+    divider.why = text(row, "why", where);
+    for (const JsonNode& limit : rows(row, "limits", where)) divider.limits.push_back(divider_limit_of(limit, divider.net, where));
+    if (divider.limits.empty()) fail(where, "divider " + divider.net + " states no limits");
+    return divider;
+}
+
+std::optional<IsetWindow> iset_window_of(const JsonNode& node, const std::string& where) {
+    const JsonNode& value = present(node, "iset_window_ma", where);
+    if (value.kind == JsonKind::Null) return std::nullopt;
+    const bool pair = value.kind == JsonKind::Array && value.array_value.size() == 2 &&
+                      value.array_value.front().kind == JsonKind::Number && value.array_value.back().kind == JsonKind::Number;
+    if (!pair) fail(where, "field 'iset_window_ma' is neither null nor [low, high]");
+    IsetWindow window;
+    window.low_ma = value.array_value.front().number_value;
+    window.high_ma = value.array_value.back().number_value;
+    if (!(window.low_ma > 0) || !(window.low_ma < window.high_ma)) fail(where, "field 'iset_window_ma' is not 0 < low < high");
+    return window;
+}
+
+SubsystemChecks checks_of(const JsonNode& document, const std::string& where) {
+    const std::string at = where + " checks";
+    const JsonNode& node = member(document, "checks", JsonKind::Object, where);
+    reject_unknown_keys(node, {"dividers", "divider_sources", "iset_window_ma"}, at);
+    SubsystemChecks checks;
+    for (const JsonNode& row : rows(node, "dividers", at)) checks.dividers.push_back(divider_of(row, at));
+    checks.divider_sources = texts(node, "divider_sources", at);
+    checks.iset_window_ma = iset_window_of(node, at);
+    return checks;
+}
+
 enum class Setting : std::uint8_t { bus, note };
 
 std::string per_board(const JsonNode& value, const std::string& where, const SubsystemMeta& meta, Setting setting) {
@@ -197,11 +295,12 @@ CircuitSheetIr author_subsystem_data(const JsonNode& document, const SubsystemMe
                                   ? object_field(document, "name")->string_value
                                   : std::string("(unnamed)");
     if (document.kind != JsonKind::Object) fail(where, "the document is not an object");
-    reject_unknown_keys(document, {"schema", "name", "title", "interface", "parts", "nets", "unconnected", "ports", "hints",
-                                   "draws", "waivers", "purpose", "free"},
+    reject_unknown_keys(document, {"schema", "name", "title", "interface", "placement", "checks", "parts", "nets", "unconnected", "ports",
+                                   "hints", "draws", "waivers", "purpose", "free"},
                         where);
     if (text(document, "schema", where) != subsystem_data_schema)
         fail(where, std::string("schema is not ") + subsystem_data_schema);
+    subsystem_data_facts(document, where);
     CircuitAuthor circuit(text(document, "name", where), text(document, "title", where), context);
     apply_sections(circuit, document, meta, where, true);
     return meta.finish(circuit);
@@ -221,10 +320,25 @@ SubsystemDefinition subsystem_data_definition(const JsonNode& document, const st
     SubsystemDefinition definition;
     definition.name = text(document, "name", source);
     definition.interface = texts(document, "interface", source);
+    subsystem_data_facts(document, source);
     definition.circuit = [document](const SubsystemMeta& meta, const AuthoringContext& context) {
         return author_subsystem_data(document, meta, context);
     };
     return definition;
+}
+
+SubsystemFacts subsystem_data_facts(const JsonNode& document, const std::string& source) {
+    if (document.kind != JsonKind::Object) fail(source, "the document is not an object");
+    return {placement_of(document, source), checks_of(document, source)};
+}
+
+SubsystemFacts load_subsystem_facts(const std::filesystem::path& library, const std::string& name) {
+    const std::filesystem::path file = library / name / subsystem_data_file;
+    if (library.empty() || !std::filesystem::is_regular_file(file)) throw CircuitAuthoringError("unknown subsystem " + name);
+    const JsonNode document = parse_json_file(file.string());
+    if (document.kind == JsonKind::Object && text(document, "name", file.string()) != name)
+        fail(file.string(), "its name differs from its folder " + name);
+    return subsystem_data_facts(document, file.string());
 }
 
 std::vector<SubsystemDefinition> subsystem_data_definitions(const std::filesystem::path& library) {

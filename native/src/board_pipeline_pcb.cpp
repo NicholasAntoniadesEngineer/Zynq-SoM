@@ -11,6 +11,9 @@
 #include "schgen/process.hpp"
 #include "schgen/placement_requirements.hpp"
 #include "schgen/label_seats.hpp"
+#include "schgen/decoupling_report.hpp"
+#include "schgen/testpoint_map.hpp"
+#include "schgen/stackup.hpp"
 #include <cmath>
 #include <climits>
 #include <cstdlib>
@@ -127,7 +130,7 @@ void pcb_stages(Context& c){
         stage.inputs=c.measure("pcb_input_loading_and_netlist_validation",[&]{
             const auto nets=extract_netlist(c.schematic->root_path,c.options.extraction);
             validate_board_input_connectivity(c.circuits,c.index,nets);
-            return load_board_inputs(c.paths,c.circuits,*c.link,nets,c.options.pcb);});
+            return load_board_inputs(c.paths,c.circuits,c.require_roles(),*c.link,nets,c.options.pcb);});
         stage.inputs.floorplan.sheet_index=c.index;
         if(c.options.native_policy){
             const auto policy=configure_native_board_policy(c.options,c.paths,stage.inputs.floorplan);
@@ -205,12 +208,23 @@ void pcb_stages(Context& c){
             const auto destination=c.out==c.paths.project_root?bp:c.reports/"fanout_baseline.json";
             publish_text(destination,"{\n \"starved_baseline\": "+std::to_string(n)+",\n \"note\": \"fan-out ratchet ceiling — may only DECREASE; a build whose starved count exceeds this FAILS. Reach 0 to promote the gate to HARD.\"\n}\n");}
         c.gate("pcb_geometry",r.ok(),"independent final-board gates complete");});
+    c.attempt("testpoint_map",[&]{if(!c.pcb||!c.testpoints)throw ProjectError("PCB or test-point coverage unavailable");
+        const auto& model=c.pcb->placement.model;const auto map=build_testpoint_map(model,*c.testpoints);
+        publish_text(c.reports/"test_points.txt",map.text());
+        const auto errors=verify_testpoint_map(map,c.sheets,c.index,model,*c.testpoints);
+        c.gate("testpoint_map",errors.empty(),std::to_string(map.rows.size())+" test points; "+std::to_string(map.waivers.size())+" waived nets"+(errors.empty()?"":"; "+join(errors,"; ")));});
+    c.attempt("decoupling_report",[&]{if(!c.pcb||!c.geometry)throw ProjectError("PCB or placement integrity unavailable");
+        const auto& model=c.pcb->placement.model;const PcbCheckInput input(model);const auto intent=layout::authored_intent(c.pcb->inputs);
+        const rules::RuleContext context(input,model,board_stackup(),intent);
+        const auto report=build_decoupling_report(context);publish_text(c.reports/"decoupling.txt",report.text());
+        const auto errors=verify_decoupling_report(report,context,intent,c.geometry->integrity.of(rules::bypass_rule_id));
+        c.gate("decoupling_report",errors.empty(),std::to_string(report.rows.size())+" rows; "+std::to_string(report.failures())+" failing"+(errors.empty()?"":"; "+join(errors,"; ")));});
     c.attempt("assembly",[&]{if(!c.pcb||!c.power)throw ProjectError("PCB/power result unavailable");
         JsonNode result;try{result=run_assembly_documents(c.pcb->placement.model,*c.power,load_project_config(c.paths).name,c.manufacturing/"ASSEMBLY.md",c.renders/"assembly",pcb_emit_policy(c.pcb->inputs.floorplan.project));}
         catch(...){c.fallbacks.record("assembly_generation_failed");throw;}
         const auto v=assembly_verdict(result,report_root);c.gate("assembly",v.first,v.second);});
     c.attempt("ratsnest_images",[&]{if(!c.pcb||!c.geometry)throw ProjectError("PCB/geometry unavailable");const auto r=run_ratsnest_documents(c.pcb->placement.model,c.out,&c.geometry->nets,&c.geometry->edges);c.gate("ratsnest_images",true,ratsnest_document_summary(r,report_root));});
-    c.attempt("thermal",[&]{if(!c.power)throw ProjectError("power result unavailable");const auto r=run_thermal_checks(c.circuits,c.reports,&*c.power,c.pcb_published?std::optional<fs::path>{pcb_path}:std::nullopt,c.paths.repository_root);c.gate("thermal",r.ok(),thermal_report(r));});
+    c.attempt("thermal",[&]{if(!c.power)throw ProjectError("power result unavailable");const auto r=run_thermal_checks(c.circuits,c.reports,c.require_power_policy(),&*c.power,c.pcb_published?std::optional<fs::path>{pcb_path}:std::nullopt,c.paths.repository_root);c.gate("thermal",r.ok(),thermal_report(r));});
     c.attempt("copper_debt",[&]{auto sources=author_copper_debt_sources(c.paths.repository_root);
         const auto scope=c.paths.project_root.filename().string();for(auto& x:sources.circuits)if(x.scope==scope){const auto it=std::find_if(c.circuits.begin(),c.circuits.end(),[&](const auto& s){return s.name==x.sheet;});if(it!=c.circuits.end())x.circuit=it->circuit;}
         if(c.pcb)sources.emission=pcb_emit_policy(c.pcb->inputs.floorplan.project);

@@ -1,0 +1,4 @@
+struct FloorplanNote {
+    int n = 0;
+    std::string block, short_text, long_text;
+};

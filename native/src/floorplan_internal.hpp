@@ -125,6 +125,12 @@ public:
     // Search history must survive restoration of a candidate layout.
     std::set<std::string> rejected_subjects;
     std::map<std::string, const CircuitSheetIr*> sheets;
+    std::map<std::string, std::string> module_sheet_of;
+    const std::string& module_sheet(const std::string& connector) const {
+        const auto found = module_sheet_of.find(connector);
+        if (found == module_sheet_of.end()) throw FloorplanError("floorplan: no sheet carries module connector " + connector);
+        return found->second;
+    }
     std::map<std::string, CachedFootprint> footprint_cache;
     std::map<std::string, FloorplanPoint> zbox;
     std::map<std::string, std::string> edge_of;

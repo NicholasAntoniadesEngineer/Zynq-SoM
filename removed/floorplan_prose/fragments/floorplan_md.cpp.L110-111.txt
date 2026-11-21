@@ -1,0 +1,2 @@
+    line();line("## Placement notes (the WHYs)");line();
+    for(const auto& n:notes)line("- "+(n.n ? "**("+std::to_string(n.n)+") "+n.block+"**":"**(board)**")+": "+n.long_text);

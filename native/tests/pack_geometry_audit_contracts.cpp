@@ -12,7 +12,7 @@ int main(int argc,char** argv){try{
   return scan_cpp_audit_sources(root,files,o);
  };
  const std::set<std::string> functions{
- "pair_gap","edge_components","som_decoupling_grid","som_decoupling_cells","som_components",
+ "pair_gap","edge_components","under_module_grid","under_module_cells","som_components",
  "cout_column_centers","bulk_cap_pose","zone_components_assemble","rotate_offsets_90",
  "corridor_board_rect","mirror_offset_x"};
  auto selected=[&](const auto& s){for(const auto& f:functions)if(s.function=="native/src/pack.cpp::schgen::"+f)return true;return false;};

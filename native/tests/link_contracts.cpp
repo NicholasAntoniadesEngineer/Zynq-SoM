@@ -2,6 +2,7 @@
 // and report byte against a Python-generated JSON snapshot; --corpus accepts
 // multiple pure-link input/output snapshots. Neither mode executes Python.
 #include "schgen/link.hpp"
+#include "sheet_roles_fixture.hpp"
 
 #include <algorithm>
 #include <filesystem>
@@ -59,7 +60,7 @@ CircuitPortIr voltage(const std::string& net, double level) {
 }
 LinkResult run(const std::vector<CircuitSheetIr>& sheets, const LinkSomNets& nets = {},
                const LinkMapping& mapping = {}, const LinkDiagnosticOrder& order = {}) {
-    return link_sheets(sheets, nets, mapping, order);
+    return link_sheets(sheets, sheet_module_connectors(explicit_sheet_roles(sheets)), nets, mapping, order);
 }
 
 JsonNode str(const std::string& value) {
@@ -283,7 +284,7 @@ void mapping_and_json_contracts() {
     const auto nets = link_som_nets_from_json(contract);
     equal(nets.at("N"), {"J1.-10", "J1.-2", "J1.2", "J1.02", "J1.10", "J1.+1_0",
         "J1.10000000000000000000000", "J2.1"}, "stable arbitrary-width numeric pin sorting");
-    require(link_sheets({sheet("a", {"N"})}, contract, policy, {}).ok(), "JSON overload failed");
+    require(link_sheets({sheet("a", {"N"})}, sheet_module_connectors(explicit_sheet_roles(std::vector<std::string>{"a"})), contract, policy, {}).ok(), "JSON overload failed");
     for (const auto* pin : {"1tail", "", "-", "1__0", "1_"})
         rejects([&] { link_som_nets_from_json(obj({{"connectors", obj({
             {"J1", obj({{"pins", obj({{pin, str("X")}})}})}})}})); }, "invalid literal for int()");
@@ -395,7 +396,7 @@ void snapshot(const std::string& subsystems, const std::string& contract,
     std::vector<CircuitSheetIr> sheets;
     for (const auto& name : strings(field(expected, "sheets")))
         sheets.push_back(load_circuit_json(std::filesystem::path(subsystems) / name / "circuit.json"));
-    const auto result = link_sheets(sheets, parse_json_file(contract), parse_json_file(mapping), {});
+    const auto result = link_sheets(sheets, sheet_module_connectors(explicit_sheet_roles(sheets)), parse_json_file(contract), parse_json_file(mapping), {});
     compare_json(link_result_json(result), expected, "snapshot");
     std::cout << "Python snapshot parity: " << sheets.size() << " sheets, " << result.bindings.size()
               << " bindings, " << result.rail_bindings.size() << " rails; all fields/report bytes match\n";

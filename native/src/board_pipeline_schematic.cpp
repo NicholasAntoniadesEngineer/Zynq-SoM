@@ -106,7 +106,7 @@ void schematic_stage(Context& c){
     c.status("sheet_render",c.options.no_render?BoardGateStatus::skipped:render_ok?BoardGateStatus::passed:BoardGateStatus::failed,c.options.no_render?"--no-render":"per-sheet native PDF rasterization");
     c.report("cc_gate.txt",join(cc_reports,"\n"));c.gate("cc",cc_ok&&inputs.size()==c.circuits.size(),join(cc_reports,"\n"));
     c.attempt("symbol_law",[&]{const auto r=check_symbol_law(c.sheets,c.library);c.report("symbol_law.txt",r.summary());c.gate("symbol_law",r.ok(),r.summary());});
-    c.attempt("link",[&]{c.som=load_som_interface(c.paths.som_interface_file);c.link=link_sheets(c.sheets,parse_json_file(c.paths.som_interface_file.string()),parse_json_file((c.paths.project_root/"som_mapping.json").string()), c.paths.module.do_not_load_straps);
+    c.attempt("link",[&]{c.som=load_som_interface(c.paths.som_interface_file);c.link=link_sheets(c.sheets,sheet_module_connectors(c.require_roles()),parse_json_file(c.paths.som_interface_file.string()),parse_json_file((c.paths.project_root/"som_mapping.json").string()), c.paths.module.do_not_load_straps);
         c.report("link_report.txt",c.link->report());c.gate("link",c.link->ok(),c.link->report());});
     c.attempt("constraints",[&]{write_layout_constraints(c.circuits,c.paths.project_root/"research/si_spec.json",c.manufacturing);c.gate("constraints",true,"layout rules and net-class CSV published");});
     c.attempt("diagram",[&]{if(!c.link)throw ProjectError("link result unavailable");write_block_diagram(*c.link,link_som_nets_from_json(parse_json_file(c.paths.som_interface_file.string())),c.docs/"block_diagram.svg");c.gate("diagram",true,"block diagram published");});

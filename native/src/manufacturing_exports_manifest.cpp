@@ -1,4 +1,5 @@
 #include "schgen/board_files.hpp"
+#include "schgen/i2c_inventory.hpp"
 #include "schgen/manufacturing_exports.hpp"
 #include "schgen/pcb_checks.hpp"
 #include "manufacturing_exports_internal.hpp"
@@ -23,15 +24,10 @@ JsonNode rails(const ManufacturingManifestInput& in,const PowerPolicy& policy){
     }return arr(std::move(out));
 }
 JsonNode i2c(const std::vector<ProjectCircuit>& sheets){
-    std::map<std::string,const CircuitSheetIr*> cs;for(const auto& sc:sheets)cs[sc.name]=&sc.circuit;
     using Row=std::tuple<int,std::string,std::string,std::string,std::string>;std::vector<Row> rows;
-    for(const auto& [name,ptr]:cs){const auto& c=*ptr;
-        if(std::any_of(c.parts.begin(),c.parts.end(),[](const auto& p){return has(p.value,"TCA9535");})){const auto e=bringup_expander(c);rows.emplace_back(e.addr,"TCA9535",name,e.ref,"STM32_I2C2");}
-        for(const auto& m:ina3221_monitors(c))rows.emplace_back(m.addr,"INA3221",name,m.ref,"STM32_I2C2");
-        for(const auto& p:c.parts)if(has(p.value,"FUSB302"))rows.emplace_back(0x22,"FUSB302B",name,p.ref,"STM32_I2C2");
-        if(name=="board_services"){rows.emplace_back(bringup_id_eeprom_addr(c),"24AA025E48",name,"U1","AUX_I2C");rows.emplace_back(0x52,"RV-3028",name,"U2","AUX_I2C");}
-    }std::sort(rows.begin(),rows.end());std::vector<JsonNode> out;
-    for(const auto& [addr,dev,sheet,ref,bus]:rows)out.push_back(obj({{"device",j(dev)},{"addr",j(addr)},{"addr_hex",j("0x"+hex(addr))},{"bus",j(bus)},{"sheet",j(sheet)},{"ref",j(ref)}}));
+    for(const auto& d:build_i2c_inventory(sheets,default_part_facts()).devices)rows.emplace_back(d.address,d.label,d.sheet,d.ref,d.bus);
+    std::sort(rows.begin(),rows.end());std::vector<JsonNode> out;
+    for(const auto& [addr,dev,sheet,ref,bus]:rows)out.push_back(obj({{"device",j(dev)},{"addr",j(addr)},{"addr_hex",j(i2c_address_hex(addr))},{"bus",j(bus)},{"sheet",j(sheet)},{"ref",j(ref)}}));
     return arr(std::move(out));
 }
 JsonNode bom(const ManufacturingManifestInput& in){
@@ -47,8 +43,8 @@ std::vector<ProjectArtifact> manufacturing_artifacts(const std::filesystem::path
     namespace fs=std::filesystem;
     std::map<std::string,fs::path> selected;const auto exclude=fs::weakly_canonical(out);
     const auto add=[&](const fs::path& p){if(fs::is_regular_file(p)&&fs::weakly_canonical(p)!=exclude)selected[p.lexically_relative(root).generic_string()]=p;};
-    for(const auto& rel:std::vector<std::string>{board_file_name(file_stem,BoardFileKind::Schematic),board_file_name(file_stem,BoardFileKind::Project),board_file_name(file_stem,BoardFileKind::Pcb),"manufacturing/SI_CONSTRAINTS.md","docs/BRINGUP.md","docs/FLOORPLAN.md","docs/DESIGN_SPEC.md","docs/COMPLIANCE.md"})add(root/rel);
-    for(const auto& [dir,ext]:ProjectStrings{{"schematic",".kicad_sch"},{"fpga",".xdc"},{"firmware",".h"},{"manufacturing",".csv"},{"manufacturing",".txt"},{"manufacturing",".kicad_dru"},{"reports",".txt"},{"docs",".svg"}}){
+    for(const auto& rel:std::vector<std::string>{board_file_name(file_stem,BoardFileKind::Schematic),board_file_name(file_stem,BoardFileKind::Project),board_file_name(file_stem,BoardFileKind::Pcb),"manufacturing/SI_CONSTRAINTS.md","docs/FLOORPLAN.md"})add(root/rel);
+    for(const auto& [dir,ext]:ProjectStrings{{"schematic",".kicad_sch"},{"fpga",".xdc"},{"manufacturing",".csv"},{"manufacturing",".txt"},{"manufacturing",".kicad_dru"},{"reports",".txt"},{"docs",".svg"}}){
         const auto p=root/dir;if(!fs::exists(p))continue;
         for(const auto& entry:fs::directory_iterator(p))if(ends(entry.path().filename().string(),ext))add(entry.path());
     }

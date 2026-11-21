@@ -897,7 +897,7 @@ Box4 footprint_bbox(const Sexpr& doc, int decimals) {
                 py_round(*xmax, decimals), py_round(*ymax, decimals)};
 }
 
-SomOutline extract_som_scan(const std::string& text) {
+SomOutline extract_som_scan(const std::string& text, const std::vector<std::string>& connectors) {
     std::vector<std::pair<double, double>> edge_pts;
     std::unordered_map<std::string, std::tuple<double, double, double, double,
                                                double>>
@@ -918,7 +918,7 @@ SomOutline extract_som_scan(const std::string& text) {
     double pad_at_y = 0.0;
 
     auto commit_fp = [&]() {
-        if (in_fp && (fp_ref == "J1" || fp_ref == "J2" || fp_ref == "J3")
+        if (in_fp && std::find(connectors.begin(), connectors.end(), fp_ref) != connectors.end()
             && have_fp_at && !pad_xs.empty()) {
             const auto [xmin, xmax] = std::minmax_element(pad_xs.begin(),
                                                           pad_xs.end());
@@ -1033,9 +1033,10 @@ SomOutline extract_som_scan(const std::string& text) {
     if (edge_pts.empty()) {
         throw std::runtime_error("extract_som_scan: Edge.Cuts required");
     }
-    if (js_raw.find("J1") == js_raw.end() || js_raw.find("J2") == js_raw.end()
-        || js_raw.find("J3") == js_raw.end()) {
-        throw std::runtime_error("extract_som_scan: J1 J2 J3 required");
+    for (const std::string& connector : connectors) {
+        if (js_raw.find(connector) == js_raw.end()) {
+            throw std::runtime_error("extract_som_scan: module connector " + connector + " required");
+        }
     }
     double x0 = edge_pts[0].first;
     double y0 = edge_pts[0].second;
@@ -1052,7 +1053,7 @@ SomOutline extract_som_scan(const std::string& text) {
     SomOutline out;
     out.w = py_round(w, 3);
     out.h = py_round(h, 3);
-    for (const char* ref : {"J1", "J2", "J3"}) {
+    for (const std::string& ref : connectors) {
         const auto& row = js_raw[ref];
         const double px = std::get<0>(row);
         const double py = std::get<1>(row);

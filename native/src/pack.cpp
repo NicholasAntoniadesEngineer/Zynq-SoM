@@ -887,7 +887,7 @@ std::vector<Comp> edge_components(char edge, double block_x, double block_y,
     return out;
 }
 
-std::tuple<double, double, int, int> som_decoupling_grid(double som_w,
+std::tuple<double, double, int, int> under_module_grid(double som_w,
                                                          double som_h, int n,
                                                          double inset, QuantizationCounts* counts) {
     const double rw = std::max(1.0, som_w - 2.0 * inset);
@@ -904,7 +904,7 @@ std::tuple<double, double, int, int> som_decoupling_grid(double som_w,
     return {rw, rh, cols, rows};
 }
 
-std::vector<std::pair<double, double>> som_decoupling_cells(
+std::vector<std::pair<double, double>> under_module_cells(
     double som_x, double som_y, double som_w, double som_h, int n,
     double inset, QuantizationCounts* counts) {
     if (n <= 0) {
@@ -912,7 +912,7 @@ std::vector<std::pair<double, double>> som_decoupling_cells(
     }
     const double rx0 = som_x + inset;
     const double ry0 = som_y + inset;
-    const auto grid = som_decoupling_grid(som_w, som_h, n, inset, counts);
+    const auto grid = under_module_grid(som_w, som_h, n, inset, counts);
     const double rw = std::get<0>(grid);
     const double rh = std::get<1>(grid);
     const int cols = std::get<2>(grid);
@@ -2880,22 +2880,20 @@ std::vector<Box4> legalize_mh_corners(double board_w, double board_h,
 }
 
 std::vector<std::tuple<std::string, double, double, double, double>>
-som_jack_rects(
+module_connector_rects(
     double som_x, double som_y,
     const std::vector<std::tuple<std::string, double, double, double, double>>&
-        jacks) {
+        jacks,
+    const std::map<std::string, std::string>& sheet_of_connector) {
     std::vector<std::tuple<std::string, double, double, double, double>> out;
     out.reserve(jacks.size());
     for (const auto& jack : jacks) {
         const std::string& ref = std::get<0>(jack);
-        if (ref.size() < 2) {
-            throw std::runtime_error("som_jack_rects: jack ref required");
+        const auto sheet = sheet_of_connector.find(ref);
+        if (sheet == sheet_of_connector.end()) {
+            throw std::runtime_error("module_connector_rects: no sheet carries module connector " + ref);
         }
-        std::string name = "som_j";
-        for (std::size_t i = 1; i < ref.size(); ++i) {
-            name.push_back(static_cast<char>(
-                std::tolower(static_cast<unsigned char>(ref[i]))));
-        }
+        const std::string& name = sheet->second;
         const double jx = std::get<1>(jack);
         const double jy = std::get<2>(jack);
         const double jw = std::get<3>(jack);

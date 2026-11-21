@@ -134,6 +134,7 @@ PcbCheckModel local_model(const Context& ctx, const Geometry& g, const std::stri
     model.board_w = shape.w; model.board_h = shape.h;
     model.net_numbers = trusted.net_numbers;
     model.connectors = ctx.in.floorplan.project.connectors;
+    model.isolation = ctx.in.floorplan.project.isolation;
     std::set<std::string> seen;
     for (const auto* offsets : {&shape.top_off, &shape.bot_off})
         for (const auto& [ref, xy] : *offsets) {
