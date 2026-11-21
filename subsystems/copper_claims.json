@@ -109,10 +109,10 @@
       "assumes": "a Bob-Smith common trunk (4 x 75R || 1n/2kV into BS_COMMON) laid in copper on the chassis-side island, spaced for the 2kV surge rating (IEEE 802.3 40.7.1)",
       "risk": "without trunk copper + spacing the 2kV HF termination exists only as parts; surge creepage and return-path behaviour are unproven until the routing wave draws the island",
       "checks": [
-        {"kind": "part", "scopes": ["library", "carrier"], "sheet": "ethernet", "refs": ["T1"], "value_prefix": "HX5008"},
+        {"kind": "part", "scopes": ["library", "carrier", "motor_carrier"], "sheet": "ethernet", "refs": ["T1"], "value_prefix": "HX5008"},
         {
           "kind": "net_pins",
-          "scopes": ["library", "carrier"],
+          "scopes": ["library", "carrier", "motor_carrier"],
           "sheet": "ethernet",
           "net": "MCT1",
           "pins": [
@@ -123,7 +123,7 @@
         },
         {
           "kind": "net_pins",
-          "scopes": ["library", "carrier"],
+          "scopes": ["library", "carrier", "motor_carrier"],
           "sheet": "ethernet",
           "net": "MCT2",
           "pins": [
@@ -134,7 +134,7 @@
         },
         {
           "kind": "net_pins",
-          "scopes": ["library", "carrier"],
+          "scopes": ["library", "carrier", "motor_carrier"],
           "sheet": "ethernet",
           "net": "MCT3",
           "pins": [
@@ -145,7 +145,7 @@
         },
         {
           "kind": "net_pins",
-          "scopes": ["library", "carrier"],
+          "scopes": ["library", "carrier", "motor_carrier"],
           "sheet": "ethernet",
           "net": "MCT4",
           "pins": [
@@ -156,7 +156,7 @@
         },
         {
           "kind": "net_pins",
-          "scopes": ["library", "carrier"],
+          "scopes": ["library", "carrier", "motor_carrier"],
           "sheet": "ethernet",
           "net": "BS_COMMON",
           "pins": [
@@ -172,7 +172,7 @@
         },
         {
           "kind": "part",
-          "scopes": ["library", "carrier"],
+          "scopes": ["library", "carrier", "motor_carrier"],
           "sheet": "ethernet",
           "refs": ["C1", "C2", "C3", "C4", "C5"],
           "footprint": "Capacitor_SMD:C_1206_3225Metric",
@@ -180,7 +180,7 @@
         },
         {
           "kind": "part",
-          "scopes": ["library", "carrier"],
+          "scopes": ["library", "carrier", "motor_carrier"],
           "sheet": "ethernet",
           "refs": ["C5"],
           "pins": [
@@ -197,8 +197,8 @@
       "assumes": "NO GND plane under the ethernet magnetics line side / RJ45 media pins (Pulse HX5008 layout guidance; the 2kV isolation moat) — the full-board In1 plane must be VOIDED there",
       "risk": "a continuous plane under the magnetics bridges the isolation barrier capacitively and violates the 2kV creepage intent; the RJ45<->magnetics media CORRIDOR void remains routing-wave debt",
       "checks": [
-        {"kind": "part_fact", "scopes": ["library", "carrier"], "sheet": "ethernet", "refs": ["T1"], "section": "isolation"},
-        {"kind": "part_fact", "scopes": ["library", "carrier"], "sheet": "rj45_connector", "refs": ["J1"], "section": "isolation"},
+        {"kind": "part_fact", "scopes": ["library", "carrier", "motor_carrier"], "sheet": "ethernet", "refs": ["T1"], "section": "isolation"},
+        {"kind": "part_fact", "scopes": ["library", "carrier", "motor_carrier"], "sheet": "rj45_connector", "refs": ["J1"], "section": "isolation"},
         {"kind": "emission_ground_layer", "layer": "In1.Cu"},
         {"kind": "isolation_margins"}
       ],

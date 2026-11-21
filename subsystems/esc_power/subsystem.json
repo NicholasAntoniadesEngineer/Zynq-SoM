@@ -28,7 +28,16 @@
     "reserves_edge": false
   },
   "checks": {
-    "dividers": [],
+    "dividers": [
+      {
+        "net": "VSENSE_DIV",
+        "source": "+VBAT_OUT",
+        "limits": [
+          {"volts": 25.2, "hi": 3.5, "tag": "6S pack maximum inside the bank-35 pin's recommended maximum"}
+        ],
+        "why": "battery-voltage sense divider R12 100k / R13 10k into a bank-35 pin through R14 (design 1b, Analogue outputs: 2.29 V at 25.2 V): 25.2 V x 10k / 110k = 2.291 V against VIN max = VCCO + 0.20 V = 3.5 V at VCCO 3.3 V (AMD DS187 v1.21 Table 2); R14 carries only the pin leakage, at most 15 uA (DS187 Table 3, IL), which moves the pin by at most 15 uA x (10k + 9.09k divider source) = 0.29 V, 2.58 V worst case"
+      }
+    ],
     "divider_sources": [],
     "iset_window_ma": null,
     "iset_basis": null
