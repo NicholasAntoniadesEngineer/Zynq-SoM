@@ -337,6 +337,7 @@ Every board names the folder of the module it carries in `board.json`, under `mo
 | `schema` | `schgen.module/1`. |
 | `schematic`, `pcb` | File names of the module's KiCad schematic and board inside the module folder. A path separator is rejected. |
 | `connector_part` | The part name of the module connector. |
+| `controller_ref`, `fpga_ref` | The reference designators, in the module's own schematic, of its controller and of its FPGA or processor. They differ. The pin constraints file, the controller pin map in the manifest and the module pin map read them from here. |
 | `draw` | `connector`, `rail`, `amps` and `note`: the module's own current draw. `rail` is the module net; a board's `rebound_som_rails` maps it to the board net. |
 | `sdio_level_v`, `sd_bus` | The module's SD bus signal level and its net names. |
 | `pairs` | Differential pairs on module pin nets, as in `board.json`. They come before the board's own pairs. |

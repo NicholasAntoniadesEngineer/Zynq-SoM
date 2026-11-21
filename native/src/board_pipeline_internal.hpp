@@ -2,6 +2,7 @@
 #include "schgen/board_pipeline.hpp"
 #include "schgen/pcb_verification.hpp"
 #include "schgen/firmware_docs.hpp"
+#include "schgen/module_pin_map.hpp"
 #include "schgen/spice.hpp"
 #include "schgen/design_rules.hpp"
 #include "schgen/execution_timing.hpp"
@@ -41,6 +42,9 @@ struct Context {
     std::optional<TestpointCoverage> testpoints;
     std::optional<SpiceResult> spice;
     std::optional<ManufacturingXdc> xdc;
+    std::vector<XdcPin> xdc_pins;
+    std::optional<SomZynq> fpga_live;
+    std::optional<Stm32PinMap> controller;
     std::optional<ManufacturingManifestInput> manifest_input;
     NativeLedger ledger;
     NativeQuantizations quantizations;

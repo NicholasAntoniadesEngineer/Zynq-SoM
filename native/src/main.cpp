@@ -70,7 +70,7 @@ int main(int argc, char** argv) {
                          "  powertree|part-rules [--project NAME] [SUBSYSTEM ...] [-o REPORT]\n"
                          "  thermal [--project NAME] [SUBSYSTEM ...] [--pcb FILE] [-o REPORT]\n"
                          "  design-rules|testpoints [--project NAME] [SUBSYSTEM ...] [-o REPORT]\n"
-                         "  som-interface [--project NAME] [--som FILE] [--refs J1,J2,J3] [-o FILE]\n"
+                         "  som-interface [--project NAME] [--som FILE] --refs REF,REF,... [-o FILE]\n"
                          "  xdc [--project NAME] [--som FILE] [--contract FILE] [-o FILE]\n"
                          "  bom [--project NAME] [SUBSYSTEM ...] [-o FILE] [--allow-missing] [--qualified-refs]\n"
                          "  link [--project NAME] [SUBSYSTEM ...] [--contract FILE] [-o REPORT]\n"

@@ -56,7 +56,7 @@ namespace schgen {
 namespace {
 namespace fs = std::filesystem;
 struct Options {
-    std::string command, refs = "J1,J2,J3", kicad_cli = "kicad-cli";
+    std::string command, refs, kicad_cli = "kicad-cli";
     fs::path repository = fs::current_path(), som, contract, output, pcb, run_config;
     std::optional<fs::path> project;
     std::vector<std::string> subsystems;
@@ -359,7 +359,8 @@ Options parse(int argc, char** argv) {
                out.command == "pin-completeness" || out.command == "symbol-law") {
         // These checks consume the selected circuits, not a live SoM map.
     } else if (!check_only && out.command != "design-rules" && out.command != "testpoints" && out.command != "constraints") {
-        allowed.insert("--som"); allowed.insert("--refs"); allowed.insert("--kicad-cli");
+        allowed.insert("--som"); allowed.insert("--kicad-cli");
+        if (out.command == "som-interface") allowed.insert("--refs");
         if (out.command != "som-interface") allowed.insert("--contract");
     }
     for (const auto& key : seen) {
@@ -644,7 +645,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
     if (options.command == "som-interface") {
         if (!options.subsystems.empty()) throw std::runtime_error("som-interface takes no subsystem names");
         const auto output = options.output.empty() ? paths.som_interface_file : options.output;
-        (void)refs(options.refs);
+        if (refs(options.refs).empty()) throw std::runtime_error("som-interface requires --refs");
         std::cout << write_som_interface(som, options.refs, output, {options.kicad_cli});
         return 0;
     }
@@ -745,8 +746,9 @@ std::optional<int> run_project_command(int argc, char** argv) {
         return result.ok ? 0 : 1;
     }
     if (options.command == "manifest") {
-        const auto pins = stm32_pin_map(extract_som_zynq(paths.som_schematic, "U9",
-            {"J1", "J2", "J3"}, {options.kicad_cli}), load_som_interface(paths.som_interface_file));
+        const auto module_pins = load_som_interface(paths.som_interface_file);
+        const auto pins = stm32_pin_map(extract_som_zynq(paths.som_schematic, paths.module.controller_ref,
+            som_interface_refs(module_pins), {options.kicad_cli}), module_pins);
         const auto power = board_power();
         auto input = prepare_manufacturing_manifest(circuits, pins, power);
         input.file_stem = paths.file_stem;
@@ -921,8 +923,8 @@ std::optional<int> run_project_command(int argc, char** argv) {
         return bom.missing_lcsc.empty() || options.allow_missing ? 0 : 1;
     }
     XdcInput live_input;
-    live_input.refs = refs(options.refs);
-    const auto live = extract_som_zynq(som, "U2", live_input.refs, {options.kicad_cli});
+    live_input.refs = som_interface_refs(load_som_interface(options.contract.empty() ? paths.som_interface_file : options.contract));
+    const auto live = extract_som_zynq(som, paths.module.fpga_ref, live_input.refs, {options.kicad_cli});
     apply_som_to_xdc(live_input, live);
     live_input.pins_file = board_file_name(paths.file_stem, BoardFileKind::PinConstraints);
     const auto input = load_project_xdc_input(paths.repository_root, paths.project_root,
