@@ -1,6 +1,7 @@
 #pragma once
 
 #include <optional>
+#include <set>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -21,6 +22,7 @@ struct XdcInput {
     XdcStrings ball_net, pin_names, jpin_net, function_map, bank_rails, vcco_rails;
     std::vector<XdcPort> ports;
     std::vector<std::string> refs;
+    std::set<std::string> module_sheets;
     // Optional diagnostic presentation order. The Python adapter supplies its
     // historical set iteration order; standalone callers use sorted bank IDs.
     std::vector<std::string> drift_order;

@@ -83,6 +83,9 @@ XdcInput load_project_xdc_input(const std::filesystem::path& repository,
     live.bank_rails = strings(field(fpga, "bank_rails", JsonKind::Object,
                                     project_path.string()), project_path.string());
     live.ports.clear();
+    live.module_sheets.clear();
+    for (const BoardSheet& board_sheet : load_board(project).sheets)
+        if (board_sheet.from_module()) live.module_sheets.insert(board_sheet.name);
     for (const auto& sheet : sheets) {
         std::map<std::string, const CircuitPortIr*> types;
         for (const auto& type : sheet.port_types) types.emplace(type.net, &type);
