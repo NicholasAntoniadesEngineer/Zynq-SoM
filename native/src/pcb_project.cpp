@@ -260,6 +260,9 @@ std::string render_pcb_project(const PcbModel &m, const std::string &filename,
         set(d, "pcbnew", jo({{"last_paths", jo()}, {"page_layout_descr_file", j(std::string())}}));
     return dump(d, doc, counts) + "\n";
 }
+JsonNode pcb_project_board_settings(const PcbEmitPolicy &p) {
+    return jo({{"board", jo({{"design_settings", design_settings(p).data}})}});
+}
 void write_pcb_project(const PcbModel &m, const std::filesystem::path &path,
                        const PcbEmitPolicy &p, QuantizationCounts* counts) {
     std::optional<PcbProjectDocument> prior;

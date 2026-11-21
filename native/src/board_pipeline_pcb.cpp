@@ -153,7 +153,7 @@ void pcb_stages(Context& c){
             auto squeezed=c.measure("pcb_layout_squeeze",[&]{
                 return layout::squeeze_stage(stage.inputs,stage.placement.model,pcb_emit_policy(stage.inputs.floorplan.project),
                     {c.options.layout->plane_net,
-                     layout::project_edge_clearance(parse_json_file((c.paths.project_root/board_file_name(c.paths.file_stem,BoardFileKind::Project)).string())),
+                     layout::project_edge_clearance(pcb_project_board_settings(pcb_emit_policy(stage.inputs.floorplan.project))),
                      c.options.layout->overmold_parts,stage.inputs.floorplan.place_clear,layout::authored_intent(stage.inputs)});});
             c.report("layout_squeeze.txt",squeezed.report);
             stage.placement.model=std::move(squeezed.model);
