@@ -78,7 +78,7 @@
     {
       "name": "ethernet",
       "settings": {
-        "bind": {"CHASSIS_GND": "CHASSIS_GND", "MDI0_P": "ETH_PHY_MDI0_P", "MDI0_N": "ETH_PHY_MDI0_N", "MDI1_P": "ETH_PHY_MDI1_P", "MDI1_N": "ETH_PHY_MDI1_N", "MDI2_P": "ETH_PHY_MDI2_P", "MDI2_N": "ETH_PHY_MDI2_N", "MDI3_P": "ETH_PHY_MDI3_P", "MDI3_N": "ETH_PHY_MDI3_N", "MX0_P": "ETH_LINE_MDI_0_P", "MX0_N": "ETH_LINE_MDI_0_N", "MX1_P": "ETH_LINE_MDI_1_P", "MX1_N": "ETH_LINE_MDI_1_N", "MX2_P": "ETH_LINE_MDI_2_P", "MX2_N": "ETH_LINE_MDI_2_N", "MX3_P": "ETH_LINE_MDI_3_P", "MX3_N": "ETH_LINE_MDI_3_N"},
+        "bind": {"GND": "GND", "CHASSIS_GND": "CHASSIS_GND", "MDI0_P": "ETH_PHY_MDI0_P", "MDI0_N": "ETH_PHY_MDI0_N", "MDI1_P": "ETH_PHY_MDI1_P", "MDI1_N": "ETH_PHY_MDI1_N", "MDI2_P": "ETH_PHY_MDI2_P", "MDI2_N": "ETH_PHY_MDI2_N", "MDI3_P": "ETH_PHY_MDI3_P", "MDI3_N": "ETH_PHY_MDI3_N", "MX0_P": "ETH_LINE_MDI_0_P", "MX0_N": "ETH_LINE_MDI_0_N", "MX1_P": "ETH_LINE_MDI_1_P", "MX1_N": "ETH_LINE_MDI_1_N", "MX2_P": "ETH_LINE_MDI_2_P", "MX2_N": "ETH_LINE_MDI_2_N", "MX3_P": "ETH_LINE_MDI_3_P", "MX3_N": "ETH_LINE_MDI_3_N"},
         "expects": {"MX0_P": "rj45_connector (wave 2)", "MX1_P": "rj45_connector (wave 2)", "MX2_P": "rj45_connector (wave 2)", "MX3_P": "rj45_connector (wave 2)"}
       }
     },

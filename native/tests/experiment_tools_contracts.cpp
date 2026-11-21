@@ -435,7 +435,7 @@ void probes(const std::filesystem::path &root, const std::string &project) {
     std::cout<<project<<": independent complete stage report passed\n";
 }
 bool reviewed_projection_sheet(const std::string &project, const std::string &name) {
-    const std::set<std::string> carrier{"board_aux","bringup_modules","motor_pwm","board_qwiic","lcd","pd_input","bringup_rails"};
+    const std::set<std::string> carrier{"board_aux","bringup_modules","motor_pwm","board_qwiic","lcd","pd_input","bringup_rails","ethernet"};
     const std::set<std::string> module{"som_j1","som_j2","som_j3"};
     if (module.count(name)) return true;
     return project=="carrier" ? carrier.count(name)!=0 : project=="devkit_mini" && name=="pd_input";
