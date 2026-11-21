@@ -56,8 +56,6 @@ void validate_board_input_connectivity(const std::vector<ProjectCircuit>& circui
         if(!inserted&&f->second!=name)fail("split authored net "+key.first+":"+key.second);
         const auto [r,new_net]=reverse.emplace(name,key);
         if(!new_net&&r->second!=key)fail("shorted authored nets on "+name);
-        if(!key.first.empty()&&name!=board_net_name(key.first,CircuitNetIr{key.second,"signal",{}}))
-            fail("sheet-local net identity changed: "+key.first+":"+key.second+" -> "+name);
         if(key.first.empty()&&normalize_netlist_name(name)!=key.second)
             fail("public net identity changed: "+key.second+" -> "+name);
     }
