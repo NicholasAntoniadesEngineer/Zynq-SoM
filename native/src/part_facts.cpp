@@ -37,7 +37,7 @@ constexpr std::size_t axis_count = 3;
 const char* const facts_file_name = "part_facts.json";
 const char* const part_file_name = "part.json";
 const std::string_view face_signs = "+-";
-const std::string_view face_axes = "XY";
+const std::string_view face_axes = "XYZ";
 constexpr std::size_t face_length = 2;
 constexpr std::size_t pair_length = 2;
 const char* const led_boost_kind = "led_boost";
@@ -667,7 +667,8 @@ ConnectorFacts connectors_from(const JsonNode& section, const std::map<std::stri
         fact.mating_face = require_string(entry, "mating_face", false, where);
         if (fact.mating_face.size() != face_length || face_signs.find(fact.mating_face.front()) == std::string_view::npos ||
             face_axes.find(fact.mating_face.back()) == std::string_view::npos)
-            refuse(where + ": mating_face must be one of +X, -X, +Y, -Y");
+            refuse(where + ": mating_face must be one of +X, -X, +Y, -Y, +Z");
+        if (fact.mating_face == "-Z") refuse(where + ": mating_face -Z would mate through the board");
         fact.edge_pinned = flag_of(entry, "edge_pinned", where);
         fact.overmold = flag_of(entry, "overmold", where);
         fact.pad_row_face_check = flag_of(entry, "pad_row_face_check", where);
@@ -675,6 +676,7 @@ ConnectorFacts connectors_from(const JsonNode& section, const std::map<std::stri
         fact.numbered_label = text_of(entry, "numbered_label", where);
         fact.pair_label = text_of(entry, "pair_label", where);
         if (fact.edge_pinned && !fact.description) refuse(where + ": an edge-pinned connector needs a description");
+        if (fact.edge_pinned && fact.mating_face.back() == face_axes.back()) refuse(where + ": a connector mated from above (+Z) cannot be edge-pinned");
         fact.handling = require_string(entry, "handling", false, where);
         const auto& handling = connector_handling_classes();
         if (std::find(handling.begin(), handling.end(), fact.handling) == handling.end())
@@ -735,6 +737,7 @@ const ConnectorFact& connector_fact_of(const ConnectorFacts& facts, const std::s
 
 std::pair<int, int> mating_face_vector(const ConnectorFact& fact) {
     const int sign = fact.mating_face.front() == face_signs.front() ? 1 : -1;
+    if (fact.mating_face.back() == face_axes.back()) return {0, 0};
     return fact.mating_face.back() == face_axes.front() ? std::pair<int, int>{sign, 0} : std::pair<int, int>{0, sign};
 }
 

@@ -457,8 +457,9 @@ ArrangeReport arrange(Kernel& kernel, const SqueezeOptions& options) {
     report.unarranged = squeezed(start);
     double best = report.unarranged;
     Snapshot kept_state = start;
-    const std::size_t finalists = std::min(ranked.size(), static_cast<std::size_t>(constants::arrange_finalists.value));
-    for (std::size_t place = 0; place < finalists; ++place) {
+    const std::size_t skip = ranked.empty() ? 0 : options.plan_skip % ranked.size();
+    const std::size_t finalists = std::min(ranked.size(), skip + static_cast<std::size_t>(constants::arrange_finalists.value));
+    for (std::size_t place = skip; place < finalists; ++place) {
         ArrangePlan& plan = report.plans[ranked[place]];
         plan.squeezed = squeezed(states[ranked[place]]);
         if (plan.squeezed >= best) continue;

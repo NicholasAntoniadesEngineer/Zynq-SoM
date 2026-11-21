@@ -407,7 +407,19 @@ void mark_connectors(const PcbModel& model, const AdapterOptions& options, const
         const ConnectorFact* fact = connector_fact(model.connectors, found->second->value);
         if (!fact) continue;
         part.connector = true;
-        if (fact->access) part.access = to_nm(fact->access->side_mm);
+        if (fact->access) {
+            part.access = to_nm(fact->access->side_mm);
+            part.access_front = to_nm(fact->access->front_mm);
+        }
+        const auto face = mating_face_vector(*fact);
+        if (face != std::pair<int, int>{0, 0}) {
+            const PcbCheckInstance& instance = *found->second;
+            const auto world = turn_point(face.first, instance.mirror ? -face.second : face.second, instance.rotation);
+            const Point out{static_cast<Nm>(std::lround(world.first)), static_cast<Nm>(std::lround(world.second))};
+            const std::size_t index = static_cast<std::size_t>(&part - problem.parts.data());
+            const auto back = static_cast<Turn>((turn_count - static_cast<int>(placement[index].turn)) % turn_count);
+            part.mouth = turned(out, back);
+        }
         if (fact->mating && fact->mating->plug_width_mm) part.plug_width = to_nm(*fact->mating->plug_width_mm);
     }
     ConnectorRules& rules = problem.constraints.connectors;

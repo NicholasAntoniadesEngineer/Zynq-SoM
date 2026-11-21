@@ -66,7 +66,8 @@ struct Part {
     bool fanout_subject = false, never_crowds = false, cluster_passive = false;
     bool fixed = false, top_only = false, core_exempt = false, cohesion_member = true;
     bool connector = false, overmold = false, module = false;
-    std::optional<Nm> access, plug_width;
+    std::optional<Nm> access, access_front, plug_width;
+    std::optional<Point> mouth;
     bool field_source = false, field_sensitive = false;
     std::optional<EdgeRule> edge;
     std::optional<CornerRule> corner;

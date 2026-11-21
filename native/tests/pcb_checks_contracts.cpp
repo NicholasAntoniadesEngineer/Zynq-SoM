@@ -1,4 +1,5 @@
 #include "schgen/pcb_checks.hpp"
+#include "schgen/floorplan.hpp"
 #include "sheet_roles_fixture.hpp"
 #include "legacy_power_policy.hpp"
 #include <algorithm>
@@ -37,6 +38,19 @@ void synthetic(const ConnectorFacts& connectors){
     m.insts[0].rotation=180;require(has(check_placement_mech(PcbCheckInput(m)).bad_connectors,"faces inward"),"inward connector");m.insts[0].rotation=0;m.insts[0].y=90;require(has(check_placement_mech(PcbCheckInput(m)).bad_connectors,"interior"),"recessed connector");
     m.insts={part("R1",50,50,2)};m.som_core=Box4{45,45,55,55};require(check_placement_mech(PcbCheckInput(m)).top_under_som.size()==1,"top passive keepout");m.insts[0].side="bottom";require(check_placement_mech(PcbCheckInput(m)).ok,"bottom passive allowed");m.insts[0].ref="SW1";require(has(check_placement_mech(PcbCheckInput(m)).face_top_on_bottom,"emits B.Cu"),"face-down switch");m.insts[0].side="top";require(check_placement_mech(PcbCheckInput(m)).controls_under_som.size()==1,"buried control");
     m.som_core.reset();m.insts={part("J1",40,40,2),part("J2",60,40,2)};for(auto& i:m.insts)i.value="HDMI-019S";auto spacing=check_connector_spacing(PcbCheckInput(m));require(spacing.ok&&spacing.pairs.size()==1,"spacing green");m.insts[1].x=57;require(!check_connector_spacing(PcbCheckInput(m)).ok,"overmold mutant");m.insts[1].value="TF-01A";m.insts[1].x=44;require(!check_connector_spacing(PcbCheckInput(m)).ok,"one-sided gap mutant");m.insts[1].x=40;require(has(check_connector_spacing(PcbCheckInput(m)).violations,"OVERLAP"),"stacked connectors");
+    {
+        auto facts=connectors;require(facts.count("XT60PW-M")&&facts.at("XT60PW-M").mating&&facts.at("XT60PW-M").mating->plug_width_mm==15.5,"XT60 mating width from part data");
+        PcbCheckModel x;x.connectors=facts;x.board_w=x.board_h=200;x.insts={part("J1",40,40,2),part("J2",50,40,2)};for(auto& i:x.insts)i.value="XT60PW-M";x.insts[1].rotation=90;
+        require(check_connector_spacing(PcbCheckInput(x)).ok,"plug envelopes clear of each other");
+        x.insts[1].x=48;require(has(check_connector_spacing(PcbCheckInput(x)).violations,"plug envelopes must not collide"),"plug envelope reaches the neighbour although the courtyards are apart");
+        x.insts={part("J1",40,40,2),part("J2",40,55.5,2)};for(auto& i:x.insts)i.value="XT60PW-M";
+        require(check_connector_spacing(PcbCheckInput(x)).ok,"plugs side by side touching pass when no access clearance is stated");
+        facts.at("XT60PW-M").access=ConnectorAccess{25,0,"fixture access statement"};x.connectors=facts;
+        require(has(check_connector_spacing(PcbCheckInput(x)).violations,"fixture access statement"),"two XT60 side by side fail the stated access room");
+        x.insts[1].y=80.49;require(!check_connector_spacing(PcbCheckInput(x)).ok,"just short of the access room fails");
+        x.insts[1].y=80.5;require(check_connector_spacing(PcbCheckInput(x)).ok,"plugs the stated access apart pass");
+        x.insts[1].y=40;x.insts[1].x=42;require(check_connector_spacing(PcbCheckInput(x)).ok,"the access room is beside the plug, not in front of its mouth");
+    }
     auto partial=PcbCheckModel{};partial.connectors=connectors;partial.board_w=partial.board_h=100;partial.insts={part("J1",40,124,2),part("J2",70,124,2),part("U9",50,50,8)};partial.insts[0].value=partial.insts[1].value="HDMI-019S";partial.insts[2].mod.reset();PcbCheckInput partial_input(partial);
     require(check_connector_spacing(partial_input).ok,"spacing ignores unresolved nonconnector");require(check_placement_mech(partial_input).ok,"mechanical without core ignores unused nonconnector geometry");rejects([&]{check_fanout(partial_input,0);},"fanout retains its all-courtyards requirement");partial.som_core=Box4{45,45,55,55};rejects([&]{check_placement_mech(PcbCheckInput(partial));},"mechanical core actually requires every courtyard");partial.som_core.reset();partial.insts[0].mod.reset();rejects([&]{check_connector_spacing(PcbCheckInput(partial));},"spacing requires connector geometry");
     for(double z:{0.,180.,-180.,360.,90.,270.,45.}){m.insts.resize(1);m.insts[0].mod=pcb_check_footprint("test","(footprint \"test\" (model \"x\" (rotate (xyz 0 0 "+sexpr_fmt_num(z)+"))))");auto r=check_connector_models(m);require(r.ok==(std::fmod(z,180)==0),"model Z orientation");}
@@ -73,7 +87,8 @@ struct Live {
     std::map<std::string,PcbCheckFootprintPtr> pool,return_footprints;
 };
 Live load_live(const fs::path& root,const std::string& project,bool historical){
-    Live live;live.model.connectors=load_connector_facts(root/"parts");auto dir=root/project;live.board={"Zynq_Carrier.kicad_pcb",sexpr_loads(read(dir/"Zynq_Carrier.kicad_pcb"))};live.iface_bytes=read(module_root_of(dir)/module_interface_file);live.iface=load_som_interface(module_root_of(dir)/module_interface_file);live.mapping=link_mapping_from_json(parse_json_file((dir/"som_mapping.json").string()),load_board_module(dir).do_not_load_straps);auto config=parse_json_file((dir/"project.json").string());live.population=pcb_escape_population_from_json(field(config,"escape"),load_board_module(dir));auto block=parse_json_file((dir/"escape_block.json").string());live.model.escape_plan=pcb_escape_plan_from_json(block);live.model.escape_interface_sha256=field(field(block,"escape_meta"),"som_interface_sha256").string_value;
+    Live live;live.model.connectors=load_connector_facts(root/"parts");auto dir=root/project;
+    if(const auto spec=load_floorplan_spec((dir/"floorplan.json").string()))for(const auto& [sheet,edge]:spec->edge_of()){(void)edge;live.model.edge_sheets.insert(sheet);}live.board={"Zynq_Carrier.kicad_pcb",sexpr_loads(read(dir/"Zynq_Carrier.kicad_pcb"))};live.iface_bytes=read(module_root_of(dir)/module_interface_file);live.iface=load_som_interface(module_root_of(dir)/module_interface_file);live.mapping=link_mapping_from_json(parse_json_file((dir/"som_mapping.json").string()),load_board_module(dir).do_not_load_straps);auto config=parse_json_file((dir/"project.json").string());live.population=pcb_escape_population_from_json(field(config,"escape"),load_board_module(dir));auto block=parse_json_file((dir/"escape_block.json").string());live.model.escape_plan=pcb_escape_plan_from_json(block);live.model.escape_interface_sha256=field(field(block,"escape_meta"),"som_interface_sha256").string_value;
     auto index=parse_json_file((dir/"sheet_index.json").string());std::map<int,std::string> bands;for(const auto& [name,n]:index.object_value)bands[static_cast<int>(n.number_value)]=name;
     if(historical){
         const auto frozen=parse_json_file((root/"native/tests/data/pcb_emit"/(project+".json")).string());

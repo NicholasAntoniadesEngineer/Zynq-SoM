@@ -120,7 +120,8 @@ private:
     std::optional<double> group_distance(const GroupGap& rule, std::size_t moved, const Shape* shape,
                                          const Pose* pose) const;
     bool edge_met(const Part& item, const Shape& shape, const Pose& pose) const;
-    bool connectors_met(std::size_t part, const Shape& shape, std::size_t other, const Shape& other_shape, Nm guard) const;
+    bool connectors_met(std::size_t part, const Shape& shape, const Pose& pose, std::size_t other, const Shape& other_shape,
+                        Nm guard) const;
     template <typename Sink>
     bool geometry_breaches(std::size_t part, const Shape& shape, const Pose& pose, Nm guard, bool owned,
                            Sink&& sink) const;

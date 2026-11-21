@@ -676,8 +676,8 @@ bool Kernel::edge_met(const Part& item, const Shape& shape, const Pose& pose) co
            seat[nearest] == item.edge->seat;
 }
 
-bool Kernel::connectors_met(std::size_t part, const Shape& shape, std::size_t other, const Shape& other_shape,
-                            Nm guard) const {
+bool Kernel::connectors_met(std::size_t part, const Shape& shape, const Pose& pose, std::size_t other,
+                            const Shape& other_shape, Nm guard) const {
     if (!shape.pads || !other_shape.pads) return true;
     const ConnectorRules& rules = problem_.constraints.connectors;
     const Box& a = *shape.pads;
@@ -688,28 +688,55 @@ bool Kernel::connectors_met(std::size_t part, const Shape& shape, std::size_t ot
     const Part& first = problem_.parts[part];
     const Part& second = problem_.parts[other];
     if (first.access || second.access || first.plug_width || second.plug_width) {
-        const auto envelope = [](const Part& item, const Box& gate) {
+        const auto direction = [](const Part& item, const Pose& at) -> std::optional<Point> {
+            if (!item.mouth) return std::nullopt;
+            return turned(*item.mouth, at.turn);
+        };
+        const auto envelope = [](const Part& item, const Box& gate, const std::optional<Point>& mouth) {
             Box box = gate;
             if (!item.plug_width) return box;
-            const bool along_x = !item.edge || item.edge->mouth.y != 0;
-            const bool along_y = !item.edge || item.edge->mouth.x != 0;
-            if (along_x && *item.plug_width > box.width()) {
+            const bool across_x = !mouth || mouth->y != 0;
+            const bool across_y = !mouth || mouth->x != 0;
+            if (across_x && *item.plug_width > box.width()) {
                 const Nm grow = (*item.plug_width - box.width() + 1) / 2;
                 box.x0 -= grow;
                 box.x1 += grow;
             }
-            if (along_y && *item.plug_width > box.height()) {
+            if (across_y && *item.plug_width > box.height()) {
                 const Nm grow = (*item.plug_width - box.height() + 1) / 2;
                 box.y0 -= grow;
                 box.y1 += grow;
             }
             return box;
         };
-        const Box first_box = envelope(first, shape.gate), second_box = envelope(second, other_shape.gate);
-        const Nm gap = std::max(std::max(first_box.x0, second_box.x0) - std::min(first_box.x1, second_box.x1),
-                                std::max(first_box.y0, second_box.y0) - std::min(first_box.y1, second_box.y1));
-        const Nm need = std::max(first.access.value_or(0), second.access.value_or(0));
-        if (gap < need + guard || (need == 0 && gap < 0)) return false;
+        const auto room = [&](const Part& item, Box box, const std::optional<Point>& mouth) {
+            if (!item.access) return box;
+            const Nm side = *item.access + guard, front = item.access_front.value_or(0) + guard;
+            if (!mouth || mouth->y != 0) {
+                box.x0 -= side;
+                box.x1 += side;
+            }
+            if (!mouth || mouth->x != 0) {
+                box.y0 -= side;
+                box.y1 += side;
+            }
+            if (mouth) {
+                if (mouth->x > 0) box.x1 += front;
+                if (mouth->x < 0) box.x0 -= front;
+                if (mouth->y > 0) box.y1 += front;
+                if (mouth->y < 0) box.y0 -= front;
+            }
+            return box;
+        };
+        const auto first_mouth = direction(first, pose), second_mouth = direction(second, placement_[other]);
+        const Box first_box = envelope(first, shape.gate, first_mouth);
+        const Box second_box = envelope(second, other_shape.gate, second_mouth);
+        const auto collides = [](const Box& a, const Box& b) {
+            return std::min(a.x1, b.x1) > std::max(a.x0, b.x0) && std::min(a.y1, b.y1) > std::max(a.y0, b.y0);
+        };
+        if (collides(first_box, second_box) || collides(room(first, first_box, first_mouth), second_box) ||
+            collides(room(second, second_box, second_mouth), first_box))
+            return false;
     }
     const bool first_boot = problem_.parts[part].overmold, second_boot = problem_.parts[other].overmold;
     if (!first_boot && !second_boot) return true;
@@ -750,7 +777,7 @@ bool Kernel::rule_breaches(std::size_t part, const Shape& shape, const Pose& pos
     if (item.connector)
         for (const std::size_t peer : connectors_) {
             if (peer == part || (owned && peer < part)) continue;
-            if (!connectors_met(part, shape, peer, shapes_[peer], guard) &&
+            if (!connectors_met(part, shape, pose, peer, shapes_[peer], guard) &&
                 sink(Violation{Breach::connector_gap, part, peer}))
                 return true;
         }

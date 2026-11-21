@@ -47,7 +47,12 @@ struct StageResult {
 };
 
 std::string squeeze_summary(const SqueezeReport& report);
+struct SearchChoice {
+    std::array<Side, edge_count> order{Side::east, Side::south, Side::west, Side::north};
+    std::size_t plan_skip = 0;
+};
+
 StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model, const PcbEmitPolicy& policy,
-                          const AdapterOptions& options);
+                          const AdapterOptions& options, const SearchChoice& choice = SearchChoice{});
 
 }
