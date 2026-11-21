@@ -74,8 +74,8 @@ void run_ngspice_crosschecks(SpiceResult& result,const SpiceRunOptions& opts) {
     if(ran)result.engine="analytic (gate) + ngspice .op cross-check on "+std::to_string(ran)+" divider(s), 1% agreement enforced";
     else result.notes.push_back("NOTE: ngspice present but no check was cross-runnable");
 }
-SpiceResult run_spice_checks(const std::vector<ProjectCircuit>& sheets,const std::filesystem::path& reports,const PowerPolicy& policy,const SpiceRunOptions& options) {
-    auto result=extract_spice_checks(sheets,policy);run_ngspice_crosschecks(result,options);
+SpiceResult run_spice_checks(const std::vector<ProjectCircuit>& sheets,const std::filesystem::path& reports,const PowerPolicy& policy,const SheetRoles& roles,const SpiceRunOptions& options) {
+    auto result=extract_spice_checks(sheets,policy,roles);run_ngspice_crosschecks(result,options);
     std::filesystem::create_directories(reports);
     write_report(reports/"spice.txt",spice_report(result,bool(options.executable?options.executable:ngspice_available())));return result;
 }
