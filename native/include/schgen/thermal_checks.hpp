@@ -89,17 +89,17 @@ struct ThermalCheckResult {
     bool ok() const { return errors.empty(); }
 };
 ThermalCheckResult analyze_thermal(const std::vector<ProjectCircuit>& sheets,
-    const PowerCheckResult& power, const ThermalCopper* copper = nullptr, const std::string& copper_src = "",
-    const ThermalPolicy& policy = default_thermal_policy(), const PowerPolicy& power_policy = default_power_policy());
-ThermalCheckResult analyze_thermal(const std::vector<ProjectCircuit>& sheets,
+    const PowerCheckResult& power, const PowerPolicy& power_policy, const ThermalCopper* copper = nullptr,
+    const std::string& copper_src = "", const ThermalPolicy& policy = default_thermal_policy());
+ThermalCheckResult analyze_thermal(const std::vector<ProjectCircuit>& sheets, const PowerPolicy& power_policy,
     const ThermalCopper* copper = nullptr, const std::string& copper_src = "",
-    const ThermalPolicy& policy = default_thermal_policy(), const PowerPolicy& power_policy = default_power_policy());
+    const ThermalPolicy& policy = default_thermal_policy());
 std::string thermal_report(const ThermalCheckResult&);
 ThermalCheckResult run_thermal_checks(const std::vector<ProjectCircuit>& sheets,
-    const std::filesystem::path& reports_dir, const PowerCheckResult* power = nullptr,
+    const std::filesystem::path& reports_dir, const PowerPolicy& power_policy, const PowerCheckResult* power = nullptr,
     const std::optional<std::filesystem::path>& pcb_path = std::nullopt,
     const std::filesystem::path& repository_root = {},
-    const ThermalPolicy& policy = default_thermal_policy(), const PowerPolicy& power_policy = default_power_policy());
+    const ThermalPolicy& policy = default_thermal_policy());
 JsonNode thermal_result_json(const ThermalCheckResult&);
 JsonNode thermal_copper_json(const ThermalCopper&);
 ThermalCheckResult thermal_result_from_json(const JsonNode&);

@@ -1,4 +1,5 @@
 #include "schgen/firmware_docs.hpp"
+#include "legacy_power_policy.hpp"
 #include "schgen/json.hpp"
 #include "schgen/link.hpp"
 #include "schgen/power_checks.hpp"
@@ -77,8 +78,7 @@ std::size_t svg_rectangles(const std::string& text) {
     }
     return count;
 }
-void partition_and_determinism(const std::vector<ProjectCircuit>& sheets, const std::string& module_rail, const std::string& board) {
-    const auto policy = default_power_policy();
+void partition_and_determinism(const std::vector<ProjectCircuit>& sheets, const std::string& module_rail, const std::string& board, const PowerPolicy& policy) {
     const auto power = analyze_power(sheets, policy);
     const auto sequence = build_power_sequence(sheets, power, module_rail, policy);
     const auto svg = render_power_sequence_svg(sequence, board, power.ok(), policy);
@@ -107,15 +107,15 @@ void partition_and_determinism(const std::vector<ProjectCircuit>& sheets, const 
     require(svg == repeated_svg, "power-sequence SVG bytes are not deterministic");
     require(svg_rectangles(svg) >= power.regs.size(), "power-sequence SVG has fewer rail boxes than regulators");
 }
-void mutants(const std::vector<ProjectCircuit>& sheets, const PowerCheckResult& pr, const std::string& module_rail, const std::string& board) {
+void mutants(const std::vector<ProjectCircuit>& sheets, const PowerCheckResult& pr, const std::string& module_rail, const std::string& board, const PowerPolicy& policy) {
     auto cyclic = pr; PowerReg cycle; cycle.vin = "+VBUS_IN"; cycle.vout = "+VBUS_IN"; cyclic.regs.push_back(cycle);
-    throws([&] { build_power_sequence(sheets, cyclic, module_rail); }, "reachable regulator cycle");
-    throws([&] { build_power_sequence(sheets, pr, ""); }, "module supply rail is empty");
-    throws([&] { render_power_sequence_svg(build_power_sequence(sheets, pr, module_rail), ""); }, "board name is empty");
-    auto seq = build_power_sequence(sheets, pr, module_rail); require(!seq.chain.empty(), "chain fixture empty");
+    throws([&] { build_power_sequence(sheets, cyclic, module_rail, policy); }, "reachable regulator cycle");
+    throws([&] { build_power_sequence(sheets, pr, "", policy); }, "module supply rail is empty");
+    throws([&] { render_power_sequence_svg(build_power_sequence(sheets, pr, module_rail, policy), "", true, policy); }, "board name is empty");
+    auto seq = build_power_sequence(sheets, pr, module_rail, policy); require(!seq.chain.empty(), "chain fixture empty");
     seq.chain.front().load = overload_load; seq.chain.front().enable = "EN_<&>";
     seq.chain.front().vin = seq.stage0.at(0);
-    const auto svg = render_power_sequence_svg(seq, board, false);
+    const auto svg = render_power_sequence_svg(seq, board, false, policy);
     require(svg.find("#dc2626") != std::string::npos && svg.find("(FAIL)") != std::string::npos && svg.find("EN_&amp;lt;&amp;amp;&amp;gt;") != std::string::npos, "SVG overload/status/escaping policy");
 }
 }
@@ -124,6 +124,7 @@ int main(int argc, char** argv) {
     try {
         if (argc != expected_arguments) throw std::runtime_error("usage: power_sequence_contracts REPOSITORY");
         const auto root = fs::absolute(argv[1]);
+        const auto policy = legacy_power_policy(root);
         for (const std::string name : {"carrier", "devkit_mini"}) {
             const auto dir = root / fixture_folder / name;
             const auto snapshot = parse_json_file((dir / "inputs.json").string());
@@ -134,14 +135,14 @@ int main(int argc, char** argv) {
             const auto mapping = link_mapping_from_json(parse_json_file((paths.project_root / "som_mapping.json").string()), paths.module.do_not_load_straps);
             const auto module_rail = module_supply_rail(paths.module.draw, mapping);
             const auto pr = power(field(snapshot, "power"));
-            const auto seq = build_power_sequence(sheets, pr, module_rail);
+            const auto seq = build_power_sequence(sheets, pr, module_rail, policy);
             require(seq.stage0 == strings(field(field(snapshot, "sequence"), "stage0")), "stage0 ordering");
-            exact(render_power_sequence_svg(seq, board, pr.ok()), dir / "power_sequence.svg");
-            exact(render_power_sequence_svg(seq, board, false), dir / "power_sequence_fail.svg");
-            const auto native_power = analyze_power(sheets);
-            exact(render_power_sequence_svg(build_power_sequence(sheets, native_power, module_rail), board, native_power.ok()), dir / "power_sequence.svg");
-            partition_and_determinism(sheets, module_rail, board);
-            if (name == "carrier") mutants(sheets, pr, module_rail, board);
+            exact(render_power_sequence_svg(seq, board, pr.ok(), policy), dir / "power_sequence.svg");
+            exact(render_power_sequence_svg(seq, board, false, policy), dir / "power_sequence_fail.svg");
+            const auto native_power = analyze_power(sheets, policy);
+            exact(render_power_sequence_svg(build_power_sequence(sheets, native_power, module_rail, policy), board, native_power.ok(), policy), dir / "power_sequence.svg");
+            partition_and_determinism(sheets, module_rail, board, policy);
+            if (name == "carrier") mutants(sheets, pr, module_rail, board, policy);
             std::cout << name << ": power sequence matches the frozen drawings\n";
         }
         std::cout << assertions << " assertions passed\n";

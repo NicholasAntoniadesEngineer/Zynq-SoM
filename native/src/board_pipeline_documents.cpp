@@ -23,7 +23,7 @@ void manifest_stage(Context& c){
         ManufacturingManifestInput in;in.file_stem=c.paths.file_stem;in.sheets=c.circuits;in.power=*c.power;
         in.stm32=stm32_pin_map(extract_som_zynq(c.paths.som_schematic,"U9",{"J1","J2","J3"},c.options.extraction),load_som_interface(c.paths.som_interface_file));in.xdc=c.xdc;
         in.coverage={c.testpoints->covered(),c.testpoints->required.size(),c.testpoints->waived.size()};
-        if(c.xdc)in.device=c.xdc->device;run_manufacturing_manifest(in,c.out,c.out/"manifest.json");
+        if(c.xdc)in.device=c.xdc->device;run_manufacturing_manifest(in,c.out,c.out/"manifest.json",c.require_power_policy());
         c.manifest_input=std::move(in);
         c.gate("manifest",true,"artifacts hashed after SI; final reports rehashed at publication");});
 }
@@ -35,7 +35,7 @@ void document_stages(Context& c){
         ManufacturingXdc manifest;manifest.count=xo.entries.size();manifest.device=xi.device;
         std::set<int> banks;for(const auto& pin:xo.entries)banks.insert(std::stoi(pin.bank));manifest.banks.assign(banks.begin(),banks.end());c.xdc=manifest;
         c.gate("xdc",true,join(xo.checks,"\n"));});
-    c.attempt("power_sequence",[&]{if(!c.power||!c.link)throw ProjectError("power or link result unavailable");const auto rail=module_supply_rail(c.paths.module.draw,c.link->mapping);publish_text(c.docs/"power_sequence.svg",render_power_sequence_svg(build_power_sequence(c.circuits,*c.power,rail),load_project_config(c.paths).name,c.power->ok()));c.gate("power_sequence",true,"power sequence published");});
+    c.attempt("power_sequence",[&]{if(!c.power||!c.link)throw ProjectError("power or link result unavailable");const auto rail=module_supply_rail(c.paths.module.draw,c.link->mapping);publish_text(c.docs/"power_sequence.svg",render_power_sequence_svg(build_power_sequence(c.circuits,*c.power,rail,c.require_power_policy()),load_project_config(c.paths).name,c.power->ok(),c.require_power_policy()));c.gate("power_sequence",true,"power sequence published");});
     c.attempt("floorplan",[&]{if(!c.pcb)throw ProjectError("no solved floorplan available; refusing a second geometry solve");
         write_floorplan_documents(c.pcb->placement.floorplan.documents,c.docs);c.gate("floorplan",true,"existing solved plan documents published; no additional counts");});
     c.attempt("model3d",[&]{const auto r=run_model3d(c.paths.parts_dir,c.paths.project_root,c.reports,c.options.model_directory.empty()?default_model3d_directory():c.options.model_directory);c.gate("model3d",r.ok,r.report());});

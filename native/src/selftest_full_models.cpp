@@ -68,21 +68,21 @@ SelftestModelResult selftest_model_gates(const SelftestModelFixtures& f,SymbolLi
         const std::string desc=key=="float_ep"?"float_ep: nc the TLV75725 EP (pin 6)":"ep_to_power: net the TLV75725 EP onto +3V3 (non-GND)";
         add({key,base.ok()&&base.ep.empty(),!res.ok()&&!res.ep.empty(),desc+"\n            by design_rules EP: "+first(res.ep,"(no finding)")});
     }
-    {const auto base=analyze_part_rules(sheets(f.cap_voltage));auto mut=f.cap_voltage;for(auto& n:mut.nets)if(n.name=="HDMI_RX_5V")n.name="+VIN";
-        const auto res=analyze_part_rules(sheets(mut));add({"cap_voltage",base.ok(),!res.ok()&&!res.findings.empty(),
+    {const auto base=analyze_part_rules(sheets(f.cap_voltage),f.power);auto mut=f.cap_voltage;for(auto& n:mut.nets)if(n.name=="HDMI_RX_5V")n.name="+VIN";
+        const auto res=analyze_part_rules(sheets(mut),f.power);add({"cap_voltage",base.ok(),!res.ok()&&!res.findings.empty(),
             "cap_voltage: 25 V MLCC HDMI_RX_5V (ok) -> +VIN 20 V (25 < 2x20)\n            by part_rules: "+first(res.findings,"(no finding)")});}
     for(const auto& name:{"thermal_overrun","thermal_waiver"}){
-        const std::string key=name;const auto base=analyze_thermal(sheets(f.buck));auto mut=f.buck;load(mut,2.5,"selftest declared load");
+        const std::string key=name;const auto base=analyze_thermal(sheets(f.buck),f.power);auto mut=f.buck;load(mut,2.5,"selftest declared load");
         if(key=="thermal_waiver")mut.waivers.push_back({"thermal_waivers","U1","selftest: copper-pour derate not in single RthJA"});
-        const auto pt=analyze_power(sheets(mut));const auto res=analyze_thermal(sheets(mut),pt);const bool good=base.ok()&&base.errors.empty()&&base.notes.empty();
+        const auto pt=analyze_power(sheets(mut),f.power);const auto res=analyze_thermal(sheets(mut),pt,f.power);const bool good=base.ok()&&base.errors.empty()&&base.notes.empty();
         if(key=="thermal_overrun"){
             auto by=first(res.errors,"(no error)");by=by.substr(0,by.find(" ["));add({key,good,pt.ok()&&!res.ok()&&contains(res.errors,"OVER Tj"),
                 "thermal_overrun: +3V3 draw 0.5A -> 2.5A (Tj over limit, under 3 A current limit)\n            by thermal: "+by});}
         else add({key,good,res.ok()&&contains(res.notes,"WAIVED over-limit"),"thermal_waiver: same over-Tj + c.waive_thermal -> demoted to a note, gate stays green\n            by thermal waiver path: "+shorten(matching(res.notes,"WAIVED over-limit","(not demoted)"),90)});
     }
-    {const auto base=analyze_power(sheets(f.buck));auto mut=f.buck;load(mut,4,"selftest overrun");const auto res=analyze_power(sheets(mut));
+    {const auto base=analyze_power(sheets(f.buck),f.power);auto mut=f.buck;load(mut,4,"selftest overrun");const auto res=analyze_power(sheets(mut),f.power);
         add({"power_overrun",base.ok(),!res.ok()&&contains(res.errors,"OVERRUN"),"power_overrun: +3V3 load 0.5A -> 4.0A (> 3 A limit)\n            by powertree: "+first(res.errors,"(no error)")});}
-    {const auto base=extract_spice_checks(sheets(f.buck));auto mut=f.buck;for(auto& p:mut.parts)if(p.ref=="R1")p.value="33k";const auto res=extract_spice_checks(sheets(mut));
+    {const auto base=extract_spice_checks(sheets(f.buck),f.power);auto mut=f.buck;for(auto& p:mut.parts)if(p.ref=="R1")p.value="33k";const auto res=extract_spice_checks(sheets(mut),f.power);
         add({"divider_drift",base.ok(),!res.ok()&&contains(res.errors(),"FB"),"divider_drift: FB top 45k3 -> 33k (Vout leaves +/-3%)\n            by spice: "+first(res.errors(),"(no error)")});}
     {const auto base=check_testpoint_coverage({f.testpoints});auto mut=f.testpoints;std::optional<std::string> drop;
         for(const auto& p:mut.parts)if(p.lib_id=="Connector:TestPoint"){const auto names=nets_of(mut,p.ref);if(std::find(names.begin(),names.end(),"+3V3")!=names.end()){drop=p.ref;break;}}

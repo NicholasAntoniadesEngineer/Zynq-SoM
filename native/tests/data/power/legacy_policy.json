@@ -1,0 +1,266 @@
+{
+  "schema": "schgen.test.legacy_power/1",
+  "basis": "Explicit equivalent of the retired compiled power policy (net-name voltage patterns, the three carrier sources, the +VBUS_IN/+VIN inlet and the som_j sheet prefix) for frozen fixtures captured under it. Every rail is listed by exact name; nothing is matched by pattern.",
+  "power": {
+    "sources": [
+      {
+        "rail": "+VBUS_IN",
+        "volts": 20.0,
+        "amps": 3.0,
+        "basis": "USB-C PD sink contract 20 V / 3 A at the receptacle (pd_input J1; +VIN sits behind the TPS26631 eFuse, round 5)"
+      },
+      {
+        "rail": "+3V3_SC",
+        "volts": 3.3,
+        "amps": 0.3,
+        "basis": "SoM TPS7A20 always-on SC LDO U13 (J1.37); 300 mA class — the SoM power_architecture sheet says '3V3 (300mA)'. Envelope shared with the SoM-side SC (STM32G431 ~50 mA); carrier tally only here"
+      },
+      {
+        "rail": "+5V_DBG",
+        "volts": 5.0,
+        "amps": 0.5,
+        "basis": "debug USB-C VBUS (usb_jtag_connector J1) — host-supplied 5 V / 0.5 A USB2 default; feeds the usb_jtag AP2112K-3.3 debug-island LDO; isolated from carrier +5V"
+      }
+    ],
+    "rails": [
+      {
+        "rail": "+1V8",
+        "volts": 1.8,
+        "basis": "voltage the retired net-name pattern table gave this fixture net"
+      },
+      {
+        "rail": "+1V8_FPGA",
+        "volts": 1.8,
+        "basis": "voltage the retired net-name pattern table gave this fixture net"
+      },
+      {
+        "rail": "+1V8_REG",
+        "volts": 1.8,
+        "basis": "voltage the retired net-name pattern table gave this fixture net"
+      },
+      {
+        "rail": "+2V5",
+        "volts": 2.5,
+        "basis": "voltage the retired net-name pattern table gave this fixture net"
+      },
+      {
+        "rail": "+2V5_VADJ",
+        "volts": 2.5,
+        "basis": "voltage the retired net-name pattern table gave this fixture net"
+      },
+      {
+        "rail": "+3V3",
+        "volts": 3.3,
+        "basis": "voltage the retired net-name pattern table gave this fixture net"
+      },
+      {
+        "rail": "+3V3_ALIAS",
+        "volts": 3.3,
+        "basis": "voltage the retired net-name pattern table gave this fixture net"
+      },
+      {
+        "rail": "+3V3_AUX",
+        "volts": 3.3,
+        "basis": "voltage the retired net-name pattern table gave this fixture net"
+      },
+      {
+        "rail": "+3V3_CAM",
+        "volts": 3.3,
+        "basis": "voltage the retired net-name pattern table gave this fixture net"
+      },
+      {
+        "rail": "+3V3_DBG",
+        "volts": 3.3,
+        "basis": "voltage the retired net-name pattern table gave this fixture net"
+      },
+      {
+        "rail": "+3V3_HDMI_RX",
+        "volts": 3.3,
+        "basis": "voltage the retired net-name pattern table gave this fixture net"
+      },
+      {
+        "rail": "+3V3_HDMI_TX",
+        "volts": 3.3,
+        "basis": "voltage the retired net-name pattern table gave this fixture net"
+      },
+      {
+        "rail": "+3V3_ISLAND",
+        "volts": 3.3,
+        "basis": "voltage the retired net-name pattern table gave this fixture net"
+      },
+      {
+        "rail": "+3V3_LCD",
+        "volts": 3.3,
+        "basis": "voltage the retired net-name pattern table gave this fixture net"
+      },
+      {
+        "rail": "+3V3_MINI",
+        "volts": 3.3,
+        "basis": "voltage the retired net-name pattern table gave this fixture net"
+      },
+      {
+        "rail": "+3V3_PMOD",
+        "volts": 3.3,
+        "basis": "voltage the retired net-name pattern table gave this fixture net"
+      },
+      {
+        "rail": "+3V3_PMODX",
+        "volts": 3.3,
+        "basis": "voltage the retired net-name pattern table gave this fixture net"
+      },
+      {
+        "rail": "+3V3_REG",
+        "volts": 3.3,
+        "basis": "voltage the retired net-name pattern table gave this fixture net"
+      },
+      {
+        "rail": "+3V3_SD",
+        "volts": 3.3,
+        "basis": "voltage the retired net-name pattern table gave this fixture net"
+      },
+      {
+        "rail": "+3V3_USER_LED",
+        "volts": 3.3,
+        "basis": "voltage the retired net-name pattern table gave this fixture net"
+      },
+      {
+        "rail": "+5V",
+        "volts": 5.0,
+        "basis": "voltage the retired net-name pattern table gave this fixture net"
+      },
+      {
+        "rail": "+5V_DEV",
+        "volts": 5.0,
+        "basis": "voltage the retired net-name pattern table gave this fixture net"
+      },
+      {
+        "rail": "+5V_HDMI_TX",
+        "volts": 5.0,
+        "basis": "voltage the retired net-name pattern table gave this fixture net"
+      },
+      {
+        "rail": "+5V_LCD",
+        "volts": 5.0,
+        "basis": "voltage the retired net-name pattern table gave this fixture net"
+      },
+      {
+        "rail": "+5V_MOTOR_IO",
+        "volts": 5.0,
+        "basis": "voltage the retired net-name pattern table gave this fixture net"
+      },
+      {
+        "rail": "+5V_REG",
+        "volts": 5.0,
+        "basis": "voltage the retired net-name pattern table gave this fixture net"
+      },
+      {
+        "rail": "+5V_SC",
+        "volts": 5.0,
+        "basis": "voltage the retired net-name pattern table gave this fixture net"
+      },
+      {
+        "rail": "+5V_SOM",
+        "volts": 4.65,
+        "basis": "voltage the retired net-name pattern table gave this fixture net"
+      },
+      {
+        "rail": "+5V_USB",
+        "volts": 5.0,
+        "basis": "voltage the retired net-name pattern table gave this fixture net"
+      },
+      {
+        "rail": "+VCCO_13",
+        "volts": 3.3,
+        "basis": "voltage the retired net-name pattern table gave this fixture net"
+      },
+      {
+        "rail": "+VCCO_33",
+        "volts": 3.3,
+        "basis": "voltage the retired net-name pattern table gave this fixture net"
+      },
+      {
+        "rail": "+VCCO_34",
+        "volts": 3.3,
+        "basis": "voltage the retired net-name pattern table gave this fixture net"
+      },
+      {
+        "rail": "+VCCO_35",
+        "volts": 2.5,
+        "basis": "voltage the retired net-name pattern table gave this fixture net"
+      },
+      {
+        "rail": "+VIN",
+        "volts": 20.0,
+        "basis": "voltage the retired net-name pattern table gave this fixture net"
+      },
+      {
+        "rail": "+VIN_SYS",
+        "volts": 20.0,
+        "basis": "voltage the retired net-name pattern table gave this fixture net"
+      },
+      {
+        "rail": "HDMI_RX_5V",
+        "volts": 5.0,
+        "basis": "voltage the retired net-name pattern table gave this fixture net"
+      },
+      {
+        "rail": "HDMI_TX_CON_5V0",
+        "volts": 5.0,
+        "basis": "voltage the retired net-name pattern table gave this fixture net"
+      },
+      {
+        "rail": "LCD_VLED_P",
+        "volts": 30.0,
+        "basis": "voltage the retired net-name pattern table gave this fixture net"
+      },
+      {
+        "rail": "USB_UART_VBUS",
+        "volts": 5.0,
+        "basis": "voltage the retired net-name pattern table gave this fixture net"
+      },
+      {
+        "rail": "USB_VBUS",
+        "volts": 5.0,
+        "basis": "voltage the retired net-name pattern table gave this fixture net"
+      },
+      {
+        "rail": "VBUS",
+        "volts": 5.0,
+        "basis": "voltage the retired net-name pattern table gave this fixture net"
+      },
+      {
+        "rail": "+5V\n",
+        "volts": 5.0,
+        "basis": "frozen policies.json rail_volts row: the retired pattern matched before one terminal newline"
+      },
+      {
+        "rail": "+VBUS_IN\n",
+        "volts": 20.0,
+        "basis": "frozen policies.json rail_volts row: the retired pattern matched before one terminal newline"
+      },
+      {
+        "rail": "+5V_SOM\n",
+        "volts": 4.65,
+        "basis": "frozen policies.json rail_volts row: the retired pattern matched before one terminal newline"
+      }
+    ],
+    "inlet": {
+      "rail": "+VBUS_IN",
+      "bulk": "+VIN"
+    }
+  },
+  "regulated_rails": {
+    "rails": [
+      "+3V3",
+      "+1V8"
+    ],
+    "basis": "these rails are OUTPUTS of carrier regulators (power.py LM61460/AP2112K) AND appear on SoM J1 contract pins (+3V3: J1.24-27, +1V8: J1.56/58/60) while the SoM's own Power sheet regulates same-named rails on-module (MPM3834 stages with 3V3_EN/PG + 1V8_EN/PG). If the SoM exports its rails on those pins, linking them to the carrier's bucks puts two regulators in parallel on one net — needs an explicit decision (rename one side, sense-only pins, or drop one source) before layout. Facts from som_interface.json + som/schematic/Power.kicad_sch; nothing changed here."
+  },
+  "module_sheets": [
+    "som_j1",
+    "som_j2",
+    "som_j3",
+    "som_j1_connector",
+    "som_j2_connector"
+  ]
+}

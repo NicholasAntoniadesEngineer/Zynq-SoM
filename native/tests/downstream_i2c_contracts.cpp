@@ -24,7 +24,7 @@ std::string hex(int value){std::ostringstream out;out<<"0x"<<std::hex<<std::setw
 struct Device { int addr;std::string kind,ref,sheet,bus; };
 std::vector<Device> manifest_devices(const std::vector<ProjectCircuit>& sheets){
     ManufacturingManifestInput input;input.sheets=sheets;
-    const auto rendered=render_manufacturing_manifest(input);
+    const auto rendered=render_manufacturing_manifest(input,default_power_policy());
     const auto node=parse_json_text(rendered,"generated manifest");const auto& rows=field(node,"i2c_map");
     require(rows.kind==JsonKind::Array,"manifest i2c_map is not an array");std::vector<Device> out;
     for(const auto& row:rows.array_value){

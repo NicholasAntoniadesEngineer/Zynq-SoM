@@ -33,15 +33,14 @@ struct PartCheckResult {
     bool ok() const { return findings.empty(); }
 };
 PartCheckResult analyze_part_rules(const std::vector<ProjectCircuit>& sheets, const PowerCheckResult& power,
-    const PartRatingsTable& ratings = default_part_ratings(), const PartRulePolicy& policy = default_part_rule_policy,
-    const PowerPolicy& power_policy = default_power_policy());
-PartCheckResult analyze_part_rules(const std::vector<ProjectCircuit>& sheets,
-    const PartRatingsTable& ratings = default_part_ratings(), const PartRulePolicy& policy = default_part_rule_policy,
-    const PowerPolicy& power_policy = default_power_policy());
+    const PowerPolicy& power_policy, const PartRatingsTable& ratings = default_part_ratings(),
+    const PartRulePolicy& policy = default_part_rule_policy);
+PartCheckResult analyze_part_rules(const std::vector<ProjectCircuit>& sheets, const PowerPolicy& power_policy,
+    const PartRatingsTable& ratings = default_part_ratings(), const PartRulePolicy& policy = default_part_rule_policy);
 std::string part_rules_report(const PartCheckResult&, const PartRulePolicy& = default_part_rule_policy);
 PartCheckResult run_part_checks(const std::vector<ProjectCircuit>& sheets, const std::filesystem::path& reports_dir,
-    const PowerCheckResult* power = nullptr, const PartRatingsTable& ratings = default_part_ratings(),
-    const PartRulePolicy& policy = default_part_rule_policy, const PowerPolicy& power_policy = default_power_policy());
+    const PowerPolicy& power_policy, const PowerCheckResult* power = nullptr,
+    const PartRatingsTable& ratings = default_part_ratings(), const PartRulePolicy& policy = default_part_rule_policy);
 JsonNode part_result_json(const PartCheckResult&);
 PartCheckResult part_result_from_json(const JsonNode&);
 JsonNode part_ratings_json(const PartRatings&);

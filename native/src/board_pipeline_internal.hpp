@@ -6,6 +6,7 @@
 #include "schgen/design_rules.hpp"
 #include "schgen/execution_timing.hpp"
 #include "schgen/project_outputs.hpp"
+#include "schgen/board_power.hpp"
 #include <fstream>
 #include <iterator>
 #include <sstream>
@@ -30,6 +31,7 @@ struct Context {
     std::vector<CircuitSheetIr> sheets;
     SheetIndex index;
     std::optional<SheetRoles> roles;
+    std::optional<PowerPolicy> power_policy;
     std::optional<LinkResult> link;
     std::optional<SomInterface> som;
     std::optional<BoardSchematicResult> schematic;
@@ -48,6 +50,7 @@ struct Context {
     ExecutionTimings* timing = nullptr;
     Context(const ProjectPaths&, const BoardPipelineOptions&);
     const SheetRoles& require_roles() const { if(!roles) throw ProjectError("sheet roles unavailable; the inputs stage did not run"); return *roles; }
+    const PowerPolicy& require_power_policy() const { if(!power_policy) throw ProjectError("board power policy unavailable; the inputs stage did not run"); return *power_policy; }
     void gate(const std::string&, bool, const std::string&);
     void status(const std::string&, BoardGateStatus, const std::string&);
     void report(const std::string& filename, const std::string& value);

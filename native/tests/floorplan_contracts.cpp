@@ -1,6 +1,7 @@
 // Frozen primitive/formatter operands plus current solver requirements.
 // No Python, installed footprint library, live board output, or source inspection.
 #include "schgen/run_config.hpp"
+#include "legacy_power_policy.hpp"
 #include "../src/floorplan_internal.hpp"
 #include "board_policy_ledger_reference.hpp"
 #include "connector_facts_fixture.hpp"
@@ -93,8 +94,9 @@ SomOutline som(const J& n) {
     for (const auto& j:field(n,"js").array_value) out.js.push_back({str(j,"ref"),num(j,"pcb_x"),num(j,"pcb_y"),num(j,"rot"),num(j,"x"),num(j,"y"),num(j,"w"),num(j,"h")});
     return out;
 }
+PowerPolicy legacy;
 FloorplanInput input(const J& n) {
-    FloorplanInput in;
+    FloorplanInput in;in.power=legacy;
     for (const auto& s:field(n,"sheets").array_value) in.sheets.push_back(decode_intermediate_circuit_ir(s));
     in.roles=explicit_sheet_roles(in.sheets);
     for (const auto& b:field(n,"bindings").array_value) {
@@ -1911,6 +1913,7 @@ int main(int argc,char** argv) {
         const std::filesystem::path dir=argv[1],run_file=std::filesystem::path(argv[2])/run_config_file;
         const bool geometry_only=argc>3 && std::string(argv[3])=="--geometry-only";
         apply_run_config(run_file,"carrier");
+        legacy=legacy_power_policy(std::filesystem::path(argv[2]));
         repair_choice_contracts();
         near_distance_envelope_contracts();
         joint_separation_contracts();

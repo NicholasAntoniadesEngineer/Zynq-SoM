@@ -64,7 +64,7 @@ void publish_final_reports(Context& c) {
     // final bytes, including late audits/ledger/timings, not the previous run.
     // The manifest excludes itself, so no self-hash or timing cycle is needed.
     if(c.manifest_input) {
-        try { run_manufacturing_manifest(*c.manifest_input,c.out,c.out/"manifest.json"); }
+        try { run_manufacturing_manifest(*c.manifest_input,c.out,c.out/"manifest.json",c.require_power_policy()); }
         catch(const std::bad_alloc&) { throw; }
         catch(const std::exception& e) {
             c.report("manifest.completion.txt",std::string("FAIL: ")+e.what());
@@ -151,7 +151,7 @@ BoardPipelineResult run_board_pipeline(const ProjectPaths& p,const BoardPipeline
     c.timing=&timing;
     c.attempt("inputs",[&]{c.authored=author_board_pipeline_inputs(p,o.authoring_purity_configuration,[&](const AuthoringPurityResult& purity){
             c.report("authoring_purity.txt",purity.report());c.gate("authoring_purity",purity.ok(),purity.report());
-        },c.timing);c.measure("input_publication",[&]{publish_board_pipeline_inputs(*c.authored,p,c.out);});c.circuits=c.authored->circuits;c.roles=load_sheet_roles(p,c.circuits);
+        },c.timing);c.measure("input_publication",[&]{publish_board_pipeline_inputs(*c.authored,p,c.out);});c.circuits=c.authored->circuits;c.roles=load_sheet_roles(p,c.circuits);c.power_policy=load_board_power_policy(p,c.circuits,*c.roles);
         std::vector<std::string> names;for(const auto& sc:c.circuits){c.sheets.push_back(sc.circuit);names.push_back(sc.name);}
         c.index=extend_sheet_index(load_sheet_index(p),names).index;c.result.sheets=c.sheets.size();c.loaded=true;c.gate("inputs",true,"live C++ factories authored once; canonical snapshots published; actual IR retained");
         const auto intent=check_layout_intent(c.sheets);c.report("layout_intent.txt",intent.summary());c.gate("layout_intent",intent.ok,intent.summary());});

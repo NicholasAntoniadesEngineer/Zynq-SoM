@@ -151,7 +151,7 @@ std::pair<bool,std::string> thermal_pour_evidence(const ThermalCopper* copper,co
     return {all,"In1 GND plane + "+join(rows,"; ")};
 }
 
-ThermalCheckResult analyze_thermal(const std::vector<ProjectCircuit>& sheets,const PowerCheckResult& power,const ThermalCopper* copper,const std::string& source,const ThermalPolicy& policy,const PowerPolicy& pp) {
+ThermalCheckResult analyze_thermal(const std::vector<ProjectCircuit>& sheets,const PowerCheckResult& power,const PowerPolicy& pp,const ThermalCopper* copper,const std::string& source,const ThermalPolicy& policy) {
     ThermalCheckResult res;res.ta=policy.ambient_c;res.margin=policy.margin_c;res.waived=waivers(sheets,"thermal_waivers");res.copper_src=copper?source:"";
     std::vector<std::pair<std::string,std::pair<bool,std::string>>> ev;
     for(const auto& [key,need]:policy.pour_needs)ev.emplace_back(key,thermal_pour_evidence(copper,need));
@@ -175,8 +175,8 @@ ThermalCheckResult analyze_thermal(const std::vector<ProjectCircuit>& sheets,con
     }
     return res;
 }
-ThermalCheckResult analyze_thermal(const std::vector<ProjectCircuit>& sheets,const ThermalCopper* copper,const std::string& source,const ThermalPolicy& policy,const PowerPolicy& pp) {
-    return analyze_thermal(sheets,analyze_power(sheets,pp),copper,source,policy,pp);
+ThermalCheckResult analyze_thermal(const std::vector<ProjectCircuit>& sheets,const PowerPolicy& pp,const ThermalCopper* copper,const std::string& source,const ThermalPolicy& policy) {
+    return analyze_thermal(sheets,analyze_power(sheets,pp),pp,copper,source,policy);
 }
 
 std::string thermal_report(const ThermalCheckResult& res) {
@@ -213,7 +213,7 @@ std::string thermal_report(const ThermalCheckResult& res) {
     auto hotstr=hot?"; hottest "+hot->sheet+":"+hot->ref+" ("+hot->value+") Tj "+f(hot->tj,1)+" C":"";
     ls.insert(ls.end(),{"",std::string("THERMAL: ")+(res.ok()?"PASS":"FAIL")+" ("+std::to_string(res.devices.size())+" devices speced, "+std::to_string(res.errors.size())+" over-limit, "+std::to_string(res.findings.size())+" unspeced, "+std::to_string(res.waived.size())+" waived)"+hotstr});return join(ls);
 }
-ThermalCheckResult run_thermal_checks(const std::vector<ProjectCircuit>& sheets,const std::filesystem::path& dir,const PowerCheckResult* power,const std::optional<std::filesystem::path>& pcb,const std::filesystem::path& repository_root,const ThermalPolicy& policy,const PowerPolicy& pp) {
+ThermalCheckResult run_thermal_checks(const std::vector<ProjectCircuit>& sheets,const std::filesystem::path& dir,const PowerPolicy& pp,const PowerCheckResult* power,const std::optional<std::filesystem::path>& pcb,const std::filesystem::path& repository_root,const ThermalPolicy& policy) {
     std::optional<ThermalCopper> copper;std::string source;
     if(pcb&&std::filesystem::exists(*pcb)) {
         copper=scan_thermal_copper(*pcb);source=pcb->string();
@@ -222,7 +222,7 @@ ThermalCheckResult run_thermal_checks(const std::vector<ProjectCircuit>& sheets,
             if(!rel.empty()&&*rel.begin()!="..")source=rel.string();
         }
     }
-    auto res=power?analyze_thermal(sheets,*power,copper?&*copper:nullptr,source,policy,pp):analyze_thermal(sheets,copper?&*copper:nullptr,source,policy,pp);
+    auto res=power?analyze_thermal(sheets,*power,pp,copper?&*copper:nullptr,source,policy):analyze_thermal(sheets,pp,copper?&*copper:nullptr,source,policy);
     publish(dir/"thermal.txt",thermal_report(res)+"\n");return res;
 }
 JsonNode thermal_result_json(const ThermalCheckResult& res) {

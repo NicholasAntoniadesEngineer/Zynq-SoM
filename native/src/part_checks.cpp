@@ -106,7 +106,7 @@ void part_finding(PartCheckResult& res,const std::string& key,const std::string&
     if(auto waiver=find(res.waived,key))res.notes.push_back("WAIVED "+msg+" ["+waiver->second+"]");else res.findings.push_back(msg);
 }
 }
-PartCheckResult analyze_part_rules(const std::vector<ProjectCircuit>& sheets,const PowerCheckResult& power,const PartRatingsTable& ratings,const PartRulePolicy& policy,const PowerPolicy& power_policy) {
+PartCheckResult analyze_part_rules(const std::vector<ProjectCircuit>& sheets,const PowerCheckResult& power,const PowerPolicy& power_policy,const PartRatingsTable& ratings,const PartRulePolicy& policy) {
     PartCheckResult res;res.waived=waivers(sheets,"part_rule_waivers");
     std::vector<const ProjectCircuit*> order;for(const auto& s:sheets)order.push_back(&s);
     std::stable_sort(order.begin(),order.end(),[](auto a,auto b){return a->name<b->name;});
@@ -165,8 +165,8 @@ PartCheckResult analyze_part_rules(const std::vector<ProjectCircuit>& sheets,con
     }
     return res;
 }
-PartCheckResult analyze_part_rules(const std::vector<ProjectCircuit>& sheets,const PartRatingsTable& ratings,const PartRulePolicy& policy,const PowerPolicy& power_policy) {
-    return analyze_part_rules(sheets,analyze_power(sheets,power_policy),ratings,policy,power_policy);
+PartCheckResult analyze_part_rules(const std::vector<ProjectCircuit>& sheets,const PowerPolicy& power_policy,const PartRatingsTable& ratings,const PartRulePolicy& policy) {
+    return analyze_part_rules(sheets,analyze_power(sheets,power_policy),power_policy,ratings,policy);
 }
 std::string part_rules_report(const PartCheckResult& res,const PartRulePolicy& p) {
     std::vector<std::string> ls{"schgen per-part rule engine (ratings vs netlist usage)",std::string(78,'='),"",
@@ -178,8 +178,8 @@ std::string part_rules_report(const PartCheckResult& res,const PartRulePolicy& p
     if(res.findings.empty())ls.insert(ls.end(),{"","errors: none"});else section(res.findings,"ERRORS","  ERROR: ");
     ls.insert(ls.end(),{"",std::string("PART RULES: ")+(res.ok()?"PASS":"FAIL")+" ("+std::to_string(res.checked)+" checks, "+std::to_string(res.findings.size())+" findings, "+std::to_string(res.unspecced.size())+" unspeced, "+std::to_string(res.waived.size())+" waived)"});return join(ls);
 }
-PartCheckResult run_part_checks(const std::vector<ProjectCircuit>& sheets,const std::filesystem::path& dir,const PowerCheckResult* power,const PartRatingsTable& ratings,const PartRulePolicy& policy,const PowerPolicy& pp) {
-    auto res=power?analyze_part_rules(sheets,*power,ratings,policy,pp):analyze_part_rules(sheets,ratings,policy,pp);
+PartCheckResult run_part_checks(const std::vector<ProjectCircuit>& sheets,const std::filesystem::path& dir,const PowerPolicy& pp,const PowerCheckResult* power,const PartRatingsTable& ratings,const PartRulePolicy& policy) {
+    auto res=power?analyze_part_rules(sheets,*power,pp,ratings,policy):analyze_part_rules(sheets,pp,ratings,policy);
     publish(dir/"part_rules.txt",part_rules_report(res,policy)+"\n");return res;
 }
 JsonNode part_result_json(const PartCheckResult& res) {

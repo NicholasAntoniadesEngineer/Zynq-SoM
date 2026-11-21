@@ -1,4 +1,5 @@
 #include "schgen/example_devkit.hpp"
+#include "legacy_power_policy.hpp"
 #include "schgen/board_pipeline.hpp"
 #include "schgen/design_rules.hpp"
 #include "schgen/part_checks.hpp"
@@ -93,7 +94,7 @@ void authoring(const fs::path& root,SymbolLibrary& library,const AuthoringContex
         families.insert("bound_subsystem_passes_local_design_rules");
         const auto dr=check_design_rules({c},resolve);require(dr.decap.empty() && dr.ep.empty() && dr.strap.empty(),def.name+": local design rules");
         families.insert("bound_subsystem_passes_part_rules");
-        const auto parts=analyze_part_rules(std::vector<ProjectCircuit>{{c.name,{},c}});require(parts.ok(),def.name+": part ratings");
+        const auto parts=analyze_part_rules(std::vector<ProjectCircuit>{{c.name,{},c}},legacy_power_policy(root));require(parts.ok(),def.name+": part ratings");
         families.insert("bound_subsystem_model_is_complete");validate_circuit(c,library);require(check_circuit_electrical(c,library).ok(),def.name+": electrical completeness");
         families.insert("bind_is_byte_stable_rename");require(refs(c)==refs(base) && nc(c)==nc(base),def.name+": part/NC rename stability");
         require(c.nets.size()==base.nets.size(),"net count stability");

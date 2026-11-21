@@ -3,6 +3,7 @@
 #include "schgen/power_checks.hpp"
 #include "schgen/thermal_checks.hpp"
 #include "schgen/part_checks.hpp"
+#include "legacy_power_policy.hpp"
 
 #include <cmath>
 #include <chrono>
@@ -52,6 +53,7 @@ void write(const fs::path& path,const std::string& s){std::ofstream out(path,std
 struct FixtureAlias {std::string value,footprint_contains,mpn;};
 std::vector<FixtureAlias> fixture_aliases;
 PartFacts fixture_facts;
+PowerPolicy legacy;
 void load_fixtures(const fs::path& dir) {
     const auto aliases=parse_json_file((dir/"fixture_aliases.json").string());
     for(const auto& row:at(aliases,"aliases").array_value){
@@ -67,7 +69,7 @@ void load_fixtures(const fs::path& dir) {
     fs::remove_all(scratch);
 }
 PowerPolicy fixture_power_policy() {
-    PowerPolicy policy=default_power_policy();
+    PowerPolicy policy=legacy;
     for(const auto& [part,fact]:fixture_facts.regulators)policy.regulators.emplace(part,fact);
     return policy;
 }
@@ -103,19 +105,19 @@ PartCheckResult current_part_expectation(const JsonNode& expected,const std::str
     }
     return result;
 }
-void family(const std::vector<ProjectCircuit>& sheets,const JsonNode& expected,const std::string& name,const ThermalCopper* copper=nullptr,const std::string& source="",const PowerPolicy& policy=default_power_policy(),const ThermalPolicy& thermal_policy=default_thermal_policy()) {
+void family(const std::vector<ProjectCircuit>& sheets,const JsonNode& expected,const std::string& name,const ThermalCopper* copper=nullptr,const std::string& source="",const PowerPolicy& policy=legacy,const ThermalPolicy& thermal_policy=default_thermal_policy()) {
     eq(power_result_json(detect_power_regulators(sheets,policy)),at(expected,"detection"),name+" detector");
     auto power=analyze_power(sheets,policy);auto pj=power_result_json(power);
     eq(pj,at(expected,"power"),name+" power");
-    text_eq(power_report(power,policy),str(at(expected,"power_report")),name+" power report");
+    text_eq(power_report(power,drawing_board,policy),str(at(expected,"power_report")),name+" power report");
     if(auto svg=object_field(expected,"svg"))text_eq(power_svg(power,drawing_board,policy),str(*svg),name+" SVG");
     else fails([&]{(void)power_svg(power,drawing_board,policy);},name+" reachable cycle must not hang SVG");
     auto power_copy=power_result_from_json(pj);eq(power_result_json(power_copy),pj,name+" power inverse");
-    auto thermal=analyze_thermal(sheets,power_copy,copper,source,thermal_policy,policy);
+    auto thermal=analyze_thermal(sheets,power_copy,policy,copper,source,thermal_policy);
     auto tj=thermal_result_json(thermal);eq(tj,at(expected,"thermal"),name+" thermal");
     text_eq(thermal_report(thermal),str(at(expected,"thermal_report")),name+" thermal report");
     eq(thermal_result_json(thermal_result_from_json(tj)),tj,name+" thermal inverse");
-    auto parts=analyze_part_rules(sheets,power_copy,default_part_ratings(),default_part_rule_policy,policy);
+    auto parts=analyze_part_rules(sheets,power_copy,policy);
     const auto wanted=current_part_expectation(expected,name);
     auto rj=part_result_json(parts);eq(rj,part_result_json(wanted),name+" parts");
     text_eq(part_rules_report(parts),part_rules_report(wanted),name+" part report");
@@ -134,7 +136,7 @@ void parsers(const JsonNode& fixtures) {
             else require(v&&*v==num(expected),name+" "+value+" parsed differently");
         }
     }
-    for(const auto& [s,v]:at(fixtures,"rail_volts").object_value) {auto got=rail_volts(s);if(v.kind==JsonKind::Null)require(!got,"rail unknown "+s);else require(got&&*got==num(v),"rail voltage "+s);}
+    for(const auto& [s,v]:at(fixtures,"rail_volts").object_value) {auto got=rail_volts(s,legacy);if(v.kind==JsonKind::Null)require(!got,"rail unknown "+s);else require(got&&*got==num(v),"rail voltage "+s);}
     auto& expected=at(fixtures,"ratings");require(default_part_ratings().size()==expected.object_value.size()+1,"complete ratings table plus reviewed reference filter");
     for(std::size_t i=0;i<expected.object_value.size();++i){auto& r=default_part_ratings()[i];auto& e=expected.object_value[i];require(r.first==e.first,"rating insertion order");eq(part_ratings_json(r.second),e.second,"rating "+r.first);auto parsed=part_ratings_from_json(e.second);require(bool(parsed),"rating decode");eq(part_ratings_json(*parsed),e.second,"rating inverse "+r.first);}
     const auto& added=default_part_ratings().back();
@@ -148,22 +150,24 @@ void mutation_contracts() {
     PowerCheckResult power;power.regs.push_back({77,"caller","U7","AP2112K","ldo","+5V","+1V8",.6,1,"edited",.5,9});
     ProjectCircuit sheet;sheet.name="caller";sheet.circuit.name="different circuit name";
     CircuitPartIr part;part.ref="U7";part.value="not a regulator";part.fields={{"LCSC","C176944"},{"MPN","AP2112K-3.3TRG1"}};sheet.circuit.parts={part};
-    auto restored=power_result_from_json(power_result_json(power));auto thermal=analyze_thermal({sheet},restored);
+    auto restored=power_result_from_json(power_result_json(power));auto thermal=analyze_thermal({sheet},restored,legacy);
     require(thermal.devices.size()==1&&thermal.devices[0].i_out==.5&&thermal.devices[0].pd==(5.-1.8)*.5,"supplied result not recomputed");
     require(thermal.devices[0].sheet=="caller"&&thermal.devices[0].ref=="U7","explicit sheet identity");
-    require(analyze_part_rules({sheet},restored).checked==1,"parts consume supplied regulator");
-    restored.regs[0].vin="+VIN";require(analyze_part_rules({sheet},restored).findings.size()==1,"mutable input power vin honored");
+    require(analyze_part_rules({sheet},restored,legacy).checked==1,"parts consume supplied regulator");
+    restored.regs[0].vin="+VIN";require(analyze_part_rules({sheet},restored,legacy).findings.size()==1,"mutable input power vin honored");
     sheet.circuit.waivers={{"thermal_waivers","U7","first"},{"thermal_waivers","U7","last"},{"part_rule_waivers","U7","part reason"}};
-    auto wt=analyze_thermal({sheet},restored);require(wt.errors.empty()&&wt.waived.size()==1&&wt.waived.front().second.second=="last","last waiver wins");
-    require(analyze_part_rules({sheet},restored).findings.empty(),"part waiver honored");
-    auto before=power_result_json(restored);(void)analyze_thermal({sheet},restored);eq(power_result_json(restored),before,"immutable supplied result");
-    PowerPolicy custom=default_power_policy();custom.voltage_patterns={{"^X",0},{"^X",99}};require(rail_volts("XYZ",custom)==0,"explicit first-match voltage policy");
-    PowerPolicy copied=default_power_policy();
-    require(rail_volts("+5V_SOM\n",copied)==4.65,"cached copied policy terminal newline");
-    copied.voltage_patterns[3].second=4.7;
-    require(rail_volts("+5V_SOM",copied)==4.7,"cached expression does not freeze voltage value");
-    std::swap(copied.voltage_patterns[3],copied.voltage_patterns[5]);
-    require(rail_volts("+5V_SOM",copied)==5,"copied reordered expressions preserve first match");
+    auto wt=analyze_thermal({sheet},restored,legacy);require(wt.errors.empty()&&wt.waived.size()==1&&wt.waived.front().second.second=="last","last waiver wins");
+    require(analyze_part_rules({sheet},restored,legacy).findings.empty(),"part waiver honored");
+    auto before=power_result_json(restored);(void)analyze_thermal({sheet},restored,legacy);eq(power_result_json(restored),before,"immutable supplied result");
+    PowerPolicy custom=default_power_policy();custom.rails={{"XYZ",{0.0,"zero entry"}},{"XY",{99.0,"other entry"}}};require(rail_volts("XYZ",custom)==0,"explicit zero voltage entry is a voltage");
+    require(!rail_volts("XYZW",custom),"an entry names one net exactly, never a prefix");
+    PowerPolicy copied=legacy;
+    require(rail_volts("+5V_SOM\n",copied)==4.65,"copied policy terminal-newline entry");
+    const auto som=std::find_if(copied.rails.begin(),copied.rails.end(),[](const auto& r){return r.first=="+5V_SOM";});require(som!=copied.rails.end(),"legacy +5V_SOM entry");
+    som->second.volts=4.7;
+    require(rail_volts("+5V_SOM",copied)==4.7,"copied entry voltage value honored");
+    std::swap(*som,copied.rails.front());
+    require(rail_volts("+5V_SOM",copied)==4.7,"reordered entries keep exact-name lookup");
     sheet.circuit.loads.push_back({"+5V",std::numeric_limits<double>::quiet_NaN(),"detection must not visit"});
     auto plain=sheet;plain.circuit.parts[0].fields={{"LCSC","C176944"}};auto det=detect_power_regulators({plain});require(det.regs.empty()&&det.errors.empty()&&det.draws.empty()&&det.rails.empty()&&det.findings.empty()&&det.notes.empty()&&det.source_load.empty(),"detector independent of loads/audits");
     {
@@ -207,7 +211,7 @@ int main(int argc,char** argv) {
         auto corpus=parse_json_file((dir/"circuits.json").string());
         auto projects=parse_json_file((dir/"projects.json").string());
         auto cases=parse_json_file((dir/"cases.json").string());
-        load_fixtures(dir);
+        load_fixtures(dir);legacy=legacy_power_policy(root);
         parsers(parse_json_file((dir/"policies.json").string()));
         for(const auto& entry:projects.array_value) {
             auto name=str(at(entry,"name"));auto sheets=selected(entry,corpus);auto copper=thermal_copper_from_json(at(entry,"copper"));
@@ -237,16 +241,16 @@ int main(int argc,char** argv) {
         }
         require(!temp.empty(),"create isolated test directory");
         auto sheets=selected(projects.array_value.front(),corpus);const auto& expected=at(projects.array_value.front(),"expected_bare");
-        auto power=run_power_checks(sheets,drawing_board,temp/"reports",temp/"docs");
+        auto power=run_power_checks(sheets,drawing_board,temp/"reports",temp/"docs",legacy);
         text_eq(read(temp/"reports/power_tree.txt"),str(at(expected,"power_report"))+"\n","published power");
         text_eq(read(temp/"docs/power_tree.svg"),str(at(expected,"svg")),"published svg");
-        (void)run_thermal_checks(sheets,temp/"reports",&power,temp/"missing.kicad_pcb",temp);
+        (void)run_thermal_checks(sheets,temp/"reports",legacy,&power,temp/"missing.kicad_pcb",temp);
         text_eq(read(temp/"reports/thermal.txt"),str(at(expected,"thermal_report"))+"\n","published missing-copper thermal");
-        (void)run_part_checks(sheets,temp/"reports",&power);
+        (void)run_part_checks(sheets,temp/"reports",legacy,&power);
         text_eq(read(temp/"reports/part_rules.txt"),part_rules_report(current_part_expectation(expected,"carrier published"))+"\n","published parts");
         write(temp/"scan.kicad_pcb",str(at(scans.array_value.front(),"sexpr")));
         auto scanned=scan_thermal_copper(temp/"scan.kicad_pcb");scanned.path="frozen.kicad_pcb";eq(thermal_copper_json(scanned),at(scans.array_value.front(),"expected"),"file scanner");
-        auto rt=run_thermal_checks(sheets,temp/"reports",&power,temp/"scan.kicad_pcb",temp);require(rt.copper_src=="scan.kicad_pcb","explicit repository root relative evidence");
+        auto rt=run_thermal_checks(sheets,temp/"reports",legacy,&power,temp/"scan.kicad_pcb",temp);require(rt.copper_src=="scan.kicad_pcb","explicit repository root relative evidence");
         fs::remove_all(temp);
         std::cout<<"model_checks_contracts: "<<checks<<" checks passed\n";return 0;
     }catch(const std::exception& e){std::cerr<<"model_checks_contracts FAILED after "<<checks<<": "<<e.what()<<"\n";return 1;}

@@ -1,4 +1,5 @@
 #include "schgen/board_inputs.hpp"
+#include "schgen/board_power.hpp"
 #include "schgen/model3d.hpp"
 #include "schgen/pcb_emit.hpp"
 #include <algorithm>
@@ -33,7 +34,8 @@ PcbPlacementInput load_board_inputs(const ProjectPaths& paths,
     floor.sheet_index = load_sheet_index(paths);
     floor.link = link;
     floor.roles = roles;
-    floor.regulators = analyze_power(circuits).regs;
+    floor.power = load_board_power_policy(paths, circuits, roles);
+    floor.regulators = analyze_power(circuits, floor.power).regs;
     floor.module_offset = options.module_offset;
     floor.place_clear = options.place_clear;
     floor.compact_search = options.compact_search;

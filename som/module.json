@@ -75,5 +75,12 @@
       "note": "power inlet leaked under a signal-style name (no '+' prefix) — carried by planes, not lanes"
     }
   ],
-  "do_not_load_straps": ["ZYNQ_PS_MIO7/VM0", "ZYNQ_PS_MIO8\\VM1"]
+  "do_not_load_straps": ["ZYNQ_PS_MIO7/VM0", "ZYNQ_PS_MIO8\\VM1"],
+  "supplies": [
+    {"rail": "+3V3_SC", "volts": 3.3, "amps": 0.3, "basis": "SoM TPS7A20 always-on SC LDO U13 (J1.37); 300 mA class — the SoM power_architecture sheet says '3V3 (300mA)'. Envelope shared with the SoM-side SC (STM32G431 ~50 mA); carrier tally only here"}
+  ],
+  "regulated_rails": {
+    "rails": ["+3V3", "+1V8"],
+    "basis": "these rails are OUTPUTS of carrier regulators (power.py LM61460/AP2112K) AND appear on SoM J1 contract pins (+3V3: J1.24-27, +1V8: J1.56/58/60) while the SoM's own Power sheet regulates same-named rails on-module (MPM3834 stages with 3V3_EN/PG + 1V8_EN/PG). If the SoM exports its rails on those pins, linking them to the carrier's bucks puts two regulators in parallel on one net — needs an explicit decision (rename one side, sense-only pins, or drop one source) before layout. Facts from som_interface.json + som/schematic/Power.kicad_sch; nothing changed here."
+  }
 }

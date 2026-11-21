@@ -37,7 +37,7 @@
   "native/src/pcb_placement_zones.cpp": {"part": 1},
   "native/src/pcb_scan.cpp": {"module": 1},
   "native/src/placement_requirements.cpp": {"board": 1, "part": 3, "reference": 22, "subsystem": 2},
-  "native/src/power_checks.cpp": {"module": 5, "part": 3, "subsystem": 3},
+  "native/src/power_checks.cpp": {"subsystem": 1},
   "native/src/project_authoring.cpp": {"board": 2},
   "native/src/project_cli.cpp": {"board": 2, "module": 4, "reference": 5, "subsystem": 2},
   "native/src/rules/mechanical/tall_part_beside_module.cpp": {"part": 1},

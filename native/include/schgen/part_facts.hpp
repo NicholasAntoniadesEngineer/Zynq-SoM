@@ -126,7 +126,7 @@ struct RegulatorFact {
     std::optional<std::string> iset_pin;
     double ilim_num = 0;
     std::string note;
-    std::optional<double> fb_vref, iset_v;
+    std::optional<double> fb_vref, iset_v, out_v;
     std::optional<RegulatorEnableFact> enable;
 };
 

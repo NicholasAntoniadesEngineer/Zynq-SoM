@@ -25,9 +25,8 @@ struct PowerSequence {
 };
 std::string module_supply_rail(const BoardLoad& draw, const LinkMapping& mapping);
 PowerSequence build_power_sequence(const std::vector<ProjectCircuit>&,
-    const PowerCheckResult&, const std::string& module_rail,
-    const PowerPolicy& = default_power_policy());
-std::string render_power_sequence_svg(const PowerSequence&, const std::string& board, bool ok = true,
-    const PowerPolicy& = default_power_policy());
+    const PowerCheckResult&, const std::string& module_rail, const PowerPolicy&);
+std::string render_power_sequence_svg(const PowerSequence&, const std::string& board, bool ok,
+    const PowerPolicy&);
 
 } // namespace schgen

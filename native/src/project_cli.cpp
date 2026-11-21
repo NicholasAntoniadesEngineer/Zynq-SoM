@@ -28,6 +28,7 @@
 #include "schgen/pin_completeness.hpp"
 #include "schgen/symbol_law.hpp"
 #include "schgen/spice.hpp"
+#include "schgen/board_power.hpp"
 #include "schgen/firmware_docs.hpp"
 #include "schgen/design_rules.hpp"
 #include "schgen/link.hpp"
@@ -691,7 +692,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
             return 0;
         }
         const auto result = run_assembly_documents(stage.placement.model,
-            analyze_power(stage.circuits), stage.inputs.floorplan.project.name,
+            analyze_power(stage.circuits, stage.inputs.floorplan.power), stage.inputs.floorplan.project.name,
             directory / "manufacturing/ASSEMBLY.md", directory / "renders/assembly",
             pcb_emit_policy(stage.inputs.floorplan.project));
         const auto verdict = assembly_verdict(result, directory);
@@ -725,6 +726,10 @@ std::optional<int> run_project_command(int argc, char** argv) {
     std::vector<CircuitSheetIr> sheets;
     sheets.reserve(circuits.size());
     for (const auto& circuit : circuits) sheets.push_back(circuit.circuit);
+    const auto board_power = [&] {
+        const auto board = options.subsystems.empty() ? circuits : load_project_circuits(paths);
+        return load_board_power_policy(paths, board, load_sheet_roles(paths, board));
+    };
     if (options.command == "gallery") {
         if (!options.subsystems.empty()) throw ProjectError("gallery requires the complete project");
         const auto input = load_gallery_input(paths, circuits);
@@ -742,10 +747,11 @@ std::optional<int> run_project_command(int argc, char** argv) {
     if (options.command == "manifest") {
         const auto pins = stm32_pin_map(extract_som_zynq(paths.som_schematic, "U9",
             {"J1", "J2", "J3"}, {options.kicad_cli}), load_som_interface(paths.som_interface_file));
-        auto input = prepare_manufacturing_manifest(circuits, pins);
+        const auto power = board_power();
+        auto input = prepare_manufacturing_manifest(circuits, pins, power);
         input.file_stem = paths.file_stem;
         const auto destination = options.output.empty() ? paths.manifest_file : options.output;
-        run_manufacturing_manifest(input, paths.project_root, destination);
+        run_manufacturing_manifest(input, paths.project_root, destination, power);
         std::cout << "MANIFEST: " << destination.string() << '\n';
         return 0;
     }
@@ -757,9 +763,9 @@ std::optional<int> run_project_command(int argc, char** argv) {
         return result.verdict.ok ? 0 : 1;
     }
     if(options.command=="power-sequence") {
-        const auto power=analyze_power(circuits);
+        const auto policy=board_power();const auto power=analyze_power(circuits,policy);
         const auto mapping=link_mapping_from_json(parse_json_file((paths.project_root/"som_mapping.json").string()),paths.module.do_not_load_straps);
-        const auto text=render_power_sequence_svg(build_power_sequence(circuits,power,module_supply_rail(paths.module.draw,mapping)),load_project_config(paths).name,power.ok());
+        const auto text=render_power_sequence_svg(build_power_sequence(circuits,power,module_supply_rail(paths.module.draw,mapping),policy),load_project_config(paths).name,power.ok(),policy);
         const auto output=options.output.empty()?paths.project_root/"docs/power_sequence.svg":options.output;
         publish_text(output,text);std::cout<<options.command<<": "<<output.string()<<'\n';return 0;
     }
@@ -771,7 +777,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
             const auto r=check_bom_values(circuits,load_bom_value_catalog(data/"lcsc_values.json"));
             report=r.report();ok=r.ok;
         } else if(options.command=="spice") {
-            auto r=extract_spice_checks(circuits);SpiceRunOptions run;run.allow_ngspice=!options.no_ngspice;
+            auto r=extract_spice_checks(circuits,board_power());SpiceRunOptions run;run.allow_ngspice=!options.no_ngspice;
             run_ngspice_crosschecks(r,run);report=spice_report(r,ngspice_available().has_value());ok=r.ok();
         } else {
             SymbolLibrary library(paths.repository_root);
@@ -793,13 +799,14 @@ std::optional<int> run_project_command(int argc, char** argv) {
         std::cout<<report<<'\n';return ok?0:1;
     }
     if (options.command == "powertree" || options.command == "thermal" || options.command == "part-rules") {
-        const auto power = analyze_power(circuits);
+        const auto policy = board_power();
+        const auto power = analyze_power(circuits, policy);
         std::string report;
         bool ok = false;
         if (options.command == "powertree") {
-            report = power_report(power); ok = power.ok();
+            report = power_report(power, load_project_config(paths).name, policy); ok = power.ok();
         } else if (options.command == "part-rules") {
-            const auto result = analyze_part_rules(circuits,power);
+            const auto result = analyze_part_rules(circuits,power,policy);
             report = part_rules_report(result); ok = result.ok();
         } else {
             const auto pcb = options.pcb.empty() ? paths.project_root / board_file_name(paths.file_stem, BoardFileKind::Pcb) : options.pcb;
@@ -810,7 +817,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
                 const auto relative = fs::weakly_canonical(pcb).lexically_relative(paths.repository_root);
                 source = !relative.empty() && *relative.begin() != ".." ? relative.string() : pcb.string();
             }
-            const auto result = analyze_thermal(circuits,power,copper?&*copper:nullptr,source);
+            const auto result = analyze_thermal(circuits,power,policy,copper?&*copper:nullptr,source);
             report = thermal_report(result); ok = result.ok();
         }
         if (!options.output.empty()) publish_text(options.output,report+"\n");

@@ -45,6 +45,11 @@ const char* const small = R"json({
     "pairs": [{"positive": "BOARD_P", "negative": "BOARD_N", "kind": "diff_pair", "impedance": 90}],
     "loads": [{"connector": "J2", "rail": "+3V3", "amps": 0.02, "note": "bank supply"}]
   },
+  "power": {
+    "sources": [{"rail": "+VIN", "volts": 12.0, "amps": 2.0, "basis": "bench supply"}, {"rail": "+3V3_SC", "supplier": "module"}],
+    "rails": [{"rail": "+5V", "volts": 5.0, "basis": "buck target"}],
+    "inlet": null
+  },
   "sheets": [
     {"name": "som_j1", "module_connector": "J1", "title": "Module connector one"},
     {"name": "power", "settings": {"bind": {"+VIN": "+VIN_SYS"}}, "additions": {"draws": []}},
@@ -67,7 +72,9 @@ const char* const small_module = R"json({
     "return_path": {"n_pairs": 69, "n_pair_contacts": 138, "n_fail": 29, "worst_distance": 4}
   },
   "escape_triage": [{"pattern": "USB_.*", "class": "GENUINE", "note": "pair"}],
-  "do_not_load_straps": ["MIO7"]
+  "do_not_load_straps": ["MIO7"],
+  "supplies": [{"rail": "+3V3_SC", "volts": 3.3, "amps": 0.3, "basis": "module always-on LDO"}],
+  "regulated_rails": {"rails": ["+1V8"], "basis": "module-regulated rail"}
 })json";
 
 BoardDefinition parsed(const std::string& text) {
@@ -190,6 +197,17 @@ void refuses_bad_modules() {
     rejects([] { module_parsed(replaced(small_module, "\"pattern\": \"USB_.*\", ", "")); }, "missing");
     rejects([] { module_parsed(replaced(small_module, "\"do_not_load_straps\": [\"MIO7\"]", "\"do_not_load_straps\": [\"\"]")); }, "not a name");
     rejects([] { module_parsed(replaced(small_module, ",\n  \"do_not_load_straps\": [\"MIO7\"]", "")); }, "field 'do_not_load_straps' is missing");
+    rejects([] { module_parsed(replaced(small_module, ", \"basis\": \"module always-on LDO\"", "")); }, "field 'basis' is missing");
+    rejects([] { module_parsed(replaced(small_module, "\"amps\": 0.3, ", "\"amps\": 0.3, \"connector\": \"J1\", ")); }, "connector");
+    rejects([] { module_parsed(replaced(small_module, ", \"basis\": \"module-regulated rail\"", "")); }, "field 'basis' is missing");
+    rejects([] { parsed(replaced(small, ", \"basis\": \"bench supply\"", "")); }, "field 'basis' is missing");
+    rejects([] { parsed(replaced(small, ", \"basis\": \"buck target\"", "")); }, "field 'basis' is missing");
+    rejects([] { parsed(replaced(small, "\"inlet\": null", "\"inlet\": null, \"extra\": 1")); }, "extra");
+    rejects([] { parsed(replaced(small, "\"supplier\": \"module\"", "\"supplier\": \"board\"")); }, "supplier");
+    {
+        const auto board = parsed(small);
+        require(board.power.sources.size() == 2 && board.power.sources[1].from_module && board.power.rails.size() == 1 && !board.power.inlet, "board power is read");
+    }
 }
 
 void loads_a_module_folder() {
