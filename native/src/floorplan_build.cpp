@@ -54,7 +54,7 @@ void add_weight(std::vector<std::pair<std::string,double>>& rows,const std::stri
 }
 }  // namespace
 
-std::set<std::string> deferred_connector_names(const std::string& expectation) {
+std::set<std::string> deferred_connector_names(const std::string& expectation,const std::set<std::string>& reserving) {
     // These are literal identifiers, not a user-supplied pattern. Match the
     // previous ECMAScript word boundaries without instantiating a regex engine
     // in every compile/source audit of this translation unit. Retain the C++
@@ -63,7 +63,7 @@ std::set<std::string> deferred_connector_names(const std::string& expectation) {
     const auto& characters=std::use_facet<std::ctype<char>>(locale);
     const auto word=[&](char c){return c=='_' || characters.is(std::ctype_base::alnum,c);};
     std::set<std::string> result;
-    for(const std::string_view name:{"rj45_connector","usb_uart_connector"}) {
+    for(const std::string_view name:reserving) {
         for(auto at=expectation.find(name);at!=std::string::npos;at=expectation.find(name,at+name.size())) {
             const auto end=at+name.size();
             if((at==0 || !word(expectation[at-1])) &&
@@ -121,6 +121,7 @@ void Engine::initialize() {
     const auto spec_edges=spec.edge_of(); const auto spec_order=spec.edge_order();
     std::set<std::string> regs;
     for (const auto& r:in.regulators) regs.insert(r.sheet);
+    const std::set<std::string> reserving_sheets=sheets_reserving_edge(in.roles);
     std::map<std::string,std::set<std::string>> zone_refs;
     for (const auto& sc:in.sheets) for (const auto* p:zone_parts(sc)) {
         zone_refs[sc.name].insert(p->ref);
@@ -136,7 +137,7 @@ void Engine::initialize() {
         }
         std::set<std::string> reserved;
         for (const auto& pt:sc->port_types) {
-            const auto names=deferred_connector_names(pt.expect);
+            const auto names=deferred_connector_names(pt.expect,reserving_sheets);
             reserved.insert(names.begin(),names.end());
         }
         b.reserved.assign(reserved.begin(),reserved.end());

@@ -3,6 +3,7 @@
 #include "../src/floorplan_compose.cpp"
 #include <iostream>
 
+#include "sheet_roles_fixture.hpp"
 namespace {
 using namespace schgen;
 int checks=0;
@@ -17,6 +18,7 @@ FloorplanLegalizeInput input(bool subject_guard=false) {
     in.metrics[target].offsets={{"T",1,2}};
     in.metrics[target].zone_wh={4,4};
     in.fixed_poses[target]={70,20};
+    in.far_guard=sheet_far_guards(explicit_sheet_roles(std::vector<std::string>{subject,target}));
     in.fixed_rects={{target,{70,20,74,24}}};
     FloorplanTerm facing;
     facing.kind="facing";facing.sheet=subject;facing.subject=subject;facing.target_raw=target;

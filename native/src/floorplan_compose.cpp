@@ -121,13 +121,13 @@ std::vector<FloorplanTermEval> evaluate(const FloorplanLegalizeInput& in,
     if (strict_rows.empty()) {
         // Preserve the legacy call, guards, row order and exact work receipts.
         values = evaluate_terms(in.board_w, in.board_h, in.som_core_page,
-            {poses.begin(), poses.end()}, metrics, rows, {{"ethernet", 14}, {"power_som", 25}},
+            {poses.begin(), poses.end()}, metrics, rows, in.far_guard,
             {in.module_rects.begin(), in.module_rects.end()}, in.origin.first, in.origin.second, counts);
     } else {
         values.resize(rows.size());
         if (!guarded_rows.empty()) {
             const auto evaluated = evaluate_terms(in.board_w, in.board_h, in.som_core_page,
-                {poses.begin(), poses.end()}, metrics, guarded_rows, {{"ethernet", 14}, {"power_som", 25}},
+                {poses.begin(), poses.end()}, metrics, guarded_rows, in.far_guard,
                 {in.module_rects.begin(), in.module_rects.end()}, in.origin.first, in.origin.second, counts);
             for (std::size_t i = 0; i < guarded_indices.size(); ++i)
                 values[guarded_indices[i]] = evaluated[i];
