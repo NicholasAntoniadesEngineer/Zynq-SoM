@@ -39,7 +39,7 @@ const char* const small = R"json({
   "name": "bench",
   "files": {"stem": "Bench_Board"},
   "root_readme": false,
-  "owned_groups": true,
+  "owned_groups": ["power"],
   "module": {
     "folder": "bench_module",
     "pairs": [{"positive": "BOARD_P", "negative": "BOARD_N", "kind": "diff_pair", "impedance": 90}],
@@ -102,7 +102,7 @@ void reads_a_board() {
     const BoardDefinition board = parsed(small);
     require(board.name == "bench" && board.sheets.size() == 3, "the sheets are listed in file order");
     require(board.files.stem == "Bench_Board", "the file stem is read from files.stem");
-    require(!board.flags.root_readme && board.flags.owned_groups, "the document and placement flags are read");
+    require(!board.flags.root_readme && board.flags.owned_groups == std::vector<std::string>{"power"}, "the document and placement flags are read");
     require(board.sheet("som_j1").from_module() && board.sheet("som_j1").module_connector == "J1", "a module connector sheet names its connector");
     require(!board.sheet("power").from_module() && board.sheet("power").additions.has_value(), "a library sheet carries its settings and additions");
     require(board.sheet("mechanical").settings.kind == JsonKind::Object && board.sheet("mechanical").settings.object_value.empty(),
@@ -148,8 +148,13 @@ void refuses_bad_boards() {
     rejects([] { parsed(replaced(small, "\"stem\": \"Bench_Board\"", "\"stem\": \"Bench_Board\", \"suffix\": \"x\"")); }, "suffix");
     rejects([] { parsed(replaced(small, "\"stem\": \"Bench_Board\"", "\"stem\": 3")); }, "field 'stem' is missing or has the wrong type");
     rejects([] { parsed(replaced(small, "  \"root_readme\": false,\n", "")); }, "field 'root_readme' is missing");
-    rejects([] { parsed(replaced(small, "  \"owned_groups\": true,\n", "")); }, "field 'owned_groups' is missing");
-    rejects([] { parsed(replaced(small, "\"owned_groups\": true", "\"owned_groups\": 1")); }, "field 'owned_groups' is missing or has the wrong type");
+    rejects([] { parsed(replaced(small, "  \"owned_groups\": [\"power\"],\n", "")); }, "field 'owned_groups' is missing");
+    rejects([] { parsed(replaced(small, "\"owned_groups\": [\"power\"]", "\"owned_groups\": 1")); }, "field 'owned_groups' is missing or has the wrong type");
+    rejects([] { parsed(replaced(small, "\"owned_groups\": [\"power\"]", "\"owned_groups\": true")); }, "field 'owned_groups' is missing or has the wrong type");
+    rejects([] { parsed(replaced(small, "\"owned_groups\": [\"power\"]", "\"owned_groups\": [\"absent\"]")); }, "names sheet absent which the board does not list");
+    rejects([] { parsed(replaced(small, "\"owned_groups\": [\"power\"]", "\"owned_groups\": [\"power\", \"power\"]")); }, "lists a sheet twice");
+    rejects([] { parsed(replaced(small, "\"owned_groups\": [\"power\"]", "\"owned_groups\": [3]")); }, "holds a value that is not a name");
+    require(parsed(replaced(small, "\"owned_groups\": [\"power\"]", "\"owned_groups\": []")).flags.owned_groups.empty(), "an empty owned_groups list is a board with no owned groups");
 }
 
 void reads_a_module() {

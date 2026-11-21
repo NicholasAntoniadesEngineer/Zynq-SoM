@@ -56,17 +56,17 @@ void policy(const std::filesystem::path& root,bool compiler){
     const auto p=make_native_board_policy(paths,in);
     floorplan_detail::Engine producer(in);producer.ledger_open();
     require(buried_policy_fixture::prior_policy(floorplan_ledger_policy()).size()==83,"prior policy population lost");
-    require(buried_policy_fixture::prior_plan(producer.plan).accounting.decisions.size()+7==producer.plan.accounting.decisions.size(),"exact additive population lost");
+    require(buried_policy_fixture::prior_plan(producer.plan).accounting.decisions.size()+8==producer.plan.accounting.decisions.size(),"exact additive population lost");
     const auto original_counts=producer.plan.accounting.quantization_engagements;
-    auto prior_counts=original_counts;prior_counts.at("floorplan_ledger_display_precision4dp")-=7;
+    auto prior_counts=original_counts;prior_counts.at("floorplan_ledger_display_precision4dp")-=8;
     require(buried_policy_fixture::prior_accounted_plan(producer.plan).accounting.quantization_engagements==prior_counts,
-        "only seven actual numeric assumption displays may be projected");
+        "only eight actual numeric assumption displays may be projected");
     require(producer.plan.accounting.quantization_engagements==original_counts,"projection mutated producer receipt");
     auto tagged=original_counts;tagged["independent_other_counter"]=123;
     auto tagged_expected=prior_counts;tagged_expected["independent_other_counter"]=123;
     require(buried_policy_fixture::prior_display_counts(tagged)==tagged_expected,"projection changed another counter");
     rejects([&]{buried_policy_fixture::prior_display_counts({});});
-    for(std::size_t count:{0,6,7})
+    for(std::size_t count:{0,7,8})
         rejects([&]{buried_policy_fixture::prior_display_counts({{"floorplan_ledger_display_precision4dp",count}});});
     for(const auto& e:buried_policy_fixture::additions){
         for(int mutation=0;mutation<4;++mutation){
@@ -82,7 +82,7 @@ void policy(const std::filesystem::path& root,bool compiler){
         for(auto& row:changed)if(row.name==e.name)row.legacy_cover+="wrong";
         rejects([&]{buried_policy_fixture::prior_policy(changed);});
     }
-    require(p.ledger_declarations.size()==90,"complete authored declaration population changed");
+    require(p.ledger_declarations.size()==91,"complete authored declaration population changed");
     for(const auto& row:expected){
         const auto& d=declaration(p,row.name);
         require(bits(d.resolve().number_value)==bits(row.value),"independent policy bits changed");

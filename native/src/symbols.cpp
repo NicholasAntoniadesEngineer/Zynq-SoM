@@ -11,6 +11,7 @@
 #include <charconv>
 #include <cmath>
 #include <fstream>
+#include <functional>
 #include <iterator>
 #include <mutex>
 #include <sstream>
@@ -402,6 +403,53 @@ SymbolLibrary SymbolLibrary::with_definitions(const std::vector<SymbolDef>& defi
 void SymbolLibrary::clear() {
     defs_.clear();
     files_.clear();
+}
+
+SymbolDef renumbered_symbol(const SymbolDef& base, const std::string& lib_id,
+                            const std::map<std::string, std::string>& numbers) {
+    const auto colon = lib_id.find(':');
+    if (colon == std::string::npos || colon + 1 == lib_id.size()) throw SymbolError(lib_id + ": not a Library:Name symbol id");
+    const auto name = lib_id.substr(colon + 1);
+    const auto base_colon = base.lib_id.find(':');
+    const auto base_name = base_colon == std::string::npos ? base.lib_id : base.lib_id.substr(base_colon + 1);
+    std::set<std::string> present;
+    for (const auto& pin : base.pins) present.insert(pin.number);
+    for (const auto& [from, to] : numbers) {
+        if (!present.count(from)) throw SymbolError(base.lib_id + " has no pin " + from + " to number " + to);
+        if (present.count(to)) throw SymbolError(base.lib_id + " already has a pin numbered " + to);
+    }
+    SymbolDef out = base;
+    out.lib_id = lib_id;
+    for (auto& pin : out.pins) {
+        const auto found = numbers.find(pin.number);
+        if (found != numbers.end()) pin.number = found->second;
+    }
+    std::size_t renamed = 0;
+    const std::function<void(Sexpr&, bool)> walk = [&](Sexpr& node, bool top) {
+        auto* values = std::get_if<SexprList>(&node.v);
+        if (!values || values->empty()) return;
+        const auto head = tag(node);
+        if (head == "symbol" && values->size() > 1 && std::holds_alternative<std::string>((*values)[1].v)) {
+            auto& title = std::get<std::string>((*values)[1].v);
+            if (top) title = name;
+            else if (title.rfind(base_name + "_", 0) == 0) title = name + title.substr(base_name.size());
+        }
+        if (head == "number" && values->size() > 1 && std::holds_alternative<std::string>((*values)[1].v)) {
+            auto& number = std::get<std::string>((*values)[1].v);
+            const auto found = numbers.find(number);
+            if (found != numbers.end()) {
+                number = found->second;
+                ++renamed;
+            }
+        }
+        for (std::size_t index = 1; index < values->size(); ++index) walk((*values)[index], false);
+    };
+    walk(out.raw, true);
+    std::size_t expected = 0;
+    for (const auto& pin : base.pins) expected += numbers.count(pin.number);
+    if (renamed != expected) throw SymbolError(lib_id + ": renumbered " + std::to_string(renamed) + " pin numbers in the symbol body, expected " +
+                                               std::to_string(expected));
+    return out;
 }
 
 SymbolDef parse_symbol(const std::string& lib_id, const Sexpr& block) {

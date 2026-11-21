@@ -61,7 +61,7 @@ swing against), VN to `GND`.
 `+5V_MOTOR_IO`, default-ON (`EN` tied to `IN`). `ISET` sets the limit via a 13 k
 resistor (C22797): ILIM = 6800 / 13 k ≈ 523 mA, protecting board `+5V` against a
 shorted servo lead. Only the servo power is limited; the buffer itself stays on
-raw `+5V`. The input is decoupled with a 100 n (C14663) and the gated output
+raw `+5V`. The input is filtered with a 10 u 0805 cap (C15850) and the gated output
 holds up on a 10 u 0805 bulk cap (C15850).
 
 ## Parts
@@ -77,7 +77,7 @@ holds up on a 10 u 0805 bulk cap (C15850).
 | R* (#OE pull-up) | 10k | Device:R | C25804 |
 | R* (ISET) | 13k | Device:R | C22797 |
 | C* (U1 decouple) | 100n | Device:C (0603) | C14663 |
-| C* (U3 decouple) | 100n | Device:C (0603) | C14663 |
+| C* (U3 input) | 10u | Device:C (0805) | C15850 |
 | C* (rail bulk) | 10u | Device:C (0805) | C15850 |
 
 ## Build & test

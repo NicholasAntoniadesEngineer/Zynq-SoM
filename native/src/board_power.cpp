@@ -145,7 +145,7 @@ PowerPolicy board_power_policy(const BoardPower& power, const ModuleDefinition& 
 }
 
 PowerPolicy load_board_power_policy(const ProjectPaths& paths, const std::vector<ProjectCircuit>& sheets, const SheetRoles& roles) {
-    const BoardDefinition board = load_board(paths.project_root);
+    const BoardDefinition board = load_board(paths.project_root, paths.module);
     const auto mapping_file = paths.project_root / "som_mapping.json";
     const LinkMapping mapping = link_mapping_from_json(parse_json_file(mapping_file.string()), board.module_definition.do_not_load_straps);
     std::vector<std::string> module_sheets;

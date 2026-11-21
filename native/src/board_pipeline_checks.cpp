@@ -14,7 +14,7 @@ void electrical_stages(Context& c){
         const auto r=analyze_rail_ampacity(c.circuits,c.require_roles(),*c.som,c.link->mapping,c.require_power_policy());c.report("rail_ampacity.txt",r.report());c.gate("rail_ampacity",r.ok(),r.report());});
     c.attempt("testpoints",[&]{c.testpoints=check_testpoint_coverage(c.sheets);c.report("testpoints.txt",c.testpoints->report());c.gate("testpoints",c.testpoints->ok(),c.testpoints->report());});
     c.attempt("design_rules",[&]{const auto r=check_design_rules(c.sheets,[&](const std::string& id)->const SymbolDef&{return c.library.get(id);});c.report("design_rules.txt",r.report());c.gate("design_rules",r.ok(),r.report());});
-    c.attempt("part_rules",[&]{if(!c.power)throw ProjectError("power result unavailable");const auto r=run_part_checks(c.circuits,c.reports,c.require_power_policy(),&*c.power);c.gate("part_rules",r.ok(),part_rules_report(r));});
+    c.attempt("part_rules",[&]{if(!c.power)throw ProjectError("power result unavailable");c.parts=run_part_checks(c.circuits,c.reports,c.require_power_policy(),&*c.power);const auto& r=*c.parts;c.gate("part_rules",r.ok(),part_rules_report(r));});
     c.attempt("bom_values",[&]{const auto r=run_bom_values(c.circuits,load_bom_value_catalog(c.paths.repository_root/"schgen/verify/data/lcsc_values.json"),c.reports);c.gate("bom_values",r.ok,r.report());});
     c.attempt("footprint_pads",[&]{auto o=c.options.pcb.footprints;if(o.parts_dir.empty())o.parts_dir=c.paths.parts_dir;
         if(o.library_tables.empty())o.library_tables.push_back(c.paths.repository_root/"som/fp-lib-table");

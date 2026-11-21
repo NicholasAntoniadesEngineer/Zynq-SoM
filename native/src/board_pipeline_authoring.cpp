@@ -1,4 +1,5 @@
 #include "board_pipeline_internal.hpp"
+#include "schgen/module_symbols.hpp"
 #include "schgen/validation.hpp"
 #include "schgen/native_authoring_guard.hpp"
 #include "bringup_unicode.hpp"
@@ -29,6 +30,7 @@ BoardAuthoredProject author_board_pipeline_inputs(const ProjectPaths& paths,
     // native author-project frontend. ProjectConfig.name is a human title.
     ProjectAuthoringInput input;input.project_root=paths.project_root;
     input.context=make_guarded_native_authoring_context(paths.repository_root,purity_configuration,purity_report,timing);
+    input.board=load_board(paths.project_root,paths.module);
     input.som=load_som_interface(paths.som_interface_file);
     input.mapping=link_mapping_from_json(parse_json_file((paths.project_root/"som_mapping.json").string()),paths.module.do_not_load_straps);
     BoardAuthoredProject out;out.factories=native_project_factories(paths.project_root.filename().string(),input);
@@ -41,7 +43,7 @@ BoardAuthoredProject author_board_pipeline_inputs(const ProjectPaths& paths,
         if(entry.is_directory()&&!names.count(name))throw ProjectError("unregistered native board package: "+name);
         if(entry.is_directory()&&entry.is_symlink())throw ProjectError("symlinked native board package: "+name);
     }
-    SymbolLibrary library(paths.repository_root);
+    SymbolLibrary library = project_symbol_library(paths);
     for(auto& f:out.factories){
         if(!f.circuit)throw ProjectError("missing native board factory: "+f.name);
         auto ir=[&]{ExecutionTimings::Scope generate(timing,"input_factory_generation_and_ir_conversion");

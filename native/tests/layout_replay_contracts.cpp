@@ -1,3 +1,4 @@
+#include "schgen/land_spacing.hpp"
 #include "schgen/stackup.hpp"
 #include "schgen/board_pcb.hpp"
 #include "schgen/layout_adapter.hpp"
@@ -192,6 +193,8 @@ void differential_walk(const std::string& project, const PcbPlacementInput& inpu
             std::filesystem::copy_file(project_file, directory / project_file.filename(),
                                        std::filesystem::copy_options::overwrite_existing);
             std::ofstream(directory / "Zynq_Carrier.kicad_pcb", std::ios::binary) << render_pcb(moved, policy).pcb;
+            std::ofstream(directory / "Zynq_Carrier.kicad_dru", std::ios::binary)
+                << land_spacing_kicad_rules(judge_land_spacing(PcbCheckInput(moved)));
             const auto drc = run_pcb_drc(directory / "Zynq_Carrier.kicad_pcb");
             ++drc_done;
             const auto overlap = drc.by_type.find("courtyards_overlap");
@@ -278,6 +281,8 @@ void squeezed_board_passes(const std::string& project, const PcbPlacementInput& 
     std::filesystem::copy_file(project_file, directory / project_file.filename(),
                                std::filesystem::copy_options::overwrite_existing);
     std::ofstream(directory / "Zynq_Carrier.kicad_pcb", std::ios::binary) << rendered.pcb;
+    std::ofstream(directory / "Zynq_Carrier.kicad_dru", std::ios::binary)
+        << land_spacing_kicad_rules(judge_land_spacing(PcbCheckInput(stage.model)));
     const auto drc = run_pcb_drc(directory / "Zynq_Carrier.kicad_pcb");
     require(drc.n_errors && *drc.n_errors == 0, project + " squeezed board has no KiCad design-rule errors");
     if (project == fixture::repeat_project)

@@ -57,7 +57,7 @@ void ledger_boundaries(){
     begin();engine.ledger_open();const auto opened=end();
     const auto policy_rows=floorplan_ledger_policy();
     const auto assumptions=static_cast<std::size_t>(std::count_if(policy_rows.begin(),policy_rows.end(),[](const auto& d){return d.kind=="ASSUME";}));
-    require(policy_rows.size()==90&&assumptions==72&&opened==QuantizationCounts{{names[5],assumptions}}&&select(engine.plan.accounting.quantization_engagements)==opened,"83 prior plus seven new policy rows; each real numeric assumption displayed once");
+    require(policy_rows.size()==91&&assumptions==73&&opened==QuantizationCounts{{names[5],assumptions}}&&select(engine.plan.accounting.quantization_engagements)==opened,"83 prior plus eight new policy rows; each real numeric assumption displayed once");
     for(double value:{-0.,-.00001,-.00005,.00005,.00015,1.23445,1.23455,-1.23455,10.,1e-12}){
         begin();const auto before=engine.plan.accounting.quantization_engagements.at(names[5]);
         engine.calc("overmold_side_gap",jvalue(value),{{"plug_width",jvalue(value)},{"copper_half_width",jvalue(value)}});

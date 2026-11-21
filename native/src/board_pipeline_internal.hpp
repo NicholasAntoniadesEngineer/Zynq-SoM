@@ -3,6 +3,7 @@
 #include "schgen/pcb_verification.hpp"
 #include "schgen/firmware_docs.hpp"
 #include "schgen/module_pin_map.hpp"
+#include "schgen/part_checks.hpp"
 #include "schgen/spice.hpp"
 #include "schgen/design_rules.hpp"
 #include "schgen/execution_timing.hpp"
@@ -39,6 +40,7 @@ struct Context {
     std::optional<BoardPcbStage> pcb;
     std::optional<PcbVerificationResult> geometry;
     std::optional<PowerCheckResult> power;
+    std::optional<PartCheckResult> parts;
     std::optional<TestpointCoverage> testpoints;
     std::optional<SpiceResult> spice;
     std::optional<ManufacturingXdc> xdc;

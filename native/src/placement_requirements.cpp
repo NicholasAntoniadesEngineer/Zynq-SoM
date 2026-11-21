@@ -32,7 +32,7 @@ double gap(const Box4& a,const Box4& b) {
 }
 bool SupplyOwnership::operator==(const SupplyOwnership& b) const {return key(*this)==key(b);}
 PlacementRequirements parse_placement_requirements(const JsonNode& n) {
-    keys(n,{"schema","sheet","status","ownership","access","proximity","side","sources"});
+    keys(n,{"schema","sheet","status","owners","ownership","access","proximity","side","sources"});
     demand(str(n,"schema")=="schgen.placement-requirements/1","unsupported requirement schema");
     PlacementRequirements r; r.sheet=str(n,"sheet");
     const auto& proximity=field(n,"proximity",JsonKind::Object);
@@ -46,6 +46,13 @@ PlacementRequirements parse_placement_requirements(const JsonNode& n) {
         r.ownership.push_back(std::move(o));
     }
     demand(!r.ownership.empty(),"empty supply ownership");
+    for(const auto& kv:field(n,"owners",JsonKind::Object).object_value) {
+        demand(kv.second.kind==JsonKind::String&&!kv.second.string_value.empty(),"owner part number must be a non-empty string: "+kv.first);
+        demand(r.owners.emplace(kv.first,kv.second.string_value).second,"duplicate owner: "+kv.first);
+    }
+    std::set<std::string> owning;
+    for(const auto& o:r.ownership) owning.insert(o.owner);
+    demand(owning.size()==r.owners.size()&&std::all_of(owning.begin(),owning.end(),[&](const auto& o){return r.owners.count(o)==1;}),"owners must name exactly the owning references");
     const auto& access=field(n,"access",JsonKind::Object);
     keys(access,{"top_face_switches","actuation_envelope"});
     (void)str(access,"actuation_envelope");
@@ -53,26 +60,8 @@ PlacementRequirements parse_placement_requirements(const JsonNode& n) {
         demand(s.kind==JsonKind::String&&!s.string_value.empty()&&r.top_switches.insert(s.string_value).second,"invalid/duplicate access subject");
     return r;
 }
-PlacementRequirementDeclaration carrier_surface_requirement_declaration(const std::string& sheet) {
-    PlacementRequirementDeclaration d;d.required.sheet=sheet;
-    if(sheet=="board_aux") {
-        d.owner_mpn={{"U1","SY6280AAC"},{"U2","PCA9306DCUR"}};
-        d.required.ownership={
-            {"U1","5","IN","C1","1","2","+3V3","GND","10u","input_bypass"},
-            {"U1","1","OUT","C2","1","2","+3V3_AUX","GND","100n","output_bypass"},
-            {"U1","1","OUT","C3","1","2","+3V3_AUX","GND","10u","shared_output_bulk"},
-            {"U2","2","VREF1","C4","1","2","+3V3_SC","GND","100n","authored_reference_rail_bypass_not_translation_filter"},
-            {"U2","7","VREF2","C5","1","2","AUX_ISO_REF","GND","100p","reference_filter"}};
-        d.required.top_switches={"SW1"};
-    } else if(sheet=="bringup_rails") {
-        d.owner_mpn={{"U1","TCA9535PWR"}};
-        d.required.ownership={{"U1","24","VCC","C1","1","2","+3V3_SC","GND","100n","supply_bypass"}};
-        d.required.top_switches={"SW1","SW2","SW3","SW4","SW5","SW6"};
-    } else throw std::runtime_error("no reviewed carrier surface requirements for "+sheet);
-    return d;
-}
 PlacementRequirementReport check_placement_requirements(
-    const PlacementRequirements& r,const PlacementRequirementDeclaration& d,
+    const PlacementRequirements& r,
     const CircuitSheetIr& circuit,const std::map<std::string,CatalogPart>& catalog,
     const PcbCheckInput& placed,const std::map<std::string,std::string>& refs,
     const std::map<std::string,std::string>& nets) {
@@ -81,13 +70,8 @@ PlacementRequirementReport check_placement_requirements(
                     "Actuation/access envelope and assembly obstruction clearance unverified.",
                     "No new movement/side permission; preserve all existing placement gates and restrictions."};
     try {
-        demand(!d.required.ownership.empty(),"independent declaration is empty");
-        demand(r.sheet==circuit.name&&r.sheet==d.required.sheet,"requirement/live/declaration sheet mismatch");
-        auto a=r.ownership,b=d.required.ownership;
-        auto less=[](const auto& x,const auto& y){return key(x)<key(y);};
-        std::sort(a.begin(),a.end(),less);std::sort(b.begin(),b.end(),less);
-        demand(a==b,"omitted, extra or wrong ownership declaration");
-        demand(r.top_switches==d.required.top_switches,"omitted, extra or wrong access declaration");
+        demand(!r.ownership.empty(),"requirement ownership is empty");
+        demand(r.sheet==circuit.name,"requirement/live sheet mismatch");
         std::map<std::string,const CircuitPartIr*> parts;
         for(const auto& p:circuit.parts) demand(parts.emplace(p.ref,&p).second,"duplicate live reference");
         Nets live;
@@ -125,7 +109,7 @@ PlacementRequirementReport check_placement_requirements(
         for(const auto& o:r.ownership) {
             demand(parts.count(o.owner)&&parts.count(o.cap),"missing owner/cap part");
             const auto& owner=*parts.at(o.owner);const auto& cap=*parts.at(o.cap);
-            const auto mpn=d.owner_mpn.at(o.owner);const auto& part=catalog.at(mpn);
+            const auto mpn=r.owners.at(o.owner);const auto& part=catalog.at(mpn);
             demand(part.mpn==mpn&&owner.value==part.mpn&&owner.lib_id==part.lib_id&&owner.footprint==part.footprint,"owner catalog identity mismatch");
             demand(std::count_if(part.pins.begin(),part.pins.end(),[&](const auto& p){return p.number==o.pin;})==1,"owner physical pin number is missing/ambiguous in independent catalog");
             const auto physical=std::find_if(part.pins.begin(),part.pins.end(),[&](const auto& p){return p.number==o.pin;});

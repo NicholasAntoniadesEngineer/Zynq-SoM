@@ -2,9 +2,9 @@
 * connector + its USBLC6-2SC6 ESD array.
 *
 * MINIMAL by nature: this sheet is a pure connector + a passive ESD clamp array
-* — it adds NO R/C filter network of its own (no decoupling, no pull-ups; the
-* AUX-bus pull-ups live once on board_aux). So the subckt has no netlist
-* passives; it captures only the topology that matters electrically: the USBLC6
+* — its only passive is the 100 nF C1 on the clamp reference (U1.5, ST
+* USBLC6-2 Rev 2 fig.7); no pull-ups (the AUX-bus pull-ups live once on
+* board_aux). It captures the topology that matters electrically: the USBLC6
 * low-capacitance clamp on the two I2C lines and the always-on clamp reference.
 *
 * CARRIER-LOCAL: the subckt pins are the carrier's REAL rail/ground/port nets.
@@ -31,6 +31,8 @@ Dsda_l GND QWIIC_SDA DESD
 Rscl QWIIC_SCL AUX_I2C_SCL 1m
 Dscl_h QWIIC_SCL V3V3 DESD
 Dscl_l GND QWIIC_SCL DESD
+* VBUS (U1.5) clamp-reference bypass
+C1 V3V3 GND 100n
 
 * connector power pin (J1.2) is the GATED rail; modeled as a near-open keep-node
 * so V3V3_AUX is not dangling when this subckt is exercised standalone.

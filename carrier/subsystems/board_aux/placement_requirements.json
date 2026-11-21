@@ -2,6 +2,7 @@
   "schema": "schgen.placement-requirements/1",
   "sheet": "board_aux",
   "status": "typed runtime ownership/access checks; qualitative proximity and access envelopes unverified",
+  "owners": {"U1": "SY6280AAC", "U2": "PCA9306DCUR"},
   "ownership": [
     {"owner": "U1", "pin": "5", "pin_name": "IN", "cap": "C1", "cap_pin": "1", "return_pin": "2", "rail": "+3V3", "return_net": "GND", "value": "10u", "role": "input_bypass"},
     {"owner": "U1", "pin": "1", "pin_name": "OUT", "cap": "C2", "cap_pin": "1", "return_pin": "2", "rail": "+3V3_AUX", "return_net": "GND", "value": "100n", "role": "output_bypass"},

@@ -5,6 +5,7 @@
 #include "schgen/pcb_placement_search.hpp"
 
 namespace schgen::pcb_placement {
+using quantization_policy::kPageOriginMm;
 namespace {
 FloorplanTermIndex term_index(const Context &ctx) {
     using Key = std::tuple<std::string, std::string, std::string>;
@@ -165,8 +166,8 @@ FloorplanLocalMetrics metrics(const PcbZoneResult &zones, const Offsets &top, co
 namespace schgen {
 FloorplanInput prepare_pcb_floorplan(const PcbPlacementInput &input, const PcbZoneResult &zones) {
     using namespace pcb_placement;
-    if (input.floorplan.origin != FloorplanPoint{25, 25})
-        throw PcbZoneInfeasible("PCB placement requires the 25 mm emission origin");
+    if (input.floorplan.origin != FloorplanPoint{kPageOriginMm, kPageOriginMm})
+        throw PcbZoneInfeasible("PCB placement requires the floorplan origin at the page origin");
     Context ctx(input);
     FloorplanInput result = input.floorplan;
     result.geometry = zones.geometry;

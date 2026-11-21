@@ -1,5 +1,6 @@
 #include "board_pipeline_internal.hpp"
 #include "schgen/placement_requirements.hpp"
+#include "reviewed_ownership.hpp"
 #include <iostream>
 #include <unistd.h>
 
@@ -90,7 +91,9 @@ void tests(const fs::path& repo) {
         auto requirements=parse_json_text(original);
         for(auto& entry:requirements.object_value)if(entry.first=="ownership")entry.second.array_value.pop_back();
         publish_text(path,json(requirements));
-        fail(std::string("omitted-")+sheet,{},"ownership");publish_text(path,original);
+        bool rejected=false;
+        try{rejected=!reviewed_ownership::mismatch(parse_placement_requirements(requirements)).empty();}catch(const std::exception&){rejected=true;}
+        require(rejected,std::string("omitted-")+sheet+" ownership must be rejected by the loader or differ from the reviewed copy");publish_text(path,original);
     }
     fail("pad-name",[](Context& c){c.pcb->placement.model.insts.front().pad_nets.begin()->second.second="corrupted";},"placed pin/net changed");
     fail("pad-id",[](Context& c){c.pcb->placement.model.insts.front().pad_nets.begin()->second.first=0;},"placed pin/net changed");
@@ -116,7 +119,10 @@ void tests(const fs::path& repo) {
         const auto r=f.run(name,[](Context& c){c.pcb.reset();c.schematic.reset();c.circuits.clear();});
         require(r.gates.front().status==BoardGateStatus::failed&&r.gates.front().report.find(why)!=std::string::npos,"requirements scope rejected: "+name+": "+r.gates.front().report);
     };
-    scope_fail("scope-missing-key","\"unrelated_key\": 1","'placement_requirements' is missing");
+    {auto text=carrier_settings;text.erase(text.find(scope_text),scope_text.size()+1);f.paths.project_file=f.scratch.root/"scope-missing-key.json";publish_text(f.paths.project_file,text);
+        const auto r=f.run("scope-missing-key",[](Context& c){c.pcb.reset();c.schematic.reset();c.circuits.clear();});
+        require(r.gates.front().status==BoardGateStatus::failed&&r.gates.front().report.find("'placement_requirements' is missing")!=std::string::npos,"requirements scope rejected: scope-missing-key: "+r.gates.front().report);}
+    scope_fail("scope-unknown-top-key","\"unrelated_key\": 1","unknown key 'unrelated_key'");
     scope_fail("scope-not-object","\"placement_requirements\": 1","'placement_requirements' is missing");
     scope_fail("scope-no-applicable","\"placement_requirements\": {}","needs 'applicable'");
     scope_fail("scope-unknown-key","\"placement_requirements\": {\"applicable\": true, \"note\": \"x\"}","note");

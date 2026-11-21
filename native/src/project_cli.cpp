@@ -1,4 +1,9 @@
 #include "schgen/project_cli.hpp"
+#include "schgen/copper_debt.hpp"
+#include "schgen/board_check.hpp"
+#include "schgen/project_catalog.hpp"
+#include "schgen/run_config.hpp"
+#include "schgen/module_symbols.hpp"
 #include "schgen/board_files.hpp"
 #include "schgen/native_authoring_guard.hpp"
 
@@ -7,7 +12,6 @@
 #include "schgen/board_pcb.hpp"
 #include "schgen/board_pipeline.hpp"
 #include "schgen/subsystem_build.hpp"
-#include "schgen/example_devkit.hpp"
 #include "schgen/experiment_tools.hpp"
 #include "schgen/experiment_observers.hpp"
 #include "schgen/net_contract.hpp"
@@ -93,7 +97,7 @@ bool experiment_command(const std::string& name){
     return name=="chir-rung"||name=="w11-sweep"||name=="w12-bound"||name=="w12-stageprobe"||name=="dump-circuits";
 }
 bool project_command(const std::string& name){
-    return commands.count(name)||experiment_command(name)||name=="board"||name=="build"||name=="devkit"||name=="nets"||name=="subsystem-check"||name=="carrier-check";
+    return commands.count(name)||experiment_command(name)||name=="board"||name=="build"||name=="nets"||name=="subsystem-check"||name=="carrier-check"||name=="basis-check"||name=="board-check";
 }
 Options parse(int argc, char** argv) {
     Options out;
@@ -320,11 +324,14 @@ Options parse(int argc, char** argv) {
         allowed.insert("--floorplan-spec");
         allowed.insert("--interior-order");
         allowed.insert("--no-render"); allowed.insert("--timing"); allowed.insert("--kicad-cli");
-    } else if (out.command == "build" || out.command == "devkit") {
+    } else if (out.command == "build") {
         allowed.insert("--no-render"); allowed.insert("--kicad-cli");
-        if(out.command=="devkit")allowed.erase("--project");
     } else if (out.command == "subsystem-check" || out.command == "carrier-check") {
         allowed.erase("--output");
+    } else if (out.command == "board-check") {
+        allowed.insert("--run-config");
+    } else if (out.command == "basis-check") {
+        allowed.erase("--output"); allowed.erase("--project"); allowed.insert("--run-config");
     } else if (out.command == "nets") {
         // Explicit selected-project net header; no SoM extraction overrides.
     } else if (out.command == "preflight") {
@@ -431,8 +438,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
         const std::set<std::string> flags={"--no-render","--timing","--cons-only","--allow-missing","--qualified-refs","--no-ngspice","--keep","--compact-placement","--multiscale-outline","--edge-feasibility","--failed-first-retry","--owned-quality-first","--shape-area-first","--owned-face-cohesion","--owned-extent-alternatives","--granular-minor-occupancy","--vertical-compaction"};
         for(const auto& option:options.help_options)std::cout<<"  "<<option<<(flags.count(option)?"":" VALUE")<<(option=="--output"?" (alias -o)":"")<<'\n';
         if(options.command=="board")std::cout<<"--granular-minor-occupancy: reserve individual opposite-face courtyards with fanout halos and through-hole occupancy; requires compact placement.\n--vertical-compaction: also explore vertical leftover contacts for explicit contract-group sheets; all qualification gates remain active.\n";
-        if(options.command=="nets"||options.command=="devkit"||options.command=="board-schematic"||options.command=="pcb-stage")std::cout<<"--output is required.\n";
-        if(options.command=="devkit")std::cout<<"Builds the four-sheet example, not the twelve-sheet devkit_mini project.\n";
+        if(options.command=="nets"||options.command=="board-schematic"||options.command=="pcb-stage")std::cout<<"--output is required.\n";
         if(options.command=="board")std::cout<<"--initial-outline-mm WIDTHxHEIGHT: re-evaluate a starting candidate, then continue bounded optimisation. Not a fixed outline or cached acceptance; conflicts with a fixed project outline. All gates remain active.\n";
         if(options.command=="board")std::cout<<"--multiscale-outline: opt-in bounded axis/diagonal refinement; may stop at a larger local solution. Use a validated starting candidate when available. All gates remain active; fixed outlines conflict.\n";
         if(options.command=="board")std::cout<<"--edge-feasibility: opt-in sequential clearance-aware initial edge runs; requires --compact-placement. Not a complete joint solver. Rounded poses are rechecked; all gates remain active.\n";
@@ -456,15 +462,39 @@ std::optional<int> run_project_command(int argc, char** argv) {
         std::cout << subsystem_scaffold_summary(result);
         return 0;
     }
-    if(options.command=="devkit"){
-        if(!options.subsystems.empty()||options.output.empty())throw ProjectError("devkit requires --output DIRECTORY and no subsystem selection");
+    if(options.command=="board-check"){
+        if(!options.subsystems.empty())throw ProjectError("board-check takes no subsystem selection");
+        if(!options.project)throw ProjectError("board-check requires --project BOARD");
+        const auto repository=fs::weakly_canonical(fs::absolute(options.repository));
+        const auto board=fs::weakly_canonical(options.project->is_absolute()?*options.project:repository/ *options.project);
+        const auto catalogue=project_catalog_paths(repository,board);
+        if(!compile_part_catalog(catalogue.parts_dir.string(),catalogue.part_catalog.string()))throw ProjectError("the part catalogue could not be compiled from "+catalogue.parts_dir.string());
+        if(!open_part_catalog(catalogue.part_catalog.string()))throw ProjectError("cannot open native part catalog");
+        const auto result=check_board_definition(repository,board,options.run_config.empty()?repository/run_config_file:fs::absolute(options.run_config));
+        const auto text=result.text();
+        if(!options.output.empty())publish_text(options.output,text);
+        std::cout<<text;
+        return result.ok()?0:1;
+    }
+    if(options.command=="basis-check"){
+        if(!options.subsystems.empty())throw ProjectError("basis-check takes no subsystem selection");
         const auto repository=fs::absolute(options.repository);
         if(!open_part_catalog((repository/"native/catalog.bin").string()))throw ProjectError("cannot open native part catalog");
-        const auto sheets=author_example_devkit(make_guarded_native_authoring_context(repository));
-        SymbolLibrary library(repository);ExampleDevkitOptions build;
-        build.no_render=options.no_render;build.extraction.kicad_cli=options.kicad_cli;
-        const auto result=build_example_devkit(sheets,library,options.output,build);
-        std::cout<<result.report;return result.ok()?0:1;
+        const auto config=options.run_config.empty()?repository/run_config_file:fs::absolute(options.run_config);
+        bool audited_once=false;
+        for(const auto& board:board_folders(repository)){
+            apply_run_config(config,load_board(board,load_module(module_root_in(repository,board))).name);
+            const auto sources=author_copper_debt_sources(repository);
+            if(!audited_once){
+                const auto audited=audit_component_basis(sources.circuits,sources.basis_scopes,sources.basis);
+                std::cout<<component_basis_report(audited)<<'\n';
+                if(!audited.ok())return 1;
+                audited_once=true;
+            }
+            verify_copper_debt_sources(sources);
+            std::cout<<"COPPER CLAIMS: PASS — "<<sources.claims.claims.size()<<" claims verified on every board folder and the library under the stack-up of "<<board.filename().string()<<'\n';
+        }
+        return 0;
     }
     auto paths = resolve_project_paths(options.repository, options.project);
     if (!options.run_config.empty()) paths.run_config = fs::absolute(options.run_config);
@@ -531,7 +561,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
         for(const auto& sheet:sheets){const auto band=std::find_if(index.begin(),index.end(),[&](const auto& entry){return entry.first==sheet.name;});
             if(band==index.end())throw ProjectError("probe sheet index missing "+sheet.name);
             inputs.push_back({sheet,band->second,std::nullopt});}
-        SymbolLibrary library(paths.repository_root);BoardSchematicOptions schematic;
+        SymbolLibrary library = project_symbol_library(paths);BoardSchematicOptions schematic;
         schematic.root_name=paths.file_stem;schematic.extraction.kicad_cli=options.kicad_cli;
         schematic.reports_dir=scratch.path/"reports";
         const auto board=build_board_schematic(inputs,library,scratch.path,schematic);
@@ -557,7 +587,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
             const auto created=::mkdtemp(pattern.data());if(!created)throw ProjectError("cannot create subsystem build scratch");
             scratch.path=created;output=scratch.path;
         }
-        SymbolLibrary library(paths.repository_root);SubsystemBuildOptions build;
+        SymbolLibrary library = project_symbol_library(paths);SubsystemBuildOptions build;
         build.no_render=options.no_render;build.extraction.kicad_cli=options.kicad_cli;
         build.project_name=load_project_config(paths).name;
         const auto result=build_subsystem_sheet(circuit,library,output,build);
@@ -675,7 +705,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
         run.extraction.kicad_cli = options.kicad_cli;
         run.worker_command = {fs::absolute(*executable).string(), "selftest-worker"};
         run.progress = [](const std::string& text) { std::cout << text << std::flush; };
-        SymbolLibrary library(paths.repository_root);
+        SymbolLibrary library = project_symbol_library(paths);
         const auto result = run_full_selftest(inputs,
             selftest_model_fixtures(pcb_check_footprint(resistor->string(), bytes)), library, run);
         if (!options.output.empty()) publish_text(options.output, result.report);
@@ -782,7 +812,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
             auto r=extract_spice_checks(circuits,board_power());SpiceRunOptions run;run.allow_ngspice=!options.no_ngspice;
             run_ngspice_crosschecks(r,run);report=spice_report(r,ngspice_available().has_value());ok=r.ok();
         } else {
-            SymbolLibrary library(paths.repository_root);
+            SymbolLibrary library = project_symbol_library(paths);
             if(options.command=="pin-completeness") {
                 const auto r=check_pin_completeness(circuits,library,load_nc_allowlist(data/"nc_allowlist.json"));
                 report=r.report();ok=r.ok;
@@ -846,7 +876,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
                 throw std::runtime_error("missing persistent sheet-index band for " + c.name);
             input.push_back({c.circuit, band->second, std::nullopt});
         }
-        SymbolLibrary library(paths.repository_root);
+        SymbolLibrary library = project_symbol_library(paths);
         BoardSchematicOptions build;
         build.root_name = paths.file_stem;
         build.sheet_subdir = "schematic";
@@ -862,7 +892,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
         std::string report;
         bool ok;
         if (options.command == "design-rules") {
-            SymbolLibrary library(paths.repository_root);
+            SymbolLibrary library = project_symbol_library(paths);
             const auto result = check_design_rules(sheets,
                 [&](const std::string& id) -> const SymbolDef& { return library.get(id); });
             report = result.report();
@@ -877,7 +907,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
         return ok ? 0 : 1;
     }
     if (options.command == "circuit-check") {
-        SymbolLibrary library(paths.repository_root);
+        SymbolLibrary library = project_symbol_library(paths);
         bool ok = true;
         for (const auto& sheet : sheets) {
             const auto result = check_circuit_electrical(sheet, library);
@@ -887,7 +917,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
         return ok ? 0 : 1;
     }
     if (options.command == "link" || options.command == "diagram") {
-        SymbolLibrary library(paths.repository_root);
+        SymbolLibrary library = project_symbol_library(paths);
         for (const auto& sheet : sheets) validate_circuit(sheet, library);
         const auto contract = options.contract.empty() ? paths.som_interface_file : options.contract;
         const auto contract_json = parse_json_file(contract.string());

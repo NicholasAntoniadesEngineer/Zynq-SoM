@@ -76,10 +76,15 @@ std::vector<std::string> subsystem_required_files(const std::string& name,Author
     if(mode==AuthoringPackageMode::native_assets)return {"README.md",name+".cir"};
     return {name+".py","README.md","test_"+name+".py",name+".cir"};
 }
+std::vector<std::string> local_package_authored_files(const std::string& name,bool adapter) {
+    if(adapter)return {};
+    return {"README.md",name+".cir"};
+}
 std::vector<std::string> carrier_required_files(const std::string& name,bool adapter,AuthoringPackageMode mode) {
     if(mode==AuthoringPackageMode::native_assets) {
-        if(adapter)return {"circuit.json","layout.json"};
-        return {"circuit.json","layout.json","README.md",name+".cir"};
+        std::vector<std::string> files{"circuit.json","layout.json"};
+        for(const auto& file:local_package_authored_files(name,adapter))files.push_back(file);
+        return files;
     }
     if(adapter)return {name+".py","test_"+name+".py"};
     return {name+".py","__init__.py","README.md","test_"+name+".py",name+".cir"};

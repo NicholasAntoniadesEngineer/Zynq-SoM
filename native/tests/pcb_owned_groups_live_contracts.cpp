@@ -1,6 +1,7 @@
 #include "schgen/pcb_owned_groups.hpp"
 #include "sheet_roles_fixture.hpp"
 #include "schgen/placement_requirements.hpp"
+#include "reviewed_ownership.hpp"
 #include "schgen/board_pcb.hpp"
 #include "schgen/board_schematic.hpp"
 #include "fresh_project_schematic.hpp"
@@ -31,7 +32,8 @@ int main(int argc,char** argv) {
         std::size_t covered=0;
         for(const auto* sheet:{"board_aux","bringup_rails"}) {
             auto req=parse_placement_requirements(parse_json_file((paths.subsystems_dir/sheet/"placement_requirements.json").string()));
-            const auto expected=carrier_surface_requirement_declaration(sheet);
+            const auto problem=reviewed_ownership::mismatch(req);
+            if(!problem.empty())throw std::runtime_error(problem);
             const CircuitSheetIr* circuit=nullptr;
             for(const auto& source:stage.circuits)if(source.name==sheet)circuit=&source.circuit;
             if(!circuit)throw std::runtime_error("missing live circuit");
@@ -43,7 +45,7 @@ int main(int argc,char** argv) {
                 if(!inserted&&it->second!=mapped)throw std::runtime_error("split extracted net");
             }
             std::map<std::string,CatalogPart> catalog;
-            for(const auto& [ref,mpn]:expected.owner_mpn){(void)ref;catalog.emplace(mpn,lookup_part_catalog(mpn));}
+            for(const auto& [ref,mpn]:req.owners){(void)ref;catalog.emplace(mpn,lookup_part_catalog(mpn));}
             PcbCheckModel zone;zone.net_numbers=stage.placement.model.net_numbers;
             Box4 b{std::numeric_limits<double>::infinity(),std::numeric_limits<double>::infinity(),-std::numeric_limits<double>::infinity(),-std::numeric_limits<double>::infinity()};
             for(std::size_t i=0;i<stage.placement.model.insts.size();++i)if(stage.placement.model.insts[i].sheet==sheet) {
@@ -51,7 +53,7 @@ int main(int argc,char** argv) {
                 b.x0=std::min(b.x0,box.x0);b.x1=std::max(b.x1,box.x1);b.y0=std::min(b.y0,box.y0);b.y1=std::max(b.y1,box.y1);
             }
             zone.origin_x=b.x0;zone.origin_y=b.y0;zone.board_w=b.x1-b.x0;zone.board_h=b.y1-b.y0;
-            const auto before=check_placement_requirements(req,expected,*circuit,catalog,PcbCheckInput(zone),refs,nets);
+            const auto before=check_placement_requirements(req,*circuit,catalog,PcbCheckInput(zone),refs,nets);
             if(!before.hard_requirements_met())throw std::runtime_error(before.summary());
             std::vector<OwnedCapPlacement> rows;OwnedGroupOptions options;options.compact=true;options.clearance=stage.inputs.floorplan.place_clear;
             for(const auto& r:req.ownership) {
@@ -65,7 +67,7 @@ int main(int argc,char** argv) {
             for(const auto& d:result.diagnostics)std::cout<<d<<'\n';
             if(result.alternatives.empty())throw std::runtime_error("no real-footprint owned alternative");
             for(const auto& candidate:result.alternatives) {
-                const auto report=check_placement_requirements(req,expected,*circuit,catalog,PcbCheckInput(candidate.model),refs,nets);
+                const auto report=check_placement_requirements(req,*circuit,catalog,PcbCheckInput(candidate.model),refs,nets);
                 if(!report.hard_requirements_met())throw std::runtime_error(report.summary());
                 std::cout<<candidate.tag<<" local extent "<<zone.board_w<<'x'<<zone.board_h<<" -> "<<candidate.model.board_w<<'x'<<candidate.model.board_h<<'\n';
                 for(const auto& m:report.measurements)std::cout<<candidate.tag<<' '<<m.owner<<'.'<<m.owner_pin<<" -> "<<m.member<<'.'<<m.member_pin<<" gap="<<m.planar_pad_box_gap_mm<<" sides="<<m.owner_side<<'/'<<m.member_side<<" UNVERIFIED\n";

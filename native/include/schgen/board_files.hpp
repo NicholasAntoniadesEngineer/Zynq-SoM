@@ -4,7 +4,7 @@
 
 namespace schgen {
 
-enum class BoardFileKind { Schematic, Project, Pcb, DesignRules, Placements, PlacementsScratch, PinConstraints };
+enum class BoardFileKind { Schematic, Project, Pcb, DesignRules, ProjectRules, Placements, PlacementsScratch, PinConstraints };
 
 std::string board_file_name(const std::string& stem, BoardFileKind kind);
 

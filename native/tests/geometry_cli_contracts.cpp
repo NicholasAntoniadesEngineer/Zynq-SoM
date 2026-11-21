@@ -115,7 +115,7 @@ void parser(const JsonNode& reference) {
 void safety(const fs::path& repo, const fs::path& work) {
     const auto project = work / "safety/devkit_mini";
     write(project / "project.json", "{}"); write(project / "floorplan.json", "{}\n");
-    write(project / "board.json", R"({"files": {"stem": "Fixture_Board"}, "root_readme": false, "owned_groups": false, "module": {"folder": "som"}})");
+    write(project / "board.json", R"({"files": {"stem": "Fixture_Board"}, "root_readme": false, "owned_groups": [], "module": {"folder": "som"}})");
     const auto original = snapshot(project);
     const auto invoke = [&](const fs::path& output, const std::vector<std::string>& extra) {
         std::vector<std::string> args{"floorplan", "--repo", repo.string(), "--project", project.string(), "--output", output.string(), "--kicad-cli", "/no/extractor"};
@@ -247,7 +247,7 @@ void live(const fs::path& repo, const fs::path& work, const JsonNode& reference,
         const auto& gates = field(verdict, "gates");
         require(field(field(gates, failure), "status").string_value == "FAIL" && field(field(gates, failure), "mandatory").bool_value, "deliberately mutated mandatory gate is not waived");
         if(std::string(failure)=="fallbacks")
-            require(field(field(gates,failure),"report").string_value.find("board fallback baseline missing or invalid")!=std::string::npos,
+            require(field(field(gates,failure),"report").string_value.find("board fallback baseline invalid")!=std::string::npos,
                     "invalid required fallback evidence causes the rejection, not search effort");
         require(field(field(gates, "native_policy"), "status").string_value == "PASS", "apply ran reviewed native policy");
         const auto& audit = field(gates, "quantize_census");

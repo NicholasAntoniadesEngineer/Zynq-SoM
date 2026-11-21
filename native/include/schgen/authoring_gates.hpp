@@ -77,6 +77,7 @@ struct CarrierStructureResult {
 // files, not directories. Empty native registries/package roots fail closed.
 std::vector<std::string> subsystem_required_files(const std::string& name,
     AuthoringPackageMode mode = AuthoringPackageMode::native_assets);
+std::vector<std::string> local_package_authored_files(const std::string& name, bool adapter);
 std::vector<std::string> carrier_required_files(const std::string& name, bool adapter,
     AuthoringPackageMode mode = AuthoringPackageMode::native_assets);
 SubsystemPackageReport check_subsystem_package(const std::string& name,

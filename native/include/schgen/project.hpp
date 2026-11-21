@@ -36,7 +36,8 @@ struct ProjectPaths {
     std::optional<std::filesystem::path> run_config;
     ModuleDefinition module;
     std::string file_stem;
-    bool root_readme = false, owned_groups = false;
+    bool root_readme = false;
+    std::vector<std::string> owned_groups;
 };
 
 struct ProjectConfig {
@@ -106,6 +107,12 @@ struct ProjectManifest {
 ProjectPaths resolve_project_paths(
     const std::filesystem::path& repository_root,
     const std::optional<std::filesystem::path>& project = std::nullopt);
+const std::vector<DocumentKey>& project_document_keys();
+struct PlacementRequirementsScope {
+    bool applicable = false;
+    std::string statement;
+};
+PlacementRequirementsScope placement_requirements_scope(const JsonNode& project, const std::string& file);
 ProjectConfig load_project_config(const ProjectPaths& paths);
 ProjectManifest load_project_manifest(const ProjectPaths& paths);
 

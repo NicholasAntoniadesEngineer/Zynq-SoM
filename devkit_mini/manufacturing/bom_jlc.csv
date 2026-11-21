@@ -1,7 +1,7 @@
 Comment,Designator,Footprint,LCSC
 100R,debug_boot:R3,Resistor_SMD:R_0603_1608Metric,C22775
 100k,"pd_input:R3,pd_input:R6,power:R8",Resistor_SMD:R_0603_1608Metric,C25803
-100n,"pd_input:C1,power:C1,power:C25,power:C29,power:C4,power:C7,power:C9,power_mon:C1,power_mon:C2,power_som:C14,power_som:C17,power_som:C25,som_decoupling:C10,som_decoupling:C11,som_decoupling:C12,som_decoupling:C15,som_decoupling:C16,som_decoupling:C17,som_decoupling:C18,som_decoupling:C3,som_decoupling:C4,som_decoupling:C5,som_decoupling:C6,som_decoupling:C9,uart_bridge:C1,uart_bridge:C3,uart_bridge:C4",Capacitor_SMD:C_0603_1608Metric,C14663
+100n,"pd_input:C1,pd_input:C4,power:C1,power:C25,power:C29,power:C4,power:C7,power:C9,power_mon:C1,power_mon:C2,power_som:C14,power_som:C17,power_som:C25,som_decoupling:C10,som_decoupling:C11,som_decoupling:C12,som_decoupling:C15,som_decoupling:C16,som_decoupling:C17,som_decoupling:C18,som_decoupling:C3,som_decoupling:C4,som_decoupling:C5,som_decoupling:C6,som_decoupling:C9,uart_bridge:C1,uart_bridge:C3,uart_bridge:C4",Capacitor_SMD:C_0603_1608Metric,C14663
 10R,"power:R11,power:R13,power_som:R17",Resistor_SMD:R_0603_1608Metric,C22859
 10k,"debug_boot:R4,debug_boot:R5,debug_boot:R6,power:R2,power:R5,power_mon:R1",Resistor_SMD:R_0603_1608Metric,C25804
 10mR,"power_mon:RS1,power_mon:RS2,power_mon:RS3",RLM12FTCMR010:RLM12FTCMR010,C188070
@@ -30,7 +30,7 @@ Comment,Designator,Footprint,LCSC
 AO3400A,power:Q1,Package_TO_SOT_SMD:SOT-23,C20917
 AP2112K-1.8,power:U3,Package_TO_SOT_SMD:SOT-23-5,C176944
 CP2102N-A02,uart_bridge:U1,CP2102N-A02-GQFN24R:CP2102N-A02-GQFN24R,C969151
-DF40C-100DP-0.4V(51),"som_j1:J1,som_j2:J2,som_j3:J3",DF40C-100DP-0.4V_51:DF40C-100DP-0.4V_51,C531031
+DF40C-100DP-0.4V(51),"som_j1:J1,som_j2:J2,som_j3:J3",Mylibrary:HRS_DF40C-100DP-0.4V_51_,C531031
 DIP-4,debug_boot:SW1,DSHP04TSGER:DSHP04TSGER,C3293144
 HX_JN1.27-2x5,debug_boot:J2,HX_JN1.27-2x5_TP_H4.9:HX_JN1.27-2x5_TP_H4.9,C42372555
 INA3221AIRGVR,"power_mon:U1,power_mon:U2",INA3221AIRGVR:INA3221AIRGVR,C181255

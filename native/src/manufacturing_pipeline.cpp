@@ -39,8 +39,10 @@ ManufacturingPipelineInput manufacturing_pipeline_from_json(const JsonNode& n) {
     for(const auto& [name,b]:field(n,"baselines",JsonKind::Object).object_value)out.baselines[name]=counts(b);
     return out;
 }
-ManufacturingBaselines manufacturing_pipeline_baselines(const std::filesystem::path& root) {
-    ManufacturingBaselines out;for(const auto& entry:std::filesystem::directory_iterator(root))if(entry.is_directory()&&std::filesystem::exists(entry.path()/"project.json"))if(auto c=load_counts(entry.path()/"reports/fallback_baseline.json"))out[entry.path().filename().string()]=*c;return out;
+ManufacturingCounts manufacturing_board_baseline(const std::filesystem::path& baseline) {
+    if(!std::filesystem::exists(baseline))return {};
+    if(auto c=load_counts(baseline))return *c;
+    throw ProjectError("board fallback baseline invalid: "+baseline.string());
 }
 std::string render_manufacturing_pipeline(const ManufacturingPipelineInput& in) {
     std::ostringstream o;o<<R"(# GEOMETRY PIPELINE

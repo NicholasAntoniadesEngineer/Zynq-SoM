@@ -210,6 +210,16 @@ int main(int argc, char** argv) {
                     ++retired_footprints;
                     continue;
                 }
+                if (id == "DF40C-100DP-0.4V_51:DF40C-100DP-0.4V_51") {
+                    for (const auto& sheet : input.floorplan.sheets)
+                        for (const auto& part : sheet.parts)
+                            require(part.footprint != id, "module connector still requests the part folder land pattern");
+                    require(live == input.floorplan.footprint_of.end(), "part folder module connector land pattern still loaded");
+                    require(input.floorplan.footprint_of.count("Mylibrary:HRS_DF40C-100DP-0.4V_51_"),
+                            "the module interface's mate land pattern replaces it");
+                    ++retired_footprints;
+                    continue;
+                }
                 require(live != input.floorplan.footprint_of.end(), "resolve " + id);
                 const auto& frozen = field(field(field(expected,"footprints"),key.string_value),"text").string_value;
                 const auto& bytes = input.footprints.at(live->second)->bytes;
@@ -217,10 +227,18 @@ int main(int argc, char** argv) {
                     "independent exact footprint " + id);
                 if (id == rtc_id) { ++corrected_footprints; footprint_mutations(bytes, frozen); }
             }
-            require(retired_footprints == 1, "exact reviewed footprint retirement scope");
+            require(retired_footprints == 2, "exact reviewed footprint retirement scope");
             require(corrected_footprints == (std::string(project) == "carrier" ? 1u : 0u),
                 "exact reviewed footprint correction scope");
             for (const auto& [id, value] : field(expected,"courtyard_dims").object_value) {
+                if (id == "DF40C-100DP-0.4V_51") {
+                    require(!input.floorplan.courtyard_dims.count(id) && input.floorplan.courtyard_dims.count("Mylibrary"),
+                            "the module mate land pattern's courtyard replaces the part folder dossier");
+                    std::cout << project << ": module connector courtyard " << value.array_value.at(0).number_value << " x "
+                              << value.array_value.at(1).number_value << " -> " << input.floorplan.courtyard_dims.at("Mylibrary").first
+                              << " x " << input.floorplan.courtyard_dims.at("Mylibrary").second << "\n";
+                    continue;
+                }
                 const auto dims = input.floorplan.courtyard_dims.find(id);
                 require(dims != input.floorplan.courtyard_dims.end(), "courtyard dossier " + id);
                 require(dims->second.first == value.array_value.at(0).number_value &&

@@ -79,6 +79,7 @@ struct PcbProjectDocument {
     std::map<std::string, std::string> integer_tokens;
 };
 PcbProjectDocument read_pcb_project(const std::filesystem::path &);
+JsonNode pcb_project_board_settings(const PcbEmitPolicy &);
 std::string render_pcb_project(const PcbModel &, const std::string &filename,
                                const PcbProjectDocument *existing = nullptr,
                                const PcbEmitPolicy & = default_pcb_emit_policy(),

@@ -41,7 +41,8 @@ inline SomOutline som(const J &n) {
     s.h = number(n, "h");
     for (const auto &j : field(n, "js").array_value)
         s.js.push_back({string(j, "ref"), number(j, "pcb_x"), number(j, "pcb_y"), number(j, "rot"),
-                        number(j, "x"), number(j, "y"), number(j, "w"), number(j, "h")});
+                        number(j, "x"), number(j, "y"), number(j, "w"), number(j, "h"),
+                        number(j, "w") < number(j, "h") ? 90.0 : 0.0, {}, {}});
     return s;
 }
 struct Fixture {
@@ -158,6 +159,7 @@ inline Fixture load(const std::filesystem::path &root, const std::string &projec
             pins.push_back({p.array_value[0].string_value, p.array_value[1].string_value});
         input.netlist.push_back({row.array_value[0].string_value, pins});
     }
+    input.land_spacing = repository_land_spacing(input.netlist, repository_power_policy(root, project));
     input.interface_bytes = read(module_root_of(root / project) / module_interface_file);
     input.som_interface = load_som_interface(module_root_of(root / project) / module_interface_file);
     auto mapping =

@@ -302,7 +302,7 @@ Roles are listed in one place, `native/src/roles.cpp`; reach values are in `nati
 ## 6. How to add a subsystem
 
 1. Create `subsystems/<name>/` at the repository root. The structure gate skips folders whose names start with `.` or `_` and names ending in a space and digits (such as `name 2`). It checks every other folder under `subsystems/` as a package, so a folder without `subsystem.json` fails it (`native authoring factory unavailable: <name>`).
-2. Write `subsystems/<name>/subsystem.json` with `"name": "<name>"`. Give it `placement` and `checks` with the neutral values of the example in section 2 unless a fact applies. Parts named by `part` must exist in the part catalogue (`parts/<MPN>/part.json`; the build compiles `parts/` into `native/catalog.bin`, so a new catalogue part needs a build).
+2. Write `subsystems/<name>/subsystem.json` with `"name": "<name>"`. Give it `placement` and `checks` with the neutral values of the example in section 2 unless a fact applies. Parts named by `part` must exist in the part catalogue (`parts/<MPN>/part.json`; `schgen run` and `schgen board-check` compile `parts/` into `native/catalog.bin` at run time, so a new catalogue part needs no rebuild of the application).
 3. Add the other files the structure gate requires. For a library package (`AuthoringPackageMode::native_assets`, the mode used by the board pipeline and by the `subsystem-check` command) `check_subsystem_package` requires two regular files in the folder: `README.md` and `<name>.cir`. A missing file is reported as missing. Nothing else is required; for example `placement_contract.json` is not checked by this gate. If the folder also holds `circuit.json`, it must match the built circuit, and then `layout.json` must exist and match too (`circuit.json differs from the native authoring factory`, `layout.json is missing beside circuit.json`, `layout.json differs from the native authoring factory`).
 4. Make `interface` match the circuit. The gate builds the circuit with empty board settings and requires: a non-empty `interface`, no duplicate names (`duplicate name in native INTERFACE`), every non-signal net listed (`net 'X' is an external but not in the declared INTERFACE`), and no listed name that is not such a net (`INTERFACE name 'X' is not an external net of the built circuit`). A build failure is reported as `circuit() build failed: <message>`.
 5. Run the application. No rebuild is needed: the file is read when the subsystem is requested. A board uses it by name with its own `SubsystemMeta` (section 4).
@@ -384,3 +384,53 @@ The voltage of every net is resolved in this order, and each rail has exactly on
 3. a producer, repeated until nothing changes: a regulator with `out_v` in `parts/part_facts.json` gives that voltage; a regulator of kind `load_switch` or `efuse` passes its input rail's voltage; a power-tree bridge (a part on exactly two power nets) whose part class is `resistor`, `inductor` or `ferrite` passes the voltage of its other end.
 
 A regulator with `fb_vref` (an adjustable output) is not a home: its output needs a `rails` row stating the target, and the spice gate checks the divider set point (`fb_vref x (1 + Rtop/Rbottom)`) against that target. The load fails, naming the rails, when: a power-class net has no home; an adjustable output has no target (the message gives the divider value); a rail has two homes; a bridge joins two different voltages; a row names a net no sheet of the board has; a `supplier: module` row names no module supply; or a module supply is not taken by the board. A net of another class has a voltage only from a `rails` row.
+
+## 11. Copper claims
+
+The copper-debt ledger (`reports/copper_debt.txt`) lists the engineering claims that rest on copper the board must carry. The claims, the checks that tie each claim to the live circuits and policies, and the measurement of the emitted board are data in `subsystems/copper_claims.json`. `load_copper_claims` takes the repository root and fails with a message naming the file, the claim and the key when the file is missing or malformed. Any key or kind not listed below is rejected. The `where:` line of a claim in the report is `subsystems/copper_claims.json#<id>`.
+
+Top-level keys, all required: `schema` (`schgen.copper_claims/1`), `plane`, `inventory`, `claims`.
+
+| Key | Contents |
+|---|---|
+| `plane` | `net` and `layer` of the ground plane every measure refers to. |
+| `inventory` | `with_text`, `without_text` and `emits`, the text of the inventory line. `emits` may use `{fills}`, `{plane}`, `{rules}`, `{vias}`, `{gnd}`, `{segments}`. |
+| `claims` | Non-empty list, in report order. Each claim has `id` (unique), `title`, `assumes`, `risk`, `checks` (non-empty) and `measure`. |
+
+A claim is verified on every run, with or without a PCB. Any check that fails raises `CopperProvenanceError` naming the claim. Thermal figures, pour needs, exposed-pad via needs and isolation margins are read from `parts/part_facts.json` rows. A claim states the figures it relies on (`thermal_fact`, `thermal_credit` `need`) and the check fails when a row differs.
+
+Check kinds. The sheet kinds take `scopes` (the `library` and board folder names to check; each must exist, and each listed sheet and part must exist in each listed scope) and `sheet`.
+
+| Kind | Other keys | Fails when |
+|---|---|---|
+| `part` | `refs` (list) or `all_parts` (true); optional `lib_id`, `footprint`, `value_prefix`, `fields` (name to value), `pins` (rows of `pin` and one of `net`, `net_prefix`) | a listed part is missing, or one given attribute, field or pin connection differs. `all_parts` needs at least one attribute. |
+| `net_pins` | `net`, `pins` (rows of `[reference, pin]`) | a listed part is missing or a pin is not on the net. |
+| `part_count` | `count` | the sheet does not hold that many parts. |
+| `thermal_fact` | `refs`, `rth_ja`, `rth_ja_pour` (number or null), `pour_evidence` | the part has no `thermal` row, a figure differs, or the row has no citation. |
+| `part_fact` | `refs`, `section` (`ep_vias` or `isolation`) | the part has no row in that section. |
+| `thermal_credit` | `part` (MPN), `need` (`min_vias`, `radius_mm`, `pour_layers`: the copper the claim states) | the part's `thermal_copper` need, the thermal pour need or the emitter pour need differs from the claim's `need`, the pour field is short of it or lacks a citation, or the part has no pour credit. |
+| `emission_via` | `size_mm`, `drill_mm` | the emitter's thermal via differs. |
+| `emission_ground_layer` | `layer` | the emitter's ground layer differs. |
+| `isolation_margins` | none | the isolation facts are empty or one has no positive margin. |
+| `impedance_geometry` | `impedance_ohm` | the researched differential geometry differs from the live one or the ground reference is missing. |
+
+Measure kinds. Each takes every key listed; text keys are templates and may use only the placeholders named.
+
+| Kind | Keys |
+|---|---|
+| `thermal_via_field` | `part` (MPN; its instances are found by its `regulators` label; radius, via count and pour layers come from its `thermal_copper` need), `emits` (`{plane}`, `{rows}`), `row` (`{ref}`, `{count}`, `{radius}`), `pour` (`{layer}`, `{state}`, appended to a row once per pour layer) |
+| `ep_via_pads` | `part`, `emits` (`{plane}`, `{rows}`), `row` (`{ref}`, `{count}`); pad count and radius come from the `ep_vias` row |
+| `net_island` | `net`, `emits` (`{zones}`, `{vias}`) |
+| `plane_voids` | `zone_prefix`, `min_voids_with_plane`, `none_text`, `emits` (`{names}`) |
+| `reference_plane` | `emits` (`{x0}`, `{y0}`, `{x1}`, `{y1}`), `absent_emits` |
+| `module_body_vias` | `zone_prefix`, `found_text`, `missing_text`, `emits` (`{count}`, `{zone}`) |
+
+Add a claim by appending a row with its checks and a measure; the ledger and the report follow the file.
+
+## 12. Owned groups
+
+`board.json` `owned_groups` is required: a list of sheet names, possibly empty. Each named sheet must be listed in the board's `sheets`, and no name may appear twice; an unknown sheet, a repeated sheet, or a value that is not a list of names fails the load, naming `board.json`. A board with an empty list has no owned groups, and the placement requirements gate for it must be stated not applicable in `project.json`. A board whose `project.json` states the gate applicable must list at least one sheet.
+
+Each listed sheet holds `subsystems/<sheet>/placement_requirements.json`. Besides `schema`, `sheet`, `status`, `ownership`, `access`, `proximity`, `side` and `sources`, it holds `owners`: an object from each owning reference to the part number of that owner (`{"U1": "SY6280AAC", "U2": "PCA9306DCUR"}`). Every value is a non-empty string, and the keys must be exactly the references named by the `owner` field of the `ownership` rows; any other set fails the load. The run checks each owner against the part catalog by that part number: the live part's value, symbol and footprint, the owner pin number and its pin name.
+
+The ownership rows, the part numbers and the access list are reviewed data. The contract test `native_ownership_declaration_contracts` holds an independent reviewed copy and compares it with each listed sheet's file on every test run; `schgen run` does not compare the file with a second copy.

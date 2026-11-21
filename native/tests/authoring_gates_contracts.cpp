@@ -228,7 +228,11 @@ void connectors(const fs::path& root,const std::string& project) {
         if(auto expected=object_field(row,"error")) {
             bool rejected=false;try{run();}catch(const CircuitAuthoringError& e){rejected=true;require(expected->string_value==e.what(),"connector error differs from Python");}
             require(rejected,"repeated SoM signal accepted");
-        } else require(authoring_json_equal(authored_circuit_json(run()),at(row,"circuit")),project+": dynamic connector parameters ignored");
+        } else {
+            auto authored=run();
+            historical_input_contracts::restore_module_connector(authored,ref);
+            require(authoring_json_equal(authored_circuit_json(authored),at(row,"circuit")),project+": dynamic connector parameters ignored");
+        }
     }
     ProjectAuthoringInput input;input.project_root=root/project;input.context.library=root/subsystem_library_folder;
     input.som=load_som_interface(module_root_of(input.project_root)/module_interface_file);

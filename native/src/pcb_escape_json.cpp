@@ -1,4 +1,6 @@
 #include "pcb_escape_internal.hpp"
+#include "schgen/ladder_stub_rule.hpp"
+#include <cmath>
 
 namespace schgen {
 using namespace pcb_escape;
@@ -78,6 +80,11 @@ JsonNode PcbEscapeMetadata::json() const {
                                   {{"members", strings(r.members)}, {"depth", num(r.depth)}});
         else if (r.kind == "redundant_via")
             e.object_value.insert(e.object_value.end(), {{"u", num(r.u)}, {"v", num(r.v)}});
+        else if (r.kind == "ladder_stub_rule") {
+            e.object_value.insert(e.object_value.end(), {{"pad_width_mm", num(r.dia)}, {"native_gap_mm", num(r.at)},
+                                                         {"dropped", num(r.depth)}, {"report", strings(r.members)}});
+            if (std::isfinite(r.worst)) e.object_value.push_back({"nearest_same_footprint_mm", num(r.worst)});
+        }
         else
             throw PcbEscapeError("unknown escape ledger kind " + r.kind);
         led.array_value.push_back(std::move(e));
@@ -98,7 +105,7 @@ JsonNode PcbEscapeMetadata::json() const {
                             {"hole_foreign", num(.30)},
                             {"hole_hole", num(hole_hole)},
                             {"hole_samenet_pad", num(.10)},
-                            {"track_foreign", num(.15)},
+                            {"track_foreign", num(ladder_stub_constants::track_foreign_clearance.value)},
                             {"edge", num(.30)}})},
                {"widths",
                 obj({{"spine", num(.30)}, {"stub_pair", num(.30)}, {"stub_single", num(.25)}})},

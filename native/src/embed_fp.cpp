@@ -4,6 +4,7 @@
 #include "schgen/occupancy.hpp"
 #include "schgen/turn.hpp"
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <functional>
@@ -273,6 +274,13 @@ Sexpr embed_footprint_decorate(
         SexprList& lst = std::get<SexprList>(node.v);
         if (lst.empty()) {
             continue;
+        }
+        if (is_sym(lst[0], "fp_text") && lst.size() > 2 && (is_sym(lst[1], "reference") || is_sym(lst[1], "value"))) {
+            const bool reference = is_sym(lst[1], "reference");
+            lst[0] = S("property");
+            lst[1] = T(reference ? "Reference" : "Value");
+            lst.erase(std::remove_if(lst.begin() + 2, lst.end(), [](const Sexpr& child) { return is_tagged_list(child, "tstamp"); }),
+                      lst.end());
         }
         if (is_sym(lst[0], "property") && lst.size() > 2) {
             const std::string name = py_str(lst[1]);

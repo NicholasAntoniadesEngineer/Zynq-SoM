@@ -9,6 +9,7 @@ inline constexpr double kCreditMm = 0.05;
 inline constexpr double kSnapErosionMm = 0.75;
 inline constexpr double kOutlineSnapMm = 5.0;
 inline constexpr double kFineSnapMm = 1.0;
+inline constexpr double kPageOriginMm = 25.0;
 // These compiled estimator costs are the policy actually consumed. Do not
 // manufacture barrel/annulus/stack operands or recompute 7.6 with different
 // floating-point rounding. Caller experiment overrides are resolved separately.

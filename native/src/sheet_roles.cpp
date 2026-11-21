@@ -88,7 +88,7 @@ SheetRoles load_sheet_roles(const ProjectPaths& paths, const std::vector<Project
     const SomInterface module = som_interface_from_json(parse_json_file(interface_file), interface_file);
     AuthoringContext context;
     context.library = paths.library_dir;
-    return sheet_roles(load_board(paths.project_root), context, module, sheets, load_part_facts(paths.parts_dir / part_facts_file));
+    return sheet_roles(load_board(paths.project_root, paths.module), context, module, sheets, load_part_facts(paths.parts_dir / part_facts_file));
 }
 
 }

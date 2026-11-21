@@ -1,5 +1,5 @@
 {
-  "schema": "schgen.part_facts/4",
+  "schema": "schgen.part_facts/5",
   "classes": {
     "74xGxx:74LVC1G08": "integrated_circuit",
     "Connector:TestPoint": "test_point",
@@ -34,6 +34,7 @@
     "CH347T:CH347T": "integrated_circuit",
     "CP2102N-A02-GQFN24R:CP2102N-A02-GQFN24R": "integrated_circuit",
     "DF40C-100DP-0.4V_51:DF40C-100DP-0.4V_51": "module_connector",
+    "DF40C-100DP-0.4V_51:DF40C-100DP-0.4V_51_module_mate": "module_connector",
     "DF40C-100DS-0.4V_51:DF40C-100DS-0.4V_51": "module_connector",
     "DS1024-2x6R2:DS1024-2x6R2": "connector",
     "DSHP04TSGER:DSHP04TSGER": "switch",
@@ -139,6 +140,7 @@
     "TS-1187A-B-A-B": {"button_gap_mm": 2.0}
   },
   "model_overrides": {
+    "DF40C-100DP-0.4V_51": {"footprint": "Mylibrary:HRS_DF40C-100DP-0.4V_51_", "path": "${KIPRJMOD}/../parts/DF40C-100DP-0.4V_51/DF40C-100DP-0.4V_51.wrl", "rotation_z_deg": 0},
     "FUSB302BMPX": {"footprint": "Package_DFN_QFN:WQFN-14-1EP_2.5x2.5mm_P0.5mm_EP1.45x1.45mm", "path": "${KIPRJMOD}/../parts/FUSB302BMPX/FUSB302BMPX.wrl", "rotation_z_deg": 90}
   },
   "footprint_aliases": {
@@ -172,5 +174,7 @@
       "basis": "a test point is a bare copper pad; the KiCad footprint has no body and names no 3D model",
       "reviewed": "2026-11-19"
     }
-  }
+  },
+  "lands": {"DF40C-100DP-0.4V_51": {"footprint": "Mylibrary:HRS_DF40C-100DP-0.4V_51_", "pad_gap_mm": 0.17, "tolerance_mm": 0.02, "cite": "Hirose DF40 catalogue (2013.11) p.10, DF40C-xxDP header recommended PCB layout: pad 0.23+-0.02 on pitch 0.4+-0.02, end pads 0.35+-0.02"}},
+  "electrical_spacing": {"source": "IPC-2221B Table 6-1, electrical conductor spacing", "column": "B2", "basis": "B2 is the bare-board external conductor, uncoated, sea level to 3050 m column: every pair in the land-spacing scope has at least one land pad, which is an opening in the solder mask, so the coated column B4 does not apply to it", "rows": [{"max_volts": 15, "spacing_mm": 0.1}, {"max_volts": 30, "spacing_mm": 0.1}, {"max_volts": 50, "spacing_mm": 0.6}]}
 }

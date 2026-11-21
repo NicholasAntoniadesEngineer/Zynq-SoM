@@ -2,6 +2,7 @@
 #include "schgen/pcb_checks.hpp"
 #include "schgen/pcb_placement_gates.hpp"
 #include "schgen/placement_requirements.hpp"
+#include "reviewed_ownership.hpp"
 #include <algorithm>
 #include <iostream>
 #include <tuple>
@@ -81,9 +82,8 @@ Pins model_pins(const PcbCheckModel& m) {
 }
 void runtime_checks(const CircuitSheetIr& circuit,const JsonNode& manifest,PcbCheckModel model) {
     const auto r=parse_placement_requirements(manifest);
-    const auto d=carrier_surface_requirement_declaration(circuit.name);
     std::map<std::string,CatalogPart> catalog;
-    for(const auto& entry:d.owner_mpn) catalog.emplace(entry.second,lookup_part_catalog(entry.second));
+    for(const auto& entry:r.owners) catalog.emplace(entry.second,lookup_part_catalog(entry.second));
     std::map<std::string,std::string> refs,nets;
     for(const auto& n:circuit.nets) nets.emplace(n.name,"hierarchy/"+n.name);
     int net_id=1;
@@ -104,7 +104,7 @@ void runtime_checks(const CircuitSheetIr& circuit,const JsonNode& manifest,PcbCh
         i.mod=pcb_check_footprint("synthetic-owned-terminal-oracle",fp);
     }
     auto check=[&](const PlacementRequirements& policy,const CircuitSheetIr& c,const PcbCheckModel& m){
-        return check_placement_requirements(policy,d,c,catalog,PcbCheckInput(m),refs,nets);
+        return reviewed_ownership::check(policy,c,catalog,PcbCheckInput(m),refs,nets);
     };
     auto good=check(r,circuit,model);
     require(good.hard_requirements_met(),good.summary());
@@ -139,13 +139,13 @@ void runtime_checks(const CircuitSheetIr& circuit,const JsonNode& manifest,PcbCh
     }
     auto wrong_catalog=catalog;
     wrong_catalog.begin()->second.pins.clear();
-    require(!check_placement_requirements(r,d,circuit,wrong_catalog,PcbCheckInput(model),refs,nets).hard_requirements_met(),"independent catalog pin identity");
+    require(!reviewed_ownership::check(r,circuit,wrong_catalog,PcbCheckInput(model),refs,nets).hard_requirements_met(),"independent catalog pin identity");
     auto duplicate_physical=catalog;
     const auto& owned=r.ownership.front();
-    duplicate_physical.at(d.owner_mpn.at(owned.owner)).pins.push_back({owned.pin,"DIFFERENT_NAME","passive"});
-    require(!check_placement_requirements(r,d,circuit,duplicate_physical,PcbCheckInput(model),refs,nets).hard_requirements_met(),"duplicate physical catalog pin with another name is ambiguous");
+    duplicate_physical.at(r.owners.at(owned.owner)).pins.push_back({owned.pin,"DIFFERENT_NAME","passive"});
+    require(!reviewed_ownership::check(r,circuit,duplicate_physical,PcbCheckInput(model),refs,nets).hard_requirements_met(),"duplicate physical catalog pin with another name is ambiguous");
     auto wrong_ref=refs;wrong_ref.begin()->second="missing";
-    require(!check_placement_requirements(r,d,circuit,catalog,PcbCheckInput(model),wrong_ref,nets).hard_requirements_met(),"missing mapped placed identity");
+    require(!reviewed_ownership::check(r,circuit,catalog,PcbCheckInput(model),wrong_ref,nets).hard_requirements_met(),"missing mapped placed identity");
     auto changed=model;changed.insts.front().pad_nets.begin()->second.second="wrong-net";
     require(!check(r,circuit,changed).hard_requirements_met(),"all pin identities checked, not only owned caps");
     changed=model;changed.insts.front().pad_nets.begin()->second.first=0;
@@ -208,7 +208,7 @@ void exercise(const std::filesystem::path& root, const std::string& sheet,
     require(unsupported.ok && unsupported.checked==0,
             "engine capability changed: review requirements promotion explicitly");
     const auto& access=field(field(req,"access"),"top_face_switches").array_value;
-    require(access.size()==(sheet=="board_aux"?1:6),"switch requirement count");
+    require(access.size()==(sheet=="board_aux"?1:5),"switch requirement count");
     std::set<std::string> seen;
     for(const auto& r:access) {
         require(seen.insert(r.string_value).second,"duplicate access member");

@@ -80,6 +80,8 @@ struct ModuleDefinition {
     ModuleReturnPath return_path;
     std::vector<ModuleTriageRule> escape_triage;
     std::vector<std::string> do_not_load_straps;
+    std::string mate_symbol;
+    std::map<std::string, std::string> mate_pad_names;
     std::vector<PowerSupply> supplies;
     std::vector<std::string> regulated_rails;
     std::string regulated_rails_basis;
@@ -98,7 +100,8 @@ struct BoardFiles {
 };
 
 struct BoardFlags {
-    bool root_readme = false, owned_groups = false;
+    bool root_readme = false;
+    std::vector<std::string> owned_groups;
 };
 
 struct BoardHeader {
@@ -118,6 +121,7 @@ struct BoardDefinition {
     const BoardSheet& sheet(const std::string& name) const;
 };
 
+const std::vector<DocumentKey>& board_document_keys();
 BoardHeader board_header_of(const JsonNode& document, const std::string& source);
 BoardHeader load_board_header(const std::filesystem::path& board_root);
 std::filesystem::path module_root_in(const std::filesystem::path& repository, const std::filesystem::path& board_root);
@@ -128,5 +132,6 @@ ModuleDefinition load_board_module(const std::filesystem::path& board_root);
 BoardPower parse_board_power(const JsonNode& node, const std::string& source);
 BoardDefinition parse_board(const JsonNode& document, const std::string& source, ModuleDefinition module_definition);
 BoardDefinition load_board(const std::filesystem::path& board_root);
+BoardDefinition load_board(const std::filesystem::path& board_root, ModuleDefinition module);
 
 }

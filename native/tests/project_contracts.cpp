@@ -21,7 +21,7 @@ namespace {
 namespace fs = std::filesystem;
 using namespace schgen;
 
-const std::string board_text = R"({"files": {"stem": "Fixture_Board"}, "root_readme": false, "owned_groups": false, "module": {"folder": "som"}})";
+const std::string board_text = R"({"files": {"stem": "Fixture_Board"}, "root_readme": false, "owned_groups": [], "module": {"folder": "som"}})";
 
 void require(bool value, const std::string& message) {
     if (!value) throw std::runtime_error(message);  // Also active under NDEBUG.
@@ -165,7 +165,6 @@ void fixture_contracts(Suite& suite, const fs::path& repo) {
         require(config.reg_band_prefixes == std::vector<std::string>{"power", "bringup"}, "prefix order changed");
         require(config.bank_rails.empty() && config.header_desc.empty() && config.switch_desc.empty()
                 && config.escape.kind == JsonKind::Object && config.escape.object_value.empty(), "optional defaults changed");
-        require(object_field(config.raw, "extension") != nullptr, "extension metadata dropped");
         require(default_engine_config.grid == 1.27 && default_engine_config.char_w == 0.95
                 && default_engine_config.misplaced_overlap == 0.20 && default_engine_config.cross_k == 3.0
                 && default_engine_config.visual_clearance_mm == 0.2, "engine defaults changed");
@@ -179,9 +178,17 @@ void fixture_contracts(Suite& suite, const fs::path& repo) {
         {changed(config_text, "[-10, 6.25]", "[0]"), "module_offset"},
         {changed(config_text, "[-10, 6.25]", "[false, 6.25]"), "module_offset"},
         {changed(config_text, "\"pilot_prox_sheets\": []", "\"pilot_prox_sheets\": {}"), "pilot_prox_sheets"},
-        {changed(config_text, "\"extension\"", "\"fpga\": null, \"extension\""), "fpga"},
-        {changed(config_text, "\"extension\"", "\"silk_labels\": {\"headers\": null}, \"extension\""), "headers"},
-        {changed(config_text, "\"extension\"", "\"escape\": [], \"extension\""), "escape"},
+        {changed(config_text, "\"fpga\": {\"bank_rails\": {}}", "\"fpga\": null"), "fpga"},
+        {changed(config_text, ",\n  \"fpga\": {\"bank_rails\": {}}", ""), "fpga"},
+        {changed(config_text, "\"fpga\": {\"bank_rails\": {}}", "\"fpga\": {}"), "bank_rails"},
+        {changed(config_text, "\"fpga\"", "\"silk_labels\": {\"headers\": null}, \"fpga\""), "headers"},
+        {changed(config_text, "\"fpga\"", "\"escape\": [], \"fpga\""), "escape"},
+        {changed(config_text, "\"fpga\"", "\"extension\": 1, \"fpga\""), "unknown key 'extension'"},
+        {changed(config_text, "\"pilot_prox_sheets\": []", "\"pilot_prox_sheets\": [], \"pilot_prox\": []"), "unknown key 'pilot_prox'"},
+        {changed(config_text, "\"bank_rails\": {}", "\"bank_rails\": {}, \"banks\": {}"), "unknown key 'banks'"},
+        {changed(config_text, "\"fpga\"", "\"silk_labels\": {\"header\": {}}, \"fpga\""), "unknown key 'header'"},
+        {changed(config_text, "\"fpga\"", "\"escape\": {\"genuine_pair\": 4}, \"fpga\""), "unknown key 'genuine_pair'"},
+        {changed(config_text, "\"fpga\"", "\"escape\": {\"netted_contacts\": {}}, \"fpga\""), "module.json"},
         {"{\"name\":\"a\",\"name\":\"b\"}", "duplicate key"},
         {"{", "json"}, {"[]", "object"}};
     for (std::size_t i = 0; i < invalid_configs.size(); ++i) {
@@ -439,9 +446,9 @@ void repository_contracts(Suite& suite, const fs::path& repo) {
         require(carrier.part_catalog_file == repo / "native/catalog.bin" && carrier.fpga_dir == repo / "carrier/fpga", "downstream paths wrong");
         const auto catalogs = project_catalog_paths(repo, "carrier");
         require(carrier.part_catalog_file == catalogs.part_catalog && carrier.circuit_catalog_file == catalogs.circuit_catalog, "catalog paths diverged");
-        require(carrier.root_readme && carrier.owned_groups, "carrier states its gallery and owned-group flags");
+        require(carrier.root_readme && carrier.owned_groups == std::vector<std::string>{"board_aux", "bringup_rails"}, "carrier states its gallery and owned-group flags");
         const auto devkit = resolve_project_paths(repo, "devkit_mini");
-        require(!devkit.root_readme && !devkit.owned_groups, "devkit_mini states its gallery and owned-group flags");
+        require(!devkit.root_readme && devkit.owned_groups.empty(), "devkit_mini states its gallery and owned-group flags");
         require(carrier.file_stem == "Zynq_Carrier" && devkit.file_stem == "Zynq_Carrier", "board file stem is read from board.json");
         {
             TempDir bare;
@@ -449,9 +456,11 @@ void repository_contracts(Suite& suite, const fs::path& repo) {
             rejects([&] { resolve_project_paths(repo, bare.path); }, {"board.json", "is missing"});
             write(bare.path / "board.json", R"({"files": {"stem": "Fixture_Board"}, "root_readme": false})");
             rejects([&] { resolve_project_paths(repo, bare.path); }, {"board.json", "field 'owned_groups' is missing"});
-            write(bare.path / "board.json", R"({"files": {"stem": "Fixture_Board"}, "root_readme": false, "owned_groups": false})");
+            write(bare.path / "board.json", R"({"files": {"stem": "Fixture_Board"}, "root_readme": false, "owned_groups": true})");
+            rejects([&] { resolve_project_paths(repo, bare.path); }, {"board.json", "field 'owned_groups' is missing or has the wrong type"});
+            write(bare.path / "board.json", R"({"files": {"stem": "Fixture_Board"}, "root_readme": false, "owned_groups": []})");
             rejects([&] { resolve_project_paths(repo, bare.path); }, {"board.json", "field 'module' is missing"});
-            write(bare.path / "board.json", R"({"files": {"stem": "Fixture_Board"}, "root_readme": false, "owned_groups": false, "module": {"folder": "absent_module"}})");
+            write(bare.path / "board.json", R"({"files": {"stem": "Fixture_Board"}, "root_readme": false, "owned_groups": [], "module": {"folder": "absent_module"}})");
             rejects([&] { resolve_project_paths(repo, bare.path); }, {"absent_module", "module.json", "is missing"});
         }
         rejects([&] { resolve_project_paths(repo, "missing-project"); }, {"missing-project"});
@@ -518,7 +527,7 @@ void repository_contracts(Suite& suite, const fs::path& repo) {
                 }
                 require(hits==1,"SoM supply endpoint must occur exactly once");
             }
-            require(parts == (carrier ? 561u : 155u) && nets == (carrier ? 817u : 325u)
+            require(parts == (carrier ? 562u : 156u) && nets == (carrier ? 816u : 325u)
                     && ports == (carrier ? 387u : 51u) && nc == (carrier ? 130u : 55u), "real IR totals changed");
             const auto index = load_sheet_index(paths);
             require(index.size() == expected.size() && extend_sheet_index(index, expected).unseen.empty(), "stable sheet bands diverged");

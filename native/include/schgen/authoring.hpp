@@ -47,6 +47,7 @@ public:
     void port_type(const std::string& net, const AuthoringPort& type = {});
     CircuitPortIr port_type_of(const std::string& net) const;
     void nc(const std::vector<std::string>& pins);
+    void renumber_pins(const std::string& ref, const std::string& lib_id, const std::map<std::string, std::string>& numbers);
     void bind(const AuthoringStrings& mapping);
     void hint(const std::string& net, const std::string& style);
     void draws(const std::string& rail, double amps, const std::string& note = {});

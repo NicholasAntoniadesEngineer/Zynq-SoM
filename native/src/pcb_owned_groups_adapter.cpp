@@ -7,7 +7,6 @@ namespace schgen {
 class TrustedOwnedGroups {
 public:
     PlacementRequirements requirements;
-    PlacementRequirementDeclaration declaration;
     CircuitSheetIr circuit;
     std::map<std::string, CatalogPart> catalog;
     std::map<std::string, std::string> refs, nets;
@@ -40,14 +39,14 @@ void attach_nets(PcbCheckInstance& p, const TrustedOwnedGroups& trusted) {
     }
 }
 PlacementRequirementReport identity(const TrustedOwnedGroups& t, const PcbCheckInput& model) {
-    return check_placement_requirements(t.requirements, t.declaration, t.circuit,
+    return check_placement_requirements(t.requirements, t.circuit,
         t.catalog, model, t.refs, t.nets);
 }
 }
 TrustedOwnedGroupInputs resolve_owned_group_inputs(const ProjectPaths& paths,
     const std::vector<ProjectCircuit>& circuits, const PcbPlacementInput& in) {
     TrustedOwnedGroupInputs result;
-    if (!in.floorplan.compact_search || !paths.owned_groups) return result;
+    if (!in.floorplan.compact_search || paths.owned_groups.empty()) return result;
     std::map<std::string, int> bands;
     std::set<int> used_bands;
     for (const auto& [sheet, band] : in.floorplan.sheet_index)
@@ -63,9 +62,8 @@ TrustedOwnedGroupInputs resolve_owned_group_inputs(const ProjectPaths& paths,
             demand(extracted.emplace(std::make_pair(pin.ref, pin.pin), net).second,
                    "multiply-netted extracted pin " + pin.ref + "." + pin.pin);
     }
-    for (const auto* sheet : {"board_aux", "bringup_rails"}) {
+    for (const auto& sheet : paths.owned_groups) {
         auto t = std::make_shared<TrustedOwnedGroups>();
-        t->declaration = carrier_surface_requirement_declaration(sheet);
         // Missing/malformed required manifests fail. No catch-and-empty path.
         t->requirements = parse_placement_requirements(parse_json_file(
             (paths.subsystems_dir / sheet / "placement_requirements.json").string()));
@@ -73,7 +71,7 @@ TrustedOwnedGroupInputs resolve_owned_group_inputs(const ProjectPaths& paths,
         for (const auto& c : circuits) if (c.name == sheet) {
             demand(!source, "duplicate live sheet"); source = &c;
         }
-        demand(source && bands.count(sheet), "missing live sheet/band " + std::string(sheet));
+        demand(source && bands.count(sheet), "missing live sheet/band " + sheet);
         t->circuit = source->circuit;
         for (const auto& p : t->circuit.parts)
             demand(t->refs.emplace(p.ref, board_renamed_ref(p.ref, bands.at(sheet), sheet)).second,
@@ -94,7 +92,7 @@ TrustedOwnedGroupInputs resolve_owned_group_inputs(const ProjectPaths& paths,
         for (const auto& [pin, net] : extracted) if (board_refs.count(pin.first))
             t->pin_nets.emplace(pin, std::make_pair(numbers.at(net), net));
         std::vector<std::string> owner_mpns;
-        for (const auto& [ref, mpn] : t->declaration.owner_mpn) {
+        for (const auto& [ref, mpn] : t->requirements.owners) {
             (void)ref; owner_mpns.push_back(mpn);
         }
         const auto owners = read_part_catalog(paths.part_catalog_file.string(), owner_mpns);

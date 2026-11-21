@@ -90,6 +90,7 @@ const std::vector<Declaration> declarations{
     {"segment_cross_tolerance","ASSUME","floorplan.sizing","mm^2","signed cross-product threshold for strict segment intersection","policy","board_decision_policy.pack.segment_cross_tolerance_mm2","", {}},
     {"label_courtyard_gap","ASSUME","floorplan.sizing","mm","clear-label search offset outside the footprint courtyard","policy","board_decision_policy.pack.label_courtyard_gap_mm","", {}},
     {"label_orbit_tau","ASSUME","floorplan.sizing","radian","established full-turn double used by the sixteen-angle label orbit","policy","board_decision_policy.pack.label_orbit_tau","", {}},
+    {"page_origin","ASSUME","floorplan.sizing","mm","page offset of the board origin; the frame the placement grid snaps in","policy","quantization_policy.kPageOriginMm","", {}},
     {"overmold_side_gap","CALC","floorplan.sizing","mm","shell overhang beside a single receptacle","","floorplan.OVERMOLD_SIDE_GAP","plug_width / 2 - copper_half_width", {"plug_width","copper_half_width"}},
     {"edge_band","CALC","floorplan.sizing","mm","connector band width used by the seed outline","","floorplan.EDGE_BAND","edge_depth_cap - edge_band_relief", {"edge_depth_cap","edge_band_relief"}},
     {"occ_punch_mask","CALC","floorplan.sizing","bitmask","occupancy bits of geometry that pierces both faces","","floorplan.OCC_PUNCH","occ_top | occ_bottom", {"occ_top","occ_bottom"}},
@@ -250,6 +251,7 @@ std::optional<double> floorplan_live_assumption(const std::string& name,const Fl
     if(name=="snap_erosion")return quantization_policy::kSnapErosionMm;
     if(name=="outline_snap")return quantization_policy::kOutlineSnapMm;
     if(name=="fine_snap")return quantization_policy::kFineSnapMm;
+    if(name=="page_origin")return quantization_policy::kPageOriginMm;
     if(name=="via_ordinary_cost")return floorplan_experiment_via_cost(in.experiment.get(),false,quantization_policy::kViaOrdinaryMm);
     if(name=="via_impedance_cost")return floorplan_experiment_via_cost(in.experiment.get(),true,quantization_policy::kViaImpedanceMm);
     if(name=="zone_pack_fill")return board_decision_policy::zone_pack_fill;

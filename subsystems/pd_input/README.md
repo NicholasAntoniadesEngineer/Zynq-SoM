@@ -128,6 +128,7 @@ never rebound by `bind`.
 | C1 | 100n | `Device:C` (inlet bypass, DS-min on IN) | C14663 |
 | C2 | 10u  | `Device:C` 50 V X7R (eFuse-output board bulk) | C596319 |
 | C3 | 47n  | `Device:C` (eFuse dV/dt slew) | C1622 |
+| C4 | 100n | `Device:C` (USBLC6 VBUS bypass, U2.5) | C14663 |
 | D1 | SMBJ22A | `Device:D_Zener` (TVS, 22 V standoff) | C10214 |
 | R3 | 100k | `Device:R` (OVP divider top) | C25803 |
 | R4 | 5.49k | `Device:R` (OVP divider bottom) | C188263 |
@@ -149,3 +150,5 @@ graph, full power tree, board ERC/netlist merge) run at board level via
 ```bash
 PYTHONPATH=. python3 -m pytest subsystems/pd_input/test_pd_input.py -q
 ```
+
+**ESD array supply capacitor.** C4 (100 nF, 0603, C14663) sits at the USBLC6-2 VBUS pin (pin 5) on `+VDD_LOGIC`, as ST recommends (USBLC6-2 datasheet Rev 2, section 3, figure 7).

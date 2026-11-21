@@ -151,6 +151,20 @@ struct FootprintAliasFact {
     std::string footprint;
 };
 
+struct LandFact {
+    std::string footprint, cite;
+    double pad_gap_mm = 0, tolerance_mm = 0;
+};
+
+struct ElectricalSpacingRow {
+    double max_volts = 0, spacing_mm = 0;
+};
+
+struct ElectricalSpacingFact {
+    std::string source, column, basis;
+    std::vector<ElectricalSpacingRow> rows;
+};
+
 struct I2cPinFact {
     std::string name, number;
 };
@@ -184,6 +198,7 @@ using ReferencePinFacts = std::map<std::string, ReferencePinFact>;
 using ControlGridFacts = std::map<std::string, ControlGridFact>;
 using ModelOverrideFacts = std::map<std::string, ModelOverrideFact>;
 using FootprintAliasFacts = std::map<std::string, FootprintAliasFact>;
+using LandFacts = std::map<std::string, LandFact>;
 using I2cDeviceFacts = std::map<std::string, I2cDeviceFact>;
 using I2cBridgeFacts = std::map<std::string, I2cBridgeFact>;
 
@@ -221,6 +236,8 @@ struct PartFacts {
     ControlGridFacts control_grid;
     ModelOverrideFacts model_overrides;
     FootprintAliasFacts footprint_aliases;
+    LandFacts lands;
+    ElectricalSpacingFact electrical_spacing;
     I2cDeviceFacts i2c_devices;
     I2cBridgeFacts i2c_bridges;
 };
@@ -240,6 +257,7 @@ ConnectorFacts load_connector_facts(const std::filesystem::path& parts_directory
 
 PartFacts load_part_facts(const std::filesystem::path& file);
 PartFacts load_part_facts_in(const std::filesystem::path& parts_directory);
+ModelOverrideFacts model_overrides_by_part_number(const PartFacts& facts);
 const ThermalFieldFact* thermal_field_for(const ThermalCopperFacts& rows, const RegulatorFacts& regulators, const std::string& value);
 const EpViaFact* ep_via_for(const EpViaFacts& rows, const RegulatorFacts& regulators, const std::string& value);
 const PartFacts& default_part_facts();

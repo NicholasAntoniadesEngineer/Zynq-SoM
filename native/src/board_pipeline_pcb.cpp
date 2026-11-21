@@ -28,23 +28,11 @@ template<class F> auto precision_receipt(Context& c,const std::string& id,F&& ru
         c.inbox.merge_once(id,NativeAccountingBatch{native_counter_batch(counts),{}});
     });
 }
-std::optional<int> baseline(const fs::path& p){try{const auto j=parse_json_file(p.string());const auto* n=object_field(j,"starved_baseline");
-    if(!n||n->kind!=JsonKind::Number||!std::isfinite(n->number_value)||n->number_value<0||n->number_value>INT_MAX||std::floor(n->number_value)!=n->number_value)return {};
-    return static_cast<int>(n->number_value);}catch(const std::bad_alloc&){throw;}catch(const std::exception&){return {};}}
-struct RequirementsScope{bool applicable=false;std::string statement;};
-RequirementsScope requirements_scope(const JsonNode& project,const std::string& file){
-    const auto fail=[&](const std::string& what)->RequirementsScope{throw ProjectError(file+": 'placement_requirements' "+what);};
-    const auto* node=object_field(project,"placement_requirements");
-    if(!node||node->kind!=JsonKind::Object)return fail("is missing or is not an object");
-    reject_unknown_keys(*node,{"applicable","statement"},file+" 'placement_requirements'");
-    const auto* applicable=object_field(*node,"applicable");
-    if(!applicable||applicable->kind!=JsonKind::Bool)return fail("needs 'applicable' as true or false");
-    const auto* statement=object_field(*node,"statement");
-    RequirementsScope scope;scope.applicable=applicable->bool_value;
-    if(scope.applicable){if(statement)return fail("holds a 'statement' although it is applicable");return scope;}
-    if(!statement||statement->kind!=JsonKind::String||statement->string_value.empty())return fail("is not applicable and needs a non-empty 'statement'");
-    scope.statement=statement->string_value;return scope;
-}
+struct FanoutCeiling{int ceiling=0;bool stored=false;};
+FanoutCeiling fanout_ceiling(const fs::path& p){if(!fs::exists(p))return {};const auto j=parse_json_file(p.string());const auto* n=object_field(j,"starved_baseline");
+    if(!n||n->kind!=JsonKind::Number||!std::isfinite(n->number_value)||n->number_value<0||n->number_value>INT_MAX||std::floor(n->number_value)!=n->number_value)
+        throw ProjectError(p.string()+": 'starved_baseline' is missing or is not a whole number of at least zero");
+    return {static_cast<int>(n->number_value),true};}
 PcbDrcResult drc(const fs::path& pcb,const std::string& executable,bool warnings){
     auto pattern=(fs::temp_directory_path()/"schgen_pipeline_drc_XXXXXX").string();if(!::mkdtemp(pattern.data()))throw ProjectError("cannot create DRC scratch");
     struct Cleanup{fs::path p;~Cleanup(){std::error_code e;fs::remove_all(p,e);}}cleanup{pattern};
@@ -58,7 +46,7 @@ void carrier_surface_requirements_stage(Context& c) {
     const std::string gate_name="placement_requirements";
     c.attempt(gate_name,[&]{
         c.report("placement_requirements_unverified.txt","UNVERIFIED: current invocation requirement checks have not completed; no prior measurements may be reused.");
-        const auto scope=requirements_scope(load_project_config(c.paths).raw,c.paths.project_file.string());
+        const auto scope=placement_requirements_scope(load_project_config(c.paths).raw,c.paths.project_file.string());
         if(!scope.applicable) {
             const std::string& applicability=scope.statement;
             c.report("placement_requirements_unverified.txt",applicability);
@@ -79,8 +67,8 @@ void carrier_surface_requirements_stage(Context& c) {
                 throw ProjectError("duplicate pin in independent hierarchy extraction");
         const PcbCheckInput model(c.pcb->placement.model);
         bool hard_ok=true;std::string reports,hard_report;
-        for(const auto* sheet:{"board_aux","bringup_rails"}) {
-            const std::string sheet_name=sheet;
+        if(c.paths.owned_groups.empty())throw ProjectError("placement requirements are applicable but the board file lists no owned_groups sheet");
+        for(const auto& sheet_name:c.paths.owned_groups) {
             const auto live=std::find_if(c.circuits.begin(),c.circuits.end(),[&](const auto& s){return s.name==sheet_name;});
             if(live==c.circuits.end()||std::count_if(c.circuits.begin(),c.circuits.end(),[&](const auto& s){return s.name==sheet_name;})!=1)
                 throw ProjectError("required live carrier sheet missing/duplicated: "+sheet_name);
@@ -88,11 +76,10 @@ void carrier_surface_requirements_stage(Context& c) {
             if(band==bands.end())throw ProjectError("required hierarchy band missing: "+sheet_name);
             const auto requirements=parse_placement_requirements(parse_json_file(
                 (c.paths.subsystems_dir/sheet_name/"placement_requirements.json").string()));
-            const auto declaration=carrier_surface_requirement_declaration(sheet_name);
             std::map<std::string,CatalogPart> catalog;
             // The caller holds the same native catalog open for the complete
             // board invocation, as required by author_board_pipeline_inputs.
-            for(const auto& owner:declaration.owner_mpn)
+            for(const auto& owner:requirements.owners)
                 catalog.emplace(owner.second,lookup_part_catalog(owner.second));
             std::map<std::string,std::string> refs,nets;
             for(const auto& part:live->circuit.parts)
@@ -108,7 +95,7 @@ void carrier_surface_requirements_stage(Context& c) {
                 }
                 if(!name||!nets.emplace(net.name,*name).second)throw ProjectError("empty/duplicate live net: "+sheet_name+":"+net.name);
             }
-            const auto checked=check_placement_requirements(requirements,declaration,live->circuit,catalog,model,refs,nets);
+            const auto checked=check_placement_requirements(requirements,live->circuit,catalog,model,refs,nets);
             hard_ok=hard_ok&&checked.hard_requirements_met();reports+=checked.summary();
             hard_report+=sheet_name+(checked.hard_requirements_met()?": hard ownership/identity/top-switch requirements met\n":": hard requirement FAIL\n");
             for(const auto& violation:checked.violations)hard_report+="FAIL "+violation+"\n";
@@ -153,7 +140,7 @@ void pcb_stages(Context& c){
             auto squeezed=c.measure("pcb_layout_squeeze",[&]{
                 return layout::squeeze_stage(stage.inputs,stage.placement.model,pcb_emit_policy(stage.inputs.floorplan.project),
                     {c.options.layout->plane_net,
-                     layout::project_edge_clearance(parse_json_file((c.paths.project_root/board_file_name(c.paths.file_stem,BoardFileKind::Project)).string())),
+                     layout::project_edge_clearance(pcb_project_board_settings(pcb_emit_policy(stage.inputs.floorplan.project))),
                      c.options.layout->overmold_parts,stage.inputs.floorplan.place_clear,layout::authored_intent(stage.inputs)});});
             c.report("layout_squeeze.txt",squeezed.report);
             stage.placement.model=std::move(squeezed.model);
@@ -181,10 +168,11 @@ void pcb_stages(Context& c){
         const auto report=std::to_string(errors)+" non-unrouted errors; "+std::to_string(r.n_unconnected)+" unrouted (expected); "+r.stderr_tail;
         c.report("pcb_drc.txt",report);c.gate("pcb_drc",errors==0,report);});
     c.attempt("pcb_geometry",[&]{if(!c.pcb_published)throw ProjectError("no board emitted this invocation");
-        const auto bp=c.options.fanout_baseline.empty()?c.paths.repository_root/"carrier/reports/fanout_baseline.json":c.options.fanout_baseline;
+        const auto bp=c.options.fanout_baseline.empty()?c.paths.reports_dir/"fanout_baseline.json":c.options.fanout_baseline;
+        const auto ceiling=fanout_ceiling(bp);
         PcbEmittedBoard emitted{pcb_path.string(),sexpr_loads(read(pcb_path)),true};
         c.geometry=precision_receipt(c,"pcb/geometry/ratsnest_precision",[&](auto& counts){
-            return verify_pcb_geometry(*c.pcb,emitted,baseline(bp),&counts);});const auto& r=*c.geometry;
+            return verify_pcb_geometry(*c.pcb,emitted,ceiling.ceiling,&counts);});const auto& r=*c.geometry;
         NativeAccountingBatch mechanical;
         mechanical.quantization_engagements.insert(r.mechanical.quantization_engagements.begin(),r.mechanical.quantization_engagements.end());
         c.inbox.merge_once("pcb/geometry/mechanical",mechanical);
@@ -203,8 +191,8 @@ void pcb_stages(Context& c){
         gate("return_stitch",r.return_stitch.ok,r.return_stitch.summary());gate("escape_lanes",r.escape_lanes.ok,r.escape_lanes.summary());
         gate("placement_integrity",r.integrity.ok_at(r.reached),r.integrity.summary(r.reached));
         gate("return_path",r.return_path.ok,"REPORT-ONLY: fixed SoM interface; remediation judged by return_stitch.\n"+r.return_path.summary());
-        gate("fanout",r.fanout.ok,r.fanout.summary());
-        if(r.fanout.ok){const auto old=baseline(bp);const auto n=old?std::min(*old,r.fanout.n_starved):r.fanout.n_starved;
+        gate("fanout",r.fanout.ok,r.fanout.summary()+(ceiling.stored?"":"\n  no stored baseline at "+(c.options.fanout_baseline.empty()?std::string("reports/fanout_baseline.json in the board folder"):bp.string())+": held to 0, the strictest ceiling"));
+        if(r.fanout.ok){const auto n=std::min(ceiling.ceiling,r.fanout.n_starved);
             const auto destination=c.out==c.paths.project_root?bp:c.reports/"fanout_baseline.json";
             publish_text(destination,"{\n \"starved_baseline\": "+std::to_string(n)+",\n \"note\": \"fan-out ratchet ceiling — may only DECREASE; a build whose starved count exceeds this FAILS. Reach 0 to promote the gate to HARD.\"\n}\n");}
         c.gate("pcb_geometry",r.ok(),"independent final-board gates complete");});
@@ -225,7 +213,7 @@ void pcb_stages(Context& c){
         const auto v=assembly_verdict(result,report_root);c.gate("assembly",v.first,v.second);});
     c.attempt("ratsnest_images",[&]{if(!c.pcb||!c.geometry)throw ProjectError("PCB/geometry unavailable");const auto r=run_ratsnest_documents(c.pcb->placement.model,c.out,&c.geometry->nets,&c.geometry->edges);c.gate("ratsnest_images",true,ratsnest_document_summary(r,report_root));});
     c.attempt("thermal",[&]{if(!c.power)throw ProjectError("power result unavailable");const auto r=run_thermal_checks(c.circuits,c.reports,c.require_power_policy(),&*c.power,c.pcb_published?std::optional<fs::path>{pcb_path}:std::nullopt,c.paths.repository_root);c.gate("thermal",r.ok(),thermal_report(r));});
-    c.attempt("copper_debt",[&]{auto sources=author_copper_debt_sources(c.paths.repository_root);
+    c.attempt("copper_debt",[&]{auto sources=author_copper_debt_sources(c.paths.repository_root,single_basis_board(c.paths.project_root));
         const auto scope=c.paths.project_root.filename().string();for(auto& x:sources.circuits)if(x.scope==scope){const auto it=std::find_if(c.circuits.begin(),c.circuits.end(),[&](const auto& s){return s.name==x.sheet;});if(it!=c.circuits.end())x.circuit=it->circuit;}
         if(c.pcb)sources.emission=pcb_emit_policy(c.pcb->inputs.floorplan.project);
         std::optional<ThermalCopper> copper;if(c.pcb_published)copper=scan_thermal_copper(pcb_path);

@@ -82,7 +82,7 @@ int whole(const JsonNode& node, const std::string& key, const std::string& where
 }
 
 BoardModule module_of(const JsonNode& node, const std::string& where) {
-    reject_unknown_keys(node, {"folder", "pairs", "loads"}, where + " module");
+    reject_unknown_keys(node, document_keys_at(board_document_keys(), "module"), where + " module");
     BoardModule module;
     module.folder = folder_name(node, "folder", where);
     module.pairs = pairs_of(node, where);
@@ -152,7 +152,7 @@ BoardRail rail_of(const JsonNode& row, const std::string& where) {
 }
 
 BoardFiles files_of(const JsonNode& node, const std::string& where) {
-    reject_unknown_keys(node, {"stem"}, where + " files");
+    reject_unknown_keys(node, document_keys_at(board_document_keys(), "files"), where + " files");
     BoardFiles files;
     files.stem = text(node, "stem", where + " files");
     if (files.stem.find_first_of("/\\") != std::string::npos) fail(where, "files.stem '" + files.stem + "' holds a path separator");
@@ -161,9 +161,17 @@ BoardFiles files_of(const JsonNode& node, const std::string& where) {
 
 }
 
+const std::vector<DocumentKey>& board_document_keys() {
+    static const std::vector<DocumentKey> keys{
+        {"schema", true}, {"name", true}, {"files", true}, {"files.stem", true}, {"root_readme", true}, {"owned_groups", true},
+        {"module", true}, {"module.folder", true}, {"module.pairs", true}, {"module.loads", true},
+        {"power", true}, {"power.sources", true}, {"power.rails", true}, {"power.inlet", true}, {"sheets", true}};
+    return keys;
+}
+
 BoardPower parse_board_power(const JsonNode& node, const std::string& where) {
     if (node.kind != JsonKind::Object) fail(where, "field 'power' is not an object");
-    reject_unknown_keys(node, {"sources", "rails", "inlet"}, where + " power");
+    reject_unknown_keys(node, document_keys_at(board_document_keys(), "power"), where + " power");
     BoardPower power;
     std::set<std::string> seen;
     const auto once = [&](const std::string& rail) {
@@ -199,7 +207,9 @@ BoardHeader board_header_of(const JsonNode& document, const std::string& file) {
     BoardHeader header;
     header.files = files_of(member(document, "files", JsonKind::Object, source), source);
     header.flags.root_readme = member(document, "root_readme", JsonKind::Bool, source).bool_value;
-    header.flags.owned_groups = member(document, "owned_groups", JsonKind::Bool, source).bool_value;
+    header.flags.owned_groups = names(document, "owned_groups", source);
+    if (std::set<std::string>(header.flags.owned_groups.begin(), header.flags.owned_groups.end()).size() != header.flags.owned_groups.size())
+        fail(source, "'owned_groups' lists a sheet twice");
     header.module_folder = folder_name(member(document, "module", JsonKind::Object, source), "folder", source + " module");
     return header;
 }
@@ -214,7 +224,8 @@ ModuleDefinition parse_module(const JsonNode& document, const std::string& file)
     const std::string source = "module file " + file;
     if (document.kind != JsonKind::Object) fail(source, "the document is not an object");
     reject_unknown_keys(document, {"schema", "schematic", "pcb", "connector_part", "controller_ref", "fpga_ref", "draw", "sdio_level_v", "sd_bus", "pairs",
-                                   "escape_population", "escape_triage", "do_not_load_straps", "supplies", "regulated_rails"}, source);
+                                   "escape_population", "escape_triage", "do_not_load_straps", "supplies", "regulated_rails",
+                                   "mate_symbol", "mate_pad_names"}, source);
     if (text(document, "schema", source) != module_schema) fail(source, std::string("schema is not ") + module_schema);
     ModuleDefinition module;
     module.schematic = folder_name(document, "schematic", source);
@@ -247,6 +258,21 @@ ModuleDefinition parse_module(const JsonNode& document, const std::string& file)
     }
     if (module.escape_triage.empty()) fail(source, "field 'escape_triage' is empty");
     module.do_not_load_straps = names(document, "do_not_load_straps", source);
+    const bool symbol = object_field(document, "mate_symbol") != nullptr, renames = object_field(document, "mate_pad_names") != nullptr;
+    if (symbol != renames) fail(source, "mate_symbol and mate_pad_names are stated together or not at all");
+    if (symbol) {
+        module.mate_symbol = text(document, "mate_symbol", source);
+        if (module.mate_symbol.find(':') == std::string::npos) fail(source, "mate_symbol is not a Library:Name symbol id");
+        const JsonNode& map = member(document, "mate_pad_names", JsonKind::Object, source);
+        if (map.object_value.empty()) fail(source, "mate_pad_names is empty");
+        std::set<std::string> targets;
+        for (const auto& [pin, pad] : map.object_value) {
+            if (pad.kind != JsonKind::String || pad.string_value.empty() || pin.empty())
+                fail(source, "mate_pad_names." + pin + " is not a pad name");
+            if (!targets.insert(pad.string_value).second) fail(source, "mate_pad_names names pad " + pad.string_value + " twice");
+            module.mate_pad_names[pin] = pad.string_value;
+        }
+    }
     std::set<std::string> supplied;
     for (const JsonNode& row : rows(document, "supplies", source)) {
         module.supplies.push_back(supply_of(row, source + " supplies"));
@@ -280,7 +306,7 @@ ModuleDefinition load_board_module(const std::filesystem::path& board_root) {
 BoardDefinition parse_board(const JsonNode& document, const std::string& file, ModuleDefinition module_definition) {
     const std::string source = "board file " + file;
     if (document.kind != JsonKind::Object) fail(source, "the document is not an object");
-    reject_unknown_keys(document, {"schema", "name", "files", "root_readme", "owned_groups", "module", "power", "sheets"}, source);
+    reject_unknown_keys(document, document_keys_at(board_document_keys(), ""), source);
     if (text(document, "schema", source) != board_schema) fail(source, std::string("schema is not ") + board_schema);
     BoardDefinition board;
     board.name = text(document, "name", source);
@@ -296,13 +322,19 @@ BoardDefinition parse_board(const JsonNode& document, const std::string& file, M
         if (!seen.insert(board.sheets.back().name).second) fail(source, "sheet " + board.sheets.back().name + " is listed twice");
     }
     if (board.sheets.empty()) fail(source, "the board lists no sheets");
+    for (const std::string& owned : board.flags.owned_groups)
+        if (!seen.count(owned)) fail(source, "'owned_groups' names sheet " + owned + " which the board does not list");
     return board;
 }
 
 BoardDefinition load_board(const std::filesystem::path& board_root) {
+    return load_board(board_root, load_module(module_root_of(board_root)));
+}
+
+BoardDefinition load_board(const std::filesystem::path& board_root, ModuleDefinition module) {
     const std::filesystem::path file = board_root / board_file;
     if (!std::filesystem::is_regular_file(file)) throw std::runtime_error("board file " + file.string() + " is missing");
-    BoardDefinition board = parse_board(parse_json_file(file.string()), file.string(), load_module(module_root_of(board_root)));
+    BoardDefinition board = parse_board(parse_json_file(file.string()), file.string(), std::move(module));
     if (board.name != board_root.filename().string()) fail(file.string(), "name " + board.name + " differs from its folder");
     return board;
 }

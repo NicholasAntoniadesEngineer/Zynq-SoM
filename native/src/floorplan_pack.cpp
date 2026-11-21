@@ -53,8 +53,8 @@ PackAnchorIn Engine::anchor_row(const FloorplanBlock& b,
         // anchors using the actual connector rectangle, not the E fallback.
         for(const auto& jack:plan.som.js)
             if(!jack.ref.empty()&&b.zone=="@"+module_sheet(jack.ref)) {
-                a.zone_ax=plan.som_x+jack.x+jack.w/2;
-                a.zone_ay=plan.som_y+jack.y+jack.h/2;
+                a.zone_ax=plan.som_x+jack.x;
+                a.zone_ay=plan.som_y+jack.y;
                 break;
             }
     }
@@ -274,7 +274,15 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
     plan.spilled.clear();
     std::vector<PackEdgeBlock> edge_rows;
     for (auto& b:plan.edge_blocks) {
-        std::tie(b.w,b.h)=zbox.at(b.name); b.area=block_area(b.w,b.h, counts);
+        std::tie(b.w,b.h)=zbox.at(b.name);
+        if (b.shape_idx!=0) {
+            const auto variants=in.geometry.shapes.find(b.name);
+            if (variants==in.geometry.shapes.end()||b.shape_idx<0||static_cast<std::size_t>(b.shape_idx)>=variants->second.size())
+                throw FloorplanError("edge block "+b.name+" selects shape "+std::to_string(b.shape_idx)+" that it does not offer");
+            const auto& selected=variants->second[static_cast<std::size_t>(b.shape_idx)];
+            b.w=selected.w; b.h=selected.h;
+        }
+        b.area=block_area(b.w,b.h, counts);
         PackEdgeBlock row;
         row.name=b.name; row.w=b.w; row.h=b.h;
         if (b.order_hint) row.order_hint=*b.order_hint;
@@ -424,8 +432,8 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
             std::optional<Box4> target;
             for(const auto& jack:plan.som.js) {
                 if(jack.ref.empty()||other!=module_sheet(jack.ref))continue;
-                target=Box4{plan.som_x+jack.x,plan.som_y+jack.y,
-                    plan.som_x+jack.x+jack.w,plan.som_y+jack.y+jack.h};
+                target=Box4{plan.som_x+jack.x-jack.w/2,plan.som_y+jack.y-jack.h/2,
+                    plan.som_x+jack.x+jack.w/2,plan.som_y+jack.y+jack.h/2};
                 break;
             }
             // Edge blocks have their final poses before interior seating.

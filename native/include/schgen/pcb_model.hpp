@@ -1,6 +1,7 @@
 #pragma once
 
 #include "schgen/constraints.hpp"
+#include "schgen/module_mating.hpp"
 #include "schgen/pcb_checks.hpp"
 #include "schgen/sheet_roles.hpp"
 
@@ -16,6 +17,8 @@ struct PcbModel : PcbCheckModel {
     std::vector<std::string> deferred;
     bool two_side = true;
     std::optional<Box4> som_keepout;
+    std::vector<ModuleMate> module_mates;
+    std::optional<std::pair<double, double>> module_origin;
     JsonNode escape_meta;
     // Preserve complete diagnostic metadata beyond the checker's typed subset.
     std::optional<JsonNode> escape_plan_record;

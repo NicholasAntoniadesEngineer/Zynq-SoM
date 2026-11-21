@@ -189,27 +189,44 @@ ComponentBasisResult audit_component_basis(const std::vector<ComponentBasisInput
     }
     for(const auto& [name, d] : declarations) {
         (void)d;
-        if(!globally_used.count(name)) r.unused.push_back(name + ": no declared consumer");
+        if(!globally_used.count(name)) { if(policy.every_board) r.unused.push_back(name + ": no declared consumer"); }
         else if(relevant.count(name) && !used.count(name)) r.unused.push_back(name + ": no live consumer");
     }
     r.n_registered = relevant.size();
     return r;
 }
+ComponentBasisBoards repository_basis_boards(const std::filesystem::path& repository) {
+    return {board_folders(repository), true};
+}
+ComponentBasisBoards single_basis_board(const std::filesystem::path& board_root) {
+    return {{board_root}, false};
+}
 ComponentBasisPolicy load_component_basis_policy(const std::filesystem::path& repository) {
+    return load_component_basis_policy(repository, repository_basis_boards(repository));
+}
+ComponentBasisPolicy load_component_basis_policy(const std::filesystem::path& repository, const ComponentBasisBoards& boards) {
     ComponentBasisPolicy policy;
+    policy.every_board = boards.every_board;
     read_basis_file(repository / library_folder / basis_file, library_scope, true, policy);
-    for(const auto& folder : board_folders(repository)) read_basis_file(folder / basis_file, folder.filename().string(), false, policy);
-    for(const auto& name : policy.board_scope_only)
-        if(std::none_of(policy.sheets.begin(), policy.sheets.end(), [&](const ComponentBasisSheet& s) { return s.scope != library_scope && s.name == name; }))
-            throw ModelCheckError((repository / library_folder / basis_file).string() + ": board_scope_only " + name + " is in the sheets of no board");
+    for(const auto& folder : boards.roots) read_basis_file(folder / basis_file, folder.filename().string(), false, policy);
+    if(boards.every_board)
+        for(const auto& name : policy.board_scope_only)
+            if(std::none_of(policy.sheets.begin(), policy.sheets.end(), [&](const ComponentBasisSheet& s) { return s.scope != library_scope && s.name == name; }))
+                throw ModelCheckError((repository / library_folder / basis_file).string() + ": board_scope_only " + name + " is in the sheets of no board");
     return policy;
 }
 std::set<std::string> component_basis_scopes(const std::filesystem::path& repository) {
+    return component_basis_scopes(repository_basis_boards(repository));
+}
+std::set<std::string> component_basis_scopes(const ComponentBasisBoards& boards) {
     std::set<std::string> scopes{library_scope};
-    for(const auto& folder : board_folders(repository)) scopes.insert(folder.filename().string());
+    for(const auto& folder : boards.roots) scopes.insert(folder.filename().string());
     return scopes;
 }
 std::vector<ComponentBasisInput> author_component_basis_inputs(const std::filesystem::path& root, const ComponentBasisPolicy& policy) {
+    return author_component_basis_inputs(root, repository_basis_boards(root), policy);
+}
+std::vector<ComponentBasisInput> author_component_basis_inputs(const std::filesystem::path& root, const ComponentBasisBoards& boards, const ComponentBasisPolicy& policy) {
     const auto context = make_authoring_context(root);
     std::vector<ComponentBasisInput> out;
     const auto file = (root / library_folder / basis_file).string();
@@ -228,11 +245,14 @@ std::vector<ComponentBasisInput> author_component_basis_inputs(const std::filesy
             throw ModelCheckError("library subsystem " + d.name + (listed ? " is in both sheets and board_scope_only of " : " is neither in sheets nor in board_scope_only of ") + file);
         if(listed) out.push_back({library_scope, d.name, author_subsystem(d.name, SubsystemMeta{}, context)});
     }
-    for(const auto& folder : board_folders(root))
-        for(const auto& d : project_subsystem_definitions(folder)) {
-            ProjectAuthoringInput input; input.context = context; input.project_root = root / d.project;
-            out.push_back({d.project, d.name, author_project_subsystem(d.project, d.name, input)});
-        }
+    for(const auto& folder : boards.roots) {
+        const auto module_root = module_root_in(root, folder);
+        ProjectAuthoringInput input; input.context = context; input.project_root = folder;
+        input.board = load_board(folder, load_module(module_root));
+        input.som = load_som_interface(module_root / module_interface_file);
+        for(const auto& d : project_subsystem_definitions(*input.board))
+            out.push_back({folder.filename().string(), d.name, author_project_subsystem(d.project, d.name, input)});
+    }
     return out;
 }
 std::string component_basis_report(const ComponentBasisResult& r) {

@@ -30,7 +30,7 @@ private:
 using AuditCounts = std::map<std::string, AuditInteger>;
 
 struct FallbackAuditResult {
-    bool ok = true, pinned = false;
+    bool ok = true, pinned = false, unstored = false;
     std::size_t n_names = 0, n_fired = 0;
     std::vector<std::string> regressions;
     AuditCounts search_effort;
@@ -41,6 +41,7 @@ struct FallbackAuditResult {
 // Read errors have original first-run semantics; publication errors propagate.
 std::optional<AuditCounts> load_fallback_baseline(const std::filesystem::path&);
 std::string fallback_baseline_text(const AuditCounts&);
+std::optional<AuditCounts> stored_board_fallback_baseline(const std::filesystem::path&);
 FallbackAuditResult check_fallback_ratchet(const AuditCounts&, const std::filesystem::path& baseline);
 // Separate the authoritative input ceiling from an isolated build's output.
 // Failed checks never publish; successful runs cannot relax the source ceiling.

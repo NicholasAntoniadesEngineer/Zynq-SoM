@@ -66,6 +66,13 @@
       "fields": {"LCSC": "C596319"}
     },
     {
+      "ref": "C4",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {"LCSC": "C14663"}
+    },
+    {
       "ref": "TP1",
       "symbol": "Connector:TestPoint",
       "value": "+VBUS_CONN",
@@ -87,7 +94,7 @@
     },
     {
       "name": "GND",
-      "pins": ["J1.A1B12", "J1.B1A12", "C1.2", "D1.2", "U1.9", "U1.21", "U1.12", "U1.16", "R4.2", "R5.2", "C3.2", "C2.2", "U2.2"]
+      "pins": ["J1.A1B12", "J1.B1A12", "C1.2", "D1.2", "U1.9", "U1.21", "U1.12", "U1.16", "R4.2", "R5.2", "C3.2", "C2.2", "U2.2", "C4.2"]
     },
     {
       "name": "PD_OVP_SET",
@@ -108,7 +115,7 @@
     },
     {
       "name": "+VDD_LOGIC",
-      "pins": ["R6.1", "U2.5"]
+      "pins": ["R6.1", "U2.5", "C4.1"]
     },
     {
       "name": "+VBUS_OUT",
@@ -161,6 +168,7 @@
     {"part": "C1", "role": "bypass", "pin": "U1.2"},
     {"part": "C2", "role": "reservoir", "pin": "U1.19"},
     {"part": "C3", "role": "set", "pin": "U1.10"},
+    {"part": "C4", "role": "bypass", "pin": "U2.5"},
     {"part": "D1", "role": "protect", "pin": "J1.A4B9"},
     {"part": "R3", "role": "sense", "pin": "U1.8"},
     {"part": "R4", "role": "sense", "pin": "U1.8"},

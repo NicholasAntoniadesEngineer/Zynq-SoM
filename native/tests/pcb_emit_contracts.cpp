@@ -167,10 +167,10 @@ void project(const fs::path &fixtures, const fs::path &output, const std::string
         replace_model(replace_model, expected);
         require(replaced == 1, "independent model-only correction has exactly one target");
         equal(sexpr_dumps(repaired.document), sexpr_dumps(expected), name + " repair preserves all copper and other models", output);
-        repaired_policy.model_overrides = {{"different-part", repository_part_facts().model_overrides.begin()->second}};
+        repaired_policy.model_overrides = {{"different-part", repository_part_facts().model_overrides.at("FUSB302BMPX")}};
         equal(render_pcb(m, repaired_policy).pcb, result.pcb, name + " model repair is part-specific", output);
         repaired_policy.model_overrides = repository_part_facts().model_overrides;
-        repaired_policy.model_overrides.begin()->second.footprint = "different-footprint";
+        repaired_policy.model_overrides.at("FUSB302BMPX").footprint = "different-footprint";
         equal(render_pcb(m, repaired_policy).pcb, result.pcb, name + " model repair is footprint-specific", output);
     } else {
         equal(repaired.pcb, result.pcb, name + " no irrelevant model repair", output);

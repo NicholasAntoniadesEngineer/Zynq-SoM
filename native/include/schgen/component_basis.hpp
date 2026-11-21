@@ -21,7 +21,14 @@ struct ComponentBasisPolicy {
     std::vector<ComponentBasisUse> uses;
     std::vector<ComponentBasisSheet> sheets;
     std::vector<std::string> board_scope_only;
+    bool every_board = true;
 };
+struct ComponentBasisBoards {
+    std::vector<std::filesystem::path> roots;
+    bool every_board = false;
+};
+ComponentBasisBoards repository_basis_boards(const std::filesystem::path& repository);
+ComponentBasisBoards single_basis_board(const std::filesystem::path& board_root);
 struct ComponentBasisInput {
     std::string scope, sheet;
     CircuitSheetIr circuit;
@@ -32,12 +39,16 @@ struct ComponentBasisResult {
     bool ok() const { return raw.empty() && undeclared.empty() && unused.empty() && broken.empty(); }
 };
 ComponentBasisPolicy load_component_basis_policy(const std::filesystem::path& repository);
+ComponentBasisPolicy load_component_basis_policy(const std::filesystem::path& repository, const ComponentBasisBoards& boards);
 std::set<std::string> component_basis_scopes(const std::filesystem::path& repository);
+std::set<std::string> component_basis_scopes(const ComponentBasisBoards& boards);
 // Scopes are explicit and required; omitted/extra/duplicate sheets fail closed.
 ComponentBasisResult audit_component_basis(const std::vector<ComponentBasisInput>&,
     const std::set<std::string>& scopes, const ComponentBasisPolicy&);
 std::vector<ComponentBasisInput> author_component_basis_inputs(const std::filesystem::path& repository,
     const ComponentBasisPolicy&);
+std::vector<ComponentBasisInput> author_component_basis_inputs(const std::filesystem::path& repository,
+    const ComponentBasisBoards& boards, const ComponentBasisPolicy&);
 std::string component_basis_report(const ComponentBasisResult&);
 JsonNode component_basis_result_json(const ComponentBasisResult&);
 JsonNode component_basis_policy_json(const ComponentBasisPolicy&);

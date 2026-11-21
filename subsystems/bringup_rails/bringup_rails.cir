@@ -20,14 +20,13 @@
 *   C1 +3V3_SC       -> GND      100n   (TCA9535 VCC decoupling)
 *   C2 PL_BTN0       -> GND      100n   (RC debounce)
 *   C3 PL_BTN1       -> GND      100n   (RC debounce)
-*   C4 STM32_NRST    -> GND      100n   (reset RC; STM32 internal pull-up)
 *
 * Pins: VDD_SC(=+3V3_SC) VDD(=+3V3) GND  + the signal nets the passives touch.
 
 .subckt bringup_rails VDD_SC VDD GND
 +  BU_OVR_LCD_BL BU_P16 BU_P17
 +  STM32_I2C2_SCL STM32_I2C2_SDA SC_INT_N
-+  PL_BTN0 PL_BTN1 STM32_NRST PUDC_34
++  PL_BTN0 PL_BTN1 PUDC_34
 
 * TCA9535 expander spare-port "don't float" pulldowns (no internal pulls)
 R1 BU_OVR_LCD_BL GND 100k
@@ -46,9 +45,6 @@ R7 PL_BTN0 VDD 10k
 R8 PL_BTN1 VDD 10k
 C2 PL_BTN0 GND 100n
 C3 PL_BTN1 GND 100n
-
-* reset RC (STM32_NRST has the STM32 internal ~40k pull-up, no external R)
-C4 STM32_NRST GND 100n
 
 * bank-34 PUDC config strap (LOW during config = internal pull-ups enabled)
 R9 PUDC_34 GND 10k
