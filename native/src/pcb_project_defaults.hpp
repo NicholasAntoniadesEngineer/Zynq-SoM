@@ -4,6 +4,9 @@
 #include "pcb_emit_internal.hpp"
 namespace schgen::pcb_emission {
 inline PcbProjectDocument design_settings(const PcbEmitPolicy &policy) {
+    if (!policy.drc_floors)
+        throw PcbEmissionError("project design settings need the fabricator's DRC floors; the policy was not built from a fabrication selection");
+    const DrcFloors &floors = *policy.drc_floors;
     PcbProjectDocument out;
     out.data = jo(
         {{"defaults", jo({{"apply_defaults_to_fp_barcodes", jb(false)},
@@ -141,19 +144,19 @@ inline PcbProjectDocument design_settings(const PcbEmitPolicy &policy) {
                        {"min_copper_edge_clearance", j(0.3)},
                        {"min_groove_width", j(0.0)},
                        {"min_hole_clearance", j(0.2)},
-                       {"min_hole_to_hole", j(0.25)},
+                       {"min_hole_to_hole", j(floors.hole_to_hole)},
                        {"min_microvia_diameter", j(0.2)},
                        {"min_microvia_drill", j(0.1)},
                        {"min_resolved_spokes", j(2)},
-                       {"min_silk_clearance", j(0.0)},
-                       {"min_text_height", j(0.8)},
-                       {"min_text_thickness", j(0.08)},
+                       {"min_silk_clearance", j(floors.silk_clearance)},
+                       {"min_text_height", j(floors.text_height)},
+                       {"min_text_thickness", j(floors.text_thickness)},
                        {"min_through_hole_diameter", j(0.2)},
                        {"min_track_width", j(0.09)},
                        {"min_via_annular_width", j(0.05)},
                        {"min_via_diameter", j(0.3)},
                        {"solder_mask_clearance", j(0.0)},
-                       {"solder_mask_min_width", j(0.0)},
+                       {"solder_mask_min_width", j(floors.mask_bridge)},
                        {"solder_mask_to_copper_clearance", j(0.0)},
                        {"use_height_for_length_calcs", jb(true)}})},
          {"teardrop_options", ja({jo({{"td_onpthpad", jb(true)},
@@ -335,7 +338,7 @@ inline PcbProjectDocument design_settings(const PcbEmitPolicy &policy) {
                        "/via_dimensions/6/drill"};
     for (auto &[key, val] : out.data.object_value)
         if (key == "rules")
-            set(val, "min_hole_to_hole", j(policy.minimum_hole_to_hole));
+            set(val, "min_hole_to_hole", j(floors.hole_to_hole));
     return out;
 }
 } // namespace schgen::pcb_emission
