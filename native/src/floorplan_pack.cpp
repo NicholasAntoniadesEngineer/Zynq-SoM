@@ -302,6 +302,12 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
         row.reach=b.fanout_reach; row.inset=b.fanout_inset;
         for (const auto& [j,n]:b.j_aff) row.j_aff.emplace_back(j,n);
         row.overmold=overmold(in.project.connectors,b); row.current_edge=b.edge; row.assigned_edge=edge_of.at(b.name);
+        for (const auto& c:b.conns) if (const auto* fact=connector_fact(in.project.connectors,c.value)) {
+            const double across=fact->mating_face.back()=='X' ? c.h : c.w;
+            if (fact->mating && fact->mating->plug_width_mm && *fact->mating->plug_width_mm>across)
+                row.overhang=std::max(row.overhang,(*fact->mating->plug_width_mm-across)/2);
+            if (fact->access) row.access=std::max(row.access,fact->access->side_mm);
+        }
         edge_rows.push_back(std::move(row));
     }
     std::vector<PackEdgeJack> jacks;

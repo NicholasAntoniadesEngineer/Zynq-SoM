@@ -171,7 +171,7 @@ bool open_gap(Kernel& kernel, const SqueezeOptions& settings, const Bundles& clu
             const Nm centre = along_x ? (hull.x0 + hull.x1) / 2 : (hull.y0 + hull.y1) / 2;
             if ((centre >= split) != move_high) continue;
             for (const std::size_t part : unit) {
-                held = held || problem.parts[part].fixed;
+                held = held || (problem.parts[part].fixed && !problem.parts[part].corner);
                 moving.push_back(part);
             }
         }
@@ -321,6 +321,16 @@ StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model
     {
         const std::size_t left = unmet_count(attracted) + gap_count(attracted);
         result.convergence = convergence_text(result, left);
+        const Problem& entry = attracted.problem();
+        for (const PadGap& rule : entry.constraints.soft_gaps)
+            if (rule.same_face && !pair_faced(entry, attracted.board(), rule.anchor, attracted.placement()[rule.anchor], rule.member,
+                                              attracted.placement()[rule.member], rule.or_under))
+                result.convergence += "LEFT " + entry.parts[rule.member].reference + " -> " + entry.parts[rule.anchor].reference +
+                                      " (" + rule.source + ") on the other face: " + seat_obstacles(attracted, rule, settings.pitch) + "\n";
+        for (const Violation& violation : attracted.violations())
+            if (violation.kind == Breach::connector_gap)
+                result.convergence += "LEFT connector spacing " + entry.parts[violation.part].reference + " / " +
+                                      entry.parts[violation.other].reference + "\n";
         if (left > 0)
             throw LayoutError("layout: " + std::to_string(left) +
                               " face pairs or protection orders could not be repaired within the stated budget\n" + result.convergence);

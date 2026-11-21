@@ -41,6 +41,7 @@ struct PackEdgeBlock {
     Halo inset;
     std::vector<std::pair<std::string, double>> j_aff;
     bool overmold = false;
+    double overhang = 0.0, access = 0.0;
     std::string current_edge;
     std::string assigned_edge;
 };
