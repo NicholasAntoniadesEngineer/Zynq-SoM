@@ -345,7 +345,7 @@
 		(layers "F.Paste")
 	)
 	(model
-		"RLM25FEGMR50M.wrl"
+		"${KIPRJMOD}/../parts/RLM25FEGMR50M/RLM25FEGMR50M.wrl"
 		(offset
 			(xyz 0 0 0)
 		)

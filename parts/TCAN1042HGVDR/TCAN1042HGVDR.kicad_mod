@@ -360,7 +360,7 @@
 		(layers "F.Cu" "F.Paste" "F.Mask")
 	)
 	(model
-		"TCAN1042HGVDR.wrl"
+		"${KIPRJMOD}/../parts/TCAN1042HGVDR/TCAN1042HGVDR.wrl"
 		(offset
 			(xyz 0 0 0)
 		)

@@ -210,7 +210,7 @@
 		(layers "F.Cu" "F.Paste" "F.Mask")
 	)
 	(model
-		"NUP2105LT1G.wrl"
+		"${KIPRJMOD}/../parts/NUP2105LT1G/NUP2105LT1G.wrl"
 		(offset
 			(xyz 0 0 0)
 		)

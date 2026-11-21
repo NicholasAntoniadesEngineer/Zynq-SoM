@@ -298,7 +298,7 @@
 		(layers "F.Cu" "F.Paste" "F.Mask")
 	)
 	(model
-		"RVT1H471M1213.wrl"
+		"${KIPRJMOD}/../parts/RVT1H471M1213/RVT1H471M1213.wrl"
 		(offset
 			(xyz 0 0 0)
 		)
