@@ -119,12 +119,12 @@
     "KH-5224-8P8C-D": {"margin_mm": 0.6}
   },
   "regulators": {
-    "AP2112K-1.8TRG1": {"kind": "ldo", "label": "AP2112K", "limit_a": 0.6, "eff": 1.0, "in_pin": "1", "out_pin": "5", "ilim_num": 6800.0, "note": "600 mA LDO"},
-    "AP2112K-3.3TRG1": {"kind": "ldo", "label": "AP2112K", "limit_a": 0.6, "eff": 1.0, "in_pin": "1", "out_pin": "5", "ilim_num": 6800.0, "note": "600 mA LDO"},
+    "AP2112K-1.8TRG1": {"kind": "ldo", "label": "AP2112K", "limit_a": 0.6, "eff": 1.0, "in_pin": "1", "out_pin": "5", "out_v": 1.8, "ilim_num": 6800.0, "note": "600 mA LDO"},
+    "AP2112K-3.3TRG1": {"kind": "ldo", "label": "AP2112K", "limit_a": 0.6, "eff": 1.0, "in_pin": "1", "out_pin": "5", "out_v": 3.3, "ilim_num": 6800.0, "note": "600 mA LDO"},
     "LM61460AANRJRR": {"kind": "buck", "label": "LM61460", "limit_a": 6.0, "eff": 0.9, "in_pin": "8", "out_pin": "10", "ilim_num": 6800.0, "note": "TI 6 A 3-36V synchronous buck (VIN1=8 ->L<-SW=10 ->rail)", "fb_vref": 1.0, "enable": {"direct": {"en_pin": "7", "vin_pins": ["8", "12"], "cite": "SNVSBD5D 8.3.1"}}},
     "SY6280AAC": {"kind": "load_switch", "label": "SY6280", "eff": 1.0, "in_pin": "IN", "out_pin": "OUT", "iset_pin": "ISET", "ilim_num": 6800.0, "note": "ILIM = 6800/RSET from netlist"},
     "SY7201ABC": {"kind": "led_boost", "label": "SY7201", "iset_v": 0.2},
-    "TLV75725PDYDR": {"kind": "ldo", "label": "TLV75725", "limit_a": 0.4, "eff": 1.0, "in_pin": "1", "out_pin": "5", "ilim_num": 6800.0, "note": "1 A LDO held to 0.4 A continuous (PWR-3: DYD thermal-pad, RthJA ~92.5 C/W EP-to-GND, Tj ~80 C at 0.32 W/Ta=50 C — fmc.md section 3)"},
+    "TLV75725PDYDR": {"kind": "ldo", "label": "TLV75725", "limit_a": 0.4, "eff": 1.0, "in_pin": "1", "out_pin": "5", "out_v": 2.5, "ilim_num": 6800.0, "note": "1 A LDO held to 0.4 A continuous (PWR-3: DYD thermal-pad, RthJA ~92.5 C/W EP-to-GND, Tj ~80 C at 0.32 W/Ta=50 C — fmc.md section 3)"},
     "TPS26631PWPR": {"kind": "efuse", "label": "TPS26631", "eff": 1.0, "in_pin": "IN", "out_pin": "OUT", "iset_pin": "ILIM", "ilim_num": 18000.0, "note": "ILIM = 18/R_kohm from netlist (TPS2663 Eq 5)"},
     "TPS54302DDCR": {"kind": "buck", "label": "TPS54302", "limit_a": 3.0, "eff": 0.9, "in_pin": "3", "out_pin": "2", "ilim_num": 6800.0, "note": "TI 3 A synchronous buck (SW->L->rail); thermal-gate test fixture", "fb_vref": 0.596, "enable": {"network": {"ihys_a": 1.55e-06, "recommended_max_v": 5.5, "threshold_v": 1.5, "cite": "SLVSDG6C"}}}
   },

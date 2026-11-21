@@ -436,14 +436,14 @@ RegulatorEnableFact enable_from(const JsonNode& entry, const std::string& where)
 
 RegulatorFact regulator_from(const JsonNode& entry, const std::string& where) {
     reject_unknown_keys(entry, {"kind", "label", "limit_a", "eff", "in_pin", "out_pin", "iset_pin", "ilim_num", "note", "fb_vref",
-                                "iset_v", "enable"}, where);
+                                "iset_v", "out_v", "enable"}, where);
     RegulatorFact fact;
     fact.kind = text_required(entry, "kind", where);
     if (std::find(regulator_kinds.begin(), regulator_kinds.end(), fact.kind) == regulator_kinds.end())
         refuse(where + ": kind " + fact.kind + " is not one of buck, ldo, load_switch, efuse, led_boost");
     fact.label = text_required(entry, "label", where);
     if (fact.kind == led_boost_kind) {
-        for (const char* key : {"limit_a", "eff", "in_pin", "out_pin", "iset_pin", "ilim_num", "note", "fb_vref", "enable"})
+        for (const char* key : {"limit_a", "eff", "in_pin", "out_pin", "iset_pin", "ilim_num", "note", "fb_vref", "out_v", "enable"})
             if (object_field(entry, key)) refuse(where + ": " + key + " does not apply to a led_boost");
         fact.iset_v = number_of(entry, "iset_v", where, true);
         return fact;
@@ -458,6 +458,8 @@ RegulatorFact regulator_from(const JsonNode& entry, const std::string& where) {
     fact.note = text_required(entry, "note", where);
     fact.fb_vref = optional_number_of(entry, "fb_vref", where);
     fact.iset_v = optional_number_of(entry, "iset_v", where);
+    fact.out_v = optional_number_of(entry, "out_v", where);
+    if (fact.out_v && fact.fb_vref) refuse(where + ": out_v (fixed output) and fb_vref (adjustable output) exclude each other");
     if (object_field(entry, "enable")) fact.enable = enable_from(object_required(entry, "enable", where), where + " enable");
     return fact;
 }

@@ -102,11 +102,13 @@ hand-kept file in this folder. It holds what the generator cannot know:
 - `regulators` — keyed by part number: `kind` (one of `buck`, `ldo`,
   `load_switch`, `efuse`, `led_boost`), `label` (the short device name the
   checks print), `eff`, `in_pin`, `out_pin`, `ilim_num`, `note`, and optionally
-  `limit_a`, `iset_pin`, `fb_vref`, `iset_v` and `enable`: a `direct` entry
+  `limit_a`, `iset_pin`, `fb_vref`, `out_v`, `iset_v` and `enable`: a `direct` entry
   (`en_pin`, `vin_pins`) or a `network` entry (`ihys_a`, `recommended_max_v`,
   `threshold_v`, the voltage the enable pin must exceed at the low contract
   input), each with the `cite` of the datasheet section it comes from, which
-  the check text prints. A `led_boost`
+  the check text prints. `out_v` is the output voltage of a fixed-output part
+  and `fb_vref` the feedback reference of an adjustable one; a row may not
+  state both (see `docs/SUBSYSTEM_FORMAT.md`, board power). A `led_boost`
   is not part of the power tree and states only `kind`, `label` and `iset_v`,
   the voltage its ISET resistor senses. A part is found by the part number on
   its instance: the `MPN` field when it has one, else the symbol name when the
