@@ -81,7 +81,7 @@ target_sources(schgen_core PRIVATE src/measure_board.cpp src/measure_metrics.cpp
 target_sources(schgen_core PRIVATE src/json_text.cpp src/layout_geometry.cpp src/layout_problem.cpp src/layout_kernel.cpp
     src/layout_adapter.cpp src/layout_json.cpp src/layout_cli.cpp src/layout_squeeze.cpp src/layout_arrange.cpp src/layout_stage.cpp
     src/layout_sink.cpp src/placement_integrity.cpp src/label_seats.cpp
-    src/placement_report.cpp src/testpoint_map.cpp src/decoupling_report.cpp src/i2c_inventory.cpp src/module_pin_map.cpp)
+    src/placement_report.cpp src/testpoint_map.cpp src/decoupling_report.cpp src/i2c_inventory.cpp src/module_pin_map.cpp src/connector_pinout.cpp src/rated_bom.cpp)
 set(SCHGEN_RULE_SOURCES
     src/rules/rule_context.cpp src/roles.cpp src/rules/rule_book.cpp src/rules/rule_index.cpp
     src/rules/mechanical/module_clearance.cpp src/rules/mechanical/module_escape_corridor.cpp
@@ -1173,6 +1173,16 @@ if(BUILD_TESTING)
     target_link_libraries(schgen_module_pin_map_contracts PRIVATE schgen_core)
     target_compile_options(schgen_module_pin_map_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
     add_test(NAME native_module_pin_map_contracts COMMAND schgen_module_pin_map_contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/..")
+    add_executable(schgen_connector_pinout_contracts tests/connector_pinout_contracts.cpp)
+    target_link_libraries(schgen_connector_pinout_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_connector_pinout_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME native_connector_pinout_contracts COMMAND schgen_connector_pinout_contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/..")
+    add_executable(schgen_rated_bom_contracts tests/rated_bom_contracts.cpp)
+    target_link_libraries(schgen_rated_bom_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_rated_bom_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME native_rated_bom_contracts COMMAND schgen_rated_bom_contracts
         "${CMAKE_CURRENT_SOURCE_DIR}/..")
     foreach(family verification spice)
         add_executable(schgen_${family}_contracts tests/${family}_contracts.cpp)
