@@ -751,7 +751,28 @@
       }
     }
   ],
-  "hints": [],
+  "hints": [
+    {
+      "net": "+VBAT_RAW",
+      "style": "path"
+    },
+    {
+      "net": "+VBAT_F",
+      "style": "path"
+    },
+    {
+      "net": "+VBAT_MID",
+      "style": "path"
+    },
+    {
+      "net": "+VBAT_P",
+      "style": "path"
+    },
+    {
+      "net": "+VBAT_OUT",
+      "style": "path"
+    }
+  ],
   "draws": [
     {
       "rail": "+VDD_MON",
