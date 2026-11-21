@@ -27,7 +27,7 @@ Rules the tool relies on (enforced by `native_removed_archive_contracts`):
 | `i2c_chip_facts/` | chip-specific I2C address functions and the sheet-named collision check they fed | `48d29d0194a10565be61ef5d8391051b1e0f7944` | `92644cdeccc63d6def0e71d9fc5dc14e7918f0af` |
 | `floorplan_prose/` | typed per-sheet placement notes and framing text of docs/FLOORPLAN.md and FLOORPLAN.svg | `9301deeda9d6c31cc06fc5f9230519033cd464c9` | `d6f1a6a4a9814aebb8fbf515e2494d38190bc922` |
 | `drawing_titles/` | typed titles, headings and always-on rail names of docs/power_sequence.svg and docs/power_tree.svg | `d6f1a6a4a9814aebb8fbf515e2494d38190bc922` | `8409f27ff7892b01c336bc42ea0828f7a2d12957` |
-| `subsystem_notes/` | READMEs and SPICE `.cir` files of the subsystem library and the board module sheets, the index READMEs, the SPICE identity test | `63c8ebf32d5f19e3dda76b4f0ada25ca66af032d` | pending |
+| `subsystem_notes/` | READMEs and SPICE `.cir` files of the subsystem library and the board module sheets, the index READMEs, the SPICE identity test | `63c8ebf32d5f19e3dda76b4f0ada25ca66af032d` | `31f53061af1bd02339cbb345d89a98a83868f8cd` |
 
 ## Files
 
