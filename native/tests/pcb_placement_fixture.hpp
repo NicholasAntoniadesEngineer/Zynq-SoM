@@ -1,6 +1,7 @@
 #pragma once
 #include "schgen/pcb_placement.hpp"
 #include "connector_facts_fixture.hpp"
+#include "sheet_roles_fixture.hpp"
 #include <algorithm>
 #include <fstream>
 
@@ -72,6 +73,7 @@ inline Fixture load(const std::filesystem::path &root, const std::string &projec
     auto &floor = input.floorplan;
     for (const auto &s : field(in, "sheets").array_value)
         floor.sheets.push_back(decode_intermediate_circuit_ir(s));
+    floor.roles = explicit_sheet_roles(floor.sheets);
     for (const auto &b : field(in, "bindings").array_value) {
         LinkPortBinding binding;
         binding.sheet = string(b, "sheet");
@@ -120,7 +122,7 @@ inline Fixture load(const std::filesystem::path &root, const std::string &projec
     floor.project.raw = config;
     floor.project.name = string(config, "name");
     floor.project.file_stem = "Zynq_Carrier";
-    floor.project.connectors = repository_connector_facts();
+    use_repository_part_facts(floor.project);
     floor.project.wired_sheets = strings(field(placement, "wired_sheets"));
     floor.project.pilot_prox_sheets = strings(field(placement, "pilot_prox_sheets"));
     auto off = point(field(placement, "module_offset"));
@@ -157,7 +159,7 @@ inline Fixture load(const std::filesystem::path &root, const std::string &projec
             pins.push_back({p.array_value[0].string_value, p.array_value[1].string_value});
         input.netlist.push_back({row.array_value[0].string_value, pins});
     }
-    input.land_spacing = repository_land_spacing(input.netlist);
+    input.land_spacing = repository_land_spacing(input.netlist, repository_power_policy(root, project));
     input.interface_bytes = read(module_root_of(root / project) / module_interface_file);
     input.som_interface = load_som_interface(module_root_of(root / project) / module_interface_file);
     auto mapping =

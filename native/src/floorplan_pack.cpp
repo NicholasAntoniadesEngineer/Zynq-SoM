@@ -52,7 +52,7 @@ PackAnchorIn Engine::anchor_row(const FloorplanBlock& b,
         // SoM connectors are not edge blocks. Honour their explicit near
         // anchors using the actual connector rectangle, not the E fallback.
         for(const auto& jack:plan.som.js)
-            if(!jack.ref.empty()&&jack.ref.front()=='J'&&b.zone=="@som_j"+jack.ref.substr(1)) {
+            if(!jack.ref.empty()&&b.zone=="@"+module_sheet(jack.ref)) {
                 a.zone_ax=plan.som_x+jack.x;
                 a.zone_ay=plan.som_y+jack.y;
                 break;
@@ -341,7 +341,7 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
     const Pose som_occ{plan.som_x-som_pad,plan.som_y-som_pad,plan.som.w+2*som_pad,plan.som.h+2*som_pad};
     std::vector<Comp> som_comps;
     if (plan.punch_free) som_comps=som_components(som_occ.x,som_occ.y,plan.dec_radius,
-        som_decoupling_cells(plan.som_x,plan.som_y,plan.som.w,plan.som.h,plan.dec_count,dec_inset,counts),
+        under_module_cells(plan.som_x,plan.som_y,plan.som.w,plan.som.h,plan.dec_count,dec_inset,counts),
         {som_rects.begin()+1,som_rects.end()},occ_bottom,occ_punch,counts);
     std::map<std::string,std::vector<Comp>> edge_comps;
     for (const auto& b:plan.edge_blocks) if (plan.punch_free)
@@ -431,7 +431,7 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
             const auto hull=selected_hull(b.name,shape_index);if(!hull)continue;
             std::optional<Box4> target;
             for(const auto& jack:plan.som.js) {
-                if(jack.ref.empty()||jack.ref.front()!='J'||other!="som_j"+jack.ref.substr(1))continue;
+                if(jack.ref.empty()||other!=module_sheet(jack.ref))continue;
                 target=Box4{plan.som_x+jack.x-jack.w/2,plan.som_y+jack.y-jack.h/2,
                     plan.som_x+jack.x+jack.w/2,plan.som_y+jack.y+jack.h/2};
                 break;
@@ -944,7 +944,7 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
             li.som_core_page=som_core_rect(plan.som_x,plan.som_y,plan.som.w,plan.som.h,in.origin.first,in.origin.second,.03);
             std::vector<std::tuple<std::string,double,double,double,double>> rows;
             for (const auto& j:plan.som.js) rows.emplace_back(j.ref,j.x,j.y,j.w,j.h);
-            for (const auto& [n,x0,y0,x1,y1]:som_jack_rects(plan.som_x,plan.som_y,rows)) li.som_j_rects[n]={x0,y0,x1,y1};
+            for (const auto& [n,x0,y0,x1,y1]:module_connector_rects(plan.som_x,plan.som_y,rows,module_sheet_of)) li.module_rects[n]={x0,y0,x1,y1};
             const auto orig=plan.interior_blocks;
             bool compaction_attempted=false;
             auto legalize=[&](bool do_compact,bool release_neighbours=false) {

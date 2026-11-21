@@ -1,0 +1,1 @@
+    emit("<text x=\""+number(lx)+"\" y=\""+number(oy+26+legend.size()*22+12)+"\" fill=\"#6b7280\" font-size=\"10\">block area = courtyards (big parts raw, small x"+number(plan.factor)+") — see FLOORPLAN.md</text>");

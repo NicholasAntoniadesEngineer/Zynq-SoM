@@ -172,7 +172,8 @@ PcbPlacementInput load_geometry_board_inputs(const ProjectPaths& paths, const Ne
     std::vector<CircuitSheetIr> sheets; std::vector<std::string> names;
     for (const auto& circuit : authored.circuits) { sheets.push_back(circuit.circuit); names.push_back(circuit.name); }
     const auto index = extend_sheet_index(load_sheet_index(paths), names).index;
-    const auto link = link_sheets(sheets, parse_json_file(paths.som_interface_file.string()),
+    const auto roles = load_sheet_roles(paths, authored.circuits);
+    const auto link = link_sheets(sheets, sheet_module_connectors(roles), parse_json_file(paths.som_interface_file.string()),
         parse_json_file((paths.project_root / "som_mapping.json").string()), paths.module.do_not_load_straps);
     if (!link.ok()) throw ProjectError("geometry link failed: " + link.report());
     std::vector<BoardSheetInput> inputs;
@@ -186,7 +187,7 @@ PcbPlacementInput load_geometry_board_inputs(const ProjectPaths& paths, const Ne
     options.root_name = paths.file_stem; options.extraction = extraction; options.reports_dir = scratch.path / "reports";
     const auto board = build_board_schematic(inputs, library, scratch.path, options);
     if (!board.ok()) throw ProjectError("geometry schematic gate failed: " + board.report);
-    auto input = load_board_inputs(paths, authored.circuits, link, extract_netlist(board.root_path, extraction));
+    auto input = load_board_inputs(paths, authored.circuits, roles, link, extract_netlist(board.root_path, extraction));
     input.floorplan.sheet_index = index;
     return input;
 }

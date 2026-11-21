@@ -1,4 +1,6 @@
 #include "schgen/run_config.hpp"
+#include "legacy_power_policy.hpp"
+#include "sheet_roles_fixture.hpp"
 #include "schgen/assembly_documents.hpp"
 #include "connector_facts_fixture.hpp"
 #include "schgen/manufacturing_checks.hpp"
@@ -27,7 +29,7 @@ std::vector<std::string> strings(const JsonNode& n){std::vector<std::string> o;f
 void exact(const std::string& got,const fs::path& file,const fs::path& output){auto want=read(file);write(output,got);if(got!=want){std::size_t i=0;while(i<std::min(got.size(),want.size())&&got[i]==want[i])++i;throw std::runtime_error(file.string()+": bytes differ at "+std::to_string(i)+" actual saved in "+output.string());}++assertions;}
 template<class F>void throws(F f,const std::string& text){bool caught=false;try{f();}catch(const std::exception& e){caught=true;require(std::string(e.what()).find(text)!=std::string::npos,"unexpected error: "+std::string(e.what()));}require(caught,"expected error containing "+text);}
 PcbFootprintPool pool(const JsonNode& n){PcbFootprintPool p;for(const auto& [k,v]:n.object_value)p[k]=pcb_check_footprint(k,v.string_value);return p;}
-PcbEmitPolicy policy(const JsonNode& n){auto p=default_pcb_emit_policy();p.connectors=repository_connector_facts();for(const auto& [k,v]:field(n,"header_descriptions").object_value)p.header_descriptions.emplace_back(k,v.string_value);for(const auto& [k,v]:field(n,"switch_descriptions").object_value)p.switch_descriptions.emplace_back(k,v.string_value);return p;}
+PcbEmitPolicy policy(const JsonNode& n){auto p=default_pcb_emit_policy();p.connectors=repository_connector_facts();p.thermal_copper=repository_part_facts().thermal_copper;p.regulators=repository_part_facts().regulators;for(const auto& [k,v]:field(n,"header_descriptions").object_value)p.header_descriptions.emplace_back(k,v.string_value);for(const auto& [k,v]:field(n,"switch_descriptions").object_value)p.switch_descriptions.emplace_back(k,v.string_value);return p;}
 Stm32PinMap stm32(const JsonNode& n){Stm32PinMap out;out.value=str(n,"value");for(const auto& [k,v]:field(n,"nets").object_value)out.nets[k]={str(v,"net"),str(v,"port"),static_cast<int>(num(v,"pin")),strings(field(v,"j_pins"))};return out;}
 void groups(const PcbModel& m,const AssemblyPlan& p,const JsonNode& expected){
     for(const auto& [kind,phases]:std::vector<std::pair<std::string,bool>>{{"steps",false},{"phases",true}}){const auto& want=field(expected,kind).array_value;require((phases?p.phases.size():p.steps.size())==want.size(),kind+" count");
@@ -46,13 +48,14 @@ std::string rgb(const std::string& png,int width,int height){
     std::string out(static_cast<std::size_t>(stride)*height,'\0');for(int y=0;y<height;++y){auto f=static_cast<unsigned char>(filtered[static_cast<std::size_t>(y)*(stride+1)]);require(f<=4,"PNG filter");for(int x=0;x<stride;++x){auto pos=static_cast<std::size_t>(y)*stride+x;int a=x>=3?static_cast<unsigned char>(out[pos-3]):0,b=y?static_cast<unsigned char>(out[pos-stride]):0,c=x>=3&&y?static_cast<unsigned char>(out[pos-stride-3]):0;int p=a+b-c,pa=std::abs(p-a),pb=std::abs(p-b),pc=std::abs(p-c);int predictor=f==1?a:f==2?b:f==3?(a+b)/2:f==4?(pa<=pb&&pa<=pc?a:pb<=pc?b:c):0;out[pos]=static_cast<char>(static_cast<unsigned char>(filtered[static_cast<std::size_t>(y)*(stride+1)+x+1])+predictor);}}
     return out;
 }
+PowerPolicy legacy;
 void check_images(const std::vector<AssemblyImage>& images,const std::vector<JsonNode>& expected,const fs::path& output,const std::string& name){
     require(images.size()==expected.size(),"assembly image inventory");
     for(std::size_t n=0;n<images.size();++n){const auto& i=images[n];const auto& e=expected[n];require(i.filename==str(e,"filename"),"PNG filename");write(output/i.filename,i.png);const auto pixels=rgb(i.png,static_cast<int>(num(e,"width")),static_cast<int>(num(e,"height")));require(pcb_sha256(pixels)==str(e,"rgb_sha256"),name+" "+i.filename+": RGB parity failed");require(pcb_sha256(i.png)==str(e,"png_sha256"),name+" "+i.filename+": PNG byte parity failed");}
 }
 void project(const fs::path& root,const fs::path& scratch,const std::string& name){
     const auto fixture=root/"native/tests/data/manufacturing"/name;const auto output=scratch/name;const auto input=parse_json_file((fixture/"inputs.json").string());
-    const auto raw=parse_json_file((root/"native/tests/data/pcb_emit"/(name+".json")).string());auto m=pcb_model_from_json(field(raw,"model"),pool(field(raw,"footprints")));auto pol=policy(raw);auto power=power_result_from_json(field(input,"power"));auto plan=assembly_plan(m,power,pol);
+    const auto raw=parse_json_file((root/"native/tests/data/pcb_emit"/(name+".json")).string());auto m=pcb_model_from_json(field(raw,"model"),pool(field(raw,"footprints")), explicit_sheet_roles(field(raw,"model")));auto pol=policy(raw);auto power=power_result_from_json(field(input,"power"));auto plan=assembly_plan(m,power,pol);
     groups(m,plan,parse_json_file((fixture/"plan.json").string()));exact(render_assembly_markdown(m,plan,name),fixture/"ASSEMBLY.md",output/"ASSEMBLY.md");
     std::cout<<name<<": plan and assembly Markdown exact\n";
     auto paths=resolve_project_paths(root,name);auto sheets=load_project_circuits(paths);
@@ -60,7 +63,7 @@ void project(const fs::path& root,const fs::path& scratch,const std::string& nam
     exact(render_si_design_rules(si,"(version 1)\n# preserve caller rule\n"),fixture/"si.kicad_dru",output/"si.kicad_dru");exact(render_si_markdown(si,"Zynq_Carrier_pcb.kicad_dru"),fixture/"SI_CONSTRAINTS.md",output/"SI_CONSTRAINTS.md");
     require(verdict.summary()+"\n"==read(fixture/"si_summary.txt"),"SI exact summary");
     const auto run_path=output/"si-run";write(run_path/"rules.kicad_dru","(version 1)\n# preserve caller rule\n");const auto run=run_si_constraints(sheets,paths.project_root/"research/si_spec.json",run_path/"rules.kicad_dru",run_path/"SI.md");require(run.verdict.ok,"SI run checks real model");require(read(run.md)==render_si_markdown(si,"rules.kicad_dru")&&read(run.dru)==render_si_design_rules(si,"(version 1)\n# preserve caller rule\n"),"SI run publishes rules and Markdown");throws([&]{run_si_constraints(sheets,paths.project_root/"research/si_spec.json",run.md,run.md);},"distinct");
-    auto in=prepare_manufacturing_manifest(sheets,stm32(field(input,"stm32")),ManufacturingXdc{5,{35,34,35},std::nullopt},"xc7z020clg400-1",{12.34565,7});
+    auto in=prepare_manufacturing_manifest(sheets,stm32(field(input,"stm32")),legacy,ManufacturingXdc{5,{35,34,35},std::nullopt},"xc7z020clg400-1",{12.34565,7});
     for(const auto& a:field(input,"artifacts").array_value)in.artifacts.push_back({str(a,"path"),str(a,"sha256")});
     auto historical=in;
     for(auto& sheet:historical.sheets)sheet.circuit=historical_input_contracts::project(sheet.circuit,name);
@@ -81,7 +84,13 @@ void project(const fs::path& root,const fs::path& scratch,const std::string& nam
                 "removed enable network must not reappear: "+std::string(ref));
     replace_once(name=="carrier"?"\"lines\": 105":"\"lines\": 43",name=="carrier"?"\"lines\": 104":"\"lines\": 42");
     replace_once(name=="carrier"?"\"parts\": 502":"\"parts\": 136",name=="carrier"?"\"parts\": 499":"\"parts\": 133");
-    require(render_manufacturing_manifest(historical)==reviewed_expected,"manifest differs beyond reviewed direct-enable removal");
+    if(name=="carrier"){
+        const auto edid=std::find_if(in.sheets.begin(),in.sheets.end(),[](const auto& s){return s.circuit.name=="hdmi_rx";});
+        require(edid!=in.sheets.end()&&std::any_of(edid->circuit.parts.begin(),edid->circuit.parts.end(),[](const auto& p){return p.ref=="U1"&&p.value=="M24C02-WMN6TP";}),
+                "the EDID EEPROM the inventory adds is on the HDMI receive sheet");
+        replace_once("      \"sheet\": \"motor_sense\"\n    },\n","      \"sheet\": \"motor_sense\"\n    },\n    {\n      \"addr\": 80,\n      \"addr_hex\": \"0x50\",\n      \"bus\": \"hdmi_rx/HDMI_RX_SDA\",\n      \"device\": \"M24C02\",\n      \"ref\": \"U1\",\n      \"sheet\": \"hdmi_rx\"\n    },\n");
+    }
+    require(render_manufacturing_manifest(historical,legacy)==reviewed_expected,"manifest differs beyond reviewed direct-enable removal");
     auto current_expected=reviewed_expected;
     if(name=="carrier") {
         // The reviewed 100p/C14858 reference filter adds one BOM group;
@@ -95,15 +104,15 @@ void project(const fs::path& root,const fs::path& scratch,const std::string& nam
     const auto parts_pos=current_expected.find(reviewed_parts);
     require(parts_pos!=std::string::npos&&current_expected.find(reviewed_parts,parts_pos+reviewed_parts.size())==std::string::npos,"unique reviewed part-count preimage");
     current_expected.replace(parts_pos,reviewed_parts.size(),current_parts);
-    const auto current_manifest=render_manufacturing_manifest(in);write(output/"manifest.json",current_manifest);
+    const auto current_manifest=render_manufacturing_manifest(in,legacy);write(output/"manifest.json",current_manifest);
     require(current_manifest==current_expected,"current manifest differs beyond reviewed reference-filter BOM group");
     std::cout<<name<<": SI and live-analysis manifest exact\n";
     const auto images=render_assembly_images(m,plan);const auto expected=parse_json_file((fixture/"images.json").string()).array_value;check_images(images,expected,output,name);
     std::cout<<name<<": "<<images.size()<<" assembly PNGs exact\n";
 }
 void mutations(const fs::path& root,const fs::path& scratch){
-    const auto raw=parse_json_file((root/"native/tests/data/manufacturing/mutations.json").string());const auto fps=pool(field(raw,"footprints"));auto mutation_policy=default_pcb_emit_policy();mutation_policy.connectors=repository_connector_facts();
-    for(const auto& row:field(raw,"assembly").array_value){auto name=str(row,"name");auto m=pcb_model_from_json(field(row,"model"),fps);auto p=power_result_from_json(field(row,"power"));
+    const auto raw=parse_json_file((root/"native/tests/data/manufacturing/mutations.json").string());const auto fps=pool(field(raw,"footprints"));auto mutation_policy=default_pcb_emit_policy();mutation_policy.connectors=repository_connector_facts();mutation_policy.thermal_copper=repository_part_facts().thermal_copper;mutation_policy.regulators=repository_part_facts().regulators;
+    for(const auto& row:field(raw,"assembly").array_value){auto name=str(row,"name");auto m=pcb_model_from_json(field(row,"model"),fps, explicit_sheet_roles(field(row,"model")));auto p=power_result_from_json(field(row,"power"));
         if(auto e=object_field(row,"error")){throws([&]{assembly_plan(m,p,mutation_policy);},e->string_value);continue;}
         const auto plan=assembly_plan(m,p,mutation_policy);groups(m,plan,field(row,"plan"));require(render_assembly_markdown(m,plan,name)==str(row,"markdown"),name+" mutated assembly Markdown");
         check_images(render_assembly_images(m,plan),field(row,"images").array_value,scratch/"mutations"/name,name);
@@ -128,8 +137,8 @@ void mutations(const fs::path& root,const fs::path& scratch){
     const auto board=sexpr_loads("(kicad_pcb (segment (width 0.10)) (via (size 0.4) (drill 0.2)) (footprint X (pad \"1\" thru_hole oval (drill oval 0.5 0.3))))");auto demand=measure_manufacturing_board(board,"(constraint track_width (min 0.09mm)) (constraint clearance (min 0.1mm))","{\"min_hole_to_hole\": 0.16, \"min_via_annular_width\":0.001}");require(demand.n_segments==1&&demand.n_vias==1&&demand.n_drills==2&&demand.min_trace_mm==.09&&demand.min_drill_mm==.2&&demand.min_via_annular_mm==.1,"fab actual board + rules extraction");require(check_manufacturing_fab(demand).ok,"fab geometry above floor");demand.min_trace_mm=.09-.0000009;require(check_manufacturing_fab(demand).ok,"fab epsilon accepted");demand.min_trace_mm=.09-.0000011;require(!check_manufacturing_fab(demand).ok,"fab epsilon exceeded");
     auto pcb=scratch/"runs/test.kicad_pcb";write(pcb,sexpr_dumps(board));const auto fab=run_manufacturing_fab(scratch/"runs",pcb,scratch/"absent.dru",scratch/"absent.pro");require(read(scratch/"runs/fab_profile.txt")==fab.report()+"\n","fab run report");throws([&]{run_manufacturing_fab(scratch/"runs",scratch/"absent.pcb",{},{});},"requires an emitted board");
     const auto tree=scratch/"artifact-tree";write(tree/"reports/fixture.txt",std::string("fixture\0\xff\r\n",11));write(tree/"reports/nested/excluded.txt","excluded");write(tree/"manufacturing/not-selected.md","excluded");write(tree/"manifest.json","old");auto artifacts=manufacturing_artifacts(tree,tree/"manifest.json","Fixture_Board");require(artifacts.size()==1&&artifacts.front().path=="reports/fixture.txt"&&artifacts.front().sha256=="874a5443d83e074f3be349130ec16d1c2bbb1733b2d9205cfbbd46f88f4344cd","artifact selection and binary hash");require(manufacturing_artifacts(tree,tree/"reports/fixture.txt","Fixture_Board").empty(),"manifest excludes itself");
-    ManufacturingManifestInput mi;mi.file_stem="Fixture_Board";mi.artifacts={{"stale","stale"}};run_manufacturing_manifest(mi,tree,tree/"manifest.json");auto manifest=parse_json_file((tree/"manifest.json").string());require(field(manifest,"artifacts").array_value.size()==1&&str(field(manifest,"artifacts").array_value[0],"path")=="reports/fixture.txt","manifest run uses live filesystem");write(tree/"reports/fixture.txt","changed");run_manufacturing_manifest(mi,tree,tree/"manifest.json");require(str(field(parse_json_file((tree/"manifest.json").string()),"artifacts").array_value[0],"sha256")==pcb_sha256("changed"),"manifest run rehashes mutated artifacts");
-    mi.preflight.extended=std::numeric_limits<long long>::max();require(render_manufacturing_manifest(mi).find("\"extended\": 9223372036854775807")!=std::string::npos,"manifest exact signed 64-bit count");throws([&]{manufacturing_manifest(mi);},"loses precision");mi.preflight.extended=std::numeric_limits<long long>::min();require(render_manufacturing_manifest(mi).find("\"extended\": -9223372036854775808")!=std::string::npos,"manifest negative signed 64-bit count");
+    ManufacturingManifestInput mi;mi.file_stem="Fixture_Board";mi.artifacts={{"stale","stale"}};run_manufacturing_manifest(mi,tree,tree/"manifest.json",legacy);auto manifest=parse_json_file((tree/"manifest.json").string());require(field(manifest,"artifacts").array_value.size()==1&&str(field(manifest,"artifacts").array_value[0],"path")=="reports/fixture.txt","manifest run uses live filesystem");write(tree/"reports/fixture.txt","changed");run_manufacturing_manifest(mi,tree,tree/"manifest.json",legacy);require(str(field(parse_json_file((tree/"manifest.json").string()),"artifacts").array_value[0],"sha256")==pcb_sha256("changed"),"manifest run rehashes mutated artifacts");
+    mi.preflight.extended=std::numeric_limits<long long>::max();require(render_manufacturing_manifest(mi,legacy).find("\"extended\": 9223372036854775807")!=std::string::npos,"manifest exact signed 64-bit count");throws([&]{manufacturing_manifest(mi,legacy);},"loses precision");mi.preflight.extended=std::numeric_limits<long long>::min();require(render_manufacturing_manifest(mi,legacy).find("\"extended\": -9223372036854775808")!=std::string::npos,"manifest negative signed 64-bit count");
     auto xdc=scratch/"runs/test.xdc";write(xdc,"# ignored\r\n# Device: \t mutated-device \r\n# Device: wrong\n");require(manufacturing_xdc_device(xdc)=="mutated-device","XDC device first matching line + whitespace");write(xdc,"# Device: \n# Device: later\n");require(!manufacturing_xdc_device(xdc),"empty first device stops search");
     std::cout<<"frozen assembly/SI mutants and publication/error contracts passed\n";
 }
@@ -155,6 +164,7 @@ int main(int argc,char** argv){
         require(argc==3,"usage: manufacturing_contracts REPOSITORY SCRATCH_PARENT");
         schgen::apply_run_config(std::filesystem::path(argv[1])/schgen::run_config_file,"carrier");
         const auto root=fs::absolute(argv[1]),parent=fs::absolute(argv[2]);
+        legacy=legacy_power_policy(root);
         fs::create_directories(parent);auto pattern=(parent/"run-XXXXXX").string();
         if(!::mkdtemp(pattern.data()))throw std::runtime_error("cannot create contract scratch directory");
         const fs::path scratch=pattern;fs::current_path(scratch);

@@ -5,7 +5,7 @@
 namespace schgen {
 std::vector<CppAuditSource> board_pipeline_audit_sources(){
     std::vector<CppAuditSource> out;
-    for(const auto* name:{"quantize.cpp","native_audit_quantize.cpp","floorplan_internal.hpp","floorplan_geometry.cpp","floorplan_cross.cpp","floorplan_pack.cpp","floorplan_compose.cpp","floorplan_build.cpp","floorplan_notes.cpp","floorplan_svg.cpp","floorplan_md.cpp","pcb_stage_internal.hpp","pcb_stage_geometry.cpp","pcb_stage_search.cpp","pcb_stage_power.cpp","pcb_stage_zone.cpp","pcb_placement_internal.hpp","pcb_placement_inputs.cpp","pcb_placement_pack.cpp","pcb_placement_variants.cpp","pcb_placement_zones.cpp","pcb_placement_model.cpp","pcb_placement_moves.cpp","pcb_placement_breathe.cpp","pcb_placement_build.cpp","pcb_escape_internal.hpp","pcb_escape_copper.cpp","pcb_escape_plan.cpp","pcb_escape_model.cpp","pcb_escape_triage.cpp","pcb_embed.cpp","pcb_emit.cpp","pcb_project.cpp","pcb_silk.cpp","legalize.cpp","occupancy.cpp","pack.cpp","ratsnest_gate.cpp"})out.push_back({std::string("native/src/")+name});
+    for(const auto* name:{"quantize.cpp","native_audit_quantize.cpp","floorplan_internal.hpp","floorplan_geometry.cpp","floorplan_cross.cpp","floorplan_pack.cpp","floorplan_compose.cpp","floorplan_build.cpp","floorplan_svg.cpp","floorplan_md.cpp","pcb_stage_internal.hpp","pcb_stage_geometry.cpp","pcb_stage_search.cpp","pcb_stage_power.cpp","pcb_stage_zone.cpp","pcb_placement_internal.hpp","pcb_placement_inputs.cpp","pcb_placement_pack.cpp","pcb_placement_variants.cpp","pcb_placement_zones.cpp","pcb_placement_model.cpp","pcb_placement_moves.cpp","pcb_placement_breathe.cpp","pcb_placement_build.cpp","pcb_escape_internal.hpp","pcb_escape_copper.cpp","pcb_escape_plan.cpp","pcb_escape_model.cpp","pcb_escape_triage.cpp","pcb_embed.cpp","pcb_emit.cpp","pcb_project.cpp","pcb_silk.cpp","legalize.cpp","occupancy.cpp","pack.cpp","ratsnest_gate.cpp"})out.push_back({std::string("native/src/")+name});
     out.push_back({"native/src/pcb_owned_groups.cpp"});
     out.push_back({"native/src/pcb_owned_groups_adapter.cpp"});
     out.push_back({"native/src/legalize_precision.cpp"});
@@ -78,7 +78,7 @@ void declare_pipeline(NativeLedger& l){
     declare_calculation(l,"register_silence","census","registrations",{"quantize_registered","quantize_engaged","fallback_registered","fallback_fired"},"registered - engaged = declared machinery this build never used");
 }
 void record_pipeline_before(Context& c){
-    std::size_t som=0,dec=0;for(const auto& s:c.sheets){som+=s.name.rfind("som_j",0)==0;dec+=s.name=="som_decoupling";}
+    std::size_t som=0,dec=0;for(const auto& s:c.sheets){som+=module_connector_sheet(c.require_roles(),s.name);dec+=under_module_sheet(c.require_roles(),s.name);}
     c.ledger.open_step("netlist");c.ledger.calc("sheet_census",number(c.sheets.size()-som-dec),{{"n_sheets",number(c.sheets.size())},{"n_som_j",number(som)},{"n_decoupling",number(dec)}});c.ledger.close_step("netlist");
     std::map<std::string,std::size_t> multi;for(const auto& s:c.sheets)for(const auto& n:s.nets)++multi[n.name];
     const auto som_nets=link_som_nets_from_json(parse_json_file(c.paths.som_interface_file.string()));std::set<std::string> all;std::size_t cross=0;

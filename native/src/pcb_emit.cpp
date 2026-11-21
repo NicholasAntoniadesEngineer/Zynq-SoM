@@ -9,8 +9,6 @@ using namespace pcb_emission;
 const PcbEmitPolicy &default_pcb_emit_policy() {
     static const PcbEmitPolicy policy = [] {
         PcbEmitPolicy p;
-        p.footprint_aliases = {
-            {"Capacitor_SMD:C_1206_3225Metric", "Capacitor_SMD:C_1206_3216Metric"}};
         p.connector_descriptions = {{"pd_input", "PWR"},
                                     {"usbc_otg", "USB OTG"},
                                     {"usb_jtag_connector", "JTAG"},
@@ -24,46 +22,8 @@ const PcbEmitPolicy &default_pcb_emit_policy() {
                                     {"lcd", "LCD"},
                                     {"pmod", "PMOD"},
                                     {"pmod_expansion", "PMOD"}};
-        p.thermal_copper = {{"LM61460",
-                             {{{1.55, -2.5},
-                               {1.55, 2.5},
-                               {2.45, -2.5},
-                               {2.45, 2.5},
-                               {1.55, -4.35},
-                               {1.55, 4.35},
-                               {2.45, -4.35},
-                               {2.45, 4.35},
-                               {1, -4.35},
-                               {1, 4.35},
-                               {-1.6, -2.7},
-                               {-1.6, 2.7},
-                               {.3, -2.6},
-                               {.3, 2.6},
-                               {2.85, -1.45},
-                               {2.85, 0},
-                               {2.85, 1.45}},
-                              8,
-                              {-3, -4.75, 4.4, 4.75},
-                              {"F.Cu", "B.Cu"},
-                              "TI SNVSBD5D 11.1.1 thermal-via field at PGND1/PGND2"}},
-                            {"TLV75725",
-                             {{{-1.15, 0},
-                               {1.15, 0},
-                               {-1.75, 0},
-                               {1.75, 0},
-                               {1.85, -1},
-                               {1.85, 1},
-                               {2.35, -.55},
-                               {2.35, .55},
-                               {-1.85, -1},
-                               {-1.85, 1}},
-                              3,
-                              {-2.9, -1.6, 2.9, 1.6},
-                              {"F.Cu"},
-                              "TI TLV757P DYD JESD51-5 pad-adjacent thermal vias"}}};
         for (const auto &[_, need] : default_thermal_policy().pour_needs)
             p.thermal_credit_needs.push_back(need);
-        p.isolation_prefixes = {"HX5008", "KH-5224"};
         return p;
     }();
     return policy;
@@ -97,18 +57,20 @@ PcbEmitPolicy pcb_emit_policy(const ProjectConfig &c) {
     p.connectors = c.connectors;
     p.header_descriptions = c.header_desc;
     p.switch_descriptions = c.switch_desc;
-    p.model_overrides = project_pcb_model_overrides();
-    for (const auto& [value, fact] : c.model_overrides)
-        p.model_overrides.push_back({value, fact.footprint, fact.path, fact.rotation_z_deg});
+    p.isolation = c.isolation;
+    p.thermal_copper = c.thermal_copper;
+    p.regulators = c.regulators;
+    p.model_overrides = c.model_overrides;
+    p.footprint_aliases = c.footprint_aliases;
     return p;
 }
-const std::vector<PcbModelOverride>& project_pcb_model_overrides() {
-    // Genuine part-linked CAD, quarter-turn aligned to the unchanged stock pads.
-    // Provenance and orientation proof: tests/data/render_models/FUSB302B_REPAIR.md.
-    static const std::vector<PcbModelOverride> overrides{{"FUSB302BMPX",
-        "Package_DFN_QFN:WQFN-14-1EP_2.5x2.5mm_P0.5mm_EP1.45x1.45mm",
-        "${KIPRJMOD}/../parts/FUSB302BMPX/FUSB302BMPX.wrl", 90}};
-    return overrides;
+std::optional<PcbThermalCopperSpec> thermal_copper_spec(const PcbEmitPolicy &p, const std::string &value) {
+    const ThermalFieldFact *field = thermal_field_for(p.thermal_copper, p.regulators, value);
+    if (!field)
+        return std::nullopt;
+    return PcbThermalCopperSpec{field->via_offsets_mm, static_cast<std::size_t>(field->max_vias),
+                                {field->pour_box_mm[0], field->pour_box_mm[1], field->pour_box_mm[2], field->pour_box_mm[3]},
+                                field->pour_layers, field->cite};
 }
 PcbEmissionResult render_pcb(const PcbModel &m, const PcbEmitPolicy &p, QuantizationCounts* counts,
                             const labels::LabelSeating* seats) {
@@ -205,12 +167,11 @@ PcbEmissionResult render_pcb(const PcbModel &m, const PcbEmitPolicy &p, Quantiza
         }
     }
     for (const auto &i : m.insts)
-        if (std::any_of(p.isolation_prefixes.begin(), p.isolation_prefixes.end(),
-                        [&](const auto &prefix) { return starts(i.value, prefix); }))
+        if (const IsolationFact *isolation = part_fact_for(p.isolation, i.value, i.footprint))
             for (const CopperLayer& layer : board_stackup().copper) {
                 if (layer.role == CopperRole::signal) continue;
                 root.push_back(emit_iso_void_zone(
-                    rect_corners_ccw(isolation_void_rect(courtyard(i), p.isolation_margin, counts)),
+                    rect_corners_ccw(isolation_void_rect(courtyard(i), isolation->margin_mm, counts)),
                     uid(layer.name == p.ground_layer ? "iso-void:" + i.ref : "iso-void:" + i.ref + ":" + layer.name),
                     "ethernet_isolation_void_" + i.ref + (layer.name == p.ground_layer ? "" : "_" + layer.name.substr(0, layer.name.find('.'))),
                     layer.name, p.zone_min_thickness));

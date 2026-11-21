@@ -14,7 +14,7 @@ void distinct(const std::filesystem::path& a,const std::filesystem::path& b) {
     if(std::filesystem::weakly_canonical(a)==std::filesystem::weakly_canonical(b))throw ProjectError("manufacturing output destinations must be distinct");
 }
 }
-ManufacturingManifestInput prepare_manufacturing_manifest(std::vector<ProjectCircuit> sheets,Stm32PinMap stm32,std::optional<ManufacturingXdc> xdc,std::optional<std::string> device,ManufacturingPreflight preflight,const PowerPolicy& policy) {
+ManufacturingManifestInput prepare_manufacturing_manifest(std::vector<ProjectCircuit> sheets,Stm32PinMap stm32,const PowerPolicy& policy,std::optional<ManufacturingXdc> xdc,std::optional<std::string> device,ManufacturingPreflight preflight) {
     ManufacturingManifestInput in;in.sheets=std::move(sheets);in.stm32=std::move(stm32);in.xdc=std::move(xdc);in.device=std::move(device);in.preflight=preflight;
     std::vector<CircuitSheetIr> circuits;for(const auto& sc:in.sheets)circuits.push_back(sc.circuit);
     const auto c=check_testpoint_coverage(circuits);in.coverage={c.covered(),c.required.size(),c.waived.size()};

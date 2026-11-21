@@ -154,20 +154,21 @@ LandSpacingJudgement judge_land_spacing(const PcbCheckInput& input) {
     return out;
 }
 
-LandSpacingPolicy board_land_spacing(const PartFacts& facts, const KicadNetlist& netlist) {
+LandSpacingPolicy board_land_spacing(const PartFacts& facts, const KicadNetlist& netlist, const PowerPolicy& power) {
     std::vector<std::pair<std::string, double>> known;
     double highest = 0.0;
-    for (const auto& [rail, source] : default_power_policy().sources) {
+    for (const auto& [rail, source] : power.sources) {
         (void)rail;
         highest = std::max(highest, source.volts);
     }
-    for (const auto& [pattern, volts] : default_power_policy().voltage_patterns) {
-        (void)pattern;
-        highest = std::max(highest, volts);
+    for (const auto& [rail, row] : power.rails) {
+        (void)rail;
+        if (row.volts) highest = std::max(highest, *row.volts);
     }
+    if (highest <= 0.0) throw std::runtime_error("land spacing: the board power data states no rail voltage, so unknown nets have no maximum");
     for (const auto& [net, pins] : netlist) {
         (void)pins;
-        if (const auto volts = rail_volts(net)) known.emplace_back(net, *volts);
+        if (const auto volts = rail_volts(net, power)) known.emplace_back(net, *volts);
     }
     const auto fab = manufacturing_jlcpcb_minimums();
     return land_spacing_policy(facts, fab.min_clearance_mm, fab.min_trace_mm, known, highest);

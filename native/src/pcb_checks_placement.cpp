@@ -23,7 +23,7 @@ PlacementMechResult check_placement_mech(const PcbCheckInput& input){
     }
     if(m.som_core)for(std::size_t i=0;i<m.insts.size();++i){const auto& inst=m.insts[i];auto b=input.courtyard_at(i);
         if(overlap_area(b,*m.som_core)<=0.5)continue;auto filename=std::filesystem::path(inst.mod->source).filename().string();
-        if(starts(filename,"MountingHole")||starts(filename,"Fiducial")||starts(inst.sheet,"som_j")||inst.side=="bottom")continue;
+        if(starts(filename,"MountingHole")||starts(filename,"Fiducial")||!inst.module_connector.empty()||inst.side=="bottom")continue;
         auto row=inst.ref+" ("+inst.sheet+") "+inst.value+" [TOP]: courtyard ("+f(b.x0,1)+","+f(b.y0,1)+")..("+f(b.x1,1)+","+f(b.y1,1)+") overlaps SoM core — carrier TOP under the module is a keepout";
         auto prefix=ref_prefix(inst.ref);bool passive=(prefix=="R"||prefix=="C"||prefix=="L")&&!starts(inst.ref,"RS")&&!starts(inst.ref,"RJ")&&!starts(inst.ref,"LED");
         if(passive){res.top_under_som.push_back(row);continue;}res.under_som.push_back(row);if(prefix=="SW"||prefix=="BT")res.controls_under_som.push_back(row);
@@ -43,16 +43,17 @@ std::string PlacementMechResult::summary()const{
 }
 // Both policy conditions are required. Pad count alone previously exempted
 // dense ICs as both subjects and crowders; it is not connector identity.
-bool pcb_is_df40_part(const std::string& sheet,int pins){static const std::regex rx("^som_j[0-9]+$");return pins>=board_decision_policy::df40_min_pins&&std::regex_match(sheet,rx);}
-bool pcb_counts_as_crowder(const std::string& ref,const std::string& sheet,int pins,const std::string& footprint,const std::string& subject_sheet){return !(pcb_is_df40_part(sheet,pins)||footprint.find("Fiducial")!=std::string::npos||is_testpoint_ref(ref)||(sheet==subject_sheet&&is_cluster_passive(ref,pins,{"RS","RJ","RN","LED"},{"R","C","L"})));}
+bool pcb_is_df40_part(const std::string& module_connector,int pins){return pins>=board_decision_policy::df40_min_pins&&!module_connector.empty();}
+std::set<std::string> pcb_module_sheets(const PcbCheckModel& model){std::set<std::string> sheets;for(const auto& inst:model.insts)if(!inst.module_connector.empty())sheets.insert(inst.sheet);return sheets;}
+bool pcb_counts_as_crowder(const std::string& ref,const std::string& sheet,const std::string& module_connector,int pins,const std::string& footprint,const std::string& subject_sheet){return !(pcb_is_df40_part(module_connector,pins)||footprint.find("Fiducial")!=std::string::npos||is_testpoint_ref(ref)||(sheet==subject_sheet&&is_cluster_passive(ref,pins,{"RS","RJ","RN","LED"},{"R","C","L"})));}
 std::pair<double,std::string> pcb_fanout_need(int pins){return intelligent_need(pins,{{2,0.2,"2-pin passive — escapes on its own pads"},{8,1.5,"<=8-pin non-passive — 1.5 mm absolute floor (user law 2026-07-29)"}},2,">=9-pin package — 2.0 mm floor (user law 2026-07-29)");}
 PcbFanoutResult check_fanout_strict(const PcbCheckInput& input,std::optional<int> baseline){
     const auto& m=input.model();PcbFanoutResult res;std::vector<Box4> boxes;
     // fanout_gate.check deliberately reads every courtyard before filtering.
     for(std::size_t i=0;i<m.insts.size();++i)boxes.push_back(input.courtyard_at(i));
-    for(std::size_t i=0;i<m.insts.size();++i){const auto& inst=m.insts[i];int pins=static_cast<int>(inst.pad_nets.size());if(pcb_is_df40_part(inst.sheet,pins)||pins<3)continue;
+    for(std::size_t i=0;i<m.insts.size();++i){const auto& inst=m.insts[i];int pins=static_cast<int>(inst.pad_nets.size());if(pcb_is_df40_part(inst.module_connector,pins)||pins<3)continue;
         auto need=pcb_fanout_need(pins);std::vector<Box4> others;std::vector<std::size_t> indices;
-        for(std::size_t j=0;j<m.insts.size();++j){const auto& o=m.insts[j];if(i!=j&&o.side==inst.side&&pcb_counts_as_crowder(o.ref,o.sheet,static_cast<int>(o.pad_nets.size()),o.footprint,inst.sheet)){others.push_back(boxes[j]);indices.push_back(j);}}
+        for(std::size_t j=0;j<m.insts.size();++j){const auto& o=m.insts[j];if(i!=j&&o.side==inst.side&&pcb_counts_as_crowder(o.ref,o.sheet,o.module_connector,static_cast<int>(o.pad_nets.size()),o.footprint,inst.sheet)){others.push_back(boxes[j]);indices.push_back(j);}}
         auto best=nearest_rect_gap(boxes[i],others,1e-4);
         std::string ref="(none)",sheet="-";if(best.index>=0){const auto& o=m.insts[indices.at(static_cast<std::size_t>(best.index))];if(!o.ref.empty())ref=o.ref;if(!o.sheet.empty())sheet=o.sheet;}
         res.records.push_back({inst.ref,inst.sheet,inst.side,pins,best.gap,need.first,ref,sheet,need.second});
@@ -90,9 +91,9 @@ bool pcb_crowds_escape(const Box4& subject,const PcbEscapeSides& sides,const Box
 PcbFanoutResult check_fanout(const PcbCheckInput& input,std::optional<int> baseline){
     const auto& m=input.model();PcbFanoutResult res;std::vector<Box4> boxes;
     for(std::size_t i=0;i<m.insts.size();++i)boxes.push_back(input.courtyard_at(i));
-    for(std::size_t i=0;i<m.insts.size();++i){const auto& inst=m.insts[i];int pins=static_cast<int>(inst.pad_nets.size());const int nets=pcb_escape_nets(inst);if(pcb_is_df40_part(inst.sheet,pins)||nets<3)continue;
+    for(std::size_t i=0;i<m.insts.size();++i){const auto& inst=m.insts[i];int pins=static_cast<int>(inst.pad_nets.size());const int nets=pcb_escape_nets(inst);if(pcb_is_df40_part(inst.module_connector,pins)||nets<3)continue;
         auto need=pcb_escape_need(nets);const auto sides=pcb_escape_sides(boxes[i],pcb_escape_pads(inst,input.geometry_at(i)),pcb_escape_tie_mm);std::vector<Box4> others;std::vector<std::size_t> indices;
-        for(std::size_t j=0;j<m.insts.size();++j){const auto& o=m.insts[j];if(i!=j&&o.side==inst.side&&pcb_counts_as_crowder(o.ref,o.sheet,static_cast<int>(o.pad_nets.size()),o.footprint,inst.sheet)&&pcb_crowds_escape(boxes[i],sides,boxes[j])){others.push_back(boxes[j]);indices.push_back(j);}}
+        for(std::size_t j=0;j<m.insts.size();++j){const auto& o=m.insts[j];if(i!=j&&o.side==inst.side&&pcb_counts_as_crowder(o.ref,o.sheet,o.module_connector,static_cast<int>(o.pad_nets.size()),o.footprint,inst.sheet)&&pcb_crowds_escape(boxes[i],sides,boxes[j])){others.push_back(boxes[j]);indices.push_back(j);}}
         auto best=nearest_rect_gap(boxes[i],others,1e-4);
         std::string ref="(none)",sheet="-";if(best.index>=0){const auto& o=m.insts[indices.at(static_cast<std::size_t>(best.index))];if(!o.ref.empty())ref=o.ref;if(!o.sheet.empty())sheet=o.sheet;}
         res.records.push_back({inst.ref,inst.sheet,inst.side,pins,best.gap,need.first,ref,sheet,need.second});

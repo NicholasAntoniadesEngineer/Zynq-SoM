@@ -208,11 +208,12 @@ FloorplanInput prepare_pcb_floorplan(const PcbPlacementInput &input, const PcbZo
     std::map<std::string, std::set<std::string>> net_sheets;
     for (const auto &sheet : result.sheets)
         for (const auto &n : sheet.nets) {
-            if (sheet.name.rfind("som_j", 0) == 0) {
+            const auto &role = sheet_role(result.roles, sheet.name);
+            if (!role.module_connector.empty()) {
                 bool auxiliary = false;
                 for (const auto &p : n.pins)
                     for (const auto &part : sheet.parts)
-                        if (p.ref == part.ref && part.ref.rfind("J", 0) != 0 &&
+                        if (p.ref == part.ref && part.ref != role.module_connector &&
                             part.footprint.find("MountingHole") == std::string::npos)
                             auxiliary = true;
                 if (!auxiliary)

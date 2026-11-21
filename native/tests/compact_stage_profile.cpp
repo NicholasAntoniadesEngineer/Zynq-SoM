@@ -5,6 +5,7 @@
 //     -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
 #include "schgen/board_pcb.hpp"
 #include "schgen/module_symbols.hpp"
+#include "sheet_roles_fixture.hpp"
 #include "schgen/catalog.hpp"
 #include "schgen/experiment_observers.hpp"
 #include "schgen/legalize.hpp"
@@ -382,7 +383,7 @@ LoadResult load(const ProjectPaths& paths, const NetlistExtractOptions& extracti
         sheets.push_back(source.circuit);
     }
     tick("circuit_validate");
-    const auto link = link_sheets(sheets, parse_json_file(paths.som_interface_file.string()),
+    const auto link = link_sheets(sheets, sheet_module_connectors(explicit_sheet_roles(sheets)), parse_json_file(paths.som_interface_file.string()),
         parse_json_file((paths.project_root / "som_mapping.json").string()), paths.module.do_not_load_straps);
     if (!link.ok()) throw ProjectError(link.report());
     tick("link");
@@ -397,7 +398,7 @@ LoadResult load(const ProjectPaths& paths, const NetlistExtractOptions& extracti
     options.compact_search = compact_capable;
     options.floorplan_spec = floorplan_spec;
     if(floorplan_spec)std::cout<<"input floorplan_spec="<<floorplan_spec->string()<<" explicit_policy=1\n";
-    out.input = load_board_inputs(paths, circuits, link, nets, options);
+    out.input = load_board_inputs(paths, circuits, schgen::load_sheet_roles(paths, circuits), link, nets, options);
     tick("board_input_resolve");
     return out;
 }

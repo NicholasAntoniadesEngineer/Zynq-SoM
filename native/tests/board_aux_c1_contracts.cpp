@@ -3,6 +3,7 @@
 #include "schgen/catalog.hpp"
 #include "schgen/validation.hpp"
 #include "schgen/part_checks.hpp"
+#include "schgen/board_power.hpp"
 #include "schgen/bom_values.hpp"
 #include "schgen/pin_completeness.hpp"
 #include "schgen/footprint_pads.hpp"
@@ -85,9 +86,9 @@ void cap_mutations(const CircuitSheetIr& c){
     bad=c;for(auto& p:bad.parts)if(p.ref=="C1")for(auto& f:p.fields)if(f.key=="LCSC")f.value="C14663";reject(bad);
     bad=c;for(auto& p:bad.parts)if(p.ref=="C1")p.fields.push_back({"LCSC","C15850"});reject(bad);
 }
-void reference_mutations(const ProjectCircuit& sheet){
-    const auto rejected=[](const ProjectCircuit& s){
-        const auto r=analyze_part_rules({s});
+void reference_mutations(const ProjectCircuit& sheet,const PowerPolicy& policy){
+    const auto rejected=[&](const ProjectCircuit& s){
+        const auto r=analyze_part_rules({s},policy);
         return std::any_of(r.findings.begin(),r.findings.end(),[](const auto& f){return f.find("PCA9306_REFERENCE ")==0;});
     };
     require(!rejected(sheet),"corrected reference topology rejected");
@@ -143,11 +144,12 @@ int main(int argc,char**argv){try{
     auto missing_filter=c;
     for(auto& n:missing_filter.nets)n.pins.erase(std::remove_if(n.pins.begin(),n.pins.end(),[](const auto& p){return p.ref=="C5"&&p.pin=="1";}),n.pins.end());
     require(!decaps(missing_filter).empty(),"missing reference filter escaped design rules");
-    auto all=load_project_circuits(resolve_project_paths(root,"carrier"));std::vector<ProjectCircuit> one;
+    const auto carrier=resolve_project_paths(root,"carrier");auto all=load_project_circuits(carrier);std::vector<ProjectCircuit> one;
     for(auto& s:all)if(s.name=="board_aux"){s.circuit=c;one.push_back(s);}
-    require(one.size()==1,"one live auxiliary sheet");reference_mutations(one.front());
-    auto power=analyze_power(all);require(power.ok(),"power");
-    const auto ratings=analyze_part_rules(one,power);
+    const auto policy=load_board_power_policy(carrier,all,load_sheet_roles(carrier,all));
+    require(one.size()==1,"one live auxiliary sheet");reference_mutations(one.front(),policy);
+    auto power=analyze_power(all,policy);require(power.ok(),"power");
+    const auto ratings=analyze_part_rules(one,power,policy);
     require(ratings.ok(),part_rules_report(ratings));
     require(std::find(ratings.unspecced.begin(),ratings.unspecced.end(),
         "board_aux:C5 (100p) — cap rail unresolved")!=ratings.unspecced.end(),

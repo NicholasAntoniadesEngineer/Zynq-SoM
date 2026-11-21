@@ -124,12 +124,17 @@ PcbStageResult pack_zone(const Context &ctx, const Geometry &g,
     }
     double target = zone_target_w(area, board_decision_policy::zone_pack_fill, aspect, 8.);
     std::vector<std::string> buttons;
-    for (const auto &r : top)
-        if (std::filesystem::path(ctx.pool.at(g.resolvable.at(r))->source)
-                .stem()
-                .string()
-                .find("TS-1187A") != std::string::npos)
-            buttons.push_back(r);
+    std::optional<double> button_gap;
+    for (const auto &r : top) {
+        const auto &part = ctx.by_ref.at(r);
+        const ControlGridFact *grid_fact = part_fact_for(ctx.in.floorplan.project.control_grid, part.value, part.footprint);
+        if (!grid_fact)
+            continue;
+        if (button_gap && *button_gap != grid_fact->button_gap_mm)
+            throw PcbZoneInfeasible("control grid parts of zone disagree on the button gap: " + r);
+        button_gap = grid_fact->button_gap_mm;
+        buttons.push_back(r);
+    }
     double tw, th;
     if (buttons.size() >= 2) {
         std::vector<std::tuple<std::string, double, double, double, double>> rows;
@@ -137,7 +142,7 @@ PcbStageResult pack_zone(const Context &ctx, const Geometry &g,
             auto b = g.bbox_of.at(r);
             rows.emplace_back(r, b.x0, b.y0, b.x1, b.y1);
         }
-        auto grid = grid_controls(rows, target, 2, zone_pad, pc, &ctx.quantization);
+        auto grid = grid_controls(rows, target, *button_gap, zone_pad, pc, &ctx.quantization);
         std::vector<ShelfOcc> blockers;
         for (auto b : grid.occ)
             blockers.push_back({b, 0, false});

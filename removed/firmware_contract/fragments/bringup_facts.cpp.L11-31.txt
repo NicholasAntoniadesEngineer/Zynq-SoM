@@ -1,0 +1,21 @@
+std::optional<double> bringup_parse_value_ohms(const std::string& value) {
+    std::string normalized;
+    for(const auto& [cp,bytes]:verification::utf8(value)) {
+        const int digit=decimal_digit(cp);
+        if(digit>=0)normalized+=static_cast<char>('0'+digit);
+        else if(verification::space(cp))normalized+=' ';
+        else normalized+=bytes;
+    }
+    const auto v=verification::strip(normalized);std::smatch m;
+    static const std::regex plain(R"((\d+(?:\.\d+)?)\s*(m|k|M)?(?:R|ohm)?)"), embedded(R"((\d+)(k|M)(\d+))");
+    if(std::regex_match(v,m,plain))return std::stod(m[1])*(m[2]=="m"?.001:m[2]=="k"?1000:m[2]=="M"?1e6:1);
+    if(std::regex_match(v,m,embedded))return std::stod(m[1].str()+"."+m[3].str())*(m[2]=="k"?1000:1e6);
+    return std::nullopt;
+}
+std::string bringup_c_ident(const std::string& net) {
+    std::string out;
+    const auto codepoints=verification::utf8(net);
+    for(const auto& [cp,bytes]:codepoints)out+=cp=='+'?"P":verification::unicode_word(cp)?bytes:"_";
+    if(!codepoints.empty()&&unicode_digit(codepoints.front().first))out="_"+out;
+    return out;
+}

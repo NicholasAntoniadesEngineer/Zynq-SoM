@@ -45,6 +45,11 @@ const char* const small = R"json({
     "pairs": [{"positive": "BOARD_P", "negative": "BOARD_N", "kind": "diff_pair", "impedance": 90}],
     "loads": [{"connector": "J2", "rail": "+3V3", "amps": 0.02, "note": "bank supply"}]
   },
+  "power": {
+    "sources": [{"rail": "+VIN", "volts": 12.0, "amps": 2.0, "basis": "bench supply"}, {"rail": "+3V3_SC", "supplier": "module"}],
+    "rails": [{"rail": "+5V", "volts": 5.0, "basis": "buck target"}],
+    "inlet": null
+  },
   "sheets": [
     {"name": "som_j1", "module_connector": "J1", "title": "Module connector one"},
     {"name": "power", "settings": {"bind": {"+VIN": "+VIN_SYS"}}, "additions": {"draws": []}},
@@ -57,6 +62,8 @@ const char* const small_module = R"json({
   "schematic": "Bench_Module.kicad_sch",
   "pcb": "Bench_Module.kicad_pcb",
   "connector_part": "DF40C-100DP-0.4V_51",
+  "controller_ref": "U9",
+  "fpga_ref": "U2",
   "draw": {"connector": "J1", "rail": "VIN", "amps": 2.15, "note": "module supply"},
   "sdio_level_v": 1.8,
   "sd_bus": ["SDIO_CLK", "SDIO_CMD"],
@@ -67,7 +74,9 @@ const char* const small_module = R"json({
     "return_path": {"n_pairs": 69, "n_pair_contacts": 138, "n_fail": 29, "worst_distance": 4}
   },
   "escape_triage": [{"pattern": "USB_.*", "class": "GENUINE", "note": "pair"}],
-  "do_not_load_straps": ["MIO7"]
+  "do_not_load_straps": ["MIO7"],
+  "supplies": [{"rail": "+3V3_SC", "volts": 3.3, "amps": 0.3, "basis": "module always-on LDO"}],
+  "regulated_rails": {"rails": ["+1V8"], "basis": "module-regulated rail"}
 })json";
 
 BoardDefinition parsed(const std::string& text) {
@@ -147,6 +156,7 @@ void reads_a_module() {
     const ModuleDefinition module = module_parsed(small_module);
     require(module.schematic == "Bench_Module.kicad_sch" && module.pcb == "Bench_Module.kicad_pcb", "module project files are read");
     require(module.connector_part == "DF40C-100DP-0.4V_51" && module.sdio_level_v == 1.8 && module.sd_bus.size() == 2, "module connector policy is read");
+    require(module.controller_ref == "U9" && module.fpga_ref == "U2", "module device references are read");
     require(module.netted_contacts.size() == 2 && module.netted_contacts.at("J2") == 100, "netted contacts are read");
     require(module.return_path.n_pairs == 69 && module.return_path.n_pair_contacts == 138 && module.return_path.n_fail == 29 &&
                 module.return_path.worst_distance == 4,
@@ -164,6 +174,11 @@ void refuses_bad_modules() {
     rejects([] { module_parsed(replaced(small_module, "  \"pcb\": \"Bench_Module.kicad_pcb\",\n", "")); }, "field 'pcb' is missing");
     rejects([] { module_parsed(replaced(small_module, "\"Bench_Module.kicad_pcb\"", "\"x/Bench_Module.kicad_pcb\"")); }, "not a single folder or file name");
     rejects([] { module_parsed(replaced(small_module, "  \"connector_part\": \"DF40C-100DP-0.4V_51\",\n", "")); }, "field 'connector_part' is missing");
+    rejects([] { module_parsed(replaced(small_module, "  \"controller_ref\": \"U9\",\n", "")); }, "field 'controller_ref' is missing");
+    rejects([] { module_parsed(replaced(small_module, "  \"fpga_ref\": \"U2\",\n", "")); }, "field 'fpga_ref' is missing");
+    rejects([] { module_parsed(replaced(small_module, "\"controller_ref\": \"U9\"", "\"controller_ref\": \"\"")); }, "field 'controller_ref' is empty");
+    rejects([] { module_parsed(replaced(small_module, "\"fpga_ref\": \"U2\"", "\"fpga_ref\": 2")); }, "field 'fpga_ref' is missing or has the wrong type");
+    rejects([] { module_parsed(replaced(small_module, "\"fpga_ref\": \"U2\"", "\"fpga_ref\": \"U9\"")); }, "name the same reference");
     rejects([] { module_parsed(replaced(small_module, "  \"draw\": {\"connector\": \"J1\", \"rail\": \"VIN\", \"amps\": 2.15, \"note\": \"module supply\"},\n", "")); }, "field 'draw' is missing");
     rejects([] { module_parsed(replaced(small_module, "\"amps\": 2.15", "\"amps\": 0")); }, "not above zero");
     rejects([] { module_parsed(replaced(small_module, "  \"sdio_level_v\": 1.8,\n", "")); }, "field 'sdio_level_v' is missing");
@@ -190,6 +205,17 @@ void refuses_bad_modules() {
     rejects([] { module_parsed(replaced(small_module, "\"pattern\": \"USB_.*\", ", "")); }, "missing");
     rejects([] { module_parsed(replaced(small_module, "\"do_not_load_straps\": [\"MIO7\"]", "\"do_not_load_straps\": [\"\"]")); }, "not a name");
     rejects([] { module_parsed(replaced(small_module, ",\n  \"do_not_load_straps\": [\"MIO7\"]", "")); }, "field 'do_not_load_straps' is missing");
+    rejects([] { module_parsed(replaced(small_module, ", \"basis\": \"module always-on LDO\"", "")); }, "field 'basis' is missing");
+    rejects([] { module_parsed(replaced(small_module, "\"amps\": 0.3, ", "\"amps\": 0.3, \"connector\": \"J1\", ")); }, "connector");
+    rejects([] { module_parsed(replaced(small_module, ", \"basis\": \"module-regulated rail\"", "")); }, "field 'basis' is missing");
+    rejects([] { parsed(replaced(small, ", \"basis\": \"bench supply\"", "")); }, "field 'basis' is missing");
+    rejects([] { parsed(replaced(small, ", \"basis\": \"buck target\"", "")); }, "field 'basis' is missing");
+    rejects([] { parsed(replaced(small, "\"inlet\": null", "\"inlet\": null, \"extra\": 1")); }, "extra");
+    rejects([] { parsed(replaced(small, "\"supplier\": \"module\"", "\"supplier\": \"board\"")); }, "supplier");
+    {
+        const auto board = parsed(small);
+        require(board.power.sources.size() == 2 && board.power.sources[1].from_module && board.power.rails.size() == 1 && !board.power.inlet, "board power is read");
+    }
 }
 
 void loads_a_module_folder() {

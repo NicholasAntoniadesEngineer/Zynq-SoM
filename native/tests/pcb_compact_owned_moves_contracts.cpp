@@ -1,4 +1,5 @@
 #include "schgen/board_inputs.hpp"
+#include "sheet_roles_fixture.hpp"
 #include "schgen/catalog.hpp"
 #include "schgen/netlist_gate.hpp"
 #include "fresh_project_schematic.hpp"
@@ -210,11 +211,11 @@ int main(int argc,char** argv) {
         const auto circuits=schgen::load_project_circuits(paths);
         std::vector<schgen::CircuitSheetIr> sheets;
         for(const auto& c:circuits)sheets.push_back(c.circuit);
-        const auto link=schgen::link_sheets(sheets,schgen::parse_json_file(paths.som_interface_file.string()),
+        const auto link=schgen::link_sheets(sheets, sheet_module_connectors(explicit_sheet_roles(sheets)),schgen::parse_json_file(paths.som_interface_file.string()),
             schgen::parse_json_file((paths.project_root/"som_mapping.json").string()), paths.module.do_not_load_straps);
         require(link.ok(),"hierarchy link failed");
         schgen::BoardInputOptions options;options.compact_search=true;
-        const auto source=schgen::load_board_inputs(paths,circuits,link,
+        const auto source=schgen::load_board_inputs(paths,circuits,schgen::load_sheet_roles(paths, circuits), link,
             schgen::extract_netlist(schgen::test::fresh_project_schematic(paths,circuits)),options);
         tests(source);eviction_risk(source);
         schgen::close_part_catalog();

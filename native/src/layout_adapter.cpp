@@ -142,9 +142,8 @@ Category category_of(const PcbModel& model, const PcbEmitPolicy& policy, const A
 }
 
 bool model_overridden(const PcbCheckInstance& instance, const PcbEmitPolicy& policy) {
-    for (const auto& entry : policy.model_overrides)
-        if (instance.value == entry.value && instance.footprint == entry.footprint) return true;
-    return false;
+    const ModelOverrideFact* found = part_fact_for(policy.model_overrides, instance.value, instance.footprint);
+    return found && found->footprint == instance.footprint;
 }
 
 PcbCheckFootprintPtr mirrored_document(const PcbCheckFootprintPtr& source) {
@@ -361,12 +360,11 @@ void reserve_thermal_fields(const PcbModel& model, const PcbEmitPolicy& policy, 
         const auto owner = std::find_if(model.insts.begin(), model.insts.end(),
                                         [&](const PcbCheckInstance& instance) { return instance.ref == owner_name; });
         if (owner == model.insts.end()) throw LayoutError("layout: thermal pour " + zone.name + " names no part");
-        const auto spec = std::find_if(policy.thermal_copper.begin(), policy.thermal_copper.end(),
-                                       [&](const auto& row) { return starts_with(owner->value, row.first); });
-        if (spec == policy.thermal_copper.end())
+        const auto spec = thermal_copper_spec(policy, owner->value);
+        if (!spec)
             throw LayoutError("layout: thermal pour " + zone.name + " has no pour rule for " + owner->value);
         const std::size_t index = static_cast<std::size_t>(owner - model.insts.begin());
-        const Box4& local = spec->second.pour;
+        const Box4& local = spec->pour;
         reserve.pour = PourRule{index, {local.x0, local.y0, local.x1, local.y1}, policy.gnd_plane_edge_back, owner->mirror};
         if (std::find(reserve.members.begin(), reserve.members.end(), index) == reserve.members.end())
             reserve.members.push_back(index);
@@ -616,9 +614,9 @@ ModelBinding bind_model(const PcbModel& model, const PcbEmitPolicy& policy, cons
         const int pins = static_cast<int>(instance.pad_nets.size());
         const PartClass part_class = part_class_of(instance);
         const bool mezzanine = part_class == PartClass::module_connector;
-        const bool foreign = pcb_counts_as_crowder(instance.ref, instance.sheet, pins,
+        const bool foreign = pcb_counts_as_crowder(instance.ref, instance.sheet, instance.module_connector, pins,
                                                    instance.footprint, foreign_group);
-        const bool own = pcb_counts_as_crowder(instance.ref, instance.sheet, pins,
+        const bool own = pcb_counts_as_crowder(instance.ref, instance.sheet, instance.module_connector, pins,
                                                instance.footprint, instance.sheet);
         Part part;
         part.reference = instance.ref;

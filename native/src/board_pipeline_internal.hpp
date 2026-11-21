@@ -2,9 +2,13 @@
 #include "schgen/board_pipeline.hpp"
 #include "schgen/pcb_verification.hpp"
 #include "schgen/firmware_docs.hpp"
+#include "schgen/module_pin_map.hpp"
+#include "schgen/part_checks.hpp"
+#include "schgen/spice.hpp"
 #include "schgen/design_rules.hpp"
 #include "schgen/execution_timing.hpp"
 #include "schgen/project_outputs.hpp"
+#include "schgen/board_power.hpp"
 #include <fstream>
 #include <iterator>
 #include <sstream>
@@ -28,16 +32,21 @@ struct Context {
     std::optional<BoardAuthoredProject> authored;
     std::vector<CircuitSheetIr> sheets;
     SheetIndex index;
+    std::optional<SheetRoles> roles;
+    std::optional<PowerPolicy> power_policy;
     std::optional<LinkResult> link;
     std::optional<SomInterface> som;
     std::optional<BoardSchematicResult> schematic;
     std::optional<BoardPcbStage> pcb;
     std::optional<PcbVerificationResult> geometry;
     std::optional<PowerCheckResult> power;
+    std::optional<PartCheckResult> parts;
     std::optional<TestpointCoverage> testpoints;
     std::optional<SpiceResult> spice;
-    std::optional<FirmwareDocsInput> firmware;
     std::optional<ManufacturingXdc> xdc;
+    std::vector<XdcPin> xdc_pins;
+    std::optional<SomZynq> fpga_live;
+    std::optional<Stm32PinMap> controller;
     std::optional<ManufacturingManifestInput> manifest_input;
     NativeLedger ledger;
     NativeQuantizations quantizations;
@@ -46,6 +55,8 @@ struct Context {
     bool loaded = false, pcb_published = false;
     ExecutionTimings* timing = nullptr;
     Context(const ProjectPaths&, const BoardPipelineOptions&);
+    const SheetRoles& require_roles() const { if(!roles) throw ProjectError("sheet roles unavailable; the inputs stage did not run"); return *roles; }
+    const PowerPolicy& require_power_policy() const { if(!power_policy) throw ProjectError("board power policy unavailable; the inputs stage did not run"); return *power_policy; }
     void gate(const std::string&, bool, const std::string&);
     void status(const std::string&, BoardGateStatus, const std::string&);
     void report(const std::string& filename, const std::string& value);
@@ -73,6 +84,7 @@ void schematic_stage(Context&);
 void electrical_stages(Context&);
 void pcb_stages(Context&);
 void document_stages(Context&);
+void manifest_stage(Context&);
 void golden_stage(Context&);
 void audit_stages(Context&);
 void publish_final_reports(Context&);

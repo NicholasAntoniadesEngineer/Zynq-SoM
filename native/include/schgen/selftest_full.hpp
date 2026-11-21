@@ -54,6 +54,7 @@ struct SelftestModelFixtures {
     CircuitSheetIr cap_voltage, symbol_law, rail_cap, esd_clamp;
     std::vector<CircuitSheetIr> board;
     PcbCheckModel ratsnest;
+    PowerPolicy power;
 };
 // Input fixtures only, never expected verdicts. Each baseline and mutated copy
 // goes through the ordinary live production gate on every invocation.

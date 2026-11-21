@@ -1,0 +1,3 @@
+BringupExpander bringup_expander(const CircuitSheetIr&);
+std::vector<BringupMonitor> ina3221_monitors(const CircuitSheetIr&);
+int bringup_id_eeprom_addr(const CircuitSheetIr&);

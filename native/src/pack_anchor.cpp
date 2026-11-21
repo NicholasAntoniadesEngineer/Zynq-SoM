@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cctype>
 #include <cmath>
+#include <cstddef>
 #include <stdexcept>
 #include <string>
 #include <tuple>
@@ -168,72 +169,73 @@ bool is_alnum_char(char value) {
 
 }  // namespace
 
-std::vector<std::string> affinity_j_from_expect(const std::string& expect) {
+std::vector<std::string> affinity_j_from_expect(const std::string& expect, const SheetRoles& roles) {
     std::vector<std::string> out;
+    const auto sheet_of_connector = module_sheets_by_connector(roles);
     for (std::size_t i = 0; i < expect.size(); ++i) {
-        const char mark = expect[i];
-        if (mark != 'j' && mark != 'J') {
-            continue;
-        }
-        if (i + 1 >= expect.size()) {
-            continue;
-        }
-        const char digit = expect[i + 1];
-        if (digit != '1' && digit != '2' && digit != '3') {
-            continue;
-        }
         if (i > 0 && is_alnum_char(expect[i - 1])) {
             continue;
         }
-        if (i + 2 < expect.size() && is_alnum_char(expect[i + 2])) {
-            continue;
+        for (const auto& entry : sheet_of_connector) {
+            const std::string& connector = entry.first;
+            if (i + connector.size() > expect.size()) {
+                continue;
+            }
+            const bool same = std::equal(connector.begin(), connector.end(), expect.begin() + static_cast<std::ptrdiff_t>(i),
+                [](char a, char b) {
+                    return std::tolower(static_cast<unsigned char>(a)) == std::tolower(static_cast<unsigned char>(b));
+                });
+            if (!same) {
+                continue;
+            }
+            if (i + connector.size() < expect.size() && is_alnum_char(expect[i + connector.size()])) {
+                continue;
+            }
+            out.push_back(connector);
+            break;
         }
-        out.push_back(std::string("J") + digit);
     }
     return out;
 }
 
-std::optional<std::string> affinity_j_from_target(const std::string& target) {
-    const std::string sheet_prefix = "sheet som_j";
+std::optional<std::string> affinity_j_from_target(const std::string& target, const SheetRoles& roles) {
+    const std::string sheet_prefix = "sheet ";
     if (target.size() >= sheet_prefix.size()
         && target.compare(0, sheet_prefix.size(), sheet_prefix) == 0) {
         const auto first_space = target.find(' ');
-        if (first_space == std::string::npos
-            || first_space + 1 >= target.size()) {
+        if (first_space + 1 >= target.size()) {
             throw std::runtime_error(
                 "affinity_j_from_target: sheet token required");
         }
         const auto second_space = target.find(' ', first_space + 1);
-        const std::string token = target.substr(
+        std::string token = target.substr(
             first_space + 1,
             second_space == std::string::npos
                 ? std::string::npos
                 : second_space - first_space - 1);
-        const std::string som_j = "som_j";
-        std::string rest = token.size() >= som_j.size()
-                               ? token.substr(som_j.size())
-                               : token;
-        const auto colon = rest.find(':');
+        const auto colon = token.find(':');
         if (colon != std::string::npos) {
-            rest = rest.substr(0, colon);
+            token = token.substr(0, colon);
         }
-        const std::string name = "J" + rest;
-        if (name == "J1" || name == "J2" || name == "J3") {
-            return name;
+        const std::string& connector = sheet_role(roles, token).module_connector;
+        if (connector.empty()) {
+            return std::nullopt;
         }
-        return std::nullopt;
+        return connector;
     }
     const std::string som_prefix = "SoM ";
     if (target.size() >= som_prefix.size()
         && target.compare(0, som_prefix.size(), som_prefix) == 0) {
-        const auto open = target.find("(J");
-        if (open == std::string::npos || open + 3 > target.size()) {
-            return std::nullopt;
+        std::optional<std::string> best;
+        std::size_t best_at = std::string::npos;
+        for (const auto& entry : module_sheets_by_connector(roles)) {
+            const auto open = target.find("(" + entry.first);
+            if (open != std::string::npos && open < best_at) {
+                best_at = open;
+                best = entry.first;
+            }
         }
-        const std::string name = target.substr(open + 1, 2);
-        if (name == "J1" || name == "J2" || name == "J3") {
-            return name;
-        }
+        return best;
     }
     return std::nullopt;
 }
@@ -242,7 +244,8 @@ std::vector<std::pair<std::string, std::vector<std::pair<std::string, int>>>>
 j_affinity(
     const std::vector<std::string>& sheets,
     const std::vector<std::tuple<std::string, bool, std::string,
-                                 std::vector<std::string>>>& bindings) {
+                                 std::vector<std::string>>>& bindings,
+    const SheetRoles& roles) {
     std::vector<std::pair<std::string, std::vector<std::pair<std::string, int>>>>
         out;
     out.reserve(sheets.size());
@@ -280,13 +283,13 @@ j_affinity(
                 throw std::runtime_error(
                     "j_affinity: deferred expect required");
             }
-            for (const auto& jack : affinity_j_from_expect(expect)) {
+            for (const auto& jack : affinity_j_from_expect(expect, roles)) {
                 bump(counts, jack);
             }
             continue;
         }
         for (const auto& target : targets) {
-            const auto jack = affinity_j_from_target(target);
+            const auto jack = affinity_j_from_target(target, roles);
             if (jack.has_value()) {
                 bump(counts, *jack);
             }

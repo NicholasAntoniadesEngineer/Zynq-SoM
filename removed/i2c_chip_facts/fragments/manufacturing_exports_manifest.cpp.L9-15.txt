@@ -1,0 +1,7 @@
+const char* const expander_sheet="bringup_rails";
+const char* const monitor_sheet="power_mon";
+const char* const usb_sheet="usb_pd";
+const char* const services_sheet="board_services";
+const char* const fusb302_part="FUSB302";
+const int fusb302_fixed_address=0x22;
+const int rtc_fixed_address=0x52;

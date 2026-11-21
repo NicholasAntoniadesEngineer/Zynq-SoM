@@ -1,6 +1,8 @@
 #include "connector_facts_fixture.hpp"
 #include "schgen/occupancy.hpp"
 #include "schgen/pcb_escape.hpp"
+#include "connector_facts_fixture.hpp"
+#include "sheet_roles_fixture.hpp"
 #include <algorithm>
 #include <cmath>
 #include <fstream>
@@ -112,6 +114,7 @@ Fixture load(const fs::path &root, const std::string &name) {
     f.model.board_h = number(m, "board_h");
     f.model.som_keepout = box(field(m, "som_keepout"));
     f.model.som_core = box(field(m, "som_core"));
+    f.model.isolation = repository_part_facts().isolation;
     std::map<std::string, PcbCheckFootprintPtr> pool;
     for (const auto &[path, bytes] : field(f.raw, "footprints").object_value)
         pool[path] = pcb_check_footprint(path, bytes.string_value);
@@ -130,6 +133,7 @@ Fixture load(const fs::path &root, const std::string &name) {
         for (const auto &[pad, p] : field(r, "pad_nets").object_value)
             i.pad_nets[pad] = {static_cast<int>(p.array_value.at(0).number_value),
                                p.array_value.at(1).string_value};
+        i.module_connector = explicit_sheet_roles(std::vector<std::string>{i.sheet}).at(i.sheet).module_connector;
         if (i.sheet == "som_j1")
             f.j1 = f.model.insts.size();
         if (i.sheet == "som_j2")
@@ -138,6 +142,7 @@ Fixture load(const fs::path &root, const std::string &name) {
             f.j3 = f.model.insts.size();
         f.model.insts.push_back(std::move(i));
     }
+    f.model.module_connectors = {"J1", "J2", "J3"};
     for (const auto &[net, n] : field(m, "net_numbers").object_value)
         f.model.net_numbers[net] = static_cast<int>(n.number_value);
     KicadNetlist nets;
@@ -145,7 +150,7 @@ Fixture load(const fs::path &root, const std::string &name) {
         (void)n;
         nets.push_back({net, {}});
     }
-    f.model.land_spacing = repository_land_spacing(nets);
+    f.model.land_spacing = repository_land_spacing(nets, repository_power_policy(root, name));
     for (const auto &[net, n] : field(m, "netclass_of").object_value)
         f.model.netclass_of[net] = n.string_value;
     for (const auto &[cls, g] : field(m, "classes").object_value) {
@@ -235,14 +240,14 @@ void real_mutations(const fs::path &root, const std::string &name) {
         else if (id == "gnd_zero")
             f.model.net_numbers["GND"] = 0;
         else if (id == "missing_j3")
-            f.model.insts[f.j3].sheet = "unrelated";
+            f.model.insts[f.j3].sheet = "unrelated", f.model.insts[f.j3].module_connector.clear();
         else if (id == "missing_keepout")
             f.model.som_keepout.reset();
         else if (id == "plane_uncovered")
             f.model.board_w = 1;
         else if (id == "isolation_intrusion") {
             obstacle(f, conn, 0, 0, 1, 1);
-            f.model.insts.back().value = "HX5008-mutant";
+            f.model.insts.back().value = repository_part_facts().isolation.begin()->first;
         } else if (id == "foreign_barrel" || id == "no_net_barrel" || id == "npth_barrel") {
             obstacle(f, conn, 15, 0, .5, .5, "top",
                      id == "npth_barrel" ? "np_thru_hole" : "thru_hole",

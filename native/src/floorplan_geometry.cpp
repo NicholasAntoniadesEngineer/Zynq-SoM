@@ -117,8 +117,11 @@ Engine::Engine(const FloorplanInput& input) : in(input) {
         finite_point({b.x0,b.y0},ref);finite_point({b.x1,b.y1},ref);
         if(b.x0>b.x1 || b.y0>b.y1)throw FloorplanError("floorplan: inverted courtyard for "+ref);
     }
-    for (const auto& sheet : in.sheets)
+    for (const auto& sheet : in.sheets) {
         if (!sheets.emplace(sheet.name, &sheet).second) throw FloorplanError("floorplan: duplicate subsystem " + repr(sheet.name));
+        (void)sheet_role(in.roles, sheet.name);
+    }
+    module_sheet_of = module_sheets_by_connector(in.roles);
     for (const auto& [key, fp] : in.footprints) {
         CachedFootprint cached;
         cached.bbox = footprint_bbox(fp.document, 3);
@@ -192,9 +195,10 @@ double Engine::sheet_area(const CircuitSheetIr& sheet, double factor) const {
 }
 std::vector<const CircuitPartIr*> Engine::zone_parts(const CircuitSheetIr& sheet) const {
     std::vector<const CircuitPartIr*> out;
-    if (sheet.name == "som_decoupling") return out;
+    const auto& role = sheet_role(in.roles, sheet.name);
+    if (role.region == SheetRegion::under_module) return out;
     for (const auto& part : sheet.parts)
-        if (!(starts(sheet.name, "som_j") && starts(part.ref, "J"))) out.push_back(&part);
+        if (part.ref != role.module_connector) out.push_back(&part);
     return out;
 }
 std::vector<Box4> Engine::pad_boxes(const std::string& key, double rot, bool thru_only) const {
@@ -390,9 +394,8 @@ void Engine::prepare_geometry() {
         (void)key;
         for (const auto& child:children) bound(child.reach,child.inset);
     }
-    const auto dec = sheets.find("som_decoupling");
-    if (dec != sheets.end()) {
-        for (const auto& p : dec->second->parts) if (const auto key = resolved(p)) {
+    for (const auto& [sheet_name, dec] : sheets) if (under_module_sheet(in.roles, sheet_name)) {
+        for (const auto& p : dec->parts) if (const auto key = resolved(p)) {
             const auto box = footprint(*key).bbox;
             ++plan.dec_count;
             plan.dec_radius = std::max({plan.dec_radius,std::hypot(box.x0,box.y0),std::hypot(box.x1,box.y0),

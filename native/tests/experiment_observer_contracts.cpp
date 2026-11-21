@@ -109,7 +109,7 @@ void unit(const std::filesystem::path &root) {
     PcbFootprintPool pool;
     std::map<std::pair<std::string, std::string>, std::pair<int, std::string>> nets;
     for (const auto &[r, p] : field(source, "parts").object_value)
-        parts[r] = {p.array_value.at(0).string_value, p.array_value.at(1).string_value, p.array_value.at(2).string_value};
+        parts[r] = {p.array_value.at(0).string_value, p.array_value.at(1).string_value, p.array_value.at(2).string_value, "", false};
     for (const auto &[key, bytes] : field(source, "footprints").object_value)
         pool[key] = pcb_check_footprint(key, bytes.string_value);
     for (const auto &row : field(source, "pin_net").array_value) {

@@ -1,0 +1,10 @@
+struct RegulatorStage {
+    std::string ref, value, enable, rail_in, rail_out;
+    std::optional<double> vout;
+    std::optional<std::string> pg_led;
+};
+struct ModuleGate {
+    std::string ref, module, rail_in, rail_out, enable;
+    std::optional<int> ilim_ma;
+    std::optional<std::string> status_led;
+};

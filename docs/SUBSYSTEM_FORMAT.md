@@ -337,12 +337,15 @@ Every board names the folder of the module it carries in `board.json`, under `mo
 | `schema` | `schgen.module/1`. |
 | `schematic`, `pcb` | File names of the module's KiCad schematic and board inside the module folder. A path separator is rejected. |
 | `connector_part` | The part name of the module connector. |
+| `controller_ref`, `fpga_ref` | The reference designators, in the module's own schematic, of its controller and of its FPGA or processor. They differ. The pin constraints file, the controller pin map in the manifest and the module pin map read them from here. |
 | `draw` | `connector`, `rail`, `amps` and `note`: the module's own current draw. `rail` is the module net; a board's `rebound_som_rails` maps it to the board net. |
 | `sdio_level_v`, `sd_bus` | The module's SD bus signal level and its net names. |
 | `pairs` | Differential pairs on module pin nets, as in `board.json`. They come before the board's own pairs. |
 | `escape_population` | `netted_contacts` (contacts per connector reference) and `return_path` (`n_pairs`, `n_pair_contacts`, `n_fail`, `worst_distance`): the measured populations the escape and return-stitch gates compare the live module against. |
 | `escape_triage` | Rules `pattern`, `class` and `note` for module pin nets. They are tried after the rules in the board's own `escape_triage.json`. |
 | `do_not_load_straps` | Module pin nets that must stay unmapped in every board's `som_mapping.json`. |
+| `supplies` | Rails the module delivers to the board: `rail` (module net, mapped through the board's `rebound_som_rails`), `volts`, `amps` and a required `basis`. Every board must take each one in its `power.sources` (see section 10, board power). |
+| `regulated_rails` | `rails`, the module nets the module regulates on-module without delivering them, and `basis`, the text of the parallel-source finding the power-tree gate raises when a board regulator outputs one of those rails on a module connector sheet. |
 
 `som_interface.json` is written by `schgen som-interface` into the module folder. A board's `som_mapping.json` and `escape_triage.json` hold only the board's own decisions; `do_not_load_straps` in `som_mapping.json` is rejected.
 
@@ -361,3 +364,65 @@ The table is built from the board definition, the library, the module interface 
 | Two sheets carry the same connector. | `board B sheet S: module connector C is also carried by sheet T` |
 | A sheet names a connector the module interface lacks. | `board B sheet S: module connector C is not a connector of the module interface F` |
 | The module interface has a connector that no sheet carries. | `board B: no sheet carries module connector C of the module interface F` |
+
+## 10. Board power
+
+`board.json` `power` is required, with exactly these keys:
+
+| Key | Contents |
+|---|---|
+| `sources` | The board's power sources in report order. A row is either `{"rail", "volts", "amps", "basis"}` (a source the board owns, such as a USB-C PD contract) or `{"rail", "supplier": "module"}` (a rail from the module's `supplies`; its values come only from `module.json`). |
+| `rails` | `{"rail", "volts", "basis"}` rows: `volts` is a number or `null` (a rail stated to have no voltage). Use a row for a rail the tool cannot compute: the target of an adjustable regulator, a connector-supplied or cable-supplied net, a part with no `regulators` row. |
+| `inlet` | `{"rail", "bulk"}`: the receptacle rail and the bulk rail behind its eFuse, for the pre-contract capacitance audit; or `null` for a board with no such inlet. |
+
+Every row needs a `basis`; unknown keys are rejected and a rail may appear once in `sources` and `rails` together. Example: `{"rail": "+5V_REG", "volts": 5.0, "basis": "LM61460 power:U1 set-point target; ..."}`.
+
+The voltage of every net is resolved in this order, and each rail has exactly one home:
+
+1. a source row;
+2. a `rails` row;
+3. a producer, repeated until nothing changes: a regulator with `out_v` in `parts/part_facts.json` gives that voltage; a regulator of kind `load_switch` or `efuse` passes its input rail's voltage; a power-tree bridge (a part on exactly two power nets) whose part class is `resistor`, `inductor` or `ferrite` passes the voltage of its other end.
+
+A regulator with `fb_vref` (an adjustable output) is not a home: its output needs a `rails` row stating the target, and the spice gate checks the divider set point (`fb_vref x (1 + Rtop/Rbottom)`) against that target. The load fails, naming the rails, when: a power-class net has no home; an adjustable output has no target (the message gives the divider value); a rail has two homes; a bridge joins two different voltages; a row names a net no sheet of the board has; a `supplier: module` row names no module supply; or a module supply is not taken by the board. A net of another class has a voltage only from a `rails` row.
+
+## 11. Copper claims
+
+The copper-debt ledger (`reports/copper_debt.txt`) lists the engineering claims that rest on copper the board must carry. The claims, the checks that tie each claim to the live circuits and policies, and the measurement of the emitted board are data in `subsystems/copper_claims.json`. `load_copper_claims` takes the repository root and fails with a message naming the file, the claim and the key when the file is missing or malformed. Any key or kind not listed below is rejected. The `where:` line of a claim in the report is `subsystems/copper_claims.json#<id>`.
+
+Top-level keys, all required: `schema` (`schgen.copper_claims/1`), `plane`, `inventory`, `claims`.
+
+| Key | Contents |
+|---|---|
+| `plane` | `net` and `layer` of the ground plane every measure refers to. |
+| `inventory` | `with_text`, `without_text` and `emits`, the text of the inventory line. `emits` may use `{fills}`, `{plane}`, `{rules}`, `{vias}`, `{gnd}`, `{segments}`. |
+| `claims` | Non-empty list, in report order. Each claim has `id` (unique), `title`, `assumes`, `risk`, `checks` (non-empty) and `measure`. |
+
+A claim is verified on every run, with or without a PCB. Any check that fails raises `CopperProvenanceError` naming the claim. Thermal figures, pour needs, exposed-pad via needs and isolation margins are read from `parts/part_facts.json` rows. A claim states the figures it relies on (`thermal_fact`, `thermal_credit` `need`) and the check fails when a row differs.
+
+Check kinds. The sheet kinds take `scopes` (the `library` and board folder names to check; each must exist, and each listed sheet and part must exist in each listed scope) and `sheet`.
+
+| Kind | Other keys | Fails when |
+|---|---|---|
+| `part` | `refs` (list) or `all_parts` (true); optional `lib_id`, `footprint`, `value_prefix`, `fields` (name to value), `pins` (rows of `pin` and one of `net`, `net_prefix`) | a listed part is missing, or one given attribute, field or pin connection differs. `all_parts` needs at least one attribute. |
+| `net_pins` | `net`, `pins` (rows of `[reference, pin]`) | a listed part is missing or a pin is not on the net. |
+| `part_count` | `count` | the sheet does not hold that many parts. |
+| `thermal_fact` | `refs`, `rth_ja`, `rth_ja_pour` (number or null), `pour_evidence` | the part has no `thermal` row, a figure differs, or the row has no citation. |
+| `part_fact` | `refs`, `section` (`ep_vias` or `isolation`) | the part has no row in that section. |
+| `thermal_credit` | `part` (MPN), `need` (`min_vias`, `radius_mm`, `pour_layers`: the copper the claim states) | the part's `thermal_copper` need, the thermal pour need or the emitter pour need differs from the claim's `need`, the pour field is short of it or lacks a citation, or the part has no pour credit. |
+| `emission_via` | `size_mm`, `drill_mm` | the emitter's thermal via differs. |
+| `emission_ground_layer` | `layer` | the emitter's ground layer differs. |
+| `isolation_margins` | none | the isolation facts are empty or one has no positive margin. |
+| `impedance_geometry` | `impedance_ohm` | the researched differential geometry differs from the live one or the ground reference is missing. |
+
+Measure kinds. Each takes every key listed; text keys are templates and may use only the placeholders named.
+
+| Kind | Keys |
+|---|---|
+| `thermal_via_field` | `part` (MPN; its instances are found by its `regulators` label; radius, via count and pour layers come from its `thermal_copper` need), `emits` (`{plane}`, `{rows}`), `row` (`{ref}`, `{count}`, `{radius}`), `pour` (`{layer}`, `{state}`, appended to a row once per pour layer) |
+| `ep_via_pads` | `part`, `emits` (`{plane}`, `{rows}`), `row` (`{ref}`, `{count}`); pad count and radius come from the `ep_vias` row |
+| `net_island` | `net`, `emits` (`{zones}`, `{vias}`) |
+| `plane_voids` | `zone_prefix`, `min_voids_with_plane`, `none_text`, `emits` (`{names}`) |
+| `reference_plane` | `emits` (`{x0}`, `{y0}`, `{x1}`, `{y1}`), `absent_emits` |
+| `module_body_vias` | `zone_prefix`, `found_text`, `missing_text`, `emits` (`{count}`, `{zone}`) |
+
+Add a claim by appending a row with its checks and a measure; the ledger and the report follow the file.

@@ -120,6 +120,7 @@ struct PcbComposeReport {
     std::size_t n_corridors = 0;
     std::vector<std::string> unmanaged, managed;
     PcbCrossAirwires cross_airwires;
+    std::set<std::string> module_sheets;
     std::string text() const;
 };
 PcbComposeReport report_pcb_composition(const PcbCheckInput &, const FloorplanTermIndex &,

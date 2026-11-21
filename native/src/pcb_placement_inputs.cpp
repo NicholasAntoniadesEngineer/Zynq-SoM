@@ -40,8 +40,8 @@ Context::Context(const PcbPlacementInput &input)
                 netclass_of[net.name] = "POWER";
             }
         }
-        if (sheet.name.size() == 6 && sheet.name.rfind("som_j", 0) == 0) {
-            auto ref = "J" + sheet.name.substr(5);
+        const auto &ref = sheet_role(in.floorplan.roles, sheet.name).module_connector;
+        if (!ref.empty()) {
             auto p = std::find_if(sheet.parts.begin(), sheet.parts.end(),
                                   [&](const auto &x) { return x.ref == ref; });
             if (p != sheet.parts.end()) {
@@ -94,6 +94,7 @@ PcbStageInput Context::stage_input(const std::string &sheet, const Geometry &g) 
     s.side_of = g.side_of;
     s.bbox_of = g.bbox_of;
     s.pilot = pilot.count(sheet);
+    s.module_connector_sheet = module_connector_sheet(in.floorplan.roles, sheet);
     s.partners = partners;
     s.place_clear = clearance;
     s.connectors = in.floorplan.project.connectors;

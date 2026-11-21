@@ -1,4 +1,5 @@
 #include "schgen/run_config.hpp"
+#include "sheet_roles_fixture.hpp"
 #include "pcb_placement_orientations.hpp"
 #include "pcb_placement_fixture.hpp"
 #include "contract_rigid_groups_internal.hpp"
@@ -84,7 +85,7 @@ void unit(){
   try{(void)bottom_contact_shift(bad);}catch(const std::invalid_argument&){rejected=true;}
   demand(rejected,"nonfinite contact translation accepted");
  }
- PcbPlacementInput input;input.floorplan.compact_search=true;Context ctx(input);Geometry g;
+ PcbPlacementInput input;input.floorplan.compact_search=true;input.floorplan.roles=explicit_sheet_roles(std::vector<std::string>{"unit"});Context ctx(input);Geometry g;
  const std::string bytes="(footprint asymmetric (layer F.Cu) (fp_rect (start -2 -1) (end 3 2) (stroke (width 0.05) (type default)) (layer F.CrtYd)) (pad 1 smd rect (at -1 -.5) (size .4 .6) (layers F.Cu)) (pad 2 smd rect (at 2 .25) (size .8 .4) (layers F.Cu)) (pad 3 smd rect (at .25 1.5) (size .3 .5) (layers F.Cu)))";
  auto fp=pcb_check_footprint("asymmetric.kicad_mod",bytes);
  auto doc=mirrored_footprint(fp->document);

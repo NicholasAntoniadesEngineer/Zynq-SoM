@@ -1,4 +1,5 @@
 #include "schgen/run_config.hpp"
+#include "sheet_roles_fixture.hpp"
 #include "schgen/board_policy.hpp"
 #include "schgen/board_decision_policy.hpp"
 #include "floorplan_internal.hpp"
@@ -86,7 +87,7 @@ FloorplanInput cross_input(){
     in.footprint_of["Test:One"]="one";
     for(int k=1;k<=2;++k){const std::string name=k==1?"source":"sink",ref="U"+std::to_string(k*1000+1);
         CircuitSheetIr s;s.name=name;s.parts.push_back({"U1","Test:One","one","Test:One",{},{},{}});
-        s.nets.push_back({"signal","port",{{"U1","1"}}});in.sheets.push_back(s);in.sheet_index.emplace_back(name,k);
+        s.nets.push_back({"signal","port",{{"U1","1"}}});in.sheets.push_back(s);in.roles=explicit_sheet_roles(in.sheets);in.sheet_index.emplace_back(name,k);
         in.geometry.zone_box[name]={2,2};in.geometry.top_off[name][ref]={0,0};in.geometry.side_of[ref]="top";
         in.geometry.resolvable[ref]="one";in.geometry.bbox_of[ref]={-1,-1,1,1};
     }
@@ -151,8 +152,8 @@ void precision(){
         require(bits(som_pose_half_mm(x))==bits(py_round(py_round(x*2.,0)/2.,1)),"half-grid multiply/divide order bits");
         require(bits(legalize_pose_quantum(x))==bits(py_round(py_round(x/.5,0)*.5,4)),"legalizer quantum bits");
     }
-    require(board_decision_policy::df40_min_pins==40&&!pcb_is_df40_part("som_j2",39)&&pcb_is_df40_part("som_j2",40),"shared DF40 threshold boundaries");
-    require(!pcb_is_df40_part("logic",40)&&!pcb_is_df40_part("som_j2",3)&&!pcb_is_df40_part("som_jx",40),"pad count alone must not identify a DF40 connector");
+    require(board_decision_policy::df40_min_pins==40&&!pcb_is_df40_part("J2",39)&&pcb_is_df40_part("J2",40),"shared DF40 threshold boundaries");
+    require(!pcb_is_df40_part("",40)&&!pcb_is_df40_part("J2",3),"pad count alone must not identify a DF40 connector");
 }
 }
 int main(int argc,char** argv){try{

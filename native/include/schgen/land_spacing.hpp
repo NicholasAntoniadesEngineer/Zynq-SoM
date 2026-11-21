@@ -2,6 +2,7 @@
 
 #include "schgen/named_constant.hpp"
 #include "schgen/pcb_checks.hpp"
+#include "schgen/power_checks.hpp"
 
 #include <array>
 #include <string>
@@ -47,6 +48,6 @@ LandSpacingJudgement judge_land_spacing(const PcbCheckInput& input);
 LandSpacingPolicy land_spacing_policy(const PartFacts& facts, double fab_minimum, double fab_minimum_track,
                                       const std::vector<std::pair<std::string, double>>& known_volts, double highest_volts);
 std::string land_spacing_kicad_rules(const LandSpacingJudgement& judgement);
-LandSpacingPolicy board_land_spacing(const PartFacts& facts, const KicadNetlist& netlist);
+LandSpacingPolicy board_land_spacing(const PartFacts& facts, const KicadNetlist& netlist, const PowerPolicy& power);
 
 }

@@ -29,14 +29,13 @@
 #include "schgen/pin_completeness.hpp"
 #include "schgen/symbol_law.hpp"
 #include "schgen/spice.hpp"
+#include "schgen/board_power.hpp"
 #include "schgen/firmware_docs.hpp"
-#include "schgen/devicetree.hpp"
 #include "schgen/design_rules.hpp"
 #include "schgen/link.hpp"
 #include "schgen/project.hpp"
 #include "schgen/project_outputs.hpp"
 #include "schgen/som_interface.hpp"
-#include "schgen/vivado.hpp"
 #include "schgen/validation.hpp"
 #include "schgen/selftest_full.hpp"
 #include "schgen/process.hpp"
@@ -58,8 +57,8 @@ namespace schgen {
 namespace {
 namespace fs = std::filesystem;
 struct Options {
-    std::string command, refs = "J1,J2,J3", kicad_cli = "kicad-cli";
-    fs::path repository = fs::current_path(), som, contract, output, xdc, pcb, run_config;
+    std::string command, refs, kicad_cli = "kicad-cli";
+    fs::path repository = fs::current_path(), som, contract, output, pcb, run_config;
     std::optional<fs::path> project;
     std::vector<std::string> subsystems;
     bool allow_missing = false, qualified_refs = false, no_ngspice = false, keep = false;
@@ -90,7 +89,7 @@ struct Options {
     std::set<std::string> help_options;
     long long quantity = 1, minimum_stock = 50;
 };
-const std::set<std::string> commands{"selftest", "project-check", "circuit-check", "som-interface", "xdc", "vivado", "fpga", "bom", "link", "devicetree", "design-rules", "testpoints", "board-schematic", "pcb-stage", "pcb-drc", "subsystem-new", "render3d", "board-step", "model3d-check", "assembly", "ratsnest", "gallery", "diagram", "si-constraints", "fab-profile", "manifest", "preflight", "constraints", "powertree", "thermal", "part-rules", "bom-values", "footprint-pads", "pin-completeness", "symbol-law", "spice", "firmware", "manual", "scfw", "testplan", "power-sequence"};
+const std::set<std::string> commands{"selftest", "project-check", "circuit-check", "som-interface", "xdc", "bom", "link", "design-rules", "testpoints", "board-schematic", "pcb-stage", "pcb-drc", "subsystem-new", "render3d", "board-step", "model3d-check", "assembly", "ratsnest", "gallery", "diagram", "si-constraints", "fab-profile", "manifest", "preflight", "constraints", "powertree", "thermal", "part-rules", "bom-values", "footprint-pads", "pin-completeness", "symbol-law", "spice", "power-sequence"};
 bool experiment_command(const std::string& name){
     return name=="chir-rung"||name=="w11-sweep"||name=="w12-bound"||name=="w12-stageprobe"||name=="dump-circuits";
 }
@@ -238,7 +237,7 @@ Options parse(int argc, char** argv) {
         }
         if (arg == "--repo" || arg == "--project" || arg == "--som" ||
             arg == "--contract" || arg == "--output" || arg == "-o" ||
-            arg == "--xdc" || arg == "--refs" || arg == "--kicad-cli" || arg == "--pcb" ||
+            arg == "--refs" || arg == "--kicad-cli" || arg == "--pcb" ||
             arg == "--subsystem" || arg == "--qty" || arg == "--min-stock" || arg == "--initial-outline-mm" ||
             arg == "--floorplan-spec" || arg == "--interior-order" || arg == "--run-config") {
             if (++i == argc) throw std::runtime_error("missing value for " + arg);
@@ -252,7 +251,6 @@ Options parse(int argc, char** argv) {
             else if (arg == "--som") out.som = value;
             else if (arg == "--contract") out.contract = value;
             else if (arg == "--output" || arg == "-o") out.output = value;
-            else if (arg == "--xdc") out.xdc = value;
             else if (arg == "--pcb") out.pcb = value;
             else if (arg == "--refs") out.refs = value;
             else if (arg == "--floorplan-spec") out.floorplan_spec = value;
@@ -354,17 +352,17 @@ Options parse(int argc, char** argv) {
         if (out.command == "thermal") allowed.insert("--pcb");
     } else if (out.command == "spice") {
         allowed.insert("--no-ngspice");
-    } else if (out.command == "firmware" || out.command == "manual" || out.command == "scfw" || out.command == "manifest") {
+    } else if (out.command == "manifest") {
         allowed.insert("--kicad-cli");
-    } else if (out.command == "testplan" || out.command == "power-sequence" || out.command == "si-constraints" || out.command == "fab-profile") {
+    } else if (out.command == "power-sequence" || out.command == "si-constraints" || out.command == "fab-profile") {
         // Pure document stages use the selected circuits.
     } else if (out.command == "bom-values" || out.command == "footprint-pads" ||
                out.command == "pin-completeness" || out.command == "symbol-law") {
         // These checks consume the selected circuits, not a live SoM map.
     } else if (!check_only && out.command != "design-rules" && out.command != "testpoints" && out.command != "constraints") {
-        allowed.insert("--som"); allowed.insert("--refs"); allowed.insert("--kicad-cli");
+        allowed.insert("--som"); allowed.insert("--kicad-cli");
+        if (out.command == "som-interface") allowed.insert("--refs");
         if (out.command != "som-interface") allowed.insert("--contract");
-        if (out.command == "vivado" || out.command == "fpga") allowed.insert("--xdc");
     }
     for (const auto& key : seen) {
         if (!allowed.count(key)) throw std::runtime_error(key + " is not valid for " + out.command);
@@ -526,7 +524,8 @@ std::optional<int> run_project_command(int argc, char** argv) {
         std::vector<CircuitSheetIr> sheets;std::vector<std::string> names;
         for(const auto& circuit:authored.circuits){sheets.push_back(circuit.circuit);names.push_back(circuit.name);}
         const auto index=extend_sheet_index(load_sheet_index(paths),names).index;
-        const auto link=link_sheets(sheets,parse_json_file(paths.som_interface_file.string()),
+        const auto roles=load_sheet_roles(paths,authored.circuits);
+        const auto link=link_sheets(sheets,sheet_module_connectors(roles),parse_json_file(paths.som_interface_file.string()),
             parse_json_file((paths.project_root/"som_mapping.json").string()), paths.module.do_not_load_straps);
         if(!link.ok())throw ProjectError("probe link failed: "+link.report());
         std::vector<BoardSheetInput> inputs;
@@ -538,7 +537,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
         schematic.reports_dir=scratch.path/"reports";
         const auto board=build_board_schematic(inputs,library,scratch.path,schematic);
         if(!board.ok())throw ProjectError("probe schematic gate failed: "+board.report);
-        auto input=load_board_inputs(paths,authored.circuits,link,extract_netlist(board.root_path,schematic.extraction));
+        auto input=load_board_inputs(paths,authored.circuits,roles,link,extract_netlist(board.root_path,schematic.extraction));
         input.floorplan.sheet_index=index;
         const auto result=options.command=="w12-bound"?run_w12_bound(std::move(input),argument,selected):
             run_w12_stageprobe(std::move(input),argument,selected,options.conservative_only);
@@ -647,21 +646,8 @@ std::optional<int> run_project_command(int argc, char** argv) {
     if (options.command == "som-interface") {
         if (!options.subsystems.empty()) throw std::runtime_error("som-interface takes no subsystem names");
         const auto output = options.output.empty() ? paths.som_interface_file : options.output;
-        (void)refs(options.refs);
+        if (refs(options.refs).empty()) throw std::runtime_error("som-interface requires --refs");
         std::cout << write_som_interface(som, options.refs, output, {options.kicad_cli});
-        return 0;
-    }
-    if (options.command == "devicetree") {
-        if (!options.subsystems.empty()) throw std::runtime_error("devicetree takes no subsystem names");
-        const auto jrefs = refs(options.refs);
-        const auto live = extract_som_zynq(som, "U2", jrefs, {options.kicad_cli});
-        const auto input = load_devicetree_input(paths.repository_root, paths.project_root,
-                                                live, board_file_name(paths.file_stem, BoardFileKind::PinConstraints), options.contract, jrefs);
-        const auto result = generate_devicetree(input);
-        const auto output = options.output.empty() ? paths.project_root / "firmware/carrier_pl.dtsi"
-                                                   : options.output;
-        publish_text(output, result.text);
-        std::cout << "DEVICETREE: " << output.string() << " (" << result.mio_rows.size() << " MIO rows)\n";
         return 0;
     }
     if (options.command == "selftest") {
@@ -708,7 +694,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
             return 0;
         }
         const auto result = run_assembly_documents(stage.placement.model,
-            analyze_power(stage.circuits), stage.inputs.floorplan.project.name,
+            analyze_power(stage.circuits, stage.inputs.floorplan.power), stage.inputs.floorplan.project.name,
             directory / "manufacturing/ASSEMBLY.md", directory / "renders/assembly",
             pcb_emit_policy(stage.inputs.floorplan.project));
         const auto verdict = assembly_verdict(result, directory);
@@ -742,6 +728,10 @@ std::optional<int> run_project_command(int argc, char** argv) {
     std::vector<CircuitSheetIr> sheets;
     sheets.reserve(circuits.size());
     for (const auto& circuit : circuits) sheets.push_back(circuit.circuit);
+    const auto board_power = [&] {
+        const auto board = options.subsystems.empty() ? circuits : load_project_circuits(paths);
+        return load_board_power_policy(paths, board, load_sheet_roles(paths, board));
+    };
     if (options.command == "gallery") {
         if (!options.subsystems.empty()) throw ProjectError("gallery requires the complete project");
         const auto input = load_gallery_input(paths, circuits);
@@ -757,12 +747,14 @@ std::optional<int> run_project_command(int argc, char** argv) {
         return result.ok ? 0 : 1;
     }
     if (options.command == "manifest") {
-        const auto pins = stm32_pin_map(extract_som_zynq(paths.som_schematic, "U9",
-            {"J1", "J2", "J3"}, {options.kicad_cli}), load_som_interface(paths.som_interface_file));
-        auto input = prepare_manufacturing_manifest(circuits, pins);
+        const auto module_pins = load_som_interface(paths.som_interface_file);
+        const auto pins = stm32_pin_map(extract_som_zynq(paths.som_schematic, paths.module.controller_ref,
+            som_interface_refs(module_pins), {options.kicad_cli}), module_pins);
+        const auto power = board_power();
+        auto input = prepare_manufacturing_manifest(circuits, pins, power);
         input.file_stem = paths.file_stem;
         const auto destination = options.output.empty() ? paths.manifest_file : options.output;
-        run_manufacturing_manifest(input, paths.project_root, destination);
+        run_manufacturing_manifest(input, paths.project_root, destination, power);
         std::cout << "MANIFEST: " << destination.string() << '\n';
         return 0;
     }
@@ -773,41 +765,11 @@ std::optional<int> run_project_command(int argc, char** argv) {
         std::cout << result.verdict.summary() << '\n';
         return result.verdict.ok ? 0 : 1;
     }
-    if(options.command=="firmware" || options.command=="manual" || options.command=="scfw" ||
-       options.command=="testplan" || options.command=="power-sequence") {
-        FirmwareDocsInput in;in.sheets=circuits;in.firmware_sources=firmware_sources(paths);
-        std::vector<std::string> missing;
-        if(options.command=="manual")missing=manual_missing_requirements(in);
-        if(options.command=="scfw")missing=scfw_missing_requirements(in);
-        if(!missing.empty()) {
-            std::cout<<options.command<<": SKIP — project missing";
-            for(const auto& name:missing)std::cout<<' '<<name;
-            std::cout<<'\n';return 1;
-        }
-        if(options.command=="firmware" || options.command=="manual" || options.command=="scfw")
-            in.stm32=stm32_pin_map(extract_som_zynq(paths.som_schematic,"U9",{"J1","J2","J3"},{options.kicad_cli}),
-                                  load_som_interface(paths.som_interface_file));
-        if(options.command=="scfw") {
-            const auto artifacts=render_scfw(in);
-            const auto directory=options.output.empty()?paths.project_root/"firmware/sc":options.output;
-            for(const auto& artifact:artifacts)publish_text(directory/artifact.path,artifact.text);
-            std::cout<<"SCFW SCAFFOLD: "<<directory.string()<<" ("<<artifacts.size()<<" files)\n";return 0;
-        }
-        std::string text;fs::path default_path;
-        if(options.command=="firmware") {text=render_firmware_contract(in);default_path="firmware/zynq_carrier_contract.h";}
-        else if(options.command=="manual") {text=render_bringup_manual(in);default_path="docs/BRINGUP.md";}
-        else if(options.command=="power-sequence") {
-            const auto power=analyze_power(circuits);
-            text=render_power_sequence_svg(build_power_sequence(circuits,power),power.ok());default_path="docs/power_sequence.svg";
-        } else {
-            ProjectStrings probes;
-            for(const auto& [net,locations]:check_testpoint_coverage(sheets).have) {
-                std::string value;for(const auto& location:locations){if(!value.empty())value+=", ";value+=location;}
-                probes.emplace_back(net,value);
-            }
-            text=render_test_plan(in,extract_spice_checks(circuits),probes);default_path="docs/TEST_PLAN.md";
-        }
-        const auto output=options.output.empty()?paths.project_root/default_path:options.output;
+    if(options.command=="power-sequence") {
+        const auto policy=board_power();const auto power=analyze_power(circuits,policy);
+        const auto mapping=link_mapping_from_json(parse_json_file((paths.project_root/"som_mapping.json").string()),paths.module.do_not_load_straps);
+        const auto text=render_power_sequence_svg(build_power_sequence(circuits,power,module_supply_rail(paths.module.draw,mapping),policy),load_project_config(paths).name,power.ok(),policy);
+        const auto output=options.output.empty()?paths.project_root/"docs/power_sequence.svg":options.output;
         publish_text(output,text);std::cout<<options.command<<": "<<output.string()<<'\n';return 0;
     }
     if (options.command == "bom-values" || options.command == "footprint-pads" ||
@@ -818,7 +780,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
             const auto r=check_bom_values(circuits,load_bom_value_catalog(data/"lcsc_values.json"));
             report=r.report();ok=r.ok;
         } else if(options.command=="spice") {
-            auto r=extract_spice_checks(circuits);SpiceRunOptions run;run.allow_ngspice=!options.no_ngspice;
+            auto r=extract_spice_checks(circuits,board_power());SpiceRunOptions run;run.allow_ngspice=!options.no_ngspice;
             run_ngspice_crosschecks(r,run);report=spice_report(r,ngspice_available().has_value());ok=r.ok();
         } else {
             SymbolLibrary library = project_symbol_library(paths);
@@ -830,7 +792,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
             } else {
                 FootprintResolutionOptions fp;fp.parts_dir=paths.repository_root/"parts";
                 fp.library_tables={paths.repository_root/"som/fp-lib-table"};
-                fp.aliases={{"Capacitor_SMD:C_1206_3225Metric","Capacitor_SMD:C_1206_3216Metric"}};
+                for(const auto& [from,alias]:load_part_facts_in(fp.parts_dir).footprint_aliases)fp.aliases.emplace(from,alias.footprint);
                 for(const auto* root:{"/Applications/KiCad/KiCad.app/Contents/SharedSupport/footprints","/usr/share/kicad/footprints","/usr/local/share/kicad/footprints"})
                     if(fs::is_directory(root)){fp.kicad_footprint_root=root;break;}
                 const auto r=check_footprint_pads(circuits,library,fp);report=r.report();ok=r.ok;
@@ -840,13 +802,14 @@ std::optional<int> run_project_command(int argc, char** argv) {
         std::cout<<report<<'\n';return ok?0:1;
     }
     if (options.command == "powertree" || options.command == "thermal" || options.command == "part-rules") {
-        const auto power = analyze_power(circuits);
+        const auto policy = board_power();
+        const auto power = analyze_power(circuits, policy);
         std::string report;
         bool ok = false;
         if (options.command == "powertree") {
-            report = power_report(power); ok = power.ok();
+            report = power_report(power, load_project_config(paths).name, policy); ok = power.ok();
         } else if (options.command == "part-rules") {
-            const auto result = analyze_part_rules(circuits,power);
+            const auto result = analyze_part_rules(circuits,power,policy);
             report = part_rules_report(result); ok = result.ok();
         } else {
             const auto pcb = options.pcb.empty() ? paths.project_root / board_file_name(paths.file_stem, BoardFileKind::Pcb) : options.pcb;
@@ -857,7 +820,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
                 const auto relative = fs::weakly_canonical(pcb).lexically_relative(paths.repository_root);
                 source = !relative.empty() && *relative.begin() != ".." ? relative.string() : pcb.string();
             }
-            const auto result = analyze_thermal(circuits,power,copper?&*copper:nullptr,source);
+            const auto result = analyze_thermal(circuits,power,policy,copper?&*copper:nullptr,source);
             report = thermal_report(result); ok = result.ok();
         }
         if (!options.output.empty()) publish_text(options.output,report+"\n");
@@ -929,7 +892,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
         for (const auto& sheet : sheets) validate_circuit(sheet, library);
         const auto contract = options.contract.empty() ? paths.som_interface_file : options.contract;
         const auto contract_json = parse_json_file(contract.string());
-        const auto result = link_sheets(sheets, contract_json,
+        const auto result = link_sheets(sheets, sheet_module_connectors(load_sheet_roles(paths, circuits)), contract_json,
             parse_json_file((paths.project_root / "som_mapping.json").string()), paths.module.do_not_load_straps);
         if (options.command == "diagram") {
             const auto output = options.output.empty() ? paths.project_root / "docs/block_diagram.svg" : options.output;
@@ -961,33 +924,17 @@ std::optional<int> run_project_command(int argc, char** argv) {
         return bom.missing_lcsc.empty() || options.allow_missing ? 0 : 1;
     }
     XdcInput live_input;
-    live_input.refs = refs(options.refs);
-    const auto live = extract_som_zynq(som, "U2", live_input.refs, {options.kicad_cli});
+    live_input.refs = som_interface_refs(load_som_interface(options.contract.empty() ? paths.som_interface_file : options.contract));
+    const auto live = extract_som_zynq(som, paths.module.fpga_ref, live_input.refs, {options.kicad_cli});
     apply_som_to_xdc(live_input, live);
     live_input.pins_file = board_file_name(paths.file_stem, BoardFileKind::PinConstraints);
     const auto input = load_project_xdc_input(paths.repository_root, paths.project_root,
         sheets, std::move(live_input), som, options.contract);
     const auto xdc = generate_xdc(input);
-    const auto fpga_dir = options.command == "fpga" && !options.output.empty()
-                        ? options.output : paths.fpga_dir;
-    const auto xdc_path = options.command == "xdc" && !options.output.empty() ? options.output
-                        : !options.xdc.empty() ? options.xdc : fpga_dir / input.pins_file;
-    const auto vivado_path = options.command == "vivado" && !options.output.empty() ? options.output
-                           : fpga_dir / "create_project.tcl";
-    std::string vivado;
-    if (options.command != "xdc") {
-        const auto relative = fs::weakly_canonical(xdc_path).lexically_relative(
-            fs::weakly_canonical(vivado_path.parent_path()));
-        vivado = render_vivado(xdc, input.device, input.zynq_ref,
-                               relative.generic_string(), input.refs);
-    }
-    // Finish every validation/render before publishing any member of the batch.
-    if (options.command != "vivado") publish_text(xdc_path, xdc.text);
-    if (options.command != "xdc") publish_text(vivado_path, vivado);
+    const auto xdc_path = !options.output.empty() ? options.output : paths.fpga_dir / input.pins_file;
+    publish_text(xdc_path, xdc.text);
     for (const auto& check : xdc.checks) std::cout << "  check: " << check << '\n';
-    if (options.command != "vivado")
-        std::cout << "XDC: " << xdc_path.string() << " (" << xdc.entries.size() << " pins)\n";
-    if (options.command != "xdc") std::cout << "VIVADO: " << vivado_path.string() << "\n";
+    std::cout << "XDC: " << xdc_path.string() << " (" << xdc.entries.size() << " pins)\n";
     return 0;
 }
 }

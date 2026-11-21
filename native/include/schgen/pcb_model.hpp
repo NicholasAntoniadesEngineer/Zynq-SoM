@@ -3,6 +3,7 @@
 #include "schgen/constraints.hpp"
 #include "schgen/module_mating.hpp"
 #include "schgen/pcb_checks.hpp"
+#include "schgen/sheet_roles.hpp"
 
 namespace schgen {
 
@@ -32,7 +33,7 @@ struct PcbModel : PcbCheckModel {
 using PcbFootprintPool = std::map<std::string, PcbCheckFootprintPtr>;
 // Strict boundary for an already placed model. mod_path is an opaque pool key;
 // missing entries fail explicitly. It never opens a file or executes authoring.
-PcbModel pcb_model_from_json(const JsonNode &, const PcbFootprintPool &);
+PcbModel pcb_model_from_json(const JsonNode &, const PcbFootprintPool &, const SheetRoles &);
 JsonNode pcb_model_json(const PcbModel &);
 
 } // namespace schgen

@@ -177,7 +177,7 @@ Parts Engine::seat_all(const std::vector<Demand> &demands, const NamedBoxes &ib,
 }
 double Engine::flip_rotation(const std::string &ref) {
     const auto p = part(ref);
-    if (pads(p.mod).size() < 10 || connector(in.connectors, *p.mod) || in.sheet.rfind("som_j", 0) == 0)
+    if (pads(p.mod).size() < 10 || connector(in.connectors, *p.mod) || in.module_connector_sheet)
         return 0;
     std::vector<FloorplanPoint> centers;
     for (const auto &[name, type, x, y, r, w, h] : p.mod->pads) {

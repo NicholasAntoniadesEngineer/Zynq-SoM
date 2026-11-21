@@ -186,7 +186,7 @@ bool evict_movable(const Placer &p, const std::string &r, bool checked_contract_
     // Context builds l4_exempt from wired sheets and external zone targets,
     // not board references. Match l4_pull's sheet-keyed eligibility.
     return (checked_contract_group || !p.ctx.l4_exempt.count(part.sheet)) &&
-        part.sheet.rfind("som_j",0)!=0 && part.sheet!="som_decoupling" &&
+        !module_connector_sheet(p.ctx.in.floorplan.roles,part.sheet) && !under_module_sheet(p.ctx.in.floorplan.roles,part.sheet) &&
         part.footprint.find("Fiducial")==std::string::npos &&
         (checked_contract_group || !(p.ctx.wired.count(part.sheet) && p.ctx.in.contracts.count(part.sheet)));
 }

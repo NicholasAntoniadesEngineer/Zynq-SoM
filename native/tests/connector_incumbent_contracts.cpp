@@ -1,6 +1,7 @@
 // Test-only instrumentation: floorplan_geometry.cpp, precision_ops.cpp and
 // native_audit_quantize.cpp. No production callbacks or external memoization.
 #include "floorplan_internal.hpp"
+#include "sheet_roles_fixture.hpp"
 #include "native_audit_quantize_internal.hpp"
 #include "schgen/precision_ops.hpp"
 #include <cstring>
@@ -108,6 +109,7 @@ FloorplanInput small(bool compact) {
         CircuitSheetIr s;s.name=name;in.sheets.push_back(s);in.geometry.zone_box[name]={12,8};
         FloorplanZoneShape shape;shape.w=12;shape.h=8;in.geometry.shapes[name]={shape,shape};
     }
+    in.roles=explicit_sheet_roles(in.sheets);
     in.accounting.fallback_events={"interior_reseat_retry","legalize_only_compaction","interior_reseat_retry"};
     return in;
 }
@@ -117,7 +119,7 @@ void unit(bool compact,bool fail_pack,bool constraint_first=false) {
     if(fail_pack) {
         // Only the alternate north connector has an oversized fanout. The
         // unchanged east connector forces a genuine cross-edge rejection.
-        CircuitSheetIr s;s.name="other_edge";in.sheets.push_back(s);
+        CircuitSheetIr s;s.name="other_edge";in.sheets.push_back(s);in.roles=explicit_sheet_roles(in.sheets);
         in.spec->edges["E"]={s.name};in.geometry.zone_box[s.name]={12,8};
         in.footprints["wide"]={"synthetic-wide",sexpr_loads(R"((footprint "wide"
             (pad "1" smd rect (at 0 0) (size 1 1))

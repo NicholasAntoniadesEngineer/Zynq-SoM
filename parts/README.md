@@ -58,7 +58,7 @@ native/bin/schgen catalog-compile parts native/catalog.bin
 
 ## Part facts (`part_facts.json`)
 
-`parts/part_facts.json` (`schema: schgen.part_facts/3`) is the one reviewed,
+`parts/part_facts.json` (`schema: schgen.part_facts/5`) is the one reviewed,
 hand-kept file in this folder. It holds what the generator cannot know:
 
 - `classes` — the class of every schematic symbol the boards may place, keyed
@@ -93,15 +93,35 @@ hand-kept file in this folder. It holds what the generator cannot know:
   emitter places).
 - `ep_vias` — keyed by part number: `min_pads` ground via pads within
   `radius_mm` of the part's centre.
+
+  `thermal_copper` and `ep_vias` find a placed part by the `label` of the
+  part's `regulators` entry: a part whose value begins with that label. A row
+  whose part has no `regulators` entry is refused, naming the part.
 - `isolation` — keyed by part number: `margin_mm`, the margin of the plane void
   under the part's courtyard.
-- `regulators` — keyed by part number: `kind`, `eff`, `in_pin`, `out_pin`,
-  `ilim_num`, `note`, and optionally `limit_a`, `iset_pin`, `fb_vref`, `iset_v`
-  and `enable` (`en_pin` with `vin_pins`, or `ihys_a` with
-  `recommended_max_v` and `threshold_v`).
-- `zeners` — keyed by part number: `vz_min_v`, `vz_max_v`, `izt_a`, `zzt_ohm`.
-- `reference_pins` — keyed by part number: `vref1_pin` and `vref2_pin`, the two
-  reference pins that must not sit directly on two different rails.
+- `regulators` — keyed by part number: `kind` (one of `buck`, `ldo`,
+  `load_switch`, `efuse`, `led_boost`), `label` (the short device name the
+  checks print), `eff`, `in_pin`, `out_pin`, `ilim_num`, `note`, and optionally
+  `limit_a`, `iset_pin`, `fb_vref`, `out_v`, `iset_v` and `enable`: a `direct` entry
+  (`en_pin`, `vin_pins`) or a `network` entry (`ihys_a`, `recommended_max_v`,
+  `threshold_v`, the voltage the enable pin must exceed at the low contract
+  input), each with the `cite` of the datasheet section it comes from, which
+  the check text prints. `out_v` is the output voltage of a fixed-output part
+  and `fb_vref` the feedback reference of an adjustable one; a row may not
+  state both (see `docs/SUBSYSTEM_FORMAT.md`, board power). A `led_boost`
+  is not part of the power tree and states only `kind`, `label` and `iset_v`,
+  the voltage its ISET resistor senses. A part is found by the part number on
+  its instance: the `MPN` field when it has one, else the symbol name when the
+  symbol is the part's own, else its value. An instance with no row whose part number or value starts with the
+  `label` of a row is an unreviewed variant of that device: the power tree
+  reports it as an error and the SPICE gate as unverified, naming the sheet,
+  the reference, the value and the label.
+- `zeners` — keyed by the schematic value of the zener (a generic
+  `Device:D_Zener` has no folder here, so this key is not checked against the
+  folders and is matched exactly): `vz_min_v`, `vz_max_v`, `izt_a`, `zzt_ohm`.
+- `reference_pins` — keyed by part number: `label` (the short device name the
+  finding prints), `vref1_pin` and `vref2_pin`, the two reference pins that
+  must not sit directly on two different rails.
 - `control_grid` — keyed by part number: `button_gap_mm`, the gap when the
   part's instances are placed as a grid of controls.
 - `model_overrides` — keyed by part number: `footprint`, `path` and
@@ -117,9 +137,30 @@ hand-kept file in this folder. It holds what the generator cannot know:
   `basis` and `rows`, each row `max_volts` and `spacing_mm`, rising in
   `max_volts`. The land-spacing rule takes the minimum electrical spacing for a
   pair of nets from the first row that covers the voltage between them.
+- `i2c_devices` — keyed by part number, one row per addressable I2C target:
+  `label` (the device name the manifest prints), `base` (the 7-bit address
+  with every strap at value 0), `data_pin` and `clock_pin`, `straps` (each a
+  `pin` and its `selects`: a map from a pin of the same part to the value added
+  to `base` when the strap pin is on that pin's net) and the datasheet `cite`.
+  Pins are named by the names in the part's `part.json`; each name must pick
+  exactly one pin. The address is `base` plus the selected values and must stay
+  within seven bits.
+- `i2c_bridges` — keyed by part number, one row per part that carries I2C
+  lines from one net to another: `joins` (pairs of pin names, one pair per
+  line), `shares_addresses` (true when a target on one side answers the
+  controller on the other at its own address, as through a level translator;
+  false for a multiplexer or an address translator) and the datasheet `cite`.
+
+The board's I2C inventory reads these two sections: a bus is the pair of nets
+on a device's data and clock pins (or a typed `i2c` port pair), named by the
+`bus` of its typed ports, else by its data net; buses joined by a bridge that
+shares addresses form one address space. A part of class `integrated_circuit`
+on a bus net with neither row fails the build.
 
 Each of these sections must be present; an empty one is `{}`. A key naming a
-part must be the name of a folder in this folder. An unknown key, a value of
+part must be the name of a folder in this folder; the keys of `zeners` (values)
+and `footprint_aliases` (footprint ids) are the exceptions. A key of `i2c_devices` or `i2c_bridges` must also have
+a `part.json` in its folder. An unknown key, a value of
 the wrong type or a repeated key fails the build, naming the file, the section
 and the key.
 

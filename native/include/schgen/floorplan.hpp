@@ -12,6 +12,7 @@
 #include "schgen/pcb_scan.hpp"
 #include "schgen/power_checks.hpp"
 #include "schgen/project.hpp"
+#include "schgen/sheet_roles.hpp"
 
 #include <map>
 #include <memory>
@@ -188,7 +189,7 @@ struct FloorplanLegalizeInput {
     // Complete disjoint occupancy masks suppress its pair separation;
     // explicit hard terms in index are still evaluated independently.
     std::map<std::pair<std::string, std::string>, int> channel_demand;
-    std::map<std::string, Box4> som_j_rects;
+    std::map<std::string, Box4> module_rects;
     double clear = board_decision_policy::floorplan::clear;
     bool compact = false;
     FloorplanPoint origin{25.0, 25.0};
@@ -244,10 +245,6 @@ struct FloorplanBlock {
     double cx() const { return x + w / 2; }
     double cy() const { return y + h / 2; }
 };
-struct FloorplanNote {
-    int n = 0;
-    std::string block, short_text, long_text;
-};
 struct FloorplanDecision {
     std::string step, kind, name;
     JsonNode value;  // heterogeneous diagnostic scalar, never executable
@@ -281,8 +278,10 @@ struct FloorplanPlan {
 // missing keys referenced by geometry are errors, not guessed dimensions.
 struct FloorplanInput {
     std::vector<CircuitSheetIr> sheets;
+    SheetRoles roles;
     LinkResult link;
     std::vector<FloorplanRegulator> regulators;
+    PowerPolicy power;
     // Researched per-net SI data for Markdown reporting. No per-kind fallback.
     std::vector<FloorplanSiPair> si_pairs;
     std::string si_source;
@@ -323,13 +322,9 @@ std::string render_floorplan_spec_json(const FloorplanPlan& plan);
 std::filesystem::path write_floorplan_spec(const FloorplanPlan& plan,
                                          const std::filesystem::path& path);
 FloorplanPlan build_floorplan(const FloorplanInput& input, ExecutionFailureReceipt* failure = nullptr);
-std::vector<FloorplanNote> build_floorplan_notes(
-    const FloorplanPlan& plan, const FloorplanInput& input);
 std::string render_floorplan_svg(const FloorplanPlan& plan,
-                                 const std::vector<FloorplanNote>& notes,
                                  QuantizationCounts* counts = nullptr);
 std::string render_floorplan_md(const FloorplanPlan& plan,
-                                const std::vector<FloorplanNote>& notes,
                                 const FloorplanInput& input);
 std::string render_floorplan_ledger(const FloorplanPlan& plan);
 JsonNode floorplan_plan_json(const FloorplanPlan& plan);
@@ -338,7 +333,6 @@ JsonNode floorplan_plan_json(const FloorplanPlan& plan);
 // solver callback, or mutable process-wide render context. A PCB invocation
 // retains this stage before mutating its downstream instance placement.
 struct FloorplanDocuments {
-    std::vector<FloorplanNote> notes;
     std::string svg, markdown;
     ExecutionAccounting accounting;
 };

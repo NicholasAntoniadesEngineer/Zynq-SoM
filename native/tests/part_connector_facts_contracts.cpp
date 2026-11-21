@@ -11,8 +11,8 @@ namespace {
 using namespace schgen;
 
 namespace fixture {
-const std::string head = "{\"schema\": \"schgen.part_facts/3\", \"classes\": {\"P1:P1\": \"connector\", \"Device:R\": \"resistor\"}, ";
-const std::string tail = ", \"stated_heights\": {}, \"thermal\": {}, \"thermal_copper\": {}, \"ep_vias\": {}, \"isolation\": {}, \"regulators\": {}, \"zeners\": {}, \"reference_pins\": {}, \"control_grid\": {}, \"model_overrides\": {}, \"footprint_aliases\": {}, \"lands\": {}, \"electrical_spacing\": {\"source\": \"fixture\", \"column\": \"B2\", \"basis\": \"fixture\", \"rows\": [{\"max_volts\": 30, \"spacing_mm\": 0.1}]}}";
+const std::string head = "{\"schema\": \"schgen.part_facts/5\", \"classes\": {\"P1:P1\": \"connector\", \"Device:R\": \"resistor\"}, ";
+const std::string tail = ", \"stated_heights\": {}, \"thermal\": {}, \"thermal_copper\": {}, \"ep_vias\": {}, \"isolation\": {}, \"regulators\": {}, \"zeners\": {}, \"reference_pins\": {}, \"control_grid\": {}, \"model_overrides\": {}, \"footprint_aliases\": {}, \"i2c_devices\": {}, \"i2c_bridges\": {}, \"lands\": {}, \"electrical_spacing\": {\"source\": \"fixture\", \"column\": \"B2\", \"basis\": \"fixture\", \"rows\": [{\"max_volts\": 30, \"spacing_mm\": 0.1}]}}";
 const std::string good_entry =
     "{\"mating_face\": \"-X\", \"edge_pinned\": true, \"overmold\": false, \"pad_row_face_check\": true, "
     "\"description\": \"fixture socket\", \"numbered_label\": \"SOCK\", \"pair_label\": \"PAIR\"}";

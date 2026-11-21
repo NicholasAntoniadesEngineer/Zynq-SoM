@@ -1,0 +1,6 @@
+struct BringupExpander { std::string ref; int addr = 0; ProjectStrings ports; };
+struct BringupMonitor {
+    std::string ref;
+    int addr = 0;
+    std::map<int, std::pair<std::string, std::string>> channels;
+};

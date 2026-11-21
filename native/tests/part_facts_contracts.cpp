@@ -24,8 +24,8 @@ const char* const solid =
     "#4 = CARTESIAN_POINT('',(1.,0.,8.54));\n#5 = VERTEX_POINT('',#4);\n"
     "#6 = CARTESIAN_POINT('',(1.,0.,8.647));\nENDSEC;\n";
 const char* const facts_text =
-    "{\"schema\": \"schgen.part_facts/3\", \"classes\": {\"Device:R\": \"resistor\"}, \"connectors\": {}, "
-    "\"thermal\": {}, \"thermal_copper\": {}, \"ep_vias\": {}, \"isolation\": {}, \"regulators\": {}, \"zeners\": {}, \"reference_pins\": {}, \"control_grid\": {}, \"model_overrides\": {}, \"footprint_aliases\": {}, \"lands\": {}, \"electrical_spacing\": {\"source\": \"fixture\", \"column\": \"B2\", \"basis\": \"fixture\", \"rows\": [{\"max_volts\": 30, \"spacing_mm\": 0.1}]}, \"stated_heights\": {\"Pad:Bare\": {\"mm\": 0.25, \"basis\": \"fixture\", \"reviewed\": \"2026-11-19\"}}}";
+    "{\"schema\": \"schgen.part_facts/5\", \"classes\": {\"Device:R\": \"resistor\"}, \"connectors\": {}, "
+    "\"thermal\": {}, \"thermal_copper\": {}, \"ep_vias\": {}, \"isolation\": {}, \"regulators\": {}, \"zeners\": {}, \"reference_pins\": {}, \"control_grid\": {}, \"model_overrides\": {}, \"footprint_aliases\": {}, \"i2c_devices\": {}, \"i2c_bridges\": {}, \"lands\": {}, \"electrical_spacing\": {\"source\": \"fixture\", \"column\": \"B2\", \"basis\": \"fixture\", \"rows\": [{\"max_volts\": 30, \"spacing_mm\": 0.1}]}, \"stated_heights\": {\"Pad:Bare\": {\"mm\": 0.25, \"basis\": \"fixture\", \"reviewed\": \"2026-11-19\"}}}";
 }
 
 void require(bool condition, const std::string& what) {
@@ -96,7 +96,7 @@ void models_are_measured(const std::filesystem::path& scratch) {
             "U3", "a tilted model is refused");
     require(symbol_class(facts, "Device:R", "R1") == PartClass::resistor, "a symbol takes the class the facts give it");
     refuses([&] { symbol_class(facts, "Device:X", "X1 (sheet)"); }, "X1 (sheet)", "a symbol with no class is refused");
-    write(scratch / "bad.json", "{\"schema\": \"schgen.part_facts/3\", \"classes\": {\"Device:R\": \"widget\"}, \"connectors\": {}, \"thermal\": {}, \"thermal_copper\": {}, \"ep_vias\": {}, \"isolation\": {}, \"regulators\": {}, \"zeners\": {}, \"reference_pins\": {}, \"control_grid\": {}, \"model_overrides\": {}, \"footprint_aliases\": {}, \"lands\": {}, \"electrical_spacing\": {\"source\": \"fixture\", \"column\": \"B2\", \"basis\": \"fixture\", \"rows\": [{\"max_volts\": 30, \"spacing_mm\": 0.1}]}, \"stated_heights\": {}}");
+    write(scratch / "bad.json", "{\"schema\": \"schgen.part_facts/5\", \"classes\": {\"Device:R\": \"widget\"}, \"connectors\": {}, \"thermal\": {}, \"thermal_copper\": {}, \"ep_vias\": {}, \"isolation\": {}, \"regulators\": {}, \"zeners\": {}, \"reference_pins\": {}, \"control_grid\": {}, \"model_overrides\": {}, \"footprint_aliases\": {}, \"i2c_devices\": {}, \"i2c_bridges\": {}, \"lands\": {}, \"electrical_spacing\": {\"source\": \"fixture\", \"column\": \"B2\", \"basis\": \"fixture\", \"rows\": [{\"max_volts\": 30, \"spacing_mm\": 0.1}]}, \"stated_heights\": {}}");
     refuses([&] { load_part_facts(scratch / "bad.json"); }, "widget", "an unknown class name is refused");
     refuses([&] { load_part_facts(scratch / "absent.json"); }, "absent.json", "a missing facts file is refused");
     PcbCheckInstance bare;

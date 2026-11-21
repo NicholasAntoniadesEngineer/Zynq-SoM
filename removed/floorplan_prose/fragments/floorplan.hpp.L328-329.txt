@@ -1,0 +1,2 @@
+std::vector<FloorplanNote> build_floorplan_notes(
+    const FloorplanPlan& plan, const FloorplanInput& input);

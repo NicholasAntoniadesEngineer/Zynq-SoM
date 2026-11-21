@@ -16,6 +16,6 @@ struct BoardInputOptions {
 // extracted board netlist and validated link result; neither is synthesized
 // from fixture geometry or a previously placed board. No files are written.
 PcbPlacementInput load_board_inputs(const ProjectPaths&,
-    const std::vector<ProjectCircuit>&, const LinkResult&, const KicadNetlist&,
+    const std::vector<ProjectCircuit>&, const SheetRoles&, const LinkResult&, const KicadNetlist&,
     const BoardInputOptions& = {});
 }

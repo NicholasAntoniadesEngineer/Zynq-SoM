@@ -102,11 +102,23 @@ std::vector<double> pin_volts(const CircuitSheetIr& c,const std::string& ref,con
     for(const auto& n:c.nets)if(std::any_of(n.pins.begin(),n.pins.end(),[&](const auto& pin){return pin.ref==ref;}))if(auto v=rail_volts(n.name,p))out.push_back(*v);
     return out;
 }
-void part_finding(PartCheckResult& res,const std::string& key,const std::string& msg) {
-    if(auto waiver=find(res.waived,key))res.notes.push_back("WAIVED "+msg+" ["+waiver->second+"]");else res.findings.push_back(msg);
+const char* const voltage_quantity = part_check_voltage_quantity;
+const char* const power_quantity = part_check_power_quantity;
+const char* const reference_quantity = "reference_current_limit";
+const char* const cap_rule = "CAP_V";
+const char* const power_rule = "RES_POWER";
+const char* const input_rule = "IC_VIN";
+const char* const reference_suffix = "_REFERENCE";
+const double input_voltage_limit = 1.0;
+PartCheckVerdict part_finding(PartCheckResult& res,const std::string& key,const std::string& msg) {
+    if(auto waiver=find(res.waived,key)){res.notes.push_back("WAIVED "+msg+" ["+waiver->second+"]");return PartCheckVerdict::waived;}
+    res.findings.push_back(msg);return PartCheckVerdict::fail;
+}
+void record_check(PartCheckResult& res,const std::string& sheet,const std::string& ref,const std::string& rule,const char* quantity,PartCheckVerdict verdict,PartCheckBound bound,std::optional<double> stress,std::optional<double> rating,std::optional<double> ratio,std::optional<double> limit) {
+    res.evaluated.push_back({sheet,ref,rule,quantity,verdict,bound,stress,rating,ratio,limit});
 }
 }
-PartCheckResult analyze_part_rules(const std::vector<ProjectCircuit>& sheets,const PowerCheckResult& power,const PartRatingsTable& ratings,const PartRulePolicy& policy,const PowerPolicy& power_policy) {
+PartCheckResult analyze_part_rules(const std::vector<ProjectCircuit>& sheets,const PowerCheckResult& power,const PowerPolicy& power_policy,const PartRatingsTable& ratings,const PartRulePolicy& policy) {
     PartCheckResult res;res.waived=waivers(sheets,"part_rule_waivers");
     std::vector<const ProjectCircuit*> order;for(const auto& s:sheets)order.push_back(&s);
     std::stable_sort(order.begin(),order.end(),[](auto a,auto b){return a->name<b->name;});
@@ -117,16 +129,18 @@ PartCheckResult analyze_part_rules(const std::vector<ProjectCircuit>& sheets,con
             // alias metadata. SCPS113O 8.1.2/10: different supply nets must not
             // be bridged by the reference FET without current limiting. Equal
             // nominal voltages do not establish identical power sequencing.
-            if(part->lib_id=="PCA9306DCUR:PCA9306DCUR") {
-                const auto* v1=idx.net(ref,"2");
-                const auto* v2=idx.net(ref,"7");
+            const auto* reference=part_fact(power_policy.reference_pins,catalogue_part_number(*part));
+            if(reference) {
+                const auto* v1=idx.net(ref,reference->vref1_pin);
+                const auto* v2=idx.net(ref,reference->vref2_pin);
                 if(v1&&v2&&v1->name!=v2->name) {
                     const auto rail=rail_volts(v2->name,power_policy);
                     if(rail&&*rail>0) {
                         ++res.checked;
+                        record_check(res,sc->name,ref,reference->label+reference_suffix,reference_quantity,PartCheckVerdict::fail,PartCheckBound::none,std::nullopt,std::nullopt,std::nullopt,std::nullopt);
                         // No waiver: this is an observed direct connection,
                         // not a voltage-rating advisory or a transient model.
-                        res.findings.push_back("PCA9306_REFERENCE "+sc->name+":"+ref+
+                        res.findings.push_back(reference->label+"_REFERENCE "+sc->name+":"+ref+
                             ": VREF2 directly on "+v2->name+" with VREF1 on "+v1->name+
                             "; missing reference current limiting (TI SCPS113O 8.1.2/10). "
                             "EN resistance does not limit this path; power sequencing remains unqualified.");
@@ -140,12 +154,15 @@ PartCheckResult analyze_part_rules(const std::vector<ProjectCircuit>& sheets,con
                 if(vs.empty()){res.unspecced.push_back(key+" ("+part->value+") — cap rail unresolved");continue;}
                 double rail=*std::max_element(vs.begin(),vs.end());if(rail<=0)continue;
                 ++res.checked;double derate=capacitor_derating(*r,policy),need=derate*rail;
-                if(*r->v_max<need)part_finding(res,key,"CAP_V "+key+" ("+part->value+", LCSC "+lcsc+"): "+g(*r->v_max)+"V "+(r->dielectric&&!r->dielectric->empty()?*r->dielectric:r->kind)+" on a "+g(rail)+"V rail — needs >= "+g(derate)+"x = "+g(need)+"V (margin "+f(*r->v_max/rail,1)+"x). Pick a higher-V part or c.waive_part_rule("+repr(ref)+", reason)");
+                PartCheckVerdict verdict=PartCheckVerdict::pass;
+                if(*r->v_max<need)verdict=part_finding(res,key,"CAP_V "+key+" ("+part->value+", LCSC "+lcsc+"): "+g(*r->v_max)+"V "+(r->dielectric&&!r->dielectric->empty()?*r->dielectric:r->kind)+" on a "+g(rail)+"V rail — needs >= "+g(derate)+"x = "+g(need)+"V (margin "+f(*r->v_max/rail,1)+"x). Pick a higher-V part or c.waive_part_rule("+repr(ref)+", reason)");
+                record_check(res,sc->name,ref,cap_rule,voltage_quantity,verdict,PartCheckBound::at_least,rail,*r->v_max,*r->v_max/rail,derate);
             } else if(r->kind=="res"&&r->p_max&&*r->p_max!=0) {
                 auto ohms=parse_resistor_ohms(part->value);auto vs=pin_volts(sc->circuit,ref,power_policy);
                 if(ohms&&*ohms>0&&vs.size()>=2) {
                     double dv=*std::max_element(vs.begin(),vs.end())-*std::min_element(vs.begin(),vs.end()),p=dv*dv / *ohms;
                     ++res.checked;
+                    record_check(res,sc->name,ref,power_rule,power_quantity,p>policy.derate_res * *r->p_max?PartCheckVerdict::advisory:PartCheckVerdict::pass,PartCheckBound::at_most,p,*r->p_max,p/ *r->p_max,policy.derate_res);
                     if(p>policy.derate_res * *r->p_max)res.notes.push_back("RES_POWER(advisory) "+key+" ("+part->value+"): P~="+f(p*1000,0)+"mW across "+g(dv)+"V > "+g(policy.derate_res)+"x rated "+f(*r->p_max*1000,0)+"mW — verify it is not a full-rail dissipator");
                 }
             }
@@ -160,12 +177,14 @@ PartCheckResult analyze_part_rules(const std::vector<ProjectCircuit>& sheets,con
         auto v=rail_volts(r->vin,power_policy);
         if(!v){res.unspecced.push_back(key+" ("+r->value+") — input rail "+r->vin+" unresolved");continue;}
         ++res.checked;
-        if(*rating->vin_max<*v)part_finding(res,key,"IC_VIN "+key+" ("+r->value+"): abs-max input "+g(*rating->vin_max)+"V < its rail "+r->vin+" "+g(*v)+"V — over-stress");
+        PartCheckVerdict verdict=PartCheckVerdict::pass;
+        if(*rating->vin_max<*v)verdict=part_finding(res,key,"IC_VIN "+key+" ("+r->value+"): abs-max input "+g(*rating->vin_max)+"V < its rail "+r->vin+" "+g(*v)+"V — over-stress");
+        record_check(res,r->sheet,r->ref,input_rule,voltage_quantity,verdict,PartCheckBound::at_least,*v,*rating->vin_max,*v>0?std::optional<double>(*rating->vin_max/ *v):std::nullopt,input_voltage_limit);
     }
     return res;
 }
-PartCheckResult analyze_part_rules(const std::vector<ProjectCircuit>& sheets,const PartRatingsTable& ratings,const PartRulePolicy& policy,const PowerPolicy& power_policy) {
-    return analyze_part_rules(sheets,analyze_power(sheets,power_policy),ratings,policy,power_policy);
+PartCheckResult analyze_part_rules(const std::vector<ProjectCircuit>& sheets,const PowerPolicy& power_policy,const PartRatingsTable& ratings,const PartRulePolicy& policy) {
+    return analyze_part_rules(sheets,analyze_power(sheets,power_policy),power_policy,ratings,policy);
 }
 std::string part_rules_report(const PartCheckResult& res,const PartRulePolicy& p) {
     std::vector<std::string> ls{"schgen per-part rule engine (ratings vs netlist usage)",std::string(78,'='),"",
@@ -177,8 +196,8 @@ std::string part_rules_report(const PartCheckResult& res,const PartRulePolicy& p
     if(res.findings.empty())ls.insert(ls.end(),{"","errors: none"});else section(res.findings,"ERRORS","  ERROR: ");
     ls.insert(ls.end(),{"",std::string("PART RULES: ")+(res.ok()?"PASS":"FAIL")+" ("+std::to_string(res.checked)+" checks, "+std::to_string(res.findings.size())+" findings, "+std::to_string(res.unspecced.size())+" unspeced, "+std::to_string(res.waived.size())+" waived)"});return join(ls);
 }
-PartCheckResult run_part_checks(const std::vector<ProjectCircuit>& sheets,const std::filesystem::path& dir,const PowerCheckResult* power,const PartRatingsTable& ratings,const PartRulePolicy& policy,const PowerPolicy& pp) {
-    auto res=power?analyze_part_rules(sheets,*power,ratings,policy,pp):analyze_part_rules(sheets,ratings,policy,pp);
+PartCheckResult run_part_checks(const std::vector<ProjectCircuit>& sheets,const std::filesystem::path& dir,const PowerPolicy& pp,const PowerCheckResult* power,const PartRatingsTable& ratings,const PartRulePolicy& policy) {
+    auto res=power?analyze_part_rules(sheets,*power,pp,ratings,policy):analyze_part_rules(sheets,pp,ratings,policy);
     publish(dir/"part_rules.txt",part_rules_report(res,policy)+"\n");return res;
 }
 JsonNode part_result_json(const PartCheckResult& res) {

@@ -1,4 +1,5 @@
 #include "schgen/run_config.hpp"
+#include "sheet_roles_fixture.hpp"
 #include "pcb_placement_fixture.hpp"
 #include "pcb_placement_requirements.hpp"
 #include "ledger_accounting_fixture.hpp"
@@ -111,7 +112,8 @@ void rats(std::ostream& out,const RatsnestGateResult& r){
 }
 void board(std::ostream& out,const std::filesystem::path& root,const std::string& name){
     auto f=placement_fixture::load(root,name);
-    auto model=pcb_model_from_json(f.model,f.expected_pool);
+    auto model=pcb_model_from_json(f.model,f.expected_pool, explicit_sheet_roles(f.model));
+    model.isolation=f.input.floorplan.project.isolation;
     model.land_spacing=f.input.land_spacing;
     auto policy=pcb_emit_policy(f.input.floorplan.project);
     // This immutable rendering baseline predates service-only PCB labels.
@@ -125,12 +127,7 @@ void board(std::ostream& out,const std::filesystem::path& root,const std::string
     // the corrected fixture loader and live --full path retain real edges.
     auto rendering_plan=f.stage.plan;
     for(auto& block:rendering_plan.edge_blocks)block.edge.clear();
-    const auto floor=parse_json_file((root/"native/tests/data/floorplan"/(name+".json")).string());
-    std::vector<FloorplanNote> notes;
-    for(const auto& n:placement_fixture::field(placement_fixture::field(floor,"expected"),"notes").array_value)
-        notes.push_back({static_cast<int>(placement_fixture::number(n,"n")),placement_fixture::string(n,"block"),
-                         placement_fixture::string(n,"short"),placement_fixture::string(n,"long")});
-    begin();auto svg=render_floorplan_svg(rendering_plan,notes SINK);end(counts,"svg",&out);
+    begin();auto svg=render_floorplan_svg(rendering_plan SINK);end(counts,"svg",&out);
     bytes(out,"svg",svg);
     counts.clear();begin();auto emission=render_pcb(model,policy SINK);end(counts,"silk",&out);
     bytes(out,"pcb",emission.pcb);
@@ -290,11 +287,11 @@ void scalars(){
             end(counts,"invalid scalar narrowing");require(rejected,"invalid scalar narrowing reached an integer cast");
         }
     FloorplanPlan small;small.board_w=20.9;small.board_h=30.2;
-    counts.clear();begin();const auto small_svg=render_floorplan_svg(small,{},&counts);end(counts,"small grid");
+    counts.clear();begin();const auto small_svg=render_floorplan_svg(small,&counts);end(counts,"small grid");
     require(counts.at("floorplan_svg_extent_trunc")==2&&counts.at("floorplan_svg_grid_trunc")==5,
             "grid condition must count its two terminating conversions");
     const auto saved=counts;
-    require(render_floorplan_svg(small,{})==small_svg&&counts==saved,"diagnostic rendering inherited a sink");
+    require(render_floorplan_svg(small)==small_svg&&counts==saved,"diagnostic rendering inherited a sink");
     for(std::size_t i=0;i<names.size();++i){
         QuantizationCounts full{{names[i],std::numeric_limits<std::size_t>::max()}};
         const auto prior=full;bool rejected=false;
