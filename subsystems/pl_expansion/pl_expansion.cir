@@ -1,0 +1,14 @@
+* pl_expansion.cir - SPICE subckt of the pl_expansion sheet.
+*
+* PL expansion header: 32 spare bank IO on 2x20 2.54 mm, current-limited 3.3 V
+* The subckt declares the sheet's power and ground rails as its pins and models
+* each rail as a 1G tie to the last pin so no node floats in .op; the signal
+* ports carry no two-rail passive and are not pins.
+*
+* Port order: V3V3 V3V3_XIO GND
+
+.subckt pl_expansion V3V3 V3V3_XIO GND
+RV3V3 V3V3 GND 1G
+RV3V3_XIO V3V3_XIO GND 1G
+.ends pl_expansion
+.end

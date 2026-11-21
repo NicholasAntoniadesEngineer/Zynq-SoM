@@ -1,0 +1,19 @@
+* vbat_supply.cir - SPICE subckt of the vbat_supply sheet.
+*
+* Battery logic feed: TPS26631 eFuse + LM61460 8 V pre-regulator + supply selector
+* The subckt declares the sheet's power and ground rails as its pins and models
+* each rail as a 1G tie to the last pin so no node floats in .op; the signal
+* ports carry no two-rail passive and are not pins.
+*
+* Port order: VVBAT VVBAT_D VVDD_LOGIC VVBAT_SW VVPRE VVIN_USB VVIN GND
+
+.subckt vbat_supply VVBAT VVBAT_D VVDD_LOGIC VVBAT_SW VVPRE VVIN_USB VVIN GND
+RVVBAT VVBAT GND 1G
+RVVBAT_D VVBAT_D GND 1G
+RVVDD_LOGIC VVDD_LOGIC GND 1G
+RVVBAT_SW VVBAT_SW GND 1G
+RVVPRE VVPRE GND 1G
+RVVIN_USB VVIN_USB GND 1G
+RVVIN VVIN GND 1G
+.ends vbat_supply
+.end

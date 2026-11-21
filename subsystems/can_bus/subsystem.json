@@ -1,0 +1,258 @@
+{
+  "schema": "schgen.subsystem/1",
+  "name": "can_bus",
+  "title": "CAN bus port: TCAN1042HGV transceiver (70 V bus fault), switched 120R termination, two daisy-chain connectors",
+  "interface": [
+    "+5V",
+    "+3V3",
+    "GND",
+    "GND_BUS",
+    "CAN_TX",
+    "CAN_RX"
+  ],
+  "placement": {
+    "region": "board",
+    "silk_label": null,
+    "far_guard_mm": null,
+    "escape_basis": null,
+    "escape_escalates": false,
+    "reserves_edge": false
+  },
+  "checks": {
+    "dividers": [],
+    "divider_sources": [],
+    "iset_window_ma": null,
+    "iset_basis": null
+  },
+  "parts": [
+    {
+      "ref": "U1",
+      "part": "TCAN1042HGVDR"
+    },
+    {
+      "ref": "C2",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      }
+    },
+    {
+      "ref": "C1",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      }
+    },
+    {
+      "ref": "R1",
+      "symbol": "Device:R",
+      "value": "10k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C25804"
+      }
+    },
+    {
+      "ref": "R2",
+      "symbol": "Device:R",
+      "value": "120R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C22787"
+      }
+    },
+    {
+      "ref": "SW1",
+      "part": "DSHP04TSGER",
+      "value": "DIP-4"
+    },
+    {
+      "ref": "D1",
+      "part": "NUP2105LT1G"
+    },
+    {
+      "ref": "J1",
+      "part": "ZX-SH1.0-4PWT"
+    },
+    {
+      "ref": "J2",
+      "part": "ZX-SH1.0-4PWT"
+    },
+    {
+      "ref": "TP1",
+      "symbol": "Connector:TestPoint",
+      "value": "CAN_H",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      }
+    },
+    {
+      "ref": "TP2",
+      "symbol": "Connector:TestPoint",
+      "value": "CAN_L",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      }
+    }
+  ],
+  "nets": [
+    {
+      "name": "+5V",
+      "pins": [
+        "U1.3",
+        "C1.1"
+      ]
+    },
+    {
+      "name": "+3V3",
+      "pins": [
+        "U1.5",
+        "C2.1",
+        "R1.1"
+      ]
+    },
+    {
+      "name": "GND",
+      "pins": [
+        "U1.2",
+        "U1.8",
+        "C1.2",
+        "C2.2"
+      ]
+    },
+    {
+      "name": "GND_BUS",
+      "pins": [
+        "D1.3",
+        "J1.4",
+        "J1.5",
+        "J1.6",
+        "J2.4",
+        "J2.5",
+        "J2.6"
+      ]
+    },
+    {
+      "name": "CAN_TX",
+      "class": "port",
+      "pins": [
+        "U1.1",
+        "R1.2"
+      ]
+    },
+    {
+      "name": "CAN_RX",
+      "class": "port",
+      "pins": [
+        "U1.4"
+      ]
+    },
+    {
+      "name": "CAN_H",
+      "pins": [
+        "U1.7",
+        "D1.1",
+        "J1.2",
+        "J2.2",
+        "R2.1",
+        "TP1.1"
+      ]
+    },
+    {
+      "name": "CAN_L",
+      "pins": [
+        "U1.6",
+        "D1.2",
+        "J1.3",
+        "J2.3",
+        "SW1.8",
+        "TP2.1"
+      ]
+    },
+    {
+      "name": "CAN_TERM",
+      "pins": [
+        "R2.2",
+        "SW1.1"
+      ]
+    }
+  ],
+  "unconnected": [
+    "SW1.2",
+    "SW1.3",
+    "SW1.4",
+    "SW1.5",
+    "SW1.6",
+    "SW1.7",
+    "J1.1",
+    "J2.1"
+  ],
+  "ports": [
+    {
+      "net": "CAN_TX",
+      "kind": "single",
+      "expect": {
+        "instance": "non_empty"
+      }
+    },
+    {
+      "net": "CAN_RX",
+      "kind": "single",
+      "expect": {
+        "instance": "non_empty"
+      }
+    }
+  ],
+  "hints": [],
+  "draws": [
+    {
+      "rail": "+5V",
+      "amps": 0.08,
+      "note": "TCAN1042 5 V supply current, dominant, 50 ohm bus load: 80 mA max (TI SLLSES9D electrical characteristics, supply)"
+    }
+  ],
+  "waivers": [],
+  "purpose": [
+    {
+      "part": "C1",
+      "role": "bypass",
+      "pin": "U1.3"
+    },
+    {
+      "part": "C2",
+      "role": "bypass",
+      "pin": "U1.5"
+    },
+    {
+      "part": "R1",
+      "role": "pull",
+      "pin": "U1.1"
+    },
+    {
+      "part": "R2",
+      "role": "terminate",
+      "pin": "U1.7"
+    },
+    {
+      "part": "D1",
+      "role": "protect",
+      "pin": "J1.2"
+    }
+  ],
+  "free": [
+    {
+      "part": "TP1",
+      "reason": "probe point; it follows its net"
+    },
+    {
+      "part": "TP2",
+      "reason": "probe point; it follows its net"
+    }
+  ]
+}

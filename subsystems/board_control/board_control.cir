@@ -1,0 +1,16 @@
+* board_control.cir - SPICE subckt of the board_control sheet.
+*
+* Board control: rail DIP, TCA9535 status expander (I2C 0x20), user LEDs and button, PUDC strap
+* The subckt declares the sheet's power and ground rails as its pins and models
+* each rail as a 1G tie to the last pin so no node floats in .op; the signal
+* ports carry no two-rail passive and are not pins.
+*
+* Port order: V3V3_SC V3V3 V5V V5V_FAN GND
+
+.subckt board_control V3V3_SC V3V3 V5V V5V_FAN GND
+RV3V3_SC V3V3_SC GND 1G
+RV3V3 V3V3 GND 1G
+RV5V V5V GND 1G
+RV5V_FAN V5V_FAN GND 1G
+.ends board_control
+.end

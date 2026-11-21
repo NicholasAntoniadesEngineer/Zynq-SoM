@@ -1,0 +1,16 @@
+* esc_io.cir - SPICE subckt of the esc_io sheet.
+*
+* 8-ch ESC signal interface: 5 V PWM/DShot drive, read-back, idle bias, telemetry input
+* The subckt declares the sheet's power and ground rails as its pins and models
+* each rail as a 1G tie to the last pin so no node floats in .op; the signal
+* ports carry no two-rail passive and are not pins.
+*
+* Port order: V5V V3V3 V5V_SERVO GND GND_ESC
+
+.subckt esc_io V5V V3V3 V5V_SERVO GND GND_ESC
+RV5V V5V GND_ESC 1G
+RV3V3 V3V3 GND_ESC 1G
+RV5V_SERVO V5V_SERVO GND_ESC 1G
+RGND GND GND_ESC 1G
+.ends esc_io
+.end
