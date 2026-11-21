@@ -1,0 +1,359 @@
+(footprint
+	"RLM25FEGMR50M"
+	(version 20260206)
+	(generator "schgen_part_gen")
+	(generator_version "1.0")
+	(layer "F.Cu")
+	(descr
+		"RES-SMD_L6.4-W3.2_RLM25 — RLM25FEGMR50M (RES-SMD_L6.4-W3.2_RLM25) (EasyEDA/LCSC C710260, faithful conversion)"
+	)
+	(tags "Current Sense Resistors/Shunt Resistors")
+	(attr smd)
+	(property
+		"Reference"
+		"REF**"
+		(at 0 -3.15 0)
+		(layer "F.SilkS")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"Value"
+		"RLM25FEGMR50M"
+		(at 0 3.15 0)
+		(layer "F.Fab")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"Datasheet"
+		"https://www.lcsc.com/datasheet/C710260.pdf"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"Description"
+		"RLM25FEGMR50M (RES-SMD_L6.4-W3.2_RLM25)"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"LCSC"
+		"C710260"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(fp_text
+		user
+		"${REFERENCE}"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(fp_circle
+		(center -3.1999 1.5999)
+		(end -3.1699 1.5999)
+		(stroke
+			(width 0.06)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -3.2 1.6)
+		(end 3.2 1.6)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 3.2 1.6)
+		(end 3.2 -1.6)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 3.2 -1.6)
+		(end -3.2 -1.6)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start -3.2 -1.6)
+		(end -3.2 1.6)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 4.318 -1.9566)
+		(end 2.286 -1.9566)
+		(stroke
+			(width 0.152)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 4.318 1.9566)
+		(end 2.286 1.9566)
+		(stroke
+			(width 0.152)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -4.318 -1.9566)
+		(end -2.286 -1.9566)
+		(stroke
+			(width 0.152)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -4.318 1.9566)
+		(end -2.286 1.9566)
+		(stroke
+			(width 0.152)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -4.318 -1.9566)
+		(end -4.318 1.9566)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 4.318 -1.9566)
+		(end 4.318 1.9566)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(pad
+		"1"
+		smd
+		rect
+		(at -2.286 0)
+		(size 3.499993 3.456)
+		(layers "F.Cu" "F.Mask")
+	)
+	(pad
+		"1"
+		smd
+		rect
+		(at -3.4527 -1.152)
+		(size 0.9037 0.8923)
+		(layers "F.Paste")
+	)
+	(pad
+		"1"
+		smd
+		rect
+		(at -3.4527 0)
+		(size 0.9037 0.8923)
+		(layers "F.Paste")
+	)
+	(pad
+		"1"
+		smd
+		rect
+		(at -3.4527 1.152)
+		(size 0.9037 0.8923)
+		(layers "F.Paste")
+	)
+	(pad
+		"1"
+		smd
+		rect
+		(at -2.286 -1.152)
+		(size 0.9037 0.8923)
+		(layers "F.Paste")
+	)
+	(pad
+		"1"
+		smd
+		rect
+		(at -2.286 0)
+		(size 0.9037 0.8923)
+		(layers "F.Paste")
+	)
+	(pad
+		"1"
+		smd
+		rect
+		(at -2.286 1.152)
+		(size 0.9037 0.8923)
+		(layers "F.Paste")
+	)
+	(pad
+		"1"
+		smd
+		rect
+		(at -1.1193 -1.152)
+		(size 0.9037 0.8923)
+		(layers "F.Paste")
+	)
+	(pad
+		"1"
+		smd
+		rect
+		(at -1.1193 0)
+		(size 0.9037 0.8923)
+		(layers "F.Paste")
+	)
+	(pad
+		"1"
+		smd
+		rect
+		(at -1.1193 1.152)
+		(size 0.9037 0.8923)
+		(layers "F.Paste")
+	)
+	(pad
+		"2"
+		smd
+		rect
+		(at 2.286 0)
+		(size 3.499993 3.456)
+		(layers "F.Cu" "F.Mask")
+	)
+	(pad
+		"2"
+		smd
+		rect
+		(at 1.1193 -1.152)
+		(size 0.9037 0.8923)
+		(layers "F.Paste")
+	)
+	(pad
+		"2"
+		smd
+		rect
+		(at 1.1193 0)
+		(size 0.9037 0.8923)
+		(layers "F.Paste")
+	)
+	(pad
+		"2"
+		smd
+		rect
+		(at 1.1193 1.152)
+		(size 0.9037 0.8923)
+		(layers "F.Paste")
+	)
+	(pad
+		"2"
+		smd
+		rect
+		(at 2.286 -1.152)
+		(size 0.9037 0.8923)
+		(layers "F.Paste")
+	)
+	(pad
+		"2"
+		smd
+		rect
+		(at 2.286 0)
+		(size 0.9037 0.8923)
+		(layers "F.Paste")
+	)
+	(pad
+		"2"
+		smd
+		rect
+		(at 2.286 1.152)
+		(size 0.9037 0.8923)
+		(layers "F.Paste")
+	)
+	(pad
+		"2"
+		smd
+		rect
+		(at 3.4527 -1.152)
+		(size 0.9037 0.8923)
+		(layers "F.Paste")
+	)
+	(pad
+		"2"
+		smd
+		rect
+		(at 3.4527 0)
+		(size 0.9037 0.8923)
+		(layers "F.Paste")
+	)
+	(pad
+		"2"
+		smd
+		rect
+		(at 3.4527 1.152)
+		(size 0.9037 0.8923)
+		(layers "F.Paste")
+	)
+	(model
+		"RLM25FEGMR50M.wrl"
+		(offset
+			(xyz 0 0 0)
+		)
+		(scale
+			(xyz 1 1 1)
+		)
+		(rotate
+			(xyz 0 0 0)
+		)
+	)
+)

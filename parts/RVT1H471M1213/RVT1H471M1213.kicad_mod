@@ -1,0 +1,312 @@
+(footprint
+	"RVT1H471M1213"
+	(version 20260206)
+	(generator "schgen_part_gen")
+	(generator_version "1.0")
+	(layer "F.Cu")
+	(descr
+		"CAP-SMD_BD12.5-L13.0-W13.0-RD — 470uF 50V ±20% (EasyEDA/LCSC C90272, faithful conversion)"
+	)
+	(tags "Aluminum Electrolytic Capacitors - SMD")
+	(attr smd)
+	(property
+		"Reference"
+		"REF**"
+		(at 0 -2 0)
+		(layer "F.SilkS")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"Value"
+		"RVT1H471M1213"
+		(at 0 2 0)
+		(layer "F.Fab")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"Datasheet"
+		"https://www.lcsc.com/datasheet/C90272.pdf"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"Description"
+		"470uF 50V ±20%"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"LCSC"
+		"C90272"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(fp_text
+		user
+		"${REFERENCE}"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(fp_circle
+		(center 7.1492 -6.5)
+		(end 7.1792 -6.5)
+		(stroke
+			(width 0.06)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -6.5 6.5)
+		(end -6.5 -6.5)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start -6.5 -6.5)
+		(end 3.5 -6.5)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 3.5 -6.5)
+		(end 6.5 -3.5)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 6.5 -3.5)
+		(end 6.5 3.5)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 6.5 3.5)
+		(end 3.5 6.5)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 3.5 6.5)
+		(end -6.5 6.5)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start -6.75 -6.75)
+		(end 4.5 -6.75)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -6.75 6.75)
+		(end 4.5 6.75)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -6.75 6.75)
+		(end -6.75 1.0311)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -6.75 -1.0311)
+		(end -6.75 -6.75)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 6.75 4.5)
+		(end 6.75 1.0311)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 6.75 -1.0311)
+		(end 6.75 -4.5)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 4.5 6.75)
+		(end 6.75 4.5)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 6.75 -4.5)
+		(end 4.5 -6.75)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_arc
+		(start -6 1.28)
+		(mid 0.0955 6.0234)
+		(end 6.03 1.08)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_arc
+		(start 6.06 -1.08)
+		(mid 0.0535 -6.102)
+		(end -6.0436 -1.1906)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_poly
+		(pts
+			(xy -1.57 5.92)
+			(xy -1.59 -5.97)
+			(xy -2.25 -5.72)
+			(xy -2.91 -5.49)
+			(xy -3.42 -5.16)
+			(xy -3.75 -4.88)
+			(xy -4.24 -4.55)
+			(xy -4.62 -4.14)
+			(xy -5.07 -3.56)
+			(xy -5.3 -3.02)
+			(xy -5.58 -2.62)
+			(xy -5.71 -2.16)
+			(xy -5.89 -1.74)
+			(xy -6 -1.42)
+			(xy -6.04 -1.16)
+			(xy -6.04 -1.11)
+			(xy -2.95 -1.1199)
+			(xy -2.95 0.05)
+			(xy -2.95 1.2299)
+			(xy -6 1.25)
+			(xy -5.85 1.83)
+			(xy -5.64 2.45)
+			(xy -5.29 3.13)
+			(xy -4.95 3.7)
+			(xy -4.57 4.12)
+			(xy -4.27 4.45)
+			(xy -3.84 4.82)
+			(xy -3.16 5.25)
+			(xy -2.15 5.75)
+			(xy -1.58 5.95)
+			(xy -1.57 5.92)
+		)
+		(stroke
+			(width 0)
+			(type solid)
+		)
+		(fill yes)
+		(layer "F.SilkS")
+	)
+	(pad
+		"1"
+		smd
+		rect
+		(at 5.8001 0)
+		(size 4.99999 1.599997)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"2"
+		smd
+		rect
+		(at -5.8001 0)
+		(size 4.99999 1.599997)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(model
+		"RVT1H471M1213.wrl"
+		(offset
+			(xyz 0 0 0)
+		)
+		(scale
+			(xyz 1 1 1)
+		)
+		(rotate
+			(xyz 0 0 90)
+		)
+	)
+)

@@ -1,0 +1,31 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "0456040.DR",
+  "safe_name": "0456040.DR",
+  "lcsc": "C720195",
+  "description": "0456040.DR (FUSE-SMD_L12.1-W4.5)",
+  "manufacturer": "Littelfuse(美国力特)",
+  "package": "FUSE-SMD_L12.1-W4.5",
+  "jlc_class": "Extended Part",
+  "prefix": "F",
+  "datasheet": "https://www.lcsc.com/datasheet/C720195.pdf",
+  "product_url": "https://lcsc.com/product-detail/Surface-Mount-Fuses_Littelfuse-0456040-DR_C720195.html",
+  "lib_id": "0456040.DR:0456040.DR",
+  "footprint": "0456040.DR:0456040.DR",
+  "models_3d": [
+    "0456040.DR.wrl",
+    "0456040.DR.step"
+  ],
+  "pins": [
+    {
+      "num": "1",
+      "name": "1",
+      "etype": "passive"
+    },
+    {
+      "num": "2",
+      "name": "2",
+      "etype": "passive"
+    }
+  ]
+}

@@ -1,0 +1,224 @@
+(footprint
+	"NUP2105LT1G"
+	(version 20260206)
+	(generator "schgen_part_gen")
+	(generator_version "1.0")
+	(layer "F.Cu")
+	(descr
+		"SOT-23-3_L2.9-W1.3-P1.90-LS2.4-BL-2 — NUP2105LT1G (EasyEDA/LCSC C14486, faithful conversion)"
+	)
+	(tags "TVS")
+	(attr smd)
+	(property
+		"Reference"
+		"REF**"
+		(at 0 -3 0)
+		(layer "F.SilkS")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"Value"
+		"NUP2105LT1G"
+		(at 0 3 0)
+		(layer "F.Fab")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"Datasheet"
+		"https://www.lcsc.com/datasheet/C14486.pdf"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"Description"
+		"NUP2105LT1G"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"LCSC"
+		"C14486"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(fp_text
+		user
+		"${REFERENCE}"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(fp_circle
+		(center -1.4501 1.2001)
+		(end -1.4201 1.2001)
+		(stroke
+			(width 0.06)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -1.45 -0.65)
+		(end 1.45 -0.65)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 1.45 -0.65)
+		(end 1.45 0.65)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 1.45 0.65)
+		(end -1.45 0.65)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start -1.45 0.65)
+		(end -1.45 -0.65)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 1.5263 0.7262)
+		(end 1.5263 -0.7262)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 1.5263 -0.7262)
+		(end 0.4946 -0.7262)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -1.5263 0.7262)
+		(end -1.5263 -0.7262)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -1.5263 -0.7262)
+		(end -0.4946 -0.7262)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 0.4554 0.7262)
+		(end -0.4554 0.7262)
+		(stroke
+			(width 0.1524)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_circle
+		(center -0.95 1.4501)
+		(end -0.8499 1.4501)
+		(stroke
+			(width 0.2)
+			(type solid)
+		)
+		(fill none)
+		(layer "Cmts.User")
+	)
+	(pad
+		"3"
+		smd
+		rect
+		(at 0 -1 270)
+		(size 1.25001 0.699999)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"2"
+		smd
+		rect
+		(at 0.95 1 270)
+		(size 1.25001 0.699999)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"1"
+		smd
+		rect
+		(at -0.95 1 270)
+		(size 1.25001 0.699999)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(model
+		"NUP2105LT1G.wrl"
+		(offset
+			(xyz 0 0 0)
+		)
+		(scale
+			(xyz 1 1 1)
+		)
+		(rotate
+			(xyz 0 0 0)
+		)
+	)
+)
