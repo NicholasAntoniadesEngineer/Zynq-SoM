@@ -256,6 +256,103 @@ bool evicts(Kernel& kernel, std::size_t guest, const Pose& seat, const std::vect
 
 }
 
+bool seat_first(Kernel& kernel, const NetOrder& rule, Nm pitch) {
+    const Problem& problem = kernel.problem();
+    const Pose anchor = kernel.placement()[rule.anchor];
+    const std::vector<Box> pins = named_boxes(problem, rule.anchor, anchor, rule.anchor_names);
+    if (pins.empty()) return false;
+    Box pin = pins.front();
+    for (const auto& box : pins) pin = united(pin, box);
+    const Point target{(pin.x0 + pin.x1) / 2, (pin.y0 + pin.y1) / 2};
+    const std::vector<Point> ring = seat_ring(pitch, static_cast<Nm>(constants::ring_limit.value), {0, 0});
+    const auto gap_of = [&](std::size_t part, const Pose& pose) {
+        return squared_net_gap(problem, rule.anchor, anchor, rule.anchor_names, part, pose, rule.net);
+    };
+    std::vector<Seat> seats;
+    const Pose lead_from = kernel.placement()[rule.lead];
+    for (const Point by : ring)
+        for (int turn = 0; turn < turn_count; ++turn) {
+            const Pose pose{shifted(target, by), static_cast<Turn>(turn), lead_from.face};
+            seats.push_back({pose, gap_of(rule.lead, pose)});
+        }
+    std::stable_sort(seats.begin(), seats.end(), [](const Seat& a, const Seat& b) { return a.gap < b.gap; });
+    std::size_t tries = 0;
+    for (const Seat& seat : seats) {
+        if (tries >= static_cast<std::size_t>(constants::order_tries.value)) break;
+        if (crowds_escape(problem, kernel.placement(), rule.lead, seat.pose)) continue;
+        ++tries;
+        const Snapshot before = kernel.snapshot();
+        if (!kernel.force({{rule.lead, seat.pose}})) continue;
+        bool sound = true;
+        for (const std::size_t rival : rule.rivals) {
+            const Pose from = kernel.placement()[rival];
+            if (gap_of(rival, from) > seat.gap) continue;
+            if (problem.parts[rival].fixed) {
+                sound = false;
+                break;
+            }
+            bool moved = false;
+            for (const Point by : ring) {
+                for (int turn = 0; turn < turn_count && !moved; ++turn) {
+                    const Pose pose{shifted(from.at, by), static_cast<Turn>(turn), from.face};
+                    if (gap_of(rival, pose) <= seat.gap || crowds_escape(problem, kernel.placement(), rival, pose) ||
+                        kernel.rejection(rival, pose))
+                        continue;
+                    moved = kernel.move(rival, pose);
+                }
+                if (moved) break;
+            }
+            if (!moved) {
+                sound = false;
+                break;
+            }
+        }
+        if (sound && !kernel.breach(rule.lead) && net_order_met(problem, rule, kernel.placement(), rule.lead, nullptr))
+            return true;
+        kernel.restore(before);
+    }
+    return false;
+}
+
+bool seat_faced(Kernel& kernel, const PadGap& rule, Nm pitch, Nm radius, bool evict, std::size_t& moved_aside) {
+    const Problem& problem = kernel.problem();
+    const std::size_t part = rule.member;
+    const Pose& anchor = kernel.placement()[rule.anchor];
+    const std::vector<Box> pins = named_boxes(problem, rule.anchor, anchor, rule.anchor_names);
+    if (pins.empty()) return false;
+    Box pin = pins.front();
+    for (const auto& box : pins) pin = united(pin, box);
+    const Point target{(pin.x0 + pin.x1) / 2, (pin.y0 + pin.y1) / 2};
+    const Pose from = kernel.placement()[part];
+    const bool flips = may_sink(problem, kernel.placement(), part) || from.face == Face::bottom;
+    std::vector<Seat> seats;
+    for (const Point by : seat_ring(pitch, radius, {0, 0}))
+        for (const Face face : {Face::top, Face::bottom}) {
+            if (face != from.face && !flips) continue;
+            for (int turn = 0; turn < turn_count; ++turn) {
+                const Pose pose{shifted(target, by), static_cast<Turn>(turn), face};
+                if (!pair_faced(problem, kernel.board(), rule.anchor, anchor, part, pose, rule.or_under)) continue;
+                seats.push_back({pose, squared_pad_gap(problem, rule, anchor, pose)});
+            }
+        }
+    std::stable_sort(seats.begin(), seats.end(), [](const Seat& a, const Seat& b) { return a.gap < b.gap; });
+    const std::vector<char> settled(problem.parts.size(), 0);
+    const std::vector<Point> aside = seat_ring(pitch, static_cast<Nm>(constants::aside_reach.value), {0, 0});
+    std::size_t tries = 0;
+    for (const Seat& seat : seats) {
+        if (crowds_escape(problem, kernel.placement(), part, seat.pose)) continue;
+        if (!kernel.rejection(part, seat.pose)) {
+            if (kernel.move(part, seat.pose)) return true;
+            continue;
+        }
+        if (evict && tries < static_cast<std::size_t>(constants::evict_tries.value)) {
+            ++tries;
+            if (evicts(kernel, part, seat.pose, settled, aside, moved_aside)) return true;
+        }
+    }
+    return false;
+}
+
 std::string seat_obstacles(const Kernel& kernel, const PadGap& rule, Nm pitch) {
     const Problem& problem = kernel.problem();
     const std::size_t part = rule.member;

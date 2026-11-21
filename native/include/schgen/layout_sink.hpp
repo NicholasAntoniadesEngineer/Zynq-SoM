@@ -21,7 +21,10 @@ inline constexpr NamedConstant far_pitch{"far_pitch", 1e6, "nm", "policy",
     "lattice pitch of the widening search for a part with no seat near the pin it serves; it only has to find the nearest room"};
 inline constexpr NamedConstant obstacle_rows{"obstacle_rows", 8, "rows", "report",
     "number of most frequent obstacles named for a part that is not within reach of the pin it serves"};
-inline constexpr std::array sink_registry{sink_reach, ring_limit, aside_reach, evict_tries, small_pins, far_pitch, obstacle_rows};
+inline constexpr NamedConstant order_tries{"order_tries", 24, "seats", "policy",
+    "seats at a connector pin tried for a protection part when the parts nearer than it are moved back together"};
+inline constexpr std::array sink_registry{sink_reach, ring_limit, aside_reach, evict_tries, small_pins, far_pitch, obstacle_rows,
+                                          order_tries};
 }
 
 struct AttractReport {
@@ -47,5 +50,7 @@ BalanceReport balance_faces(Kernel& kernel, Nm pitch, Nm reach);
 AttractReport attract(Kernel& kernel, Nm pitch, Nm reach);
 OrderReport lead_first(Kernel& kernel, Nm pitch);
 std::string seat_obstacles(const Kernel& kernel, const PadGap& rule, Nm pitch);
+bool seat_first(Kernel& kernel, const NetOrder& rule, Nm pitch);
+bool seat_faced(Kernel& kernel, const PadGap& rule, Nm pitch, Nm radius, bool evict, std::size_t& moved_aside);
 
 }
