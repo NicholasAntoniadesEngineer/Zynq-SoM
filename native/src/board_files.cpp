@@ -11,6 +11,7 @@ const char* suffix_of(BoardFileKind kind) {
         case BoardFileKind::Project: return ".kicad_pro";
         case BoardFileKind::Pcb: return ".kicad_pcb";
         case BoardFileKind::DesignRules: return "_pcb.kicad_dru";
+        case BoardFileKind::ProjectRules: return ".kicad_dru";
         case BoardFileKind::Placements: return "_cpl.csv";
         case BoardFileKind::PlacementsScratch: return "_cpl.pipeline.csv";
         case BoardFileKind::PinConstraints: return "_pins.xdc";

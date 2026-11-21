@@ -1,3 +1,4 @@
+#include "schgen/land_spacing.hpp"
 #include "schgen/roles.hpp"
 #include "schgen/placement_integrity.hpp"
 #include "schgen/rules.hpp"
@@ -21,6 +22,7 @@ constexpr double small_pad_x = 0.5, pad_size = 0.4;
 constexpr double regulator_x = 20, regulator_y = 20, input_capacitor_x = 16.5, upper_row = 19, lower_row = 21;
 constexpr double inductor_x = 24, output_capacitor_x = 27, logic_x = 40, sense_x = 36.5, crystal_x = 44, load_y = 17;
 constexpr double connector_y = 40, clamp_y = 42, bystander_y = 50, intruder_x = 21, intruder_y = 41;
+constexpr double fab_spacing = 0.09, highest_volts = 30;
 constexpr double spare_x = 60, spare_y = 60, module_low = 100, module_high = 130, module_centre = 115;
 constexpr double module_capacitor_x = 112, module_capacitor_y = 96, crowding_x = 98.5, crowding_y = 110;
 constexpr double far_x = 10, far_termination_x = 26, low_height = 1, tall_height = 5;
@@ -165,6 +167,8 @@ Scene baseline(const std::filesystem::path& repository) {
     mate.receptacle = mate.mate = posed_footprint_pads(*module, fixture::module_centre, fixture::module_centre, 0);
     scene.model.module_mates = {mate};
     scene.model.module_origin = std::make_pair(0.0, 0.0);
+    scene.model.land_spacing = land_spacing_policy(load_part_facts(repository / "parts" / "part_facts.json"),
+                                                   fixture::fab_spacing, fixture::fab_spacing, {}, fixture::highest_volts);
     scene.add("C7", "module_power", PartClass::capacitor, fixture::module_capacitor_x, fixture::module_capacitor_y, small(),
               {{"1", module_nets.front().second}, {"2", "GND"}});
     scene.serve("C1", "bypass", "U1", "1");

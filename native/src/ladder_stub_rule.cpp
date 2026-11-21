@@ -11,9 +11,21 @@ bool ladder_stub_joins_pad(const EscapeLadderSeg& seg) {
     return seg.role == "stub_pair" || seg.role == "stub_column" || seg.role == "stub_pad";
 }
 
+double ladder_stub_width(const EscapeLadderSeg& seg, double pad_width, double normal_floor,
+                         const std::vector<LadderStubObstacle>& obstacles) {
+    double width = std::min(seg.w, pad_width);
+    if (!ladder_stub_joins_pad(seg)) return seg.w;
+    for (const auto& obstacle : obstacles) {
+        if (!obstacle.same_footprint) continue;
+        const double centre = seg_box_dist(seg.ax, seg.ay, seg.bx, seg.by, {obstacle.x0, obstacle.y0, obstacle.x1, obstacle.y1});
+        width = std::min(width, 2 * (centre - std::max(normal_floor, obstacle.rule)));
+    }
+    return width;
+}
+
 std::optional<std::string> ladder_stub_violation(const EscapeLadderSeg& seg, double pad_width, double native_gap,
                                                  double normal_floor, const std::vector<LadderStubObstacle>& obstacles,
-                                                 LadderStubEvidence& evidence) {
+                                                 const LandRequirement& land_requirement, LadderStubEvidence& evidence) {
     std::ostringstream why;
     if (ladder_stub_joins_pad(seg) && seg.w > pad_width + stub_quantum.value) {
         why << seg.role << " is " << seg.w << " mm wide, wider than the " << pad_width << " mm pad it joins";
@@ -24,9 +36,10 @@ std::optional<std::string> ladder_stub_violation(const EscapeLadderSeg& seg, dou
         const double gap = centre - seg.w / 2;
         if (obstacle.same_footprint) {
             evidence.nearest_same = std::min(evidence.nearest_same, gap);
-            if (gap + stub_quantum.value < native_gap) {
+            const double land = land_requirement(obstacle.net);
+            if (gap + stub_quantum.value < std::max(native_gap, land)) {
                 why << seg.role << " comes " << gap << " mm from " << obstacle.label << ", closer than the land pattern's own "
-                    << native_gap << " mm pad gap";
+                    << native_gap << " mm pad gap or its " << land << " mm land spacing";
                 return why.str();
             }
             continue;
@@ -46,7 +59,8 @@ std::string ladder_stub_report(const LadderStubEvidence& evidence) {
     text << "LADDER STUB RULE " << evidence.connector << ": stub width = pad width " << evidence.pad_width
          << " mm; same-footprint pads judged against the land pattern's own gap " << evidence.native_gap
          << " mm (fabricator minimum " << evidence.fab_minimum << " mm); nearest same-footprint pad " << evidence.nearest_same
-         << " mm, nearest other copper " << evidence.nearest_other << " mm; " << evidence.kept << " stubs kept, "
+         << " mm, nearest other copper " << evidence.nearest_other << " mm; narrowest pad stub " << evidence.narrowest
+         << " mm; " << evidence.kept << " stubs kept, "
          << evidence.dropped.size() << " dropped";
     for (const auto& drop : evidence.dropped) text << "\n    dropped " << drop;
     return text.str();

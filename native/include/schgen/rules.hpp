@@ -73,6 +73,7 @@ public:
     RuleContext(const PcbCheckInput& input, const PcbModel& model, const Stackup& stackup,
                 const layout::AuthoredIntent& intent);
     const PcbModel& model() const { return model_; }
+    const PcbCheckInput& input() const { return input_; }
     const Stackup& stackup() const { return stackup_; }
     const std::vector<PcbCheckInstance>& parts() const { return input_.model().insts; }
     const std::vector<Service>& services() const { return services_; }

@@ -69,6 +69,12 @@ struct PcbEscapePopulation {
     std::optional<int> genuine_pairs;
     ModuleReturnPath return_path;
 };
+struct LandSpacingPolicy {
+    double fab_minimum = 0.0, fab_minimum_track = 0.0, highest_volts = 0.0;
+    ElectricalSpacingFact electrical;
+    std::map<std::string, std::pair<std::string, LandFact>> lands;
+    std::map<std::string, double> net_volts;
+};
 struct PcbCheckModel {
     double board_w = 0, board_h = 0, origin_x = 25, origin_y = 25;
     std::vector<PcbCheckInstance> insts;
@@ -80,6 +86,7 @@ struct PcbCheckModel {
     // nullopt means no metadata, "" means present metadata missing the hash.
     std::optional<std::string> escape_interface_sha256;
     ConnectorFacts connectors;
+    std::optional<LandSpacingPolicy> land_spacing;
 };
 struct PcbCheckGeometry {
     std::optional<Box4> courtyard, pad_bbox;

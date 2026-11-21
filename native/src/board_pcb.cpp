@@ -1,5 +1,6 @@
 #include "schgen/board_pcb.hpp"
 #include "schgen/module_symbols.hpp"
+#include "schgen/land_spacing.hpp"
 #include "schgen/board_files.hpp"
 #include "schgen/board_schematic.hpp"
 #include "schgen/atomic_file.hpp"
@@ -100,6 +101,8 @@ void publish_board_pcb(const BoardPcbStage& stage, const std::filesystem::path& 
     };
     publish(board_file_name(stem, BoardFileKind::Pcb), stage.emission.pcb);
     publish(board_file_name(stem, BoardFileKind::Project), project);
+    publish(board_file_name(stem, BoardFileKind::ProjectRules),
+            land_spacing_kicad_rules(judge_land_spacing(PcbCheckInput(stage.placement.model))));
     publish("manufacturing/" + board_file_name(stem, BoardFileKind::DesignRules), rules);
     // Preserve the emitter's evidence in both pcb-stage and full board builds.
     // A fallback count alone does not identify the affected thermal geometry.

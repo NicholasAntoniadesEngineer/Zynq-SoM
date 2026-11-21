@@ -256,6 +256,7 @@ void Placer::instantiate() {
     }
     m.som_keepout = offset_rect(keepout, kPageOriginMm, kPageOriginMm);
     m.module_origin = std::make_pair(kPageOriginMm + plan.som_x, kPageOriginMm + plan.som_y);
+    m.land_spacing = ctx.in.land_spacing;
     for (const auto &entry : som_refs) {
         const std::string &r = entry.first, &connector = entry.second;
         const auto jack = std::find_if(plan.som.js.begin(), plan.som.js.end(), [&](const auto &j) { return j.ref == connector; });

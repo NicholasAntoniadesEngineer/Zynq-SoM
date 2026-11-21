@@ -1,7 +1,7 @@
 #include "pcb_escape_internal.hpp"
 #include "schgen/output_precision.hpp"
 #include "schgen/ladder_stub_rule.hpp"
-#include "schgen/manufacturing_checks.hpp"
+#include "schgen/land_spacing.hpp"
 #include <limits>
 #include <numeric>
 
@@ -360,10 +360,11 @@ PcbEscapeCopperResult build_pcb_escape_copper(const PcbEscapeInput &input, Quant
             throw PcbEscapeError(ref + ": no GND attach options on the connector");
         const double pad_width = 2 * c.contacts.half_w;
         const double native_gap = c.contacts.pitch - pad_width;
-        const auto &fab = manufacturing_jlcpcb_multilayer();
-        if (native_gap < fab.min_clearance_mm)
+        if (!m.land_spacing) throw PcbEscapeError(ref + ": the board model carries no land-spacing policy for the GND ladder");
+        const auto &land = *m.land_spacing;
+        if (native_gap < land.fab_minimum)
             throw PcbEscapeError(ref + ": the land pattern's own pad gap " + f(native_gap, 4) +
-                                 " mm is below the fabricator's minimum spacing " + f(fab.min_clearance_mm, 4) + " mm");
+                                 " mm is below the fabricator's minimum spacing " + f(land.fab_minimum, 4) + " mm");
         try {
             segs = escape_ladder_plan(grounds, uv, c.contacts.pitch, .001, c.contacts.row_v, pad_width,
                                       pad_width, .30, counts);
@@ -371,17 +372,31 @@ PcbEscapeCopperResult build_pcb_escape_copper(const PcbEscapeInput &input, Quant
             throw PcbEscapeError(ref + ": " + e.what());
         }
         std::vector<LadderStubObstacle> nearby;
-        for (const auto &[x0, y0, x1, y1, rule, label] : obstacles.at(ref).front)
-            nearby.push_back({x0, y0, x1, y1, rule, label, label.rfind(inst.ref + "(", 0) == 0});
+        for (const auto &[x0, y0, x1, y1, rule, label] : obstacles.at(ref).front) {
+            const bool same = label.rfind(inst.ref + "(", 0) == 0;
+            const auto pad = label.substr(label.rfind('.') + 1);
+            const auto net = inst.pad_nets.find(pad);
+            nearby.push_back({x0, y0, x1, y1, rule, label, same && net != inst.pad_nets.end() ? net->second.second : std::string{}, same});
+        }
+        const auto land_requirement = [&](const std::string &net) {
+            return copper_pair_requirement(m, true, "GND", net);
+        };
         LadderStubEvidence evidence;
         evidence.connector = ref;
         evidence.pad_width = pad_width;
         evidence.native_gap = native_gap;
-        evidence.fab_minimum = fab.min_clearance_mm;
-        evidence.nearest_same = evidence.nearest_other = std::numeric_limits<double>::infinity();
+        evidence.fab_minimum = land.fab_minimum;
+        evidence.nearest_same = evidence.nearest_other = evidence.narrowest = std::numeric_limits<double>::infinity();
         std::vector<EscapeLadderSeg> kept;
-        for (const auto &s : segs) {
-            const auto violation = ladder_stub_violation(s, pad_width, native_gap, .15, nearby, evidence);
+        for (auto s : segs) {
+            s.w = ladder_stub_width(s, pad_width, .15, nearby);
+            if (ladder_stub_joins_pad(s)) evidence.narrowest = std::min(evidence.narrowest, s.w);
+            if (s.w < land.fab_minimum_track) {
+                evidence.dropped.push_back(s.role + " " + point_repr(s.ax, s.ay) + "-" + point_repr(s.bx, s.by) +
+                                           ": no width at or above the fabricator's minimum track keeps the net-class clearance");
+                continue;
+            }
+            const auto violation = ladder_stub_violation(s, pad_width, native_gap, .15, nearby, land_requirement, evidence);
             if (!violation) {
                 kept.push_back(s);
                 ++evidence.kept;

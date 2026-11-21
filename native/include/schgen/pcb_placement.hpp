@@ -29,6 +29,7 @@ struct PcbPlacementInput {
     ProjectStrings function_map;
     PcbEscapeTriage escape_triage;
     bool two_side = true;
+    std::optional<LandSpacingPolicy> land_spacing;
     std::shared_ptr<const PcbPlacementExperiment> experiment;
     TrustedOwnedGroupInputs owned_groups; // compact-only, validated board inputs
 };
