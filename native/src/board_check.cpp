@@ -156,13 +156,14 @@ BoardDefinitionCheck check_board_definition(const fs::path& repository, const fs
     const bool config_exists = rows.file(run_config, run_config_label, true);
     const auto config_document = parsed(run_config, config_exists);
     bool configured = false;
-    for (const std::string section : {"stackup", "overmold_parts"}) {
+    for (const std::string section : {"stackup", "overmold_parts", "fabrication"}) {
         const std::string item = section + "." + (name.empty() ? std::string("<project.json name>") : name);
         const JsonNode* table = config_document ? object_field(*config_document, section) : nullptr;
         if (name.empty() || !config_document) { rows.add(run_config_label, item, true, RequirementStatus::blocked); continue; }
         if (!table || table->kind != JsonKind::Object || !object_field(*table, name)) { rows.add(run_config_label, item, true, RequirementStatus::missing); continue; }
         const bool judged = rows.judge(run_config_label, item, true, [&] {
             if (section == "stackup") apply_run_config(run_config, name);
+            else if (section == "fabrication") (void)load_run_config(run_config).fabrication_of(name);
             else (void)load_run_config(run_config).overmold_parts_of(name);
         });
         if (section == "stackup") configured = judged;

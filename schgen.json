@@ -17,6 +17,22 @@
     "carrier": ["HDMI-019S"],
     "devkit_mini": []
   },
+  "fabrication": {
+    "carrier": {
+      "fabricator": "jlcpcb",
+      "copper": {"outer_oz": 1, "inner_oz": 0.5},
+      "finish": "ENIG",
+      "assembly_service": "standard",
+      "build_count": 5
+    },
+    "devkit_mini": {
+      "fabricator": "jlcpcb",
+      "copper": {"outer_oz": 1, "inner_oz": 0.5},
+      "finish": "ENIG",
+      "assembly_service": "standard",
+      "build_count": 5
+    }
+  },
   "study": {
     "stackups": ["JLC04161H-3313", "JLC06161H-3313", "JLC08161H-3313", "JLC10161H-2116"]
   }

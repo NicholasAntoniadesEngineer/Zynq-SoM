@@ -1,0 +1,650 @@
+{
+  "schema": "schgen.fabricator/1",
+  "name": "JLCPCB",
+  "assembly": {
+    "services": {
+      "economic": {
+        "double_sided": {
+          "value": false,
+          "unit": "flag",
+          "source_url": "https://jlcpcb.com/capabilities/pcb-assembly-capabilities",
+          "read_utc": "2026-11-21T12:50:07Z",
+          "quote": "Single sided placement (SMT/Thru-hole) Single & double sided placement (SMT/Thru-hole)"
+        },
+        "layers_min": {
+          "value": 2,
+          "unit": "layers",
+          "source_url": "https://jlcpcb.com/capabilities/pcb-assembly-capabilities",
+          "read_utc": "2026-11-21T12:50:07Z",
+          "quote": "2,4,6-layers"
+        },
+        "layers_max": {
+          "value": 6,
+          "unit": "layers",
+          "source_url": "https://jlcpcb.com/capabilities/pcb-assembly-capabilities",
+          "read_utc": "2026-11-21T12:50:07Z",
+          "quote": "2,4,6-layers"
+        },
+        "board_min_mm": {
+          "value": [
+            10,
+            10
+          ],
+          "unit": "mm",
+          "source_url": "https://jlcpcb.com/capabilities/pcb-assembly-capabilities",
+          "read_utc": "2026-11-21T12:50:07Z",
+          "quote": "Single PCB Size: 10x10mm - 470x500mm"
+        },
+        "board_max_mm": {
+          "value": [
+            470,
+            500
+          ],
+          "unit": "mm",
+          "source_url": "https://jlcpcb.com/capabilities/pcb-assembly-capabilities",
+          "read_utc": "2026-11-21T12:50:07Z",
+          "quote": "Single PCB Size: 10x10mm - 470x500mm"
+        },
+        "quantity_min": {
+          "value": 2,
+          "unit": "pcs",
+          "source_url": "https://jlcpcb.com/capabilities/pcb-assembly-capabilities",
+          "read_utc": "2026-11-21T12:50:07Z",
+          "quote": "2 - 50 pcs"
+        },
+        "quantity_max": {
+          "value": 50,
+          "unit": "pcs",
+          "source_url": "https://jlcpcb.com/capabilities/pcb-assembly-capabilities",
+          "read_utc": "2026-11-21T12:50:07Z",
+          "quote": "2 - 50 pcs"
+        },
+        "edge_rails_required": {
+          "value": false,
+          "unit": "flag",
+          "source_url": "https://jlcpcb.com/capabilities/pcb-assembly-capabilities",
+          "read_utc": "2026-11-21T12:50:07Z",
+          "quote": "Edge Rails Not necessary Necessary"
+        },
+        "fiducials_required": {
+          "value": false,
+          "unit": "flag",
+          "source_url": "https://jlcpcb.com/capabilities/pcb-assembly-capabilities",
+          "read_utc": "2026-11-21T12:50:07Z",
+          "quote": "Fiducials Not necessary Necessary"
+        },
+        "min_ic_pitch_mm": {
+          "value": 0.4,
+          "unit": "mm",
+          "source_url": "https://jlcpcb.com/capabilities/pcb-assembly-capabilities",
+          "read_utc": "2026-11-21T12:50:07Z",
+          "quote": "Minimum IC Pin Spacing 0.4mm 0.35mm"
+        },
+        "min_bga_pitch_mm": {
+          "value": 0.5,
+          "unit": "mm",
+          "source_url": "https://jlcpcb.com/capabilities/pcb-assembly-capabilities",
+          "read_utc": "2026-11-21T12:50:07Z",
+          "quote": "Minimum BGA Spacing 0.5mm(center to center) 0.3mm(center to center)"
+        }
+      },
+      "standard": {
+        "double_sided": {
+          "value": true,
+          "unit": "flag",
+          "source_url": "https://jlcpcb.com/capabilities/pcb-assembly-capabilities",
+          "read_utc": "2026-11-21T12:50:07Z",
+          "quote": "Single sided placement (SMT/Thru-hole) Single & double sided placement (SMT/Thru-hole)"
+        },
+        "layers_min": {
+          "value": 1,
+          "unit": "layers",
+          "source_url": "https://jlcpcb.com/capabilities/pcb-assembly-capabilities",
+          "read_utc": "2026-11-21T12:50:07Z",
+          "quote": "1 - 32 layers"
+        },
+        "layers_max": {
+          "value": 32,
+          "unit": "layers",
+          "source_url": "https://jlcpcb.com/capabilities/pcb-assembly-capabilities",
+          "read_utc": "2026-11-21T12:50:07Z",
+          "quote": "1 - 32 layers"
+        },
+        "board_min_mm": {
+          "value": [
+            70,
+            70
+          ],
+          "unit": "mm",
+          "source_url": "https://jlcpcb.com/capabilities/pcb-assembly-capabilities",
+          "read_utc": "2026-11-21T12:50:07Z",
+          "quote": "Single PCB Size: 70x70mm - 460x500mm"
+        },
+        "board_max_mm": {
+          "value": [
+            460,
+            500
+          ],
+          "unit": "mm",
+          "source_url": "https://jlcpcb.com/capabilities/pcb-assembly-capabilities",
+          "read_utc": "2026-11-21T12:50:07Z",
+          "quote": "Single PCB Size: 70x70mm - 460x500mm"
+        },
+        "quantity_min": {
+          "value": 2,
+          "unit": "pcs",
+          "source_url": "https://jlcpcb.com/capabilities/pcb-assembly-capabilities",
+          "read_utc": "2026-11-21T12:50:07Z",
+          "quote": "2 - 80000 pcs"
+        },
+        "quantity_max": {
+          "value": 80000,
+          "unit": "pcs",
+          "source_url": "https://jlcpcb.com/capabilities/pcb-assembly-capabilities",
+          "read_utc": "2026-11-21T12:50:07Z",
+          "quote": "2 - 80000 pcs"
+        },
+        "edge_rails_required": {
+          "value": true,
+          "unit": "flag",
+          "source_url": "https://jlcpcb.com/capabilities/pcb-assembly-capabilities",
+          "read_utc": "2026-11-21T12:50:07Z",
+          "quote": "Edge Rails Not necessary Necessary"
+        },
+        "fiducials_required": {
+          "value": true,
+          "unit": "flag",
+          "source_url": "https://jlcpcb.com/capabilities/pcb-assembly-capabilities",
+          "read_utc": "2026-11-21T12:50:07Z",
+          "quote": "Fiducials Not necessary Necessary"
+        },
+        "min_ic_pitch_mm": {
+          "value": 0.35,
+          "unit": "mm",
+          "source_url": "https://jlcpcb.com/capabilities/pcb-assembly-capabilities",
+          "read_utc": "2026-11-21T12:50:07Z",
+          "quote": "Minimum IC Pin Spacing 0.4mm 0.35mm"
+        },
+        "min_bga_pitch_mm": {
+          "value": 0.3,
+          "unit": "mm",
+          "source_url": "https://jlcpcb.com/capabilities/pcb-assembly-capabilities",
+          "read_utc": "2026-11-21T12:50:07Z",
+          "quote": "Minimum BGA Spacing 0.5mm(center to center) 0.3mm(center to center)"
+        }
+      }
+    },
+    "edge_rail_min_mm": {
+      "value": 5,
+      "unit": "mm",
+      "source_url": "https://jlcpcb.com/help/article/how-to-add-edge-rails-fiducials-for-pcb-assembly-order",
+      "read_utc": "2026-11-21T12:52:16Z",
+      "quote": "The minimum width of edge rails should be at least 5 mm"
+    },
+    "fiducial": {
+      "dia_mm": {
+        "value": 1,
+        "unit": "mm",
+        "source_url": "https://jlcpcb.com/help/article/how-to-add-edge-rails-fiducials-for-pcb-assembly-order",
+        "read_utc": "2026-11-21T12:52:16Z",
+        "quote": "The recommended diameter of a fiducial marker is 1 mm"
+      },
+      "mask_ratio": {
+        "value": 2,
+        "unit": "ratio",
+        "source_url": "https://jlcpcb.com/help/article/how-to-add-edge-rails-fiducials-for-pcb-assembly-order",
+        "read_utc": "2026-11-21T12:52:16Z",
+        "quote": "The solder mask opening should be twice the diameter of the exposed copper pad"
+      },
+      "edge_min_mm": {
+        "value": 3.35,
+        "unit": "mm",
+        "source_url": "https://jlcpcb.com/help/article/how-to-add-edge-rails-fiducials-for-pcb-assembly-order",
+        "read_utc": "2026-11-21T12:52:16Z",
+        "quote": "Fiducial markers must maintain a minimum clearance of 3.35 mm from the board edge, including the fiducial keep-out area"
+      },
+      "count_min": {
+        "value": 3,
+        "unit": "pcs",
+        "source_url": "https://jlcpcb.com/help/article/how-to-add-edge-rails-fiducials-for-pcb-assembly-order",
+        "read_utc": "2026-11-21T12:52:16Z",
+        "quote": "Three to four fiducial markers should be placed along the board edges"
+      }
+    },
+    "body_to_edge_mm": {
+      "value": 2.5,
+      "unit": "mm",
+      "source_url": "https://jlcpcb.com/help/article/Terms-and-Conditions-of-JLCPCB-Assembly-Service",
+      "read_utc": "2026-11-21T12:52:23Z",
+      "quote": "The distance between the body of the components and the edge of the board must be equal or greater than 2.5mm"
+    },
+    "cpl_point_spacing_mm": {
+      "value": 0.2,
+      "unit": "mm",
+      "source_url": "https://jlcpcb.com/help/article/advice-for-bom-and-cpl-files-preparation",
+      "read_utc": "2026-11-21T12:51:58Z",
+      "quote": "Ensure that the minimum distance between any two different reference designators is not less than 0.2 mm"
+    },
+    "max_designators_per_line": {
+      "value": 200,
+      "unit": "designators",
+      "source_url": "https://jlcpcb.com/help/article/advice-for-bom-and-cpl-files-preparation",
+      "read_utc": "2026-11-21T12:51:58Z",
+      "quote": "Each BOM line should contain no more than 200 reference designators"
+    },
+    "spacing_table": {
+      "chip0402_chip0402": {
+        "value": 0.15,
+        "unit": "mm",
+        "source_url": "https://jlcpcb.com/help/article/minimum-spacing-for-smd-components",
+        "read_utc": "2026-11-21T12:52:26Z",
+        "quote": "chip 0402 0.15 [6] 0.18 [7] 0.18 [7] 0.25 [10] 1 [40] 0.5 [20] 0.4 [16] 0.2 [8] 1.0 [40]"
+      },
+      "chip0603_chip0603": {
+        "value": 0.18,
+        "unit": "mm",
+        "source_url": "https://jlcpcb.com/help/article/minimum-spacing-for-smd-components",
+        "read_utc": "2026-11-21T12:52:26Z",
+        "quote": "chip 0603 0.18 [7] 0.18 [7] 0.25 [10] 1 [40] 0.5 [20] 0.4 [16] 0.2 [8] 1.0 [40]"
+      },
+      "chip0603_qfn": {
+        "value": 1,
+        "unit": "mm",
+        "source_url": "https://jlcpcb.com/help/article/minimum-spacing-for-smd-components",
+        "read_utc": "2026-11-21T12:52:26Z",
+        "quote": "chip 0603 0.18 [7] 0.18 [7] 0.25 [10] 1 [40] 0.5 [20] 0.4 [16] 0.2 [8] 1.0 [40]"
+      },
+      "chip1206_sop": {
+        "value": 0.4,
+        "unit": "mm",
+        "source_url": "https://jlcpcb.com/help/article/minimum-spacing-for-smd-components",
+        "read_utc": "2026-11-21T12:52:26Z",
+        "quote": "chip 1206 0.35 [14] 1 [40] 0.5 [20] 0.4 [16] 0.2 [8] 1.0 [40]"
+      },
+      "qfn_qfn": {
+        "value": 1,
+        "unit": "mm",
+        "source_url": "https://jlcpcb.com/help/article/minimum-spacing-for-smd-components",
+        "read_utc": "2026-11-21T12:52:26Z",
+        "quote": "QFN 1 [40] 1.0 [40] 1.0 [40] 1.0 [40] 1.5 [60]"
+      },
+      "qfn_qfp": {
+        "value": 1,
+        "unit": "mm",
+        "source_url": "https://jlcpcb.com/help/article/minimum-spacing-for-smd-components",
+        "read_utc": "2026-11-21T12:52:26Z",
+        "quote": "QFN 1 [40] 1.0 [40] 1.0 [40] 1.0 [40] 1.5 [60]"
+      },
+      "qfp_qfp": {
+        "value": 1.25,
+        "unit": "mm",
+        "source_url": "https://jlcpcb.com/help/article/minimum-spacing-for-smd-components",
+        "read_utc": "2026-11-21T12:52:26Z",
+        "quote": "QFP 1.25 [50] 1.25 [50] 1.0 [40] 1.5 [60]"
+      },
+      "sop_sop": {
+        "value": 0.5,
+        "unit": "mm",
+        "source_url": "https://jlcpcb.com/help/article/minimum-spacing-for-smd-components",
+        "read_utc": "2026-11-21T12:52:26Z",
+        "quote": "SOP/SOIC 0.5 [20] 0.4 [16] 1.0 [40]"
+      },
+      "sot_sot": {
+        "value": 0.4,
+        "unit": "mm",
+        "source_url": "https://jlcpcb.com/help/article/minimum-spacing-for-smd-components",
+        "read_utc": "2026-11-21T12:52:26Z",
+        "quote": "SOT (SOT-23, SOT-363…) 0.4 [16] 1.0 [40]"
+      },
+      "bga_bga": {
+        "value": 2,
+        "unit": "mm",
+        "source_url": "https://jlcpcb.com/help/article/minimum-spacing-for-smd-components",
+        "read_utc": "2026-11-21T12:52:26Z",
+        "quote": "BGA 2.0 [80]"
+      }
+    },
+    "fees": {
+      "setup_double_side_usd": {
+        "value": 51.12,
+        "unit": "usd",
+        "source_url": "https://jlcpcb.com/help/article/pcb-assembly-price",
+        "read_utc": "2026-11-21T12:52:29Z",
+        "quote": "$25.56/Single-side $51.12/Double-side"
+      },
+      "stencil_double_side_usd": {
+        "value": 16.42,
+        "unit": "usd",
+        "source_url": "https://jlcpcb.com/help/article/pcb-assembly-price",
+        "read_utc": "2026-11-21T12:52:29Z",
+        "quote": "$8.21/Single-side assembly $16.42/Double-side assembly"
+      },
+      "smt_per_joint_usd": {
+        "value": 0.0016,
+        "unit": "usd",
+        "source_url": "https://jlcpcb.com/help/article/pcb-assembly-price",
+        "read_utc": "2026-11-21T12:52:29Z",
+        "quote": "1–50,000 joints: $0.0016/joint"
+      },
+      "manual_per_joint_usd": {
+        "value": 0.0164,
+        "unit": "usd",
+        "source_url": "https://jlcpcb.com/help/article/pcb-assembly-price",
+        "read_utc": "2026-11-21T12:52:29Z",
+        "quote": "1–10,000 joints: $0.0164/joint"
+      },
+      "hand_soldering_labour_usd": {
+        "value": 3.58,
+        "unit": "usd",
+        "source_url": "https://jlcpcb.com/help/article/pcb-assembly-price",
+        "read_utc": "2026-11-21T12:52:29Z",
+        "quote": "$3.58 per order"
+      },
+      "feeder_loading_per_part_usd": {
+        "value": 1.53,
+        "unit": "usd",
+        "source_url": "https://jlcpcb.com/help/article/pcb-assembly-price",
+        "read_utc": "2026-11-21T12:52:29Z",
+        "quote": "$1.53 Basic/Extend"
+      }
+    },
+    "component_height_max_mm": {
+      "value": null,
+      "unit": "mm",
+      "unverified": "no maximum component height per side or weight limit for second-side parts is published on any page read (capabilities, terms, FAQs, spacing article)"
+    },
+    "placement_accuracy_mm": {
+      "value": null,
+      "unit": "mm",
+      "unverified": "no placement-accuracy figure is published on any page read"
+    }
+  },
+  "fab": {
+    "by_copper_oz": {
+      "1": {
+        "trace_mm": {
+          "value": 0.09,
+          "unit": "mm",
+          "source_url": "https://jlcpcb.com/capabilities/pcb-capabilities",
+          "read_utc": "2026-11-21T12:50:04Z",
+          "quote": "Multilayer: 0.09 / 0.09 mm (3.5 / 3.5 mil)"
+        },
+        "space_mm": {
+          "value": 0.09,
+          "unit": "mm",
+          "source_url": "https://jlcpcb.com/capabilities/pcb-capabilities",
+          "read_utc": "2026-11-21T12:50:04Z",
+          "quote": "Multilayer: 0.09 / 0.09 mm (3.5 / 3.5 mil)"
+        },
+        "mask_bridge_mm": {
+          "value": 0.1,
+          "unit": "mm",
+          "source_url": "https://jlcpcb.com/capabilities/pcb-capabilities",
+          "read_utc": "2026-11-21T12:50:04Z",
+          "quote": "Min. pad spacing: 0.10 mm (green, red, yellow, blue, purple)"
+        },
+        "pth_annular_min_mm": {
+          "value": 0.15,
+          "unit": "mm",
+          "source_url": "https://jlcpcb.com/capabilities/pcb-capabilities",
+          "read_utc": "2026-11-21T12:50:04Z",
+          "quote": "Multilayer: 1 oz: Recommended 0.20 mm or above; absolute minimum 0.15 mm 2 oz: 0.254 mm or above"
+        },
+        "pth_annular_recommended_mm": {
+          "value": 0.2,
+          "unit": "mm",
+          "source_url": "https://jlcpcb.com/capabilities/pcb-capabilities",
+          "read_utc": "2026-11-21T12:50:04Z",
+          "quote": "Multilayer: 1 oz: Recommended 0.20 mm or above; absolute minimum 0.15 mm 2 oz: 0.254 mm or above"
+        }
+      },
+      "2": {
+        "trace_mm": {
+          "value": 0.15,
+          "unit": "mm",
+          "source_url": "https://jlcpcb.com/capabilities/pcb-capabilities",
+          "read_utc": "2026-11-21T12:50:04Z",
+          "quote": "Multilayer: 0.15 / 0.15 mm (6 / 6 mil)"
+        },
+        "space_mm": {
+          "value": 0.15,
+          "unit": "mm",
+          "source_url": "https://jlcpcb.com/capabilities/pcb-capabilities",
+          "read_utc": "2026-11-21T12:50:04Z",
+          "quote": "Multilayer: 0.15 / 0.15 mm (6 / 6 mil)"
+        },
+        "mask_bridge_mm": {
+          "value": 0.2,
+          "unit": "mm",
+          "source_url": "https://jlcpcb.com/capabilities/pcb-capabilities",
+          "read_utc": "2026-11-21T12:50:04Z",
+          "quote": "Min. pad spacing: 0.20 mm (any color)"
+        },
+        "pth_annular_min_mm": {
+          "value": 0.254,
+          "unit": "mm",
+          "source_url": "https://jlcpcb.com/capabilities/pcb-capabilities",
+          "read_utc": "2026-11-21T12:50:04Z",
+          "quote": "Multilayer: 1 oz: Recommended 0.20 mm or above; absolute minimum 0.15 mm 2 oz: 0.254 mm or above"
+        },
+        "pth_annular_recommended_mm": {
+          "value": 0.254,
+          "unit": "mm",
+          "source_url": "https://jlcpcb.com/capabilities/pcb-capabilities",
+          "read_utc": "2026-11-21T12:50:04Z",
+          "quote": "Multilayer: 1 oz: Recommended 0.20 mm or above; absolute minimum 0.15 mm 2 oz: 0.254 mm or above"
+        }
+      }
+    },
+    "hole_to_hole": {
+      "via_mm": {
+        "value": 0.2,
+        "unit": "mm",
+        "source_url": "https://jlcpcb.com/capabilities/pcb-capabilities",
+        "read_utc": "2026-11-21T12:50:04Z",
+        "quote": "Via Hole-to-Hole Spacing 0.2mm"
+      },
+      "pad_mm": {
+        "value": 0.45,
+        "unit": "mm",
+        "source_url": "https://jlcpcb.com/capabilities/pcb-capabilities",
+        "read_utc": "2026-11-21T12:50:04Z",
+        "quote": "Pad Hole-to-Hole Spacing 0.45mm"
+      }
+    },
+    "npth_min_mm": {
+      "value": 0.5,
+      "unit": "mm",
+      "source_url": "https://jlcpcb.com/capabilities/pcb-capabilities",
+      "read_utc": "2026-11-21T12:50:04Z",
+      "quote": "Min. Non-plated holes 0.50mm"
+    },
+    "via": {
+      "min_hole_mm": {
+        "value": 0.15,
+        "unit": "mm",
+        "source_url": "https://jlcpcb.com/capabilities/pcb-capabilities",
+        "read_utc": "2026-11-21T12:50:04Z",
+        "quote": "Multilayer: 0.15 mm hole size / 0.25 mm via diameter"
+      },
+      "min_diameter_mm": {
+        "value": 0.25,
+        "unit": "mm",
+        "source_url": "https://jlcpcb.com/capabilities/pcb-capabilities",
+        "read_utc": "2026-11-21T12:50:04Z",
+        "quote": "Multilayer: 0.15 mm hole size / 0.25 mm via diameter"
+      },
+      "diameter_over_hole_mm": {
+        "value": 0.1,
+        "unit": "mm",
+        "source_url": "https://jlcpcb.com/capabilities/pcb-capabilities",
+        "read_utc": "2026-11-21T12:50:04Z",
+        "quote": "Via diameter should be 0.1mm(0.15mm preferred) larger than Via hole size"
+      },
+      "diameter_over_hole_preferred_mm": {
+        "value": 0.15,
+        "unit": "mm",
+        "source_url": "https://jlcpcb.com/capabilities/pcb-capabilities",
+        "read_utc": "2026-11-21T12:50:04Z",
+        "quote": "Via diameter should be 0.1mm(0.15mm preferred) larger than Via hole size"
+      }
+    },
+    "plated_slot": {
+      "width_min_mm": {
+        "value": 0.35,
+        "unit": "mm",
+        "source_url": "https://jlcpcb.com/capabilities/pcb-capabilities",
+        "read_utc": "2026-11-21T12:50:04Z",
+        "quote": "Multi-layer: 0.35mm"
+      },
+      "length_ratio_min": {
+        "value": 2,
+        "unit": "ratio",
+        "source_url": "https://jlcpcb.com/capabilities/pcb-capabilities",
+        "read_utc": "2026-11-21T12:50:04Z",
+        "quote": "The length of the slot should be at least 2 times of the width"
+      }
+    },
+    "npth_slot_min_mm": {
+      "value": 1.0,
+      "unit": "mm",
+      "source_url": "https://jlcpcb.com/capabilities/pcb-capabilities",
+      "read_utc": "2026-11-21T12:50:04Z",
+      "quote": "The minimum Non-Plated Slot Width is 1.0mm"
+    },
+    "copper_to_edge_mm": {
+      "value": 0.2,
+      "unit": "mm",
+      "source_url": "https://jlcpcb.com/capabilities/pcb-capabilities",
+      "read_utc": "2026-11-21T12:50:04Z",
+      "quote": "Copper clearance from routed board edges: ≧0.2 mm"
+    },
+    "silk": {
+      "text_height_min_mm": {
+        "value": 1.0,
+        "unit": "mm",
+        "source_url": "https://jlcpcb.com/capabilities/pcb-capabilities",
+        "read_utc": "2026-11-21T12:50:04Z",
+        "quote": "Minimum text height 40 mil (1.0mm)"
+      },
+      "line_min_mm": {
+        "value": 0.15,
+        "unit": "mm",
+        "source_url": "https://jlcpcb.com/capabilities/pcb-capabilities",
+        "read_utc": "2026-11-21T12:50:04Z",
+        "quote": "Minimum Line Width ≥0.15mm"
+      },
+      "pad_clearance_mm": {
+        "value": 0.15,
+        "unit": "mm",
+        "source_url": "https://jlcpcb.com/capabilities/pcb-capabilities",
+        "read_utc": "2026-11-21T12:50:04Z",
+        "quote": "The Minimum Distance Between Pad and Silkscreen is 0.15mm"
+      }
+    },
+    "finish": {
+      "allowed": {
+        "value": [
+          "HASL",
+          "ENIG",
+          "OSP"
+        ],
+        "unit": "text",
+        "source_url": "https://jlcpcb.com/capabilities/pcb-capabilities",
+        "read_utc": "2026-11-21T12:50:04Z",
+        "quote": "HASL (leaded / lead-free), ENlG, OSP"
+      },
+      "hasl_unsupported_from_layers": {
+        "value": 6,
+        "unit": "layers",
+        "source_url": "https://jlcpcb.com/capabilities/pcb-capabilities",
+        "read_utc": "2026-11-21T12:50:04Z",
+        "quote": "FR-4/HDI boards with 6 or more layers, boards with a thickness ≤ 0.4 mm, high-frequency boards, copper-based PCBs, and FPCs do not support HASL"
+      }
+    },
+    "copper": {
+      "outer_oz_allowed": {
+        "value": [
+          1,
+          2
+        ],
+        "unit": "oz",
+        "source_url": "https://jlcpcb.com/capabilities/pcb-capabilities",
+        "read_utc": "2026-11-21T12:50:04Z",
+        "quote": "Multi-layer: 1 oz / 2 oz"
+      },
+      "inner_oz_allowed": {
+        "value": [
+          0.5,
+          1,
+          2
+        ],
+        "unit": "oz",
+        "source_url": "https://jlcpcb.com/capabilities/pcb-capabilities",
+        "read_utc": "2026-11-21T12:50:04Z",
+        "quote": "0.5 oz / 1 oz / 2 oz"
+      },
+      "six_layer_two_oz_stackups": {
+        "value": null,
+        "unit": "text",
+        "unverified": "the impedance page offers the selector but its static HTML carries only the 1 oz outer / 0.5 oz inner listings"
+      }
+    }
+  },
+  "order_files": {
+    "bom_columns": {
+      "value": [
+        "Comment",
+        "Designator",
+        "Footprint",
+        "JLCPCB Part #"
+      ],
+      "unit": "text",
+      "source_url": "https://s3.amazonaws.com/helpscout.net/docs/assets/59f1de7804286313cffbb22c/attachments/60ee4acd9e87cb3d0124d284/Sample-BOM_JLCSMT.xlsx",
+      "read_utc": "2026-11-21T12:53:31Z",
+      "quote": "Comment Designator Footprint JLCPCB Part #"
+    },
+    "cpl_columns": {
+      "value": [
+        "Designator",
+        "Mid X",
+        "Mid Y",
+        "Layer",
+        "Rotation"
+      ],
+      "unit": "text",
+      "source_url": "https://s3.amazonaws.com/helpscout.net/docs/assets/59f1de7804286313cffbb22c/attachments/5d83250e04286364bc8f4c5e/Sample-CPL_JLCSMT.xlsx",
+      "read_utc": "2026-11-21T12:53:32Z",
+      "quote": "Designator Mid X Mid Y Layer Rotation"
+    },
+    "layer_tokens": {
+      "value": [
+        "T",
+        "B"
+      ],
+      "unit": "text",
+      "source_url": "https://s3.amazonaws.com/helpscout.net/docs/assets/59f1de7804286313cffbb22c/attachments/5d83250e04286364bc8f4c5e/Sample-CPL_JLCSMT.xlsx",
+      "read_utc": "2026-11-21T12:53:32Z",
+      "quote": "95.0518mm 22.6822mm T"
+    },
+    "coordinate_suffix": {
+      "value": "mm",
+      "unit": "text",
+      "source_url": "https://s3.amazonaws.com/helpscout.net/docs/assets/59f1de7804286313cffbb22c/attachments/5d83250e04286364bc8f4c5e/Sample-CPL_JLCSMT.xlsx",
+      "read_utc": "2026-11-21T12:53:32Z",
+      "quote": "95.0518mm 22.6822mm T"
+    },
+    "rotation_direction": {
+      "value": "ccw",
+      "unit": "text",
+      "source_url": "https://jlcpcb.com/help/article/pick-place-file-for-pcb-assembly",
+      "read_utc": "2026-11-21T12:52:01Z",
+      "quote": "Positive values are counter clockwise"
+    },
+    "cpl_negative_coordinates_accepted": {
+      "value": null,
+      "unit": "flag",
+      "unverified": "whether JLCPCB accepts negative CPL coordinates is not stated on any page read"
+    }
+  }
+}

@@ -10,5 +10,6 @@
   "plane_net": "GND",
   "audit_projections": 0,
   "stackup": {"fixture": "JLC06161H-3313"},
+  "fabrication": {"fixture": {"fabricator":"jlcpcb","copper":{"outer_oz":1,"inner_oz":0.5},"finish":"ENIG","assembly_service":"standard","build_count":5}},
   "overmold_parts": {"fixture": []}
 }

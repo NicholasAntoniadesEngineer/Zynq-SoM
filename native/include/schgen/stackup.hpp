@@ -33,7 +33,7 @@ struct DifferentialGeometry {
 
 struct Stackup {
     std::string fabricator, fabricator_name, summary, brief, prepreg, pair_basis;
-    double thickness_mm = 0.0;
+    double thickness_mm = 0.0, outer_oz = 0.0, inner_oz = 0.0;
     std::vector<CopperLayer> copper;
     std::vector<DielectricLayer> dielectric;
     std::vector<DifferentialGeometry> pairs;

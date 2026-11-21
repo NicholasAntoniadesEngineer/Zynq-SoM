@@ -2,6 +2,7 @@
 #include "schgen/stackup.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <set>
 #include <stdexcept>
 
@@ -48,6 +49,12 @@ const std::vector<std::string>& RunConfig::overmold_parts_of(const std::string& 
     return found->second;
 }
 
+const FabricationConfig& RunConfig::fabrication_of(const std::string& board) const {
+    const auto found = fabrication.find(board);
+    if (found == fabrication.end()) fail("'fabrication' names no entry for board '" + board + "'");
+    return found->second;
+}
+
 std::vector<std::string> RunConfig::board_arguments(const std::string& board, const std::filesystem::path& file) const {
     std::vector<std::string> arguments{"schgen", "board", "--project", board, "--output", (output / board).string(),
                                        "--run-config", std::filesystem::absolute(file).string(),
@@ -66,7 +73,7 @@ std::vector<std::string> RunConfig::board_arguments(const std::string& board, co
 RunConfig parse_run_config(const JsonNode& document) {
     if (document.kind != JsonKind::Object) fail("the file must hold one object");
     reject_unknown_keys(document, {"schema", "boards", "output", "squeeze", "arrange", "renders", "labels", "timing", "plane_net",
-                                   "audit_projections", "stackup", "overmold_parts", "study"}, run_config_file);
+                                   "audit_projections", "stackup", "overmold_parts", "fabrication", "study"}, run_config_file);
     if (member(document, "schema", JsonKind::String).string_value != "schgen.run/1") fail("unknown schema");
     RunConfig config;
     config.boards = names(member(document, "boards", JsonKind::Array), "boards");
@@ -89,13 +96,34 @@ RunConfig parse_run_config(const JsonNode& document) {
         if (parts.kind != JsonKind::Array) fail("overmold parts of '" + board + "' must be a list");
         config.overmold_parts[board] = names(parts, "overmold_parts");
     }
+    for (const auto& [board, entry] : member(document, "fabrication", JsonKind::Object).object_value) {
+        const std::string where = "'fabrication' of '" + board + "'";
+        if (entry.kind != JsonKind::Object) fail(where + " must be an object");
+        reject_unknown_keys(entry, {"fabricator", "copper", "finish", "assembly_service", "build_count"}, std::string(run_config_file) + " " + where);
+        FabricationConfig row;
+        row.fabricator = member(entry, "fabricator", JsonKind::String).string_value;
+        row.finish = member(entry, "finish", JsonKind::String).string_value;
+        row.assembly_service = member(entry, "assembly_service", JsonKind::String).string_value;
+        if (row.fabricator.empty() || row.finish.empty() || row.assembly_service.empty()) fail(where + " holds an empty name");
+        const JsonNode& copper = member(entry, "copper", JsonKind::Object);
+        reject_unknown_keys(copper, {"outer_oz", "inner_oz"}, std::string(run_config_file) + " " + where + " 'copper'");
+        row.outer_oz = member(copper, "outer_oz", JsonKind::Number).number_value;
+        row.inner_oz = member(copper, "inner_oz", JsonKind::Number).number_value;
+        const double count = member(entry, "build_count", JsonKind::Number).number_value;
+        if (!(count >= 1) || count != std::floor(count)) fail(where + " needs 'build_count' as a whole number of at least 1");
+        row.build_count = static_cast<int>(count);
+        config.fabrication[board] = row;
+    }
     if (const JsonNode* study = object_field(document, "study")) {
         if (study->kind != JsonKind::Object) fail("'study' must be an object");
         reject_unknown_keys(*study, {"stackups"}, std::string(run_config_file) + " 'study'");
         config.study_stackups = names(member(*study, "stackups", JsonKind::Array), "study.stackups");
         if (config.study_stackups.empty()) fail("'study.stackups' names no stack-up");
     }
-    for (const std::string& board : config.boards) config.stackup_of(board);
+    for (const std::string& board : config.boards) {
+        config.stackup_of(board);
+        config.fabrication_of(board);
+    }
     return config;
 }
 
@@ -116,6 +144,10 @@ RunConfig apply_run_config(const std::filesystem::path& config_file, const std::
         fail("'stackup' of board '" + board + "' names '" + name + "', which is not in " +
              stackup_catalogue_file().string());
     select_stackup(*listed);
+    const FabricationConfig& chosen = config.fabrication_of(board);
+    FabricatorProfile profile = load_fabricator(fabricator_file(chosen.fabricator));
+    validate_fabrication(chosen, profile, listed->copper.size(), listed->outer_oz, listed->inner_oz, board);
+    select_fabrication({chosen, std::move(profile)});
     return config;
 }
 
