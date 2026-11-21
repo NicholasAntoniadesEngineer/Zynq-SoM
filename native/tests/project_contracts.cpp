@@ -165,7 +165,6 @@ void fixture_contracts(Suite& suite, const fs::path& repo) {
         require(config.reg_band_prefixes == std::vector<std::string>{"power", "bringup"}, "prefix order changed");
         require(config.bank_rails.empty() && config.header_desc.empty() && config.switch_desc.empty()
                 && config.escape.kind == JsonKind::Object && config.escape.object_value.empty(), "optional defaults changed");
-        require(object_field(config.raw, "extension") != nullptr, "extension metadata dropped");
         require(default_engine_config.grid == 1.27 && default_engine_config.char_w == 0.95
                 && default_engine_config.misplaced_overlap == 0.20 && default_engine_config.cross_k == 3.0
                 && default_engine_config.visual_clearance_mm == 0.2, "engine defaults changed");
@@ -179,9 +178,17 @@ void fixture_contracts(Suite& suite, const fs::path& repo) {
         {changed(config_text, "[-10, 6.25]", "[0]"), "module_offset"},
         {changed(config_text, "[-10, 6.25]", "[false, 6.25]"), "module_offset"},
         {changed(config_text, "\"pilot_prox_sheets\": []", "\"pilot_prox_sheets\": {}"), "pilot_prox_sheets"},
-        {changed(config_text, "\"extension\"", "\"fpga\": null, \"extension\""), "fpga"},
-        {changed(config_text, "\"extension\"", "\"silk_labels\": {\"headers\": null}, \"extension\""), "headers"},
-        {changed(config_text, "\"extension\"", "\"escape\": [], \"extension\""), "escape"},
+        {changed(config_text, "\"fpga\": {\"bank_rails\": {}}", "\"fpga\": null"), "fpga"},
+        {changed(config_text, ",\n  \"fpga\": {\"bank_rails\": {}}", ""), "fpga"},
+        {changed(config_text, "\"fpga\": {\"bank_rails\": {}}", "\"fpga\": {}"), "bank_rails"},
+        {changed(config_text, "\"fpga\"", "\"silk_labels\": {\"headers\": null}, \"fpga\""), "headers"},
+        {changed(config_text, "\"fpga\"", "\"escape\": [], \"fpga\""), "escape"},
+        {changed(config_text, "\"fpga\"", "\"extension\": 1, \"fpga\""), "unknown key 'extension'"},
+        {changed(config_text, "\"pilot_prox_sheets\": []", "\"pilot_prox_sheets\": [], \"pilot_prox\": []"), "unknown key 'pilot_prox'"},
+        {changed(config_text, "\"bank_rails\": {}", "\"bank_rails\": {}, \"banks\": {}"), "unknown key 'banks'"},
+        {changed(config_text, "\"fpga\"", "\"silk_labels\": {\"header\": {}}, \"fpga\""), "unknown key 'header'"},
+        {changed(config_text, "\"fpga\"", "\"escape\": {\"genuine_pair\": 4}, \"fpga\""), "unknown key 'genuine_pair'"},
+        {changed(config_text, "\"fpga\"", "\"escape\": {\"netted_contacts\": {}}, \"fpga\""), "module.json"},
         {"{\"name\":\"a\",\"name\":\"b\"}", "duplicate key"},
         {"{", "json"}, {"[]", "object"}};
     for (std::size_t i = 0; i < invalid_configs.size(); ++i) {

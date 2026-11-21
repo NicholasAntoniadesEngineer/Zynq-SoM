@@ -344,4 +344,28 @@ void reject_unknown_keys(const JsonNode& node,
     }
 }
 
+std::set<std::string> document_keys_at(const std::vector<DocumentKey>& keys, const std::string& parent) {
+    std::set<std::string> out;
+    const std::string prefix = parent.empty() ? std::string() : parent + ".";
+    for (const DocumentKey& key : keys) {
+        if (key.path.compare(0, prefix.size(), prefix) != 0) continue;
+        const std::string rest = key.path.substr(prefix.size());
+        if (!rest.empty() && rest.find('.') == std::string::npos) out.insert(rest);
+    }
+    return out;
+}
+
+const JsonNode* document_member(const JsonNode& document, const std::string& path) {
+    const JsonNode* node = &document;
+    std::size_t start = 0;
+    while (node) {
+        const std::size_t dot = path.find('.', start);
+        if (node->kind != JsonKind::Object) return nullptr;
+        node = object_field(*node, path.substr(start, dot == std::string::npos ? std::string::npos : dot - start));
+        if (dot == std::string::npos) return node;
+        start = dot + 1;
+    }
+    return nullptr;
+}
+
 }  // namespace schgen

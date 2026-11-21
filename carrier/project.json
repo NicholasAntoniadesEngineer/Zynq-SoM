@@ -1,7 +1,6 @@
 {
   "name": "carrier",
   "placement_requirements": {"applicable": true},
-  "_comment": "PROJECT SPEC (P1 engine/project separation) - board-specific knowledge that previously lived as engine constants. The engine is mechanism; this file is policy. See docs/AI_PLATFORM_ROADMAP.md.",
   "placement": {
     "wired_sheets": [
       "board_qwiic",
@@ -54,7 +53,6 @@
     }
   },
   "silk_labels": {
-    "_comment": "Ref-keyed silk FUNCTION labels (interior headers + switches) - PROJECT data because per-sheet refs collide across projects. DIP legends list words in silkscreen-position order 1..N, VERIFIED against the owning subsystem's position map (bringup_rails SW1/SW2/SW6, debug_boot boot-DIP) - a wrong legend is worse than none (LAW 0). The SoM DF40 mezzanines are intentionally absent: the 'Zynq SoM' body-silk labels that region.",
     "headers": {
       "J11001": "GPIO",
       "J9001": "JTAG",
@@ -82,7 +80,6 @@
     }
   },
   "escape": {
-    "_comment": "Measured 2026-07-02 on the live SoM interface + carrier link (J1 has 7 unnetted signal pads); the escape-lane gate's drift alarm.",
     "genuine_pairs": 15
   }
 }
