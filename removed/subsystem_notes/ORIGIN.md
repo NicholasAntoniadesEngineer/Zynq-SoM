@@ -176,3 +176,28 @@ A reference card per subsystem rendered from `subsystem.json` alone (study secti
 3. Restore the test edits recorded in the fragments of `authoring_gates_contracts.cpp`, `geometry_cli_contracts.cpp`, `subsystem_scaffold_contracts.cpp` (also the `widget_cir` key of `native/tests/data/subsystem_scaffold/python_reference.json` from `tests/data/subsystem_scaffold/python_reference_widget_cir.json`, and the 7-file counts), `subsystem_scaffold_build_contracts.cpp`, and the doc lines in the fragments of `docs/OVERVIEW.md`, `docs/SUBSYSTEM_FORMAT.md`, `docs/WORKING_GUIDELINES.txt`, `native/README.md`.
 4. What changed in this task and would have to be undone: the native library requirement is now one regular file, `subsystem.json` (replacing the two note files), so that a registered library package whose folder is absent is still reported missing; the adapter check requires the same file in the generic library; local packages require `circuit.json` and `layout.json` only. The retired Python package mode of `authoring_gates.cpp` (`legacy_python`, inert fixtures from the Python tool) still lists README and `.cir` and was not touched.
 5. The committed generated report files of the boards (`carrier/reports/gates.txt`, `carrier_structure.txt`, `subsystem_structure.txt`, `board_verdicts.json`, and the same for `devkit_mini`) still show the old contract lines until the next publication.
+
+## 9. Later addition: the motor-carrier notes (18 whole files)
+
+The motor-control carrier (`motor_carrier`) was drafted with the old note pair for each of its six new library subsystems and its three module-connector sheets. They were moved here by the same rule when the board was merged onto the integration tip; nothing in the tool reads them. Source commit: `9b5a9a53` (tip of branch `wt/motor`, the last commit with the files at their original paths). Bringing them back is step 1 of section 8 with `motor_carrier/<name>/X` to `motor_carrier/subsystems/<name>/X`.
+
+| original path | archive path | git hash-object |
+|---|---|---|
+| `subsystems/board_control/README.md` | `removed/subsystem_notes/library/board_control/README.md` | `9fa2d90ac71dcdc6d4081086b561b96fc38d6e1f` |
+| `subsystems/board_control/board_control.cir` | `removed/subsystem_notes/library/board_control/board_control.cir` | `25870fd68be1047ee4d22ec3920cbd75d6ca8d64` |
+| `subsystems/can_bus/README.md` | `removed/subsystem_notes/library/can_bus/README.md` | `1411cf5bdd8ede2851b33be9836584957fdb48fd` |
+| `subsystems/can_bus/can_bus.cir` | `removed/subsystem_notes/library/can_bus/can_bus.cir` | `f8f24bda428effa409d16b17be9f232a13f23d7f` |
+| `subsystems/esc_io/README.md` | `removed/subsystem_notes/library/esc_io/README.md` | `b74a7ecb813a4a65881efc01ca863da94dd254e9` |
+| `subsystems/esc_io/esc_io.cir` | `removed/subsystem_notes/library/esc_io/esc_io.cir` | `fc33ec72ab56abad787cb63d0552080823689236` |
+| `subsystems/esc_power/README.md` | `removed/subsystem_notes/library/esc_power/README.md` | `069cbfb08b4c48c3e738953ca2c6d3b838ef52e7` |
+| `subsystems/esc_power/esc_power.cir` | `removed/subsystem_notes/library/esc_power/esc_power.cir` | `bb89c579b295ddf4c82f97afb3ef63f794fb2387` |
+| `subsystems/pl_expansion/README.md` | `removed/subsystem_notes/library/pl_expansion/README.md` | `da4f5e635b0acc62333c6ba76a2ca5d89c7b9ae2` |
+| `subsystems/pl_expansion/pl_expansion.cir` | `removed/subsystem_notes/library/pl_expansion/pl_expansion.cir` | `6f8a90c2c9ec72b5010cbd62741a0d5f890dcb77` |
+| `subsystems/vbat_supply/README.md` | `removed/subsystem_notes/library/vbat_supply/README.md` | `d4a8903fa66c7a085cd510dbb648df1cf9795b39` |
+| `subsystems/vbat_supply/vbat_supply.cir` | `removed/subsystem_notes/library/vbat_supply/vbat_supply.cir` | `5a3796727b35a80874981e0e20da9e463914a10d` |
+| `motor_carrier/subsystems/som_j1/README.md` | `removed/subsystem_notes/motor_carrier/som_j1/README.md` | `602dd37199bbc191e5d0bc008fb64f71e98ce5d8` |
+| `motor_carrier/subsystems/som_j1/som_j1.cir` | `removed/subsystem_notes/motor_carrier/som_j1/som_j1.cir` | `1182bbcb01c4f9109d8906644ea76144759b5bc8` |
+| `motor_carrier/subsystems/som_j2/README.md` | `removed/subsystem_notes/motor_carrier/som_j2/README.md` | `ca85d88822641797c182f05f2e2b181b93f2fa13` |
+| `motor_carrier/subsystems/som_j2/som_j2.cir` | `removed/subsystem_notes/motor_carrier/som_j2/som_j2.cir` | `6c2913a93dbd59da33019a64dd8bed42c5c09315` |
+| `motor_carrier/subsystems/som_j3/README.md` | `removed/subsystem_notes/motor_carrier/som_j3/README.md` | `637cb9e2ddf45f6cad52a8fbe9c0db4f6d29960f` |
+| `motor_carrier/subsystems/som_j3/som_j3.cir` | `removed/subsystem_notes/motor_carrier/som_j3/som_j3.cir` | `8e1e531df912813e8a42974ecc6bd0d92015d4a2` |
