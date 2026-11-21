@@ -95,6 +95,30 @@ void trunk_port_tail(SymbolLibrary& lib) {
         [](const auto& h) { return h.name == "SENSE"; }), "port behind the series part has no label");
 }
 
+void power_path(SymbolLibrary& lib) {
+    const std::string plug = "XT60PW-M:XT60PW-M";
+    auto circuit = sheet("power_path",
+        {part("J1", plug, "IN"), part("J2", plug, "OUT"), part("F1", resistor, "fuse"), part("C1", capacitor, "100n"),
+         part("U1", gate, "AND")},
+        gate_nets({{"+VA", "power", Pins{{"J1", "2"}, {"F1", "1"}}},
+                   {"+VB", "power", Pins{{"F1", "2"}, {"J2", "2"}, {"C1", "1"}, {"U1", "5"}}},
+                   {"GND", "ground", Pins{{"J1", "1"}, {"J1", "3"}, {"J1", "4"}, {"J2", "1"}, {"J2", "3"}, {"J2", "4"},
+                                           {"C1", "2"}, {"U1", "3"}}},
+                   {"OUT_Y", "port", Pins{{"U1", "4"}}}}));
+    circuit.hints = {{"+VA", "path"}, {"+VB", "path"}};
+    const auto page = drawn(circuit, lib);
+    const auto& j1 = placed(page.placement, "J1"); const auto& f1 = placed(page.placement, "F1");
+    const auto& c1 = placed(page.placement, "C1"); const auto& j2 = placed(page.placement, "J2");
+    require(j1.x < f1.x && f1.x < c1.x && c1.x < j2.x, "power path does not read inlet, series element, shunt, outlet");
+    require(placed(page.placement, "U1").y > f1.y, "the rest of the sheet is not below the power path");
+    auto broken = circuit; broken.hints = {{"IN_A", "path"}};
+    bool rejected = false;
+    try { place_and_route_schematic(broken, lib, {}, 1); } catch (const SchematicPlaceError& e) {
+        rejected = std::string(e.what()).find("is not a power rail") != std::string::npos;
+    }
+    require(rejected, "a path hint on a signal net was accepted");
+}
+
 void compact_retry(SymbolLibrary& lib) {
     const auto circuit = sheet("compact_retry", {part("C1", capacitor, "100n")},
         {{"+3V3", "power", Pins{{"C1", "1"}}}, {"GND", "ground", Pins{{"C1", "2"}}}});
@@ -138,7 +162,7 @@ int main(int argc, char** argv) {
         const fs::path root(argv[1]);
         SymbolLibrary lib(std::vector<fs::path>{root / "schgen/lib", root / "native/tests/data/schematic_place_chain/symbols"});
         ground_template(lib); side_pin_chain(lib); divider_ladder(lib); trunk_port_tail(lib);
-        compact_retry(lib); pack_relocates(lib);
+        power_path(lib); compact_retry(lib); pack_relocates(lib);
         std::cout << "schematic place pattern contracts passed\n";
         return 0;
     } catch (const std::exception& error) {

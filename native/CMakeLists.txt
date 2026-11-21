@@ -33,6 +33,7 @@ add_library(schgen_core STATIC
     src/schematic.cpp src/schematic_route.cpp src/netlist_gate.cpp src/design_rules.cpp
     src/schematic_place_core.cpp src/schematic_place_fanout.cpp
     src/schematic_place_templates.cpp src/schematic_place_chain.cpp src/schematic_place_pages.cpp
+    src/schematic_place_path.cpp
     src/selftest.cpp src/board_schematic.cpp src/mirror.cpp src/constraints.cpp
     src/power_checks.cpp src/board_power.cpp src/board_check.cpp src/thermal_checks.cpp src/part_checks.cpp
     src/bom_values.cpp src/footprint_pads.cpp src/pin_completeness.cpp src/symbol_law.cpp
@@ -178,6 +179,7 @@ set_source_files_properties(src/turn.cpp src/pack_anchor.cpp src/symbols.cpp
                             src/schematic_route.cpp src/schematic_place_core.cpp
                             src/schematic_place_fanout.cpp src/schematic_place_templates.cpp
                             src/schematic_place_chain.cpp src/schematic_place_pages.cpp src/board_schematic.cpp
+                            src/schematic_place_path.cpp
                             src/pack_edges.cpp src/power_checks.cpp src/board_power.cpp src/thermal_checks.cpp src/part_checks.cpp
                             src/bom_values.cpp src/spice.cpp src/spice_process.cpp
                             src/pcb_checks_model.cpp src/pcb_checks_connectors.cpp src/pcb_checks_placement.cpp

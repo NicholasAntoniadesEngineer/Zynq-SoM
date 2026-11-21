@@ -360,6 +360,7 @@ void Engine::_classify() {
         if (any_net && all_shared) shunts.push_back(ref);
     }
     _extract_float_chains();
+    _detect_power_path();
 }
 
 void Engine::_extract_float_chains() {

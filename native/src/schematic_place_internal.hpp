@@ -24,6 +24,7 @@ inline constexpr double PASSIVE_SPAN = 6 * U, RAIL_SYMBOL_SPAN = 4 * U, LADDER_J
 inline constexpr double TEXT_GAP = 0.42, PIN_CLEAR = 0.01;
 inline constexpr int SEAT_SEARCH_STEPS = 60;
 inline constexpr double ESCAPE_TEXT_CLEAR = U;
+inline constexpr double PATH_TAG_RISE = 4 * U;
 inline constexpr double PACK_WIDTH_BUDGET = 380.0, PACK_GAP = 2 * U, PACK_STEP = 2 * U;
 // Count attempted scalar entry, including a throwing quantizer; no arithmetic replay.
 inline double gsnap(double v, QuantizationCounts* counts) {
@@ -144,6 +145,8 @@ struct FacingPair { std::string net; Point a, b; std::vector<Point> a_extra, b_e
 struct ChainScore { std::array<int, 3> score; OrderedMap<int> orient; };
 struct RungIslet { std::string trunk_net, far_net, ref; };
 struct OpenStub { std::string net; Point at; int rotation; };
+struct PathLink { std::string ref, a, b; bool multi = false; };
+struct PowerPath { Refs nets; std::vector<PathLink> links; std::optional<std::string> source, sink; };
 struct PlacementMark {
     std::size_t parts = 0, powers = 0, hlabels = 0, llabels = 0, no_connects = 0, boxes = 0, stubs = 0;
     OrderedMap<std::size_t> plans;
@@ -182,6 +185,8 @@ public:
     std::set<std::string> _done, _pin_islets, _comp_starts;
     std::vector<RungIslet> _rung_islets;
     std::vector<OpenStub> _open_stubs;
+    PowerPath _path;
+    std::set<std::string> _path_refs;
     std::vector<double> _sig_rows;
     std::map<double, std::string> _rail_row_net;
     std::vector<std::pair<std::size_t, VisualBox>> _deferred_texts;
@@ -344,6 +349,10 @@ public:
     bool _label_clear(const Box4&, const std::string& name) const;
     bool _label_open_stubs();
     PlacementMark _mark() const;
+    void _detect_power_path();
+    SideTip _path_tip(const std::string& ref, const std::string& net, const std::string& side);
+    void _path_cell(const std::string& ref, double ax, double ay, const std::set<std::string>& rails, Handled&);
+    void _power_path_row(Handled&);
     void _pack_since(const PlacementMark&);
     double _clear_label_x(const std::string& name, double x, double y, double lo, double hi) const;
     void _pin_divider_columns();

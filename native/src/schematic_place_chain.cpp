@@ -420,7 +420,7 @@ void Engine::_pin_divider_columns() {
 
 Refs Engine::_chain_order() {
     Refs connectors, others;
-    for (const auto& ref : multi) if (!has(shunts, ref)) (ref.front() == 'J' ? connectors : others).push_back(ref);
+    for (const auto& ref : multi) if (!has(shunts, ref) && !_path_refs.count(ref)) (ref.front() == 'J' ? connectors : others).push_back(ref);
     // Circuit connectivity is immutable; avoid rescanning the board within
     // stable-sort comparators and connected-component propagation.
     std::map<std::string, std::set<std::string>> nets, signals;
@@ -575,10 +575,18 @@ std::string Engine::_pin_num_at(const std::string& ref, Point point, const std::
 double Engine::_side_reach(const std::string& ref, const std::string& side,
                            const TrunkMap* jobs, const std::set<std::string>& exclude) {
     const auto& trunk_jobs = jobs ? *jobs : trunks;
-    double out = 2 * U; std::size_t lanes = 0; std::vector<std::pair<double, double>> rows;
+    double out = 2 * U, columns = 0.0; std::size_t lanes = 0; std::vector<std::pair<double, double>> rows;
     for (const auto& tip : _side_tips(ref)) {
         if (tip.side != side) continue;
         const auto* n = net_of(ref, tip.number); if (!n || exclude.count(n->name)) continue;
+        if (!_path.nets.empty() && signal(*n)) {
+            Refs attached = get(hang, n->name);
+            for (const auto& item : get(pull, n->name)) attached.push_back(item.first);
+            for (const auto& r : attached) {
+                const auto& p = part(r);
+                columns += 2 * U + TEXT_GAP + std::max(text_wh(p.ref).first, text_wh(p.value).first);
+            }
+        }
         if (trunk_jobs.contains(n->name) || (n->net_class == "signal" && _rung_of(n->name, trunk_jobs))) { ++lanes; continue; }
         const auto ser = n->net_class == "signal" ? _series_of(n->name) : std::nullopt;
         if (ser) {
@@ -616,7 +624,7 @@ double Engine::_side_reach(const std::string& ref, const std::string& side,
         out = std::max(out, sp.port_run + two + 2 * U);
     }
     if (lanes) out += 3 * U + 2 * U * static_cast<double>(lanes);
-    return out;
+    return out + gceil(columns);
 }
 
 SchematicPlacement Engine::run() {
@@ -727,9 +735,17 @@ SchematicPlacement Engine::_chain_template() {
     for (const auto& name : keys(trunks)) {
         const auto& n = net(name); if (n.net_class != "signal") continue;
         const auto mp = refs_on_net(n, multi); if (mp.size() < 2) continue;
-        Refs nonshunts; bool any_shunt = false;
-        for (const auto& r : mp) { if (has(shunts, r)) any_shunt = true; else nonshunts.push_back(r); }
+        Refs nonshunts; bool any_shunt = false, on_path = false;
+        for (const auto& r : mp) {
+            if (has(shunts, r)) any_shunt = true;
+            else if (_path_refs.count(r)) on_path = true;
+            else nonshunts.push_back(r);
+        }
         if (any_shunt && nonshunts.size() <= 2) { trunks.erase(name); _bridge(name); continue; }
+        if (on_path && nonshunts.size() == 1) {
+            for (const auto& chain : trunks.at(name)->chains) chain->kind = "pin";
+            trunks.erase(name); _bridge(name); continue;
+        }
         std::vector<std::string> sides;
         for (const auto& ref : nonshunts) for (const auto& tip : _side_tips(ref))
             if (_on_net(ref, tip.number, name)) sides.push_back(tip.side);
@@ -753,7 +769,16 @@ SchematicPlacement Engine::_chain_template() {
         }
     }
 
-    double comp_dy = 0.0, row_y0 = -1e9;
+    double comp_dy = 0.0, row_y0 = -1e9, row_x0 = 0.0;
+    if (!_path.nets.empty()) {
+        _power_path_row(handled);
+        const double bottom = _extent().y1;
+        double left_tip = lib.get(part(order.front()).lib_id).body[0];
+        for (const auto& tip : _side_tips(order.front())) if (tip.side == "left") left_tip = std::min(left_tip, tip.point.first);
+        row_x0 = gsnap(gceil(_extent().x0 + _side_reach(order.front(), "left", &trunk_jobs)) - left_tip);
+        const auto shape = body_box_page(lib.get(part(order.front()).lib_id), 0.0, 0.0, get(orient, order.front()), "body", order.front());
+        comp_dy = gceil(bottom + 14 * U - shape.y0) - ays.at(order.front()); row_y0 = gceil(bottom + 2 * U);
+    }
     const auto seat = [&](const std::string& ref, double ax, double ay) {
         anchors[ref] = {ax, ay}; _collect_trunk_pins(ref, ax, ay, trunk_jobs, rung_keys);
         _cell(ref, ax, ay, handled, trunk_jobs, true, order.size() > 1 && ref == order.back() ? 1 : -1);
@@ -769,7 +794,7 @@ SchematicPlacement Engine::_chain_template() {
             }
         }
         double ay = r3(ays.at(ref) + comp_dy);
-        if (i == 0 || new_row) { seat(ref, 0.0, ay); continue; }
+        if (i == 0 || new_row) { seat(ref, i == 0 ? row_x0 : 0.0, ay); continue; }
         const auto& a_ref = order[i - 1]; const auto a = anchors.at(a_ref);
         const auto pairs = binfo.at(ref);
         const double meas = _band_edge(row_y0, 1e9, 1, row_y0 < -1e8 ? _extent().x1 : 0.0);

@@ -228,7 +228,7 @@ ChainPtr Engine::_side_pin_chain(const std::string& name, const std::string& ref
     const auto& n = net(name);
     if (n.net_class != "signal") return {};
     std::size_t owners = 0;
-    for (const auto& p : n.pins) if (has(multi, p.ref)) { if (p.ref != ref) return {}; ++owners; }
+    for (const auto& p : n.pins) if (has(multi, p.ref) && !_path_refs.count(p.ref)) { if (p.ref != ref) return {}; ++owners; }
     if (owners != 1) return {};
     for (const auto& chain : float_chains) {
         if (!chain || chain->kind != "pin" || chain->root != name || !chain->hangs.empty()) continue;
