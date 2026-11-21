@@ -1,5 +1,6 @@
 #include "board_pipeline_internal.hpp"
 #include "schgen/placement_requirements.hpp"
+#include "reviewed_ownership.hpp"
 #include <iostream>
 #include <unistd.h>
 
@@ -90,7 +91,9 @@ void tests(const fs::path& repo) {
         auto requirements=parse_json_text(original);
         for(auto& entry:requirements.object_value)if(entry.first=="ownership")entry.second.array_value.pop_back();
         publish_text(path,json(requirements));
-        fail(std::string("omitted-")+sheet,{},"ownership");publish_text(path,original);
+        bool rejected=false;
+        try{rejected=!reviewed_ownership::mismatch(parse_placement_requirements(requirements)).empty();}catch(const std::exception&){rejected=true;}
+        require(rejected,std::string("omitted-")+sheet+" ownership must be rejected by the loader or differ from the reviewed copy");publish_text(path,original);
     }
     fail("pad-name",[](Context& c){c.pcb->placement.model.insts.front().pad_nets.begin()->second.second="corrupted";},"placed pin/net changed");
     fail("pad-id",[](Context& c){c.pcb->placement.model.insts.front().pad_nets.begin()->second.first=0;},"placed pin/net changed");

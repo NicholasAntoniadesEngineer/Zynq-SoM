@@ -79,8 +79,8 @@ void carrier_surface_requirements_stage(Context& c) {
                 throw ProjectError("duplicate pin in independent hierarchy extraction");
         const PcbCheckInput model(c.pcb->placement.model);
         bool hard_ok=true;std::string reports,hard_report;
-        for(const auto* sheet:{"board_aux","bringup_rails"}) {
-            const std::string sheet_name=sheet;
+        if(c.paths.owned_groups.empty())throw ProjectError("placement requirements are applicable but the board file lists no owned_groups sheet");
+        for(const auto& sheet_name:c.paths.owned_groups) {
             const auto live=std::find_if(c.circuits.begin(),c.circuits.end(),[&](const auto& s){return s.name==sheet_name;});
             if(live==c.circuits.end()||std::count_if(c.circuits.begin(),c.circuits.end(),[&](const auto& s){return s.name==sheet_name;})!=1)
                 throw ProjectError("required live carrier sheet missing/duplicated: "+sheet_name);
@@ -88,11 +88,10 @@ void carrier_surface_requirements_stage(Context& c) {
             if(band==bands.end())throw ProjectError("required hierarchy band missing: "+sheet_name);
             const auto requirements=parse_placement_requirements(parse_json_file(
                 (c.paths.subsystems_dir/sheet_name/"placement_requirements.json").string()));
-            const auto declaration=carrier_surface_requirement_declaration(sheet_name);
             std::map<std::string,CatalogPart> catalog;
             // The caller holds the same native catalog open for the complete
             // board invocation, as required by author_board_pipeline_inputs.
-            for(const auto& owner:declaration.owner_mpn)
+            for(const auto& owner:requirements.owners)
                 catalog.emplace(owner.second,lookup_part_catalog(owner.second));
             std::map<std::string,std::string> refs,nets;
             for(const auto& part:live->circuit.parts)
@@ -108,7 +107,7 @@ void carrier_surface_requirements_stage(Context& c) {
                 }
                 if(!name||!nets.emplace(net.name,*name).second)throw ProjectError("empty/duplicate live net: "+sheet_name+":"+net.name);
             }
-            const auto checked=check_placement_requirements(requirements,declaration,live->circuit,catalog,model,refs,nets);
+            const auto checked=check_placement_requirements(requirements,live->circuit,catalog,model,refs,nets);
             hard_ok=hard_ok&&checked.hard_requirements_met();reports+=checked.summary();
             hard_report+=sheet_name+(checked.hard_requirements_met()?": hard ownership/identity/top-switch requirements met\n":": hard requirement FAIL\n");
             for(const auto& violation:checked.violations)hard_report+="FAIL "+violation+"\n";

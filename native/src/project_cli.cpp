@@ -7,7 +7,6 @@
 #include "schgen/board_pcb.hpp"
 #include "schgen/board_pipeline.hpp"
 #include "schgen/subsystem_build.hpp"
-#include "schgen/example_devkit.hpp"
 #include "schgen/experiment_tools.hpp"
 #include "schgen/experiment_observers.hpp"
 #include "schgen/net_contract.hpp"
@@ -93,7 +92,7 @@ bool experiment_command(const std::string& name){
     return name=="chir-rung"||name=="w11-sweep"||name=="w12-bound"||name=="w12-stageprobe"||name=="dump-circuits";
 }
 bool project_command(const std::string& name){
-    return commands.count(name)||experiment_command(name)||name=="board"||name=="build"||name=="devkit"||name=="nets"||name=="subsystem-check"||name=="carrier-check";
+    return commands.count(name)||experiment_command(name)||name=="board"||name=="build"||name=="nets"||name=="subsystem-check"||name=="carrier-check";
 }
 Options parse(int argc, char** argv) {
     Options out;
@@ -320,9 +319,8 @@ Options parse(int argc, char** argv) {
         allowed.insert("--floorplan-spec");
         allowed.insert("--interior-order");
         allowed.insert("--no-render"); allowed.insert("--timing"); allowed.insert("--kicad-cli");
-    } else if (out.command == "build" || out.command == "devkit") {
+    } else if (out.command == "build") {
         allowed.insert("--no-render"); allowed.insert("--kicad-cli");
-        if(out.command=="devkit")allowed.erase("--project");
     } else if (out.command == "subsystem-check" || out.command == "carrier-check") {
         allowed.erase("--output");
     } else if (out.command == "nets") {
@@ -431,8 +429,7 @@ std::optional<int> run_project_command(int argc, char** argv) {
         const std::set<std::string> flags={"--no-render","--timing","--cons-only","--allow-missing","--qualified-refs","--no-ngspice","--keep","--compact-placement","--multiscale-outline","--edge-feasibility","--failed-first-retry","--owned-quality-first","--shape-area-first","--owned-face-cohesion","--owned-extent-alternatives","--granular-minor-occupancy","--vertical-compaction"};
         for(const auto& option:options.help_options)std::cout<<"  "<<option<<(flags.count(option)?"":" VALUE")<<(option=="--output"?" (alias -o)":"")<<'\n';
         if(options.command=="board")std::cout<<"--granular-minor-occupancy: reserve individual opposite-face courtyards with fanout halos and through-hole occupancy; requires compact placement.\n--vertical-compaction: also explore vertical leftover contacts for explicit contract-group sheets; all qualification gates remain active.\n";
-        if(options.command=="nets"||options.command=="devkit"||options.command=="board-schematic"||options.command=="pcb-stage")std::cout<<"--output is required.\n";
-        if(options.command=="devkit")std::cout<<"Builds the four-sheet example, not the twelve-sheet devkit_mini project.\n";
+        if(options.command=="nets"||options.command=="board-schematic"||options.command=="pcb-stage")std::cout<<"--output is required.\n";
         if(options.command=="board")std::cout<<"--initial-outline-mm WIDTHxHEIGHT: re-evaluate a starting candidate, then continue bounded optimisation. Not a fixed outline or cached acceptance; conflicts with a fixed project outline. All gates remain active.\n";
         if(options.command=="board")std::cout<<"--multiscale-outline: opt-in bounded axis/diagonal refinement; may stop at a larger local solution. Use a validated starting candidate when available. All gates remain active; fixed outlines conflict.\n";
         if(options.command=="board")std::cout<<"--edge-feasibility: opt-in sequential clearance-aware initial edge runs; requires --compact-placement. Not a complete joint solver. Rounded poses are rechecked; all gates remain active.\n";
@@ -455,16 +452,6 @@ std::optional<int> run_project_command(int argc, char** argv) {
         const auto result = scaffold_subsystem(fs::absolute(options.repository) / "subsystems", options.subsystems.front());
         std::cout << subsystem_scaffold_summary(result);
         return 0;
-    }
-    if(options.command=="devkit"){
-        if(!options.subsystems.empty()||options.output.empty())throw ProjectError("devkit requires --output DIRECTORY and no subsystem selection");
-        const auto repository=fs::absolute(options.repository);
-        if(!open_part_catalog((repository/"native/catalog.bin").string()))throw ProjectError("cannot open native part catalog");
-        const auto sheets=author_example_devkit(make_guarded_native_authoring_context(repository));
-        SymbolLibrary library(repository);ExampleDevkitOptions build;
-        build.no_render=options.no_render;build.extraction.kicad_cli=options.kicad_cli;
-        const auto result=build_example_devkit(sheets,library,options.output,build);
-        std::cout<<result.report;return result.ok()?0:1;
     }
     auto paths = resolve_project_paths(options.repository, options.project);
     if (!options.run_config.empty()) paths.run_config = fs::absolute(options.run_config);

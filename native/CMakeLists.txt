@@ -74,7 +74,6 @@ target_sources(schgen_core PRIVATE src/placement_requirements.cpp)
 target_sources(schgen_core PRIVATE src/pcb_owned_groups.cpp src/pcb_owned_groups_adapter.cpp)
 target_sources(schgen_core PRIVATE src/pcb_drc.cpp)
 target_sources(schgen_core PRIVATE src/subsystem_build.cpp)
-target_sources(schgen_core PRIVATE src/example_devkit.cpp src/example_devkit_build.cpp)
 target_sources(schgen_core PRIVATE src/net_contract.cpp)
 target_sources(schgen_core PRIVATE src/regression_cli.cpp)
 target_sources(schgen_core PRIVATE src/measure_board.cpp src/measure_metrics.cpp src/measure_report.cpp src/measure_cli.cpp)
@@ -106,7 +105,7 @@ set_source_files_properties(src/regression_cli.cpp
     PROPERTIES COMPILE_OPTIONS "-Wall;-Wextra;-Wpedantic;-Werror;-ffp-contract=off")
 set_source_files_properties(src/precision_ops.cpp
     PROPERTIES COMPILE_OPTIONS "-Wall;-Wextra;-Wpedantic;-Werror;-ffp-contract=off")
-set_source_files_properties(src/net_contract.cpp src/example_devkit.cpp src/example_devkit_build.cpp
+set_source_files_properties(src/net_contract.cpp
     PROPERTIES COMPILE_OPTIONS "-Wall;-Wextra;-Wpedantic;-Werror;-ffp-contract=off")
 target_sources(schgen_core PRIVATE src/experiment_tools_json.cpp src/experiment_tools_board.cpp
     src/experiment_tools_probe.cpp src/experiment_tools_catalog.cpp)
@@ -447,6 +446,11 @@ if(BUILD_TESTING)
     target_compile_options(schgen_carrier_surface_requirements_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
     add_test(NAME native_carrier_surface_requirements_contracts COMMAND schgen_carrier_surface_requirements_contracts
         "${CMAKE_CURRENT_SOURCE_DIR}/.." "${CMAKE_CURRENT_SOURCE_DIR}/catalog.bin")
+    add_executable(schgen_ownership_declaration_contracts tests/ownership_declaration_contracts.cpp)
+    target_link_libraries(schgen_ownership_declaration_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_ownership_declaration_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
+    add_test(NAME native_ownership_declaration_contracts COMMAND schgen_ownership_declaration_contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/.." carrier)
     add_executable(schgen_carrier_requirements_pipeline_contracts tests/carrier_requirements_pipeline_contracts.cpp)
     target_include_directories(schgen_carrier_requirements_pipeline_contracts PRIVATE src)
     target_link_libraries(schgen_carrier_requirements_pipeline_contracts PRIVATE schgen_core)
@@ -670,7 +674,7 @@ if(BUILD_TESTING)
     endforeach()
     add_test(NAME native_authoring_context_contracts COMMAND schgen_authoring_context_contracts "${CMAKE_CURRENT_SOURCE_DIR}/..")
     add_executable(schgen_native_authoring_guard_contracts tests/native_authoring_guard_contracts.cpp)
-    target_link_libraries(schgen_native_authoring_guard_contracts PRIVATE schgen_core)
+    target_link_libraries(schgen_native_authoring_guard_contracts PRIVATE schgen_example_devkit)
     target_compile_options(schgen_native_authoring_guard_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
     add_test(NAME native_authoring_guard_contracts COMMAND schgen_native_authoring_guard_contracts "${CMAKE_CURRENT_SOURCE_DIR}/..")
     add_test(NAME native_authoring_guard_live_contracts COMMAND schgen_native_authoring_guard_contracts
@@ -1106,8 +1110,11 @@ if(BUILD_TESTING)
     target_link_libraries(schgen_net_contract_contracts PRIVATE schgen_core)
     target_compile_options(schgen_net_contract_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
     add_test(NAME native_net_contract_contracts COMMAND schgen_net_contract_contracts "${CMAKE_CURRENT_SOURCE_DIR}/.." "${CMAKE_CURRENT_BINARY_DIR}/net-contract-contract-output")
+    add_library(schgen_example_devkit STATIC tests/example_devkit.cpp tests/example_devkit_build.cpp)
+    target_link_libraries(schgen_example_devkit PUBLIC schgen_core)
+    target_compile_options(schgen_example_devkit PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
     add_executable(schgen_example_devkit_contracts tests/example_devkit_contracts.cpp)
-    target_link_libraries(schgen_example_devkit_contracts PRIVATE schgen_core)
+    target_link_libraries(schgen_example_devkit_contracts PRIVATE schgen_example_devkit)
     target_compile_options(schgen_example_devkit_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
     add_test(NAME native_example_devkit_contracts COMMAND schgen_example_devkit_contracts "${CMAKE_CURRENT_SOURCE_DIR}/..")
     add_test(NAME native_example_devkit_live_contracts COMMAND schgen_example_devkit_contracts "${CMAKE_CURRENT_SOURCE_DIR}/.." --live)
@@ -1411,7 +1418,7 @@ if(BUILD_TESTING)
     add_test(NAME native_subsystem_check_cli COMMAND schgen subsystem-check --project carrier --repo "${CMAKE_CURRENT_SOURCE_DIR}/..")
     add_test(NAME native_carrier_check_cli COMMAND schgen carrier-check --project carrier --repo "${CMAKE_CURRENT_SOURCE_DIR}/..")
     add_test(NAME native_devkit_check_cli COMMAND schgen carrier-check --project devkit_mini --repo "${CMAKE_CURRENT_SOURCE_DIR}/..")
-    foreach(command board build devkit nets chir-rung w11-sweep w12-bound w12-stageprobe dump-circuits
+    foreach(command board build nets chir-rung w11-sweep w12-bound w12-stageprobe dump-circuits
             selftest project-check circuit-check som-interface xdc bom link
             design-rules testpoints board-schematic pcb-stage pcb-drc subsystem-new render3d board-step
             model3d-check assembly ratsnest gallery diagram si-constraints fab-profile manifest preflight

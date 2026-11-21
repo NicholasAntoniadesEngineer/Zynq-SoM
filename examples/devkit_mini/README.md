@@ -80,24 +80,22 @@ in the carrier's. Host-side wiring is a consumer decision, not part of the libra
 
 ## Build it
 
-```sh
-native/bin/schgen devkit --output /absolute/private/devkit-example
-# Add --no-render to skip the PNGs; run from the repository root.
-```
-
-The native `devkit` command builds the four bound library subsystems through
-`native/src/example_devkit_build.cpp`, using shared schematic placement,
-emission, hierarchy, gate and rendering machinery. This example is distinct from
+The four-sheet example is built by the live contract test
+`native_example_devkit_live_contracts` (see below); there is no `schgen`
+command for it. Its sources are `native/tests/example_devkit.cpp` and
+`native/tests/example_devkit_build.cpp`. The build runs the four bound library
+subsystems through shared schematic placement, emission, hierarchy, gate and
+rendering machinery. This example is distinct from
 the full 12-sheet `board --project devkit_mini` project. The carrier-specific
 steps (SoM DF40 contract, `sheet_index.json`,
 carrier-structure gate, SoM-centered floorplan) do not apply because the devkit has
 no SoM.
 
-It writes under the required `--output` directory:
+The test writes under a scratch output directory:
 
 - `schematic/<name>.kicad_sch` — one schematic per subsystem,
 - the `devkit_mini.kicad_pro` hierarchy root that opens them together,
-- `renders/<name>.png` — per-sheet renders (best-effort; skipped with `--no-render`),
+- `renders/<name>.png` — per-sheet renders (best-effort; skipped when rendering is disabled),
 - `reports/cc_gate.txt`, `reports/board_gate.txt` and `reports/example_devkit.txt` — gate/build results.
 
 The build passes only if every gate passes:

@@ -1,4 +1,4 @@
-#include "schgen/example_devkit.hpp"
+#include "example_devkit.hpp"
 #include "legacy_power_policy.hpp"
 #include "schgen/board_pipeline.hpp"
 #include "schgen/design_rules.hpp"

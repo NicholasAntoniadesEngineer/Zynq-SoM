@@ -1,6 +1,6 @@
 #pragma once
 
-#include "schgen/example_devkit_authoring.hpp"
+#include "example_devkit_authoring.hpp"
 #include "schgen/subsystem_build.hpp"
 
 namespace schgen {

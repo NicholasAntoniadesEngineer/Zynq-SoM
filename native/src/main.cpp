@@ -42,7 +42,6 @@ int main(int argc, char** argv) {
                          "  circuit-check [--repo ROOT] [--project NAME] [SUBSYSTEM ...]\n"
                          "  board-schematic [--project NAME] [SUBSYSTEM ...] -o DIRECTORY\n"
                          "  build NAME [--project NAME] [-o DIRECTORY] [--no-render]\n"
-                         "  devkit --output DIRECTORY [--repo ROOT] [--no-render] (four-sheet example)\n"
                          "  dump-circuits [--project NAME] (publish live native-authored IR)\n"
                          "  nets [--project NAME] --output HEADER (C++ net-name contract)\n"
                          "  subsystem-check | carrier-check [--project NAME] (strict native package gates)\n"

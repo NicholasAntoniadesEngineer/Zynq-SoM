@@ -36,7 +36,8 @@ struct ProjectPaths {
     std::optional<std::filesystem::path> run_config;
     ModuleDefinition module;
     std::string file_stem;
-    bool root_readme = false, owned_groups = false;
+    bool root_readme = false;
+    std::vector<std::string> owned_groups;
 };
 
 struct ProjectConfig {

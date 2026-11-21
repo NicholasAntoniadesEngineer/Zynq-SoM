@@ -1,4 +1,4 @@
-#include "schgen/example_devkit.hpp"
+#include "example_devkit.hpp"
 #include "schgen/project_outputs.hpp"
 #include "schgen/native_render.hpp"
 #include <algorithm>

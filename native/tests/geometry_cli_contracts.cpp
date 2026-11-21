@@ -115,7 +115,7 @@ void parser(const JsonNode& reference) {
 void safety(const fs::path& repo, const fs::path& work) {
     const auto project = work / "safety/devkit_mini";
     write(project / "project.json", "{}"); write(project / "floorplan.json", "{}\n");
-    write(project / "board.json", R"({"files": {"stem": "Fixture_Board"}, "root_readme": false, "owned_groups": false, "module": {"folder": "som"}})");
+    write(project / "board.json", R"({"files": {"stem": "Fixture_Board"}, "root_readme": false, "owned_groups": [], "module": {"folder": "som"}})");
     const auto original = snapshot(project);
     const auto invoke = [&](const fs::path& output, const std::vector<std::string>& extra) {
         std::vector<std::string> args{"floorplan", "--repo", repo.string(), "--project", project.string(), "--output", output.string(), "--kicad-cli", "/no/extractor"};

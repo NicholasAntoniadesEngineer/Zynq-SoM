@@ -98,7 +98,8 @@ struct BoardFiles {
 };
 
 struct BoardFlags {
-    bool root_readme = false, owned_groups = false;
+    bool root_readme = false;
+    std::vector<std::string> owned_groups;
 };
 
 struct BoardHeader {

@@ -1,4 +1,4 @@
-#include "schgen/example_devkit_authoring.hpp"
+#include "example_devkit_authoring.hpp"
 #include <algorithm>
 
 namespace schgen {

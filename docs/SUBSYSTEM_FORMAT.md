@@ -426,3 +426,11 @@ Measure kinds. Each takes every key listed; text keys are templates and may use 
 | `module_body_vias` | `zone_prefix`, `found_text`, `missing_text`, `emits` (`{count}`, `{zone}`) |
 
 Add a claim by appending a row with its checks and a measure; the ledger and the report follow the file.
+
+## 12. Owned groups
+
+`board.json` `owned_groups` is required: a list of sheet names, possibly empty. Each named sheet must be listed in the board's `sheets`, and no name may appear twice; an unknown sheet, a repeated sheet, or a value that is not a list of names fails the load, naming `board.json`. A board with an empty list has no owned groups, and the placement requirements gate for it must be stated not applicable in `project.json`. A board whose `project.json` states the gate applicable must list at least one sheet.
+
+Each listed sheet holds `subsystems/<sheet>/placement_requirements.json`. Besides `schema`, `sheet`, `status`, `ownership`, `access`, `proximity`, `side` and `sources`, it holds `owners`: an object from each owning reference to the part number of that owner (`{"U1": "SY6280AAC", "U2": "PCA9306DCUR"}`). Every value is a non-empty string, and the keys must be exactly the references named by the `owner` field of the `ownership` rows; any other set fails the load. The run checks each owner against the part catalog by that part number: the live part's value, symbol and footprint, the owner pin number and its pin name.
+
+The ownership rows, the part numbers and the access list are reviewed data. The contract test `native_ownership_declaration_contracts` holds an independent reviewed copy and compares it with each listed sheet's file on every test run; `schgen run` does not compare the file with a second copy.
