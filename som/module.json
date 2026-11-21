@@ -3,6 +3,8 @@
   "schematic": "Zynq_SoM.kicad_sch",
   "pcb": "Zynq_SoM.kicad_pcb",
   "connector_part": "DF40C-100DP-0.4V_51",
+  "controller_ref": "U9",
+  "fpga_ref": "U2",
   "draw": {"connector": "J1", "rail": "VIN", "amps": 2.15, "note": "SoM module (Zynq+DDR3L+PHYs) ~10 W class at the regulated 4.65 V (P0 rebind) — estimate, refine at bring-up"},
   "sdio_level_v": 1.8,
   "sd_bus": ["SDIO_CLK", "SDIO_CMD", "SDIO_D0", "SDIO_D1", "SDIO_D2", "SDIO_D3"],

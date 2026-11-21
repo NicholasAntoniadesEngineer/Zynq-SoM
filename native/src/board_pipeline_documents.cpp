@@ -4,6 +4,7 @@
 #include "schgen/i2c_inventory.hpp"
 #include "schgen/native_render.hpp"
 #include "schgen/model3d.hpp"
+#include "schgen/sheet_roles.hpp"
 
 namespace schgen::board_pipeline_detail {
 void golden_stage(Context& c){
@@ -21,17 +22,19 @@ void manifest_stage(Context& c){
     c.attempt("manifest",[&]{if(!c.power||!c.testpoints)throw ProjectError("power/coverage facts unavailable");
         check_i2c_address_collisions(c.circuits);
         ManufacturingManifestInput in;in.file_stem=c.paths.file_stem;in.sheets=c.circuits;in.power=*c.power;
-        in.stm32=stm32_pin_map(extract_som_zynq(c.paths.som_schematic,"U9",{"J1","J2","J3"},c.options.extraction),load_som_interface(c.paths.som_interface_file));in.xdc=c.xdc;
+        if(!c.controller)throw ProjectError("controller pin map unavailable; the module_pin_map stage did not complete");in.stm32=*c.controller;in.xdc=c.xdc;
         in.coverage={c.testpoints->covered(),c.testpoints->required.size(),c.testpoints->waived.size()};
         if(c.xdc)in.device=c.xdc->device;run_manufacturing_manifest(in,c.out,c.out/"manifest.json");
         c.manifest_input=std::move(in);
         c.gate("manifest",true,"artifacts hashed after SI; final reports rehashed at publication");});
 }
 void document_stages(Context& c){
-    c.attempt("xdc",[&]{const auto live=extract_som_zynq(c.paths.som_schematic,"U2",{"J1","J2","J3"},c.options.extraction);
-        XdcInput raw;raw.refs={"J1","J2","J3"};raw.pins_file=board_file_name(c.paths.file_stem,BoardFileKind::PinConstraints);apply_som_to_xdc(raw,live);
+    c.attempt("xdc",[&]{if(!c.som)throw ProjectError("module interface unavailable; the link stage did not run");
+        const auto refs=som_interface_refs(*c.som);
+        const auto live=extract_som_zynq(c.paths.som_schematic,c.paths.module.fpga_ref,refs,c.options.extraction);c.fpga_live=live;
+        XdcInput raw;raw.refs=refs;raw.pins_file=board_file_name(c.paths.file_stem,BoardFileKind::PinConstraints);apply_som_to_xdc(raw,live);
         const auto xi=load_project_xdc_input(c.paths.repository_root,c.paths.project_root,c.sheets,raw,c.paths.som_schematic,c.paths.som_interface_file);
-        const auto xo=generate_xdc(xi);publish_text(c.out/"fpga"/xi.pins_file,xo.text);
+        const auto xo=generate_xdc(xi);publish_text(c.out/"fpga"/xi.pins_file,xo.text);c.xdc_pins=xo.entries;
         ManufacturingXdc manifest;manifest.count=xo.entries.size();manifest.device=xi.device;
         std::set<int> banks;for(const auto& pin:xo.entries)banks.insert(std::stoi(pin.bank));manifest.banks.assign(banks.begin(),banks.end());c.xdc=manifest;
         c.gate("xdc",true,join(xo.checks,"\n"));});
@@ -50,6 +53,14 @@ void document_stages(Context& c){
         publish_text(c.reports/"i2c_bus_map.txt",inventory.text());
         auto errors=verify_i2c_inventory(inventory,c.circuits,facts);for(const auto& collision:i2c_address_collisions(inventory))errors.push_back(collision);
         c.gate("i2c_bus_map",errors.empty(),std::to_string(inventory.devices.size())+" devices on "+std::to_string(inventory.buses.size())+" buses; "+std::to_string(inventory.bridges.size())+" bridged lines; "+std::to_string(inventory.pullups.size())+" pull-ups"+(errors.empty()?"":"; "+join(errors,"; ")));});
+    c.attempt("module_pin_map",[&]{if(!c.som||!c.link||!c.fpga_live||!c.xdc)throw ProjectError("module interface, link or constraints result unavailable");
+        c.controller=stm32_pin_map(extract_som_zynq(c.paths.som_schematic,c.paths.module.controller_ref,som_interface_refs(*c.som),c.options.extraction),*c.som);
+        const auto module_sheets=sheet_module_connectors(c.require_roles());
+        const ModulePinInputs inputs{*c.som,c.link->mapping,c.sheets,module_sheets,*c.fpga_live,*c.controller};
+        const auto map=build_module_pin_map(inputs);publish_text(c.reports/"module_pin_map.txt",map.text());
+        const auto errors=verify_module_pin_map(map,inputs,c.xdc_pins);
+        const auto open=std::count_if(map.rows.begin(),map.rows.end(),[](const ModulePinRow& row){return row.board_net==module_pin_map_empty_cell;});
+        c.gate("module_pin_map",errors.empty(),std::to_string(map.rows.size())+" pins on "+std::to_string(c.som->connectors.size())+" connectors; "+std::to_string(open)+" without a board net"+(errors.empty()?"":"; "+join(errors,"; ")));});
     manifest_stage(c);
     golden_stage(c);
     c.attempt("contract_coverage_lint",[&]{

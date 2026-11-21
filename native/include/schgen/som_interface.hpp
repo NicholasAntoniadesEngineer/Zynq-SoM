@@ -72,8 +72,8 @@ SomInterface extract_som_interface(
     const std::filesystem::path& som_sch, const std::vector<std::string>& refs,
     const SomExtractOptions& options = {});
 SomZynq extract_som_zynq(
-    const std::filesystem::path& som_sch, const std::string& zynq_ref = "U2",
-    const std::vector<std::string>& jrefs = {"J1", "J2", "J3"},
+    const std::filesystem::path& som_sch, const std::string& zynq_ref,
+    const std::vector<std::string>& jrefs,
     const SomExtractOptions& options = {});
 
 // Pure extraction from KiCad XML, also useful for deterministic/offline tests.
@@ -84,14 +84,15 @@ SomInterface parse_som_interface_xml(
     const std::vector<std::string>& refs);
 SomZynq parse_som_zynq_xml(
     std::string_view xml, const std::string& source,
-    const std::string& zynq_ref = "U2",
-    const std::vector<std::string>& jrefs = {"J1", "J2", "J3"});
+    const std::string& zynq_ref,
+    const std::vector<std::string>& jrefs);
 
 // Contract JSON uses Python json.dumps(indent=1, sort_keys=True) bytes, including
 // ASCII Unicode escapes and the final newline. Loading preserves file order.
 SomInterface load_som_interface(const std::filesystem::path& path);
 SomInterface som_interface_from_json(const JsonNode& root, const std::string& source = "<memory>");
 std::string som_interface_json(const SomInterface& data);
+std::vector<std::string> som_interface_refs(const SomInterface& data);
 std::string som_zynq_json(const SomZynq& data);
 
 // Equivalent to som_interface.cmd: strip comma-separated refs, extract, create

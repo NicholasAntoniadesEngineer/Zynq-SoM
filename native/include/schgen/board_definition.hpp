@@ -42,7 +42,7 @@ struct ModuleTriageRule {
 };
 
 struct ModuleDefinition {
-    std::string schematic, pcb, connector_part;
+    std::string schematic, pcb, connector_part, controller_ref, fpga_ref;
     BoardLoad draw;
     double sdio_level_v = 0.0;
     std::vector<std::string> sd_bus;

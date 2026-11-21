@@ -26,6 +26,8 @@ namespace {
 namespace fs = std::filesystem;
 using namespace schgen;
 const std::string source = "som/Zynq_SoM.kicad_sch";
+const std::string fixture_device = "U2";
+const std::vector<std::string> fixture_connectors{"J1", "J2", "J3"};
 
 void require(bool value, const std::string& message) {
     if (!value) throw std::runtime_error(message);
@@ -138,7 +140,7 @@ void contracts(const fs::path& fixtures, const fs::path& self, const std::option
     Suite s;
     const auto xml = read(fixtures / "som_interface.xml");
     const auto baseline = parse_json_file((fixtures / "som_synthetic_baseline.json").string());
-    const auto live = parse_som_zynq_xml(xml, source);
+    const auto live = parse_som_zynq_xml(xml, source, fixture_device, fixture_connectors);
     const auto interface = parse_som_interface_xml(xml, source, {"J3", "J1", "J2", "J1"});
     s.run("Python ordered extraction", [&] {
         compare(live, field(baseline,"zynq"));
@@ -159,37 +161,37 @@ void contracts(const fs::path& fixtures, const fs::path& self, const std::option
         require(parse_som_interface_xml("<export/>", "relative", {}).connectors.empty(), "empty selection failed");
         require(parse_som_zynq_xml(xml, source, "U2", {}).jpin_net.empty(), "empty jrefs not honored");
         const auto doc = xml.substr(0, xml.find("  <nets>")) + "</export>";
-        require(parse_som_zynq_xml(doc, source).ball_net.empty(), "absent nets are not empty");
+        require(parse_som_zynq_xml(doc, source, fixture_device, fixture_connectors).ball_net.empty(), "absent nets are not empty");
         require(parse_som_interface_xml(doc, source, {"J1"}).connectors[0].second.pins.empty(), "absent nets failed");
     });
     s.run("custom device and connector refs", [&] {
         const auto micro = parse_som_zynq_xml(xml, source, "U9", {"J3", "U9", "J9"});
         require(micro.pin_names == XdcStrings{{"1","PA0"}} && micro.value == "", "custom device failed");
         require(micro.ball_net.size() == 1 && micro.jpin_net.size() == 4, "custom selection failed");
-        require(parse_som_zynq_xml(changed(xml,"<value>XC7Z020-CLG484</value>","<value/>"),source).value == std::nullopt,
+        require(parse_som_zynq_xml(changed(xml,"<value>XC7Z020-CLG484</value>","<value/>"),source, fixture_device, fixture_connectors).value == std::nullopt,
                 "empty device value failed");
     });
     s.rejects("missing refs retain request order and duplicates", [&] {
         parse_som_interface_xml(xml, source, {"missing", "J9", "missing", "x'y"});
     }, "connector refs not found in SoM netlist: ['missing', 'J9', 'missing', \"x'y\"]");
-    s.rejects("missing components", [&] { parse_som_zynq_xml("<export/>",source); },
+    s.rejects("missing components", [&] { parse_som_zynq_xml("<export/>",source, fixture_device, fixture_connectors); },
               "U2 not found in SoM netlist " + source);
     s.rejects("missing libsource", [&] {
-        parse_som_zynq_xml(changed(xml,"<libsource lib=\"FPGA\" part=\"Zynq\"/>",""),source);
+        parse_som_zynq_xml(changed(xml,"<libsource lib=\"FPGA\" part=\"Zynq\"/>",""),source, fixture_device, fixture_connectors);
     }, "U2 not found in SoM netlist " + source);
     s.rejects("libsource requires both lib and part", [&] {
         parse_som_zynq_xml(changed(xml,"<libsource lib=\"FPGA\" part=\"Zynq\"/>",
-                                 "<libsource lib=\"wrong\" part=\"Zynq\"/>"),source);
+                                 "<libsource lib=\"wrong\" part=\"Zynq\"/>"),source, fixture_device, fixture_connectors);
     }, "libpart pin table for U2 (('wrong', 'Zynq')) missing from SoM netlist");
     s.rejects("empty libpart", [&] {
-        parse_som_zynq_xml("<export><components><comp ref='U2'><libsource/></comp></components></export>", source);
+        parse_som_zynq_xml("<export><components><comp ref='U2'><libsource/></comp></components></export>", source, fixture_device, fixture_connectors);
     }, "libpart pin table for U2 (('', '')) missing from SoM netlist");
     s.run("missing/empty pin numbers preserve Python semantics", [&] {
         require(live.ball_net.back() == std::make_pair(std::string{}, std::string{}), "missing ball pin changed");
         require(live.jpin_net[live.jpin_net.size()-2].first == "J3.None" && live.jpin_net.back().first == "J3.",
                 "missing connector pin became empty");
         const auto tiny = parse_som_zynq_xml("<export><components><comp ref='U2'><libsource/></comp></components>"
-            "<libparts><libpart><pins><pin/></pins></libpart></libparts></export>",source);
+            "<libparts><libpart><pins><pin/></pins></libpart></libparts></export>",source, fixture_device, fixture_connectors);
         require(tiny.pin_names == XdcStrings{{"", ""}}, "empty-number pin table was rejected");
     });
     for (const std::string bad : {"", "<export>", "<export/><export/>", "<export a='&undefined;'/>"})
@@ -279,7 +281,8 @@ void contracts(const fs::path& fixtures, const fs::path& self, const std::option
     });
     if(repo) s.run("real SoM live against Python baseline and committed contracts",[&] {
         const auto real=parse_json_file((fixtures/"som_real_baseline.json").string());
-        auto device=extract_som_zynq(*repo/source);
+        const auto module=load_module(*repo/"som");
+        auto device=extract_som_zynq(*repo/source,module.fpga_ref,fixture_connectors);
         auto contract=extract_som_interface(*repo/source,{"J3","J1","J2","J1"});
         device.source=contract.source=source;
         compare(device,field(real,"zynq")); compare(contract,field(real,"interface"));

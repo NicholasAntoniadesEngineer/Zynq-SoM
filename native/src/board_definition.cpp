@@ -149,13 +149,16 @@ BoardHeader load_board_header(const std::filesystem::path& board_root) {
 ModuleDefinition parse_module(const JsonNode& document, const std::string& file) {
     const std::string source = "module file " + file;
     if (document.kind != JsonKind::Object) fail(source, "the document is not an object");
-    reject_unknown_keys(document, {"schema", "schematic", "pcb", "connector_part", "draw", "sdio_level_v", "sd_bus", "pairs",
+    reject_unknown_keys(document, {"schema", "schematic", "pcb", "connector_part", "controller_ref", "fpga_ref", "draw", "sdio_level_v", "sd_bus", "pairs",
                                    "escape_population", "escape_triage", "do_not_load_straps"}, source);
     if (text(document, "schema", source) != module_schema) fail(source, std::string("schema is not ") + module_schema);
     ModuleDefinition module;
     module.schematic = folder_name(document, "schematic", source);
     module.pcb = folder_name(document, "pcb", source);
     module.connector_part = text(document, "connector_part", source);
+    module.controller_ref = text(document, "controller_ref", source);
+    module.fpga_ref = text(document, "fpga_ref", source);
+    if (module.controller_ref == module.fpga_ref) fail(source, "controller_ref and fpga_ref name the same reference " + module.controller_ref);
     module.draw = load_of(member(document, "draw", JsonKind::Object, source), source);
     module.sdio_level_v = positive(document, "sdio_level_v", source);
     module.sd_bus = names(document, "sd_bus", source);

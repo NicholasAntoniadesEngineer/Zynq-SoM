@@ -58,6 +58,8 @@ const char* const bench_module = R"json({
   "schematic": "Bench_Module.kicad_sch",
   "pcb": "Bench_Module.kicad_pcb",
   "connector_part": "Bench",
+  "controller_ref": "U9",
+  "fpga_ref": "U2",
   "draw": {"connector": "J1", "rail": "VIN", "amps": 2.0, "note": "module supply"},
   "sdio_level_v": 1.8,
   "sd_bus": ["SDIO_CLK"],

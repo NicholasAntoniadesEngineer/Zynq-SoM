@@ -57,6 +57,8 @@ const char* const small_module = R"json({
   "schematic": "Bench_Module.kicad_sch",
   "pcb": "Bench_Module.kicad_pcb",
   "connector_part": "DF40C-100DP-0.4V_51",
+  "controller_ref": "U9",
+  "fpga_ref": "U2",
   "draw": {"connector": "J1", "rail": "VIN", "amps": 2.15, "note": "module supply"},
   "sdio_level_v": 1.8,
   "sd_bus": ["SDIO_CLK", "SDIO_CMD"],
@@ -147,6 +149,7 @@ void reads_a_module() {
     const ModuleDefinition module = module_parsed(small_module);
     require(module.schematic == "Bench_Module.kicad_sch" && module.pcb == "Bench_Module.kicad_pcb", "module project files are read");
     require(module.connector_part == "DF40C-100DP-0.4V_51" && module.sdio_level_v == 1.8 && module.sd_bus.size() == 2, "module connector policy is read");
+    require(module.controller_ref == "U9" && module.fpga_ref == "U2", "module device references are read");
     require(module.netted_contacts.size() == 2 && module.netted_contacts.at("J2") == 100, "netted contacts are read");
     require(module.return_path.n_pairs == 69 && module.return_path.n_pair_contacts == 138 && module.return_path.n_fail == 29 &&
                 module.return_path.worst_distance == 4,
@@ -164,6 +167,11 @@ void refuses_bad_modules() {
     rejects([] { module_parsed(replaced(small_module, "  \"pcb\": \"Bench_Module.kicad_pcb\",\n", "")); }, "field 'pcb' is missing");
     rejects([] { module_parsed(replaced(small_module, "\"Bench_Module.kicad_pcb\"", "\"x/Bench_Module.kicad_pcb\"")); }, "not a single folder or file name");
     rejects([] { module_parsed(replaced(small_module, "  \"connector_part\": \"DF40C-100DP-0.4V_51\",\n", "")); }, "field 'connector_part' is missing");
+    rejects([] { module_parsed(replaced(small_module, "  \"controller_ref\": \"U9\",\n", "")); }, "field 'controller_ref' is missing");
+    rejects([] { module_parsed(replaced(small_module, "  \"fpga_ref\": \"U2\",\n", "")); }, "field 'fpga_ref' is missing");
+    rejects([] { module_parsed(replaced(small_module, "\"controller_ref\": \"U9\"", "\"controller_ref\": \"\"")); }, "field 'controller_ref' is empty");
+    rejects([] { module_parsed(replaced(small_module, "\"fpga_ref\": \"U2\"", "\"fpga_ref\": 2")); }, "field 'fpga_ref' is missing or has the wrong type");
+    rejects([] { module_parsed(replaced(small_module, "\"fpga_ref\": \"U2\"", "\"fpga_ref\": \"U9\"")); }, "name the same reference");
     rejects([] { module_parsed(replaced(small_module, "  \"draw\": {\"connector\": \"J1\", \"rail\": \"VIN\", \"amps\": 2.15, \"note\": \"module supply\"},\n", "")); }, "field 'draw' is missing");
     rejects([] { module_parsed(replaced(small_module, "\"amps\": 2.15", "\"amps\": 0")); }, "not above zero");
     rejects([] { module_parsed(replaced(small_module, "  \"sdio_level_v\": 1.8,\n", "")); }, "field 'sdio_level_v' is missing");
