@@ -117,10 +117,20 @@ std::optional<int> run_layout_command(int argc, char** argv) {
     const auto document = layout::read_document(parse_json_file(argv[2]));
     if (command == "layout-construct") {
         layout::Kernel kernel(document.problem, document.placement);
+        const auto off_face = [&] {
+            std::size_t count = 0;
+            for (const auto& rule : document.problem.constraints.soft_gaps)
+                if (rule.same_face && !layout::pair_faced(document.problem, kernel.board(), rule.anchor, kernel.placement()[rule.anchor],
+                                                          rule.member, kernel.placement()[rule.member], rule.or_under))
+                    ++count;
+            return count;
+        };
+        const std::size_t faced_before = off_face();
         const std::size_t before = kernel.violations().size();
         const auto built = layout::construct_owned(kernel, static_cast<layout::Nm>(layout::constants::search_pitch.value),
                                                    static_cast<layout::Nm>(layout::constants::construct_reach.value));
-        std::cout << layout::construct_summary(built) << "  violations " << before << " before, " << kernel.violations().size() << " after\n";
+        std::cout << layout::construct_summary(built) << "  violations " << before << " before, " << kernel.violations().size() << " after\n"
+                  << "  owned parts off their owner's face " << faced_before << " before, " << off_face() << " after\n";
         return built.unseated.empty() ? 0 : 1;
     }
     return report(document.problem, document.placement);

@@ -22,8 +22,10 @@ inline constexpr NamedConstant construct_spacing{"construct_spacing", 0.5e6, "nm
     "least distance between two seats tried for one part in that search; closer seats block the same neighbours"};
 inline constexpr NamedConstant construct_nodes{"construct_nodes", 512, "seats", "policy",
     "seats examined in one such search before the owner's parts are reported as not fitting"};
+inline constexpr NamedConstant construct_rounds{"construct_rounds", 3, "passes", "policy",
+    "passes that seat again a part left on the other face after its owner moved; the count of such parts falls each pass or the pass changes nothing"};
 inline constexpr std::array construct_registry{construct_reach, construct_evictions, construct_window, construct_branches,
-                                               construct_spacing, construct_nodes};
+                                               construct_spacing, construct_nodes, construct_rounds};
 }
 
 struct ConstructReport {

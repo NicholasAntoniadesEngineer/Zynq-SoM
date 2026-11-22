@@ -67,6 +67,8 @@ ConstructReport construct_owned(Kernel& kernel, Nm pitch, Nm reach) {
     }
     std::stable_sort(order.begin(), order.end(), [&](std::size_t a, std::size_t b) {
         if (depth[a] != depth[b]) return depth[a] < depth[b];
+        const bool faced_a = owner_rule(problem, a)->same_face, faced_b = owner_rule(problem, b)->same_face;
+        if (faced_a != faced_b) return faced_a;
         if (ties[a].size() != ties[b].size()) return ties[a].size() > ties[b].size();
         const Nm limit_a = owner_rule(problem, a)->limit, limit_b = owner_rule(problem, b)->limit;
         if (limit_a != limit_b) return limit_a < limit_b;
@@ -88,7 +90,9 @@ ConstructReport construct_owned(Kernel& kernel, Nm pitch, Nm reach) {
         const bool flips = problem.footprints[item.footprint].flippable && !item.top_only;
         Placement trial = kernel.placement();
         std::vector<const PadGap*> bound;
-        std::vector<Point> centres{owner.at};
+        const bool led = !kernel.parked(rule.anchor);
+        std::vector<Point> centres;
+        if (led) centres.push_back(owner.at);
         for (const PadGap* tie : ties[part]) {
             const std::size_t peer = tie->anchor == part ? tie->member : tie->anchor;
             if (kernel.parked(peer)) continue;
@@ -104,9 +108,10 @@ ConstructReport construct_owned(Kernel& kernel, Nm pitch, Nm reach) {
                     for (const Face face : {owner.face, owner.face == Face::top ? Face::bottom : Face::top}) {
                         if (face != original[part].face && !flips) continue;
                         const Pose pose{shifted(centre, ring[rank]), static_cast<Turn>(turn), face};
+                        if (led && rule.same_face && !pair_faced(problem, kernel.board(), rule.anchor, owner, part, pose, rule.or_under)) continue;
                         trial[part] = pose;
-                        Nm gap = pad_gap_length(problem, rule, trial);
-                        bool within = gap <= rule.limit;
+                        Nm gap = led ? pad_gap_length(problem, rule, trial) : 0;
+                        bool within = true;
                         for (std::size_t index = 0; within && index < bound.size(); ++index) {
                             const Nm length = pad_gap_length(problem, *bound[index], trial);
                             within = length <= bound[index]->limit;
@@ -115,7 +120,8 @@ ConstructReport construct_owned(Kernel& kernel, Nm pitch, Nm reach) {
                         if (within) candidates.push_back({pose, gap, rank});
                     }
         trial[part] = original[part];
-        if (std::none_of(candidates.begin(), candidates.end(), [&](const Candidate& seat) { return seat.pose == original[part]; }))
+        if (led && (!rule.same_face || pair_faced(problem, kernel.board(), rule.anchor, owner, part, original[part], rule.or_under)) &&
+            std::none_of(candidates.begin(), candidates.end(), [&](const Candidate& seat) { return seat.pose == original[part]; }))
             candidates.push_back({original[part], pad_gap_length(problem, rule, trial), ring.size()});
         std::stable_sort(candidates.begin(), candidates.end(), [&](const Candidate& a, const Candidate& b) {
             if (a.gap != b.gap) return a.gap < b.gap;
@@ -125,6 +131,7 @@ ConstructReport construct_owned(Kernel& kernel, Nm pitch, Nm reach) {
         });
         return candidates;
     };
+    const auto drain = [&] {
     while (!queue.empty()) {
         const std::size_t part = queue.front();
         queue.pop_front();
@@ -176,50 +183,74 @@ ConstructReport construct_owned(Kernel& kernel, Nm pitch, Nm reach) {
             continue;
         }
         if (!seated) {
-            std::vector<std::size_t> cluster{part};
-            std::vector<Pose> held;
-            for (const std::size_t other : order)
-                if (other != part && by_rule[other] && !kernel.parked(other) && owner_rule(problem, other)->anchor == rule.anchor)
-                    cluster.push_back(other);
-            std::stable_sort(cluster.begin(), cluster.end(), [&](std::size_t a, std::size_t b) {
-                return owner_rule(problem, a)->limit < owner_rule(problem, b)->limit;
-            });
-            for (const std::size_t member : cluster) {
-                held.push_back(kernel.placement()[member]);
-                if (member != part) kernel.park(member);
-            }
-            std::size_t nodes = 0;
+            const auto tied = [&](std::size_t other) {
+                return std::any_of(ties[part].begin(), ties[part].end(),
+                                   [&](const PadGap* tie) { return tie->anchor == other || tie->member == other; });
+            };
+            const auto area = [&](std::size_t member) {
+                const Box gate = problem.footprints[problem.parts[member].footprint].top.gate_box;
+                return static_cast<double>(gate.x1 - gate.x0) * static_cast<double>(gate.y1 - gate.y0);
+            };
             const auto node_budget = static_cast<std::size_t>(constants::construct_nodes.value);
             const auto branches = static_cast<std::size_t>(constants::construct_branches.value);
             const auto spacing = static_cast<Nm>(constants::construct_spacing.value);
-            const std::function<bool(std::size_t)> place_all = [&](std::size_t index) {
-                if (index == cluster.size()) return true;
-                if (nodes++ >= node_budget) return false;
-                const std::size_t member = cluster[index];
-                std::vector<Pose> used;
-                for (const Candidate& seat : seats_of(member)) {
-                    if (used.size() >= branches) break;
-                    if (std::any_of(used.begin(), used.end(), [&](const Pose& tried) {
-                            return tried.face == seat.pose.face && squared(tried.at.x - seat.pose.at.x) + squared(tried.at.y - seat.pose.at.y) < squared(spacing);
-                        }))
-                        continue;
-                    if (seat.pose.face == Face::bottom && crowds_escape(problem, kernel.placement(), member, seat.pose)) continue;
-                    if (!kernel.seat(member, seat.pose)) continue;
-                    used.push_back(seat.pose);
-                    if (place_all(index + 1)) return true;
-                    kernel.park(member);
+            bool arranged = false;
+            for (const bool wide : {false, true}) {
+                std::vector<std::size_t> cluster{part};
+                for (const std::size_t other : order)
+                    if (other != part && by_rule[other] && !kernel.parked(other) &&
+                        (owner_rule(problem, other)->anchor == rule.anchor || (wide && tied(other))))
+                        cluster.push_back(other);
+                std::map<std::size_t, Pose> held_at;
+                for (const std::size_t member : cluster) {
+                    held_at.emplace(member, kernel.placement()[member]);
+                    if (member != part) kernel.park(member);
                 }
-                return false;
-            };
-            if (place_all(0)) {
+                std::size_t nodes = 0;
+                const std::function<bool(std::size_t)> place_all = [&](std::size_t index) {
+                    if (index == cluster.size()) return true;
+                    if (nodes++ >= node_budget) return false;
+                    const std::size_t member = cluster[index];
+                    std::vector<Pose> used;
+                    for (const Candidate& seat : seats_of(member)) {
+                        if (used.size() >= branches) break;
+                        if (std::any_of(used.begin(), used.end(), [&](const Pose& tried) {
+                                return tried.face == seat.pose.face &&
+                                       squared(tried.at.x - seat.pose.at.x) + squared(tried.at.y - seat.pose.at.y) < squared(spacing);
+                            }))
+                            continue;
+                        if (seat.pose.face == Face::bottom && crowds_escape(problem, kernel.placement(), member, seat.pose)) continue;
+                        if (!kernel.seat(member, seat.pose)) continue;
+                        used.push_back(seat.pose);
+                        if (place_all(index + 1)) return true;
+                        kernel.park(member);
+                    }
+                    return false;
+                };
+                const std::vector<std::size_t> listed = cluster;
+                for (const bool largest_first : {false, true}) {
+                    cluster = listed;
+                    std::stable_sort(cluster.begin(), cluster.end(), [&](std::size_t a, std::size_t b) {
+                        if (largest_first && area(a) != area(b)) return area(a) > area(b);
+                        return owner_rule(problem, a)->limit < owner_rule(problem, b)->limit;
+                    });
+                    nodes = 0;
+                    if (place_all(0)) {
+                        arranged = true;
+                        break;
+                    }
+                }
+                if (arranged) break;
+                for (const std::size_t member : listed)
+                    if (member != part && !kernel.seat(member, held_at.at(member)))
+                        throw LayoutError("layout: the constructor could not put " + problem.parts[member].reference + " back on its seat");
+            }
+            if (arranged) {
                 ++report.seated;
                 ++report.searched;
                 by_rule[part] = 1;
                 continue;
             }
-            for (std::size_t index = 0; index < cluster.size(); ++index)
-                if (cluster[index] != part && !kernel.seat(cluster[index], held[index]))
-                    throw LayoutError("layout: the constructor could not put " + problem.parts[cluster[index]].reference + " back on its seat");
         }
         if (kernel.seat(part, original[part])) {
             ++report.returned;
@@ -241,6 +272,23 @@ ConstructReport construct_owned(Kernel& kernel, Nm pitch, Nm reach) {
         if (const auto refusal = kernel.seat_rejection(part, original[part]))
             line += " first seat refused by " + std::string(breach_name(refusal->kind)) + " against " + problem.parts[refusal->other].reference;
         report.causes.push_back(std::move(line));
+    }
+    };
+    drain();
+    for (std::size_t round = 0; round < static_cast<std::size_t>(constants::construct_rounds.value); ++round) {
+        for (const std::size_t part : order) {
+            if (!by_rule[part] || kernel.parked(part)) continue;
+            const PadGap& rule = *owner_rule(problem, part);
+            if (!rule.same_face || pair_faced(problem, kernel.board(), rule.anchor, kernel.placement()[rule.anchor], part,
+                                              kernel.placement()[part], rule.or_under))
+                continue;
+            kernel.park(part);
+            by_rule[part] = 0;
+            --report.seated;
+            queue.push_back(part);
+        }
+        if (queue.empty()) break;
+        drain();
     }
     report.length_after = kernel.routed_length();
     return report;
