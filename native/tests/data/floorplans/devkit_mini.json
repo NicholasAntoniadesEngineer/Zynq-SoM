@@ -1,0 +1,37 @@
+{
+  "outline": "auto",
+  "_comment": "DECLARATIVE devkit_mini floorplan - minimal edge set: both USB-C inlets on N, everything else interior. Same schema as carrier/floorplan.json.",
+  "edges": {
+    "N": [
+      "pd_input",
+      "usb_uart_connector"
+    ]
+  },
+  "interior": {
+    "debug_boot": {
+      "side": "N"
+    },
+    "mechanical": {
+      "side": "E"
+    },
+    "power": {
+      "side": "E"
+    },
+    "power_mon": {
+      "near": "power_som"
+    },
+    "power_som": {
+      "side": "E"
+    },
+    "uart_bridge": {
+      "near": "usb_uart_connector",
+      "pull": {
+        "to": "usb_uart_connector",
+        "weight": 60.0,
+        "face": "inboard",
+        "exclusive": true,
+        "basis": "CP2102N FS pair terminates at the UART USB-C - same near_max seat rule as the carrier (D11 edge-seat)"
+      }
+    }
+  }
+}

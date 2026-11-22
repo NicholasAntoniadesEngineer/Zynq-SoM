@@ -451,7 +451,7 @@ void live(const std::filesystem::path& root){
    auto reviewed=f.input;
    reviewed.contracts.at("usb_pd")=parse_json_file((root/"subsystems/usb_pd/placement_contract.json").string());
    reviewed.contracts.at("power")=parse_json_file((root/"subsystems/power/placement_contract.json").string());
-   reviewed.floorplan.spec=load_floorplan_spec((root/"carrier/floorplan.json").string());
+   reviewed.floorplan.spec=load_floorplan_spec((root/"native/tests/data/floorplans/carrier.json").string());
    const auto reviewed_zones=build_pcb_zone_geometry(reviewed);
    const auto reviewed_plan=prepare_pcb_floorplan(reviewed,reviewed_zones);
    demand(std::none_of(reviewed_plan.compose.index.hard.begin(),reviewed_plan.compose.index.hard.end(),
