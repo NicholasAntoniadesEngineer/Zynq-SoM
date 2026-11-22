@@ -122,15 +122,13 @@ void reads_subsystem_density() {
     const auto with = [&](const std::string& value) { return replaced(small, plain, "{\"name\": \"mechanical\", \"density\": " + value + "}"); };
     const BoardDefinition unstated = parsed(small);
     for (const BoardSheet& sheet : unstated.sheets) require(!sheet.density, "a sheet that states no density carries none");
-    require(board_header_of(parse_json_text(small), "bench.json").sheet_density.empty(), "a board that states no density overrides none");
+    require(sheet_densities(unstated).empty(), "a board that states no density overrides none");
     const BoardDefinition stated = parsed(with("5"));
     require(stated.sheet("mechanical").density == middle_level && !stated.sheet("power").density, "a sheet's own density is read for that sheet only");
-    const BoardHeader header = board_header_of(parse_json_text(with("1")), "bench.json");
-    require(header.sheet_density.size() == 1 && header.sheet_density.at("mechanical") == sparse_level, "the header carries each stated density by sheet");
+    const std::map<std::string, int> levels = sheet_densities(parsed(with("1")));
+    require(levels.size() == 1 && levels.at("mechanical") == sparse_level, "each stated density is listed by sheet");
     for (const char* wrong : {"0", "11", "5.5", "-1", "\"5\"", "null", "true", "[5]"}) {
-        rejects([&] { parsed(with(wrong)); }, "sheet mechanical field 'density' must be a whole number from 1 to 10");
-        rejects([&] { board_header_of(parse_json_text(with(wrong)), "bench.json"); },
-                "board file bench.json: sheet mechanical field 'density' must be a whole number from 1 to 10");
+        rejects([&] { parsed(with(wrong)); }, "board file fixture: sheet mechanical field 'density' must be a whole number from 1 to 10");
     }
     rejects([&] { parsed(replaced(small, plain, "{\"name\": \"mechanical\", \"densities\": 5}")); }, "densities");
 }

@@ -90,7 +90,7 @@ int export_problem(int argc, char** argv) {
     const auto binding = layout::bind_model(placed.model, policy, &gates,
         {arguments.plane_net, layout::project_edge_clearance(parse_json_file(arguments.project_file)),
          arguments.overmold_parts, input.floorplan.place_clear, layout::authored_intent(input),
-         {input.floorplan.project.density, paths.sheet_density}});
+         {input.floorplan.project.density, sheet_densities(load_board(paths.project_root, paths.module))}});
     const std::string text = layout::document_json(binding.problem, binding.placement);
     write_atomic_file(arguments.output, std::vector<uint8_t>(text.begin(), text.end()));
     std::cout << "layout: problem written to " << arguments.output << "\n";

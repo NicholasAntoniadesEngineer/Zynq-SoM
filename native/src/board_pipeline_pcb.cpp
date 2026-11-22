@@ -181,7 +181,7 @@ void pcb_stages(Context& c){
             c.report("native_policy.txt",policy.report());
             c.gate("native_policy",policy.providers_complete(),policy.report());
         }
-        const layout::DensityChoice density{stage.inputs.floorplan.project.density,c.paths.sheet_density};
+        const layout::DensityChoice density{stage.inputs.floorplan.project.density,sheet_densities(load_board(c.paths.project_root,c.paths.module))};
         if(!c.options.layout&&density.spaced())throw ProjectError("a density below the densest level needs the layout squeeze; set 'squeeze' in the run configuration");
         const auto run_file=c.paths.run_config?*c.paths.run_config:c.paths.repository_root/run_config_file;
         const SearchConfig search=load_run_config(run_file).search;

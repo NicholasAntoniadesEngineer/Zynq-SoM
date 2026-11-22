@@ -8,7 +8,6 @@
 #include <array>
 #include <cstdint>
 #include <filesystem>
-#include <map>
 #include <optional>
 #include <stdexcept>
 #include <string>
@@ -39,7 +38,6 @@ struct ProjectPaths {
     std::string file_stem;
     bool root_readme = false;
     std::vector<std::string> owned_groups;
-    std::map<std::string, int> sheet_density;
 };
 
 struct ProjectConfig {

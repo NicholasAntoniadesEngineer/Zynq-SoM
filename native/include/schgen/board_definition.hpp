@@ -111,7 +111,6 @@ struct BoardHeader {
     BoardFiles files;
     BoardFlags flags;
     std::string module_folder;
-    std::map<std::string, int> sheet_density;
 };
 
 inline const std::vector<std::string>& connector_handling_classes() {
@@ -154,5 +153,6 @@ BoardPower parse_board_power(const JsonNode& node, const std::string& source);
 BoardDefinition parse_board(const JsonNode& document, const std::string& source, ModuleDefinition module_definition);
 BoardDefinition load_board(const std::filesystem::path& board_root);
 BoardDefinition load_board(const std::filesystem::path& board_root, ModuleDefinition module);
+std::map<std::string, int> sheet_densities(const BoardDefinition& board);
 
 }
