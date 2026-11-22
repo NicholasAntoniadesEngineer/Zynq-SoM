@@ -479,6 +479,12 @@ Nm Kernel::rules_reach() const {
 
 bool Kernel::via_blocked(std::size_t owner, const Pose& pose, const Shape& guest) const {
     const Rules& rules = problem_.rules;
+    Box field{pose.at.x, pose.at.y, pose.at.x, pose.at.y};
+    for (const Point& site : problem_.parts[owner].via_sites) {
+        const Point at = placed(site, pose.at, pose.turn);
+        field = united(field, Box{at.x, at.y, at.x, at.y});
+    }
+    if (gap_at_least(field, guest.bound, rules_reach())) return false;
     for (const Point& site : problem_.parts[owner].via_sites) {
         const Point at = placed(site, pose.at, pose.turn);
         const Box point{at.x, at.y, at.x, at.y};
