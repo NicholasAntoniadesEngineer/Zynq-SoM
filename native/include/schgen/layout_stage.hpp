@@ -1,5 +1,6 @@
 #pragma once
 
+#include "schgen/layout_construct.hpp"
 #include "schgen/layout_adapter.hpp"
 #include "schgen/layout_sink.hpp"
 #include "schgen/layout_arrange.hpp"
@@ -31,6 +32,7 @@ struct Rebalance {
 };
 
 struct StageResult {
+    std::optional<ConstructReport> construct;
     std::vector<Rebalance> rebalances;
     PcbModel model;
     AttractReport attract, reseat;

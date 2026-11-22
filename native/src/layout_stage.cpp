@@ -634,10 +634,15 @@ StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model
         return text + " (" + std::to_string(attracted.violations().size()) + ")\n";
     };
     std::string illegal_entry, illegal_separated;
+    if (inputs.floorplan.project.construct) {
+        result.construct = construct_owned(attracted, settings.pitch, static_cast<Nm>(constants::construct_reach.value));
+        if (!result.construct->unseated.empty())
+            throw LayoutError("layout: no seat by rule for some owned parts\n" + construct_summary(*result.construct));
+    }
     repair_start(attracted, settings, result, [&](bool separated) { (separated ? illegal_separated : illegal_entry) = listed(separated ? "after connector separation" : "handed over"); });
     {
         const std::size_t left = unmet_count(attracted) + gap_count(attracted);
-        result.convergence = convergence_text(result, left) + illegal_entry + illegal_separated + listed("after repair");
+        result.convergence = (result.construct ? construct_summary(*result.construct) : std::string()) + convergence_text(result, left) + illegal_entry + illegal_separated + listed("after repair");
         const Problem& entry = attracted.problem();
         for (const PadGap& rule : entry.constraints.soft_gaps)
             if (rule.same_face && !pair_faced(entry, attracted.board(), rule.anchor, attracted.placement()[rule.anchor], rule.member,

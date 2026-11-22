@@ -34,6 +34,7 @@ nothing needs recompiling. A misspelt or unknown key stops the run with an error
 | `output` | `"out"` | Folder that receives one sub-folder per board |
 | `squeeze` | `true` | Compact the placed board to the smallest outline that passes every rule |
 | `arrange` | `true` | Before squeezing, move clusters of parts off sides of the module so those sides can close up; needs `squeeze` |
+| `construct` | `false` | Before repair and squeezing, take every part that belongs to an owner off the board and seat it again by the layout rules; needs `squeeze` |
 | `renders` | `true` | Produce the 3D and per-sheet images |
 | `labels` | `false` | After the layout is final, seat each part's reference label beside it on its own face and draw the function labels. Parts never move for a label; one with no free seat is hidden and listed in `reports/label_seats.txt` |
 | `timing` | `true` | Print how long each stage took |

@@ -140,7 +140,7 @@ std::vector<std::string> RunConfig::board_arguments(const std::string& board, co
 
 RunConfig parse_run_config(const JsonNode& document) {
     if (document.kind != JsonKind::Object) fail("the file must hold one object");
-    reject_unknown_keys(document, {"schema", "boards", "output", "squeeze", "arrange", "renders", "labels", "timing", "plane_net",
+    reject_unknown_keys(document, {"schema", "boards", "output", "squeeze", "arrange", "construct", "renders", "labels", "timing", "plane_net",
                                    "audit_projections", "stackup", "overmold_parts", "fabrication", "study", "search"}, run_config_file);
     if (member(document, "schema", JsonKind::String).string_value != "schgen.run/1") fail("unknown schema");
     RunConfig config;
@@ -152,6 +152,8 @@ RunConfig parse_run_config(const JsonNode& document) {
     config.renders = member(document, "renders", JsonKind::Bool).bool_value;
     config.arrange = member(document, "arrange", JsonKind::Bool).bool_value;
     if (config.arrange && !config.squeeze) fail("'arrange' needs 'squeeze'");
+    config.construct = member(document, "construct", JsonKind::Bool).bool_value;
+    if (config.construct && !config.squeeze) fail("'construct' needs 'squeeze'");
     config.labels = member(document, "labels", JsonKind::Bool).bool_value;
     config.timing = member(document, "timing", JsonKind::Bool).bool_value;
     config.plane_net = member(document, "plane_net", JsonKind::String).string_value;

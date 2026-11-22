@@ -218,6 +218,7 @@ ProjectConfig load_project_config(const ProjectPaths& paths) {
         out.stackup = run.stackup_of(out.name);
         out.labels = run.labels;
         out.arrange = run.arrange;
+        out.construct = run.construct;
         const auto& placement = field(out.raw, "placement");
         reject_unknown_project_keys(placement, "placement");
         out.wired_sheets = strings(field(placement, "wired_sheets"), "placement.wired_sheets");
