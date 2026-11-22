@@ -821,9 +821,13 @@ GateVerdict judge_model(const PcbPlacementInput& inputs, const PcbModel& model) 
     const PcbCheckInput input(model);
     const auto ratsnest = check_ratsnest(input);
     const PlacementIntegrityResult integrity = check_placement_integrity(input, model, authored_intent(inputs));
+    const ConnectorSpacingResult spacing = check_connector_spacing(input);
+    const bool placed_spacing = std::all_of(spacing.pairs.begin(), spacing.pairs.end(), [](const ConnectorSpacingRow& row) {
+        return row.ok || row.family == staged_connector_family;
+    });
     return {check_fanout(input, 0).ok, check_placement_mech(input).ok, ratsnest.off_board.empty(),
             ratsnest.dispersed.empty(), check_pcb_placement_gates(inputs, model).ok(),
-            check_connector_spacing(input).ok, integrity.ok, integrity.placement_ok};
+            spacing.ok, integrity.ok, integrity.placement_ok, placed_spacing};
 }
 
 PcbModel model_with(const PcbModel& base, const ModelBinding& binding, const Placement& placement) {

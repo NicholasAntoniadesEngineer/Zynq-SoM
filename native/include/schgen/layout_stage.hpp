@@ -52,6 +52,8 @@ struct SearchChoice {
     std::size_t plan_skip = 0;
 };
 
+void repair_start(Kernel& kernel, const SqueezeOptions& settings, StageResult& result, const std::function<void(bool)>& mark);
+
 StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model, const PcbEmitPolicy& policy,
                           const AdapterOptions& options, const SearchChoice& choice = SearchChoice{});
 

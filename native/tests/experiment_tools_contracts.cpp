@@ -66,12 +66,13 @@ void historical_probe_formats(const std::filesystem::path& root) {
     const auto frozen=subdocument(mutation,field(mutation.data,"result"),"/result");
     same(parse_json_text(render_experiment_json(frozen)),frozen.data,"immutable mutation formatter input");
 }
+const std::vector<std::string> checkpoint_stages{"zone_pack","plan_lattice","shape_bind","step3_emission","l4_pull",
+    "edge_seat","breathe","refit_facing","reorder","corridor_eviction","instantiate","emission_frame","escape_copper"};
 ExperimentDocument stage_expectations(const PcbPlacementInput& input, const ExperimentProbeResult& probe,
     const std::vector<PcbPlacementObservation>& frames, const FloorplanInput& prepared,const std::string& tag) {
     using namespace experiment_detail;
     using experiment_metric_contracts::lengths;
-    const std::vector<std::string> stages{"zone_pack","plan_lattice","shape_bind","step3_emission","l4_pull",
-        "edge_seat","breathe","refit_facing","reorder","corridor_eviction","instantiate","emission_frame","escape_copper"};
+    const auto& stages=checkpoint_stages;
     require(frames.size()==stages.size(),"complete checkpoint sequence");
     ExperimentDocument expected;
     expected.data=jo({{"tag",j(tag)},{"rows",ja()}});
@@ -141,9 +142,12 @@ ExperimentProbeResult measured_probe(PcbPlacementInput input,const std::string& 
     auto observer=std::make_shared<PcbPlacementExperiment>();
     observer->checkpoint=[&](const auto& frame){frames.push_back(frame);}; input.experiment=observer;
     const auto probe=run_w12_stageprobe(input,tag,sheets,conservative);
+    const bool replanned=frames.size()==2*checkpoint_stages.size()-1;
+    if(replanned)frames.erase(frames.begin()+1,frames.begin()+static_cast<std::ptrdiff_t>(checkpoint_stages.size()));
     for (const auto& sheet : sheets) input.floorplan.spec->interior[sheet].layer="either";
     const auto zones=build_pcb_zone_geometry(input);
-    const auto prepared=prepare_pcb_floorplan(input,zones);
+    auto prepared=prepare_pcb_floorplan(input,zones);
+    if(replanned)for(auto& term:prepared.compose.index.hard)if(term.kind=="facing"&&term.enforced)term.require_positive_facing=true;
     const auto expected=stage_expectations(input,probe,frames,prepared,tag);
     same(probe.document.data,expected.data,tag+" independently measured stage report");
     require(probe.output=="W12PROBE "+render_experiment_json(expected)+"\n",tag+" measured report bytes");

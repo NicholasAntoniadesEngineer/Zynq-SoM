@@ -2,6 +2,7 @@
 
 #include "schgen/placement_integrity.hpp"
 
+#include <functional>
 #include <cmath>
 #include <algorithm>
 #include <map>
@@ -547,6 +548,18 @@ std::string squeeze_summary(const SqueezeReport& report) {
     return text.str();
 }
 
+void repair_start(Kernel& kernel, const SqueezeOptions& settings, StageResult& result, const std::function<void(bool)>& mark) {
+    const std::size_t gaps_inherited = gap_count(kernel);
+    mark(false);
+    result.repairs = separate_connectors(kernel, settings, bundle(kernel.problem()));
+    mark(true);
+    result.attract = attract(kernel, settings.pitch, static_cast<Nm>(constants::sink_reach.value));
+    result.order = lead_first(kernel, settings.pitch);
+    std::vector<RepairRow> more = repair_inherited(kernel, settings, bundle(kernel.problem()), result.inherited);
+    result.repairs.insert(result.repairs.end(), more.begin(), more.end());
+    result.inherited += gaps_inherited;
+}
+
 StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model, const PcbEmitPolicy& policy,
                           const AdapterOptions& options, const SearchChoice& choice) {
     const PcbPlacementGatePolicy gates = pcb_placement_gate_policy(inputs);
@@ -561,7 +574,6 @@ StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model
     SqueezeOptions settings = default_squeeze();
     settings.order = choice.order;
     settings.plan_skip = choice.plan_skip;
-    const std::size_t gaps_inherited = gap_count(attracted);
     const auto listed = [&](const char* when) {
         std::string text = std::string("ILLEGAL ") + when + ":";
         const Problem& entry = attracted.problem();
@@ -573,16 +585,8 @@ StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model
         }
         return text + " (" + std::to_string(attracted.violations().size()) + ")\n";
     };
-    const std::string illegal_entry = listed("handed over");
-    result.repairs = separate_connectors(attracted, settings, bundle(binding.problem));
-    const std::string illegal_separated = listed("after connector separation");
-    result.attract = attract(attracted, settings.pitch, static_cast<Nm>(constants::sink_reach.value));
-    result.order = lead_first(attracted, settings.pitch);
-    {
-        std::vector<RepairRow> more = repair_inherited(attracted, settings, bundle(binding.problem), result.inherited);
-        result.repairs.insert(result.repairs.end(), more.begin(), more.end());
-        result.inherited += gaps_inherited;
-    }
+    std::string illegal_entry, illegal_separated;
+    repair_start(attracted, settings, result, [&](bool separated) { (separated ? illegal_separated : illegal_entry) = listed(separated ? "after connector separation" : "handed over"); });
     {
         const std::size_t left = unmet_count(attracted) + gap_count(attracted);
         result.convergence = convergence_text(result, left) + illegal_entry + illegal_separated + listed("after repair");

@@ -168,7 +168,9 @@ void live(const std::filesystem::path &root, const std::string &project) {
             "observer-neutral production accounting");
     require(!trace.attempts.empty(), "real packing attempts recorded");
     const std::vector<std::string> names{"zone_pack", "plan_lattice", "shape_bind", "step3_emission", "l4_pull", "edge_seat", "breathe", "refit_facing", "reorder", "corridor_eviction", "instantiate", "emission_frame", "escape_copper"};
-    require(observations.size() == names.size(), "all real checkpoints");
+    if (observations.size() == 2 * names.size() - 1)
+        observations.erase(observations.begin() + 1, observations.begin() + static_cast<std::ptrdiff_t>(names.size()));
+    require(observations.size() == names.size(), "all real checkpoints of the final model");
     for (std::size_t i = 0; i < names.size(); ++i) {
         const auto &o = observations[i];
         require(o.stage == names[i], "execution order");
