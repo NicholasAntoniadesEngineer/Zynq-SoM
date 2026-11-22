@@ -25,6 +25,8 @@ inline constexpr double TEXT_GAP = 0.42, PIN_CLEAR = 0.01;
 inline constexpr int SEAT_SEARCH_STEPS = 60;
 inline constexpr double ESCAPE_TEXT_CLEAR = U;
 inline constexpr long TRUNK_ENCLOSED_LIMIT = 2;
+inline constexpr int TAP_STUB_STEPS = 12;
+inline constexpr double TAP_STUB_MARGIN = 0.25;
 inline constexpr double PATH_TAG_RISE = 4 * U;
 inline constexpr double PACK_WIDTH_BUDGET = 380.0, PACK_GAP = 2 * U, PACK_STEP = 2 * U;
 // Count attempted scalar entry, including a throwing quantizer; no arithmetic replay.
