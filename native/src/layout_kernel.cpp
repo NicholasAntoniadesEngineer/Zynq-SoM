@@ -232,6 +232,15 @@ bool Kernel::release(std::size_t part) {
     return true;
 }
 
+bool Kernel::releasable(std::size_t part) const {
+    if (problem_.parts[part].fixed) return false;
+    for (const std::size_t reserve : fields_[part]) {
+        const std::optional<PourRule>& pour = problem_.reserves[reserve].pour;
+        if (pour && pour->owner == part) return false;
+    }
+    return true;
+}
+
 bool Kernel::owns(std::size_t reserve, std::size_t part) const {
     const auto& fields = fields_[part];
     return std::find(fields.begin(), fields.end(), reserve) != fields.end();

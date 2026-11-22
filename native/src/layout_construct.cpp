@@ -30,7 +30,7 @@ bool eligible(const Kernel& kernel, std::size_t part) {
     const Problem& problem = kernel.problem();
     const Part& item = problem.parts[part];
     if (item.fixed || item.connector || item.module || item.corner || item.edge) return false;
-    if (!kernel.movable_alone(part)) return false;
+    if (!kernel.releasable(part)) return false;
     if (problem.ownership.empty() || !problem.ownership[part].owner) return false;
     return owner_rule(problem, part) != nullptr;
 }
@@ -75,7 +75,11 @@ ConstructReport construct_owned(Kernel& kernel, Nm pitch, Nm reach) {
         return a < b;
     });
     const Placement original = kernel.placement();
-    for (const std::size_t part : order) kernel.park(part);
+    for (const std::size_t part : order) {
+        if (!kernel.movable_alone(part) && !kernel.release(part))
+            throw LayoutError("layout: " + problem.parts[part].reference + " could not be released from its reserved field");
+        kernel.park(part);
+    }
     report.taken = order.size();
     const std::vector<Point> ring = seat_ring(pitch, reach, Point{0, 0});
     std::deque<std::size_t> queue(order.begin(), order.end());

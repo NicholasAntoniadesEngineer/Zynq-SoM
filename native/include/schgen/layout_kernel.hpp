@@ -65,6 +65,7 @@ public:
     void park(std::size_t part);
     bool parked(std::size_t part) const { return absent_[part] != 0; }
     bool movable_alone(std::size_t part) const { return !problem_.parts[part].fixed && fields_[part].empty(); }
+    bool releasable(std::size_t part) const;
     std::size_t parked_count() const;
     std::optional<Violation> seat_rejection(std::size_t part, const Pose& pose) const;
     bool seat(std::size_t part, const Pose& pose);
