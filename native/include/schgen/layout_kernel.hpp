@@ -140,6 +140,7 @@ private:
     bool owns(std::size_t reserve, std::size_t part) const;
     Nm rules_reach() const;
     bool via_blocked(std::size_t owner, const Pose& pose, const Shape& guest) const;
+    std::vector<Point> via_sites_at(std::size_t owner, const Pose& pose) const;
     void place(std::size_t part, const Pose& pose);
     void refresh_nets(const std::vector<Move>& moves);
     void rebuild();

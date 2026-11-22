@@ -214,10 +214,17 @@ bool Kernel::reserves_follow(const std::vector<Move>& moves, const std::vector<c
         std::optional<Turn> swing;
         std::optional<Pose> owner;
         Point from{}, to{};
+        bool flips = false;
         for (const auto& move : moves) {
             if (!owns(reserve, move.part)) continue;
             const Pose& before = placement_[move.part];
-            if (move.pose.face != before.face) return false;
+            if (move.pose.face != before.face) {
+                if (!pour) return false;
+                if (pour->owner == move.part) owner = move.pose;
+                flips = true;
+                continue;
+            }
+            if (flips) return false;
             const Turn turn = static_cast<Turn>(
                 (static_cast<int>(move.pose.turn) + turn_count - static_cast<int>(before.turn)) % turn_count);
             if (pour && pour->owner == move.part) owner = move.pose;
@@ -231,7 +238,7 @@ bool Kernel::reserves_follow(const std::vector<Move>& moves, const std::vector<c
             if (turn != *swing || shifted(to, turned(arm, *swing)) != move.pose.at) return false;
         }
         if (pour) {
-            if (!owner) return false;
+            if (!owner || (flips && swing)) return false;
             boxes[reserve] = pour_box(*pour, *owner, board_);
         } else {
             if (*swing != Turn::none) return false;
@@ -478,16 +485,26 @@ Nm Kernel::rules_reach() const {
     return std::max({problem_.rules.via_pad, problem_.rules.via_ground, problem_.rules.via_hole});
 }
 
+std::vector<Point> Kernel::via_sites_at(std::size_t owner, const Pose& pose) const {
+    const Part& item = problem_.parts[owner];
+    std::vector<Point> out;
+    out.reserve(item.via_sites.size());
+    const bool flipped = pose.face != item.via_face;
+    const bool across_x = flipped && *mirrors_across_x(problem_.footprints[item.footprint]);
+    for (const Point& site : item.via_sites) {
+        const Point local = !flipped ? site : across_x ? Point{-site.x, site.y} : Point{site.x, -site.y};
+        out.push_back(placed(local, pose.at, pose.turn));
+    }
+    return out;
+}
+
 bool Kernel::via_blocked(std::size_t owner, const Pose& pose, const Shape& guest) const {
     const Rules& rules = problem_.rules;
+    const std::vector<Point> sites = via_sites_at(owner, pose);
     Box field{pose.at.x, pose.at.y, pose.at.x, pose.at.y};
-    for (const Point& site : problem_.parts[owner].via_sites) {
-        const Point at = placed(site, pose.at, pose.turn);
-        field = united(field, Box{at.x, at.y, at.x, at.y});
-    }
+    for (const Point& at : sites) field = united(field, Box{at.x, at.y, at.x, at.y});
     if (gap_at_least(field, guest.bound, rules_reach())) return false;
-    for (const Point& site : problem_.parts[owner].via_sites) {
-        const Point at = placed(site, pose.at, pose.turn);
+    for (const Point& at : sites) {
         const Box point{at.x, at.y, at.x, at.y};
         for (const Land& land : guest.lands) {
             const Nm need = land.net != no_net && land.net == rules.via_net ? rules.via_ground : rules.via_pad;
@@ -819,17 +836,16 @@ bool Kernel::rule_breaches(std::size_t part, const Shape& shape, const Pose& pos
         group_dispersed(item.group, part, &shape) && sink(Violation{Breach::dispersion, part, part}))
         return true;
     if (item.edge && !edge_met(item, shape, pose) && sink(Violation{Breach::edge_mount, part, part})) return true;
-    if (pose.face != item.via_face && !item.via_sites.empty() && sink(Violation{Breach::locked, part, part})) return true;
-    if (!item.via_sites.empty()) {
+    if (pose.face != item.via_face && !item.via_sites.empty() && !mirrors_across_x(problem_.footprints[item.footprint]) &&
+        sink(Violation{Breach::locked, part, part}))
+        return true;
+    if (!item.via_sites.empty() && (pose.face == item.via_face || mirrors_across_x(problem_.footprints[item.footprint]))) {
+        const std::vector<Point> sites = via_sites_at(part, pose);
         Box field{pose.at.x, pose.at.y, pose.at.x, pose.at.y};
-        for (const Point& site : item.via_sites) {
-            const Point at = placed(site, pose.at, pose.turn);
-            field = united(field, Box{at.x, at.y, at.x, at.y});
-        }
+        for (const Point& at : sites) field = united(field, Box{at.x, at.y, at.x, at.y});
         for (const auto& obstacle : problem_.obstacles)
             if (obstacle.disc && !gap_at_least(field, obstacle.box, problem_.rules.via_pad))
-                for (const Point& site : item.via_sites) {
-                    const Point at = placed(site, pose.at, pose.turn);
+                for (const Point& at : sites) {
                     if (!gap_at_least(Box{at.x, at.y, at.x, at.y}, *obstacle.disc, problem_.rules.via_pad) &&
                         sink(Violation{Breach::via_field, part, part}))
                         return true;

@@ -373,6 +373,8 @@ void reserve_thermal_fields(const PcbModel& model, const PcbEmitPolicy& policy, 
         reserve.pour = PourRule{index, {local.x0, local.y0, local.x1, local.y1}, policy.gnd_plane_edge_back, owner->mirror};
         if (std::find(reserve.members.begin(), reserve.members.end(), index) == reserve.members.end())
             reserve.members.push_back(index);
+        if (owner->mirror != (placement[index].face == Face::bottom))
+            throw LayoutError("layout: thermal pour " + zone.name + " is mirrored on a face its owner is not on");
         if (pour_box(*reserve.pour, placement[index], problem.board) != box)
             throw LayoutError("layout: thermal pour " + zone.name + " is not where its rule puts it");
     }

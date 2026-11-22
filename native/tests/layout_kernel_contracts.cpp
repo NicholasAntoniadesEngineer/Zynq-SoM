@@ -42,6 +42,7 @@ constexpr Point inland_site{30 * unit, 3 * unit}, north_slide{20 * unit, 6 * uni
 constexpr Point north_crowd{37 * unit, 6 * unit / 5};
 constexpr Point order_lead{16 * unit, 20 * unit}, order_rival{13 * unit, 20 * unit}, order_past{10 * unit, 20 * unit};
 constexpr Point via_site{3 * unit, 0}, via_near{24 * unit, 20 * unit}, via_clear{241 * unit / 10, 20 * unit};
+constexpr Point via_mirror{16 * unit, 20 * unit};
 constexpr Nm via_pad = 11 * unit / 20, via_ground = unit / 4, via_hole = 3 * unit / 5;
 constexpr std::uint64_t walk_seed = 20261111;
 constexpr int walk_steps = 400;
@@ -504,9 +505,13 @@ void via_sites_stay_clear() {
     scene.problem.rules.via_net = static_cast<int>(signal);
     require(!has(Kernel(scene.problem, scene.placement).violations(), Breach::via_field),
             "a pad on the via net needs only the hole-to-pad distance");
+    scene.problem.rules.via_net = no_net;
     scene.placement.front().face = Face::bottom;
-    require(has(Kernel(scene.problem, scene.placement).violations(), Breach::locked),
-            "a part with planned thermal vias stays on the face they were planned for");
+    require(!has(Kernel(scene.problem, scene.placement).violations(), Breach::via_field),
+            "the planned vias mirror with their owner when it goes to the rear");
+    scene.placement.back().at = fixture::via_mirror;
+    require(has(Kernel(scene.problem, scene.placement).violations(), Breach::via_field),
+            "a pad at the mirrored site blocks it from either face");
 }
 
 int main() {

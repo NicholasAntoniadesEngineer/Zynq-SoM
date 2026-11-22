@@ -180,20 +180,46 @@ BalanceReport balance_faces(Kernel& kernel, Nm pitch, Nm reach) {
             mirror.push_back({part, {at, static_cast<Turn>(back), Face::bottom}});
         }
         bool flipped = false;
+        std::map<std::string, std::size_t> blocked;
+        std::size_t sampled = 0;
         for (const Point by : offsets) {
             std::vector<Move> moves = mirror;
             for (auto& move : moves) move.pose.at = shifted(move.pose.at, by);
             if (std::any_of(moves.begin(), moves.end(), [&](const Move& move) {
                     return crowds_escape(problem, kernel.placement(), move.part, move.pose);
-                }))
+                })) {
+                ++blocked["crowds an escape on the other face"];
                 continue;
+            }
             if (kernel.move_many(moves)) {
                 flipped = true;
                 break;
             }
+            if (sampled++ >= static_cast<std::size_t>(constants::balance_samples.value)) continue;
+            const Snapshot before = kernel.snapshot();
+            if (!kernel.force(moves)) {
+                ++blocked["move refused"];
+            } else {
+                for (const std::size_t part : members)
+                    if (const auto found = kernel.breach(part)) {
+                        const std::size_t other = found->part == part ? found->other : found->part;
+                        ++blocked[std::string(breach_name(found->kind)) + " " + problem.parts[part].reference + "/" +
+                                  (other != part && other < count ? problem.parts[other].reference : "board")];
+                        break;
+                    }
+            }
+            kernel.restore(before);
         }
         if (!flipped) {
-            report.kept_on_top.emplace_back(candidate.area, lead + ": no mirrored seat within reach");
+            std::vector<std::pair<std::size_t, std::string>> ranked;
+            for (const auto& [reason, tally] : blocked) ranked.emplace_back(tally, reason);
+            std::sort(ranked.begin(), ranked.end(), [](const auto& a, const auto& b) {
+                return a.first != b.first ? a.first > b.first : a.second < b.second;
+            });
+            std::string why = lead + ": no mirrored seat within reach";
+            for (std::size_t index = 0; index < ranked.size() && index < static_cast<std::size_t>(constants::obstacle_rows.value); ++index)
+                why += "; " + std::to_string(ranked[index].first) + " " + ranked[index].second;
+            report.kept_on_top.emplace_back(candidate.area, why);
             continue;
         }
         ++report.flipped;

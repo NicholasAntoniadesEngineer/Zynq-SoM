@@ -23,8 +23,10 @@ inline constexpr NamedConstant obstacle_rows{"obstacle_rows", 8, "rows", "report
     "number of most frequent obstacles named for a part that is not within reach of the pin it serves"};
 inline constexpr NamedConstant order_tries{"order_tries", 24, "seats", "policy",
     "seats at a connector pin tried for a protection part when the parts nearer than it are moved back together"};
+inline constexpr NamedConstant balance_samples{"balance_samples", 48, "seats", "report",
+    "refused rear seats examined to name what keeps a cluster on top; the report needs the commonest causes, not every seat"};
 inline constexpr std::array sink_registry{sink_reach, ring_limit, aside_reach, evict_tries, small_pins, far_pitch, obstacle_rows,
-                                          order_tries};
+                                          order_tries, balance_samples};
 }
 
 struct AttractReport {

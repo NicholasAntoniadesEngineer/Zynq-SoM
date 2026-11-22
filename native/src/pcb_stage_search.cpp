@@ -459,7 +459,7 @@ Parts Engine::solve_contract() {
                 const auto &r = members[index];
                 const auto c = candidates(r, att[r], rep[r], placed, pad, forbid);
                 std::vector<std::pair<double, double>> tried;
-                for (std::size_t choice = 0; choice < c.size() && tried.size() < static_cast<std::size_t>(contract_search::branch_width.value); ++choice) {
+                for (std::size_t choice = 0; choice < c.size() && static_cast<double>(tried.size()) < contract_search::branch_width.value; ++choice) {
                     const Box4 b = body(c[choice]);
                     const std::pair<double, double> centre{(b.x0 + b.x1) / 2, (b.y0 + b.y1) / 2};
                     if (std::any_of(tried.begin(), tried.end(), [&](const auto &seen) {
@@ -467,7 +467,7 @@ Parts Engine::solve_contract() {
                         }))
                         continue;
                     tried.push_back(centre);
-                    if (++nodes > static_cast<std::size_t>(contract_search::node_budget.value))
+                    if (static_cast<double>(++nodes) > contract_search::node_budget.value)
                         return false;
                     placed.push_back(c[choice]);
                     if (seat(index + 1))
