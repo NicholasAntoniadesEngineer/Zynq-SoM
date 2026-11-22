@@ -154,6 +154,80 @@ void pack_relocates(SymbolLibrary& lib) {
     require(same(path.front().first, c1.x) && same(c1.y - path.front().second, 3.81), "the cell's wires did not move with it");
 }
 
+void pack_near_served_part(SymbolLibrary& lib) {
+    auto circuit = sheet("pack_near_served_part",
+        {part("U1", gate, "AND"), part("U2", gate, "AND"), part("R1", resistor, "10k"), part("R2", resistor, "10k")},
+        {{"+3V3", "power", Pins{{"U1", "5"}, {"U2", "5"}, {"R1", "1"}, {"R2", "1"}}}, {"GND", "ground", Pins{{"U1", "3"}, {"U2", "3"}}},
+         {"NODE", "signal", Pins{{"U2", "4"}, {"R1", "2"}, {"R2", "2"}}}});
+    CircuitServiceIr service; service.part = "R2"; service.role = "pull"; service.owner = {"U1", "4"};
+    circuit.layout.serves.push_back(service);
+    const Point stated{5.08, 5.08}, sharing{96.52, 5.08};
+    const double upper_half = 45.72;
+    const auto distance = [](const SchematicPlacedPart& p, Point to) { return std::abs(p.x - to.first) + std::abs(p.y - to.second); };
+    for (const std::string ref : {"R1", "R2"}) {
+        Engine engine(circuit, lib);
+        engine.pl.boxes.push_back({0.0, 0.0, 10.16, 10.16, "body", "U1"});
+        engine.pl.boxes.push_back({91.44, 0.0, 101.6, 10.16, "body", "U2"});
+        engine.pl.boxes.push_back({0.0, 91.44, 101.6, 101.6, "body", "FLOOR"});
+        const auto mark = engine._mark();
+        engine.passive(ref, 50.8, 203.2, 0);
+        engine._pack_since(mark);
+        const auto& moved = placed(engine.pl, ref);
+        require(moved.y < upper_half, ref + " was packed into the first free space, not beside the part it serves");
+        if (ref == "R1") require(distance(moved, sharing) < distance(moved, stated), "a detached cell was not packed beside the part it shares a net with");
+        else require(distance(moved, stated) < distance(moved, sharing), "a detached cell was not packed beside the part its purpose names");
+    }
+}
+
+void enclosing_taps(SymbolLibrary& lib) {
+    const auto circuit = sheet("enclosing_taps",
+        {part("U1", gate, "AND"), part("R1", resistor, "10k"), part("C1", capacitor, "100n"), part("R2", resistor, "10k")},
+        gate_nets({{"+3V3", "power", Pins{{"U1", "5"}, {"R1", "1"}}}, {"GND", "ground", Pins{{"U1", "3"}, {"C1", "2"}}},
+                   {"NODE", "signal", Pins{{"U1", "4"}, {"R1", "2"}, {"C1", "1"}, {"R2", "1"}}},
+                   {"SENSE", "port", Pins{{"R2", "2"}}}}));
+    for (const long foreign : {TRUNK_ENCLOSED_LIMIT, TRUNK_ENCLOSED_LIMIT + 1}) {
+        Engine engine(circuit, lib);
+        Trunk trunk; trunk.net = "NODE"; trunk.y = 101.6;
+        for (long i = 0; i < foreign; ++i)
+            engine.pl.boxes.push_back({10.16 + 10.16 * i, 20.32, 15.24 + 10.16 * i, 30.48, "body", "X" + std::to_string(i)});
+        engine.pl.boxes.push_back({10.16, 40.64, 15.24, 50.8, "body", "R1"});
+        engine.pl.boxes.push_back({20.32, 40.64, 25.4, 50.8, "body", "#PWR01"});
+        engine.pl.plan("NODE", {{0.0, 0.0}, {76.2, 0.0}, {76.2, 101.6}});
+        std::vector<double> nodes{76.2};
+        const bool stubbed = engine._stub_enclosing_taps(trunk, {{0, 76.2, {0.0, 0.0}, "right"}}, nodes);
+        const auto& path = engine.pl.plans.front().second.front();
+        if (foreign <= TRUNK_ENCLOSED_LIMIT) {
+            require(!stubbed && nodes.size() == 1 && path.size() == 3 && engine.pl.llabels.empty(),
+                    "a bus tap within the enclosure limit was broken into a stub");
+        } else {
+            require(stubbed && nodes.empty() && path.size() == 2 && same(path.back().first, engine.sp.port_run)
+                    && same(path.back().second, 0.0), "a bus tap that encloses unrelated symbols was not cut to a stub");
+            require(engine.pl.llabels.size() == 1 && engine.pl.llabels.front().name == "NODE"
+                    && engine.pl.label_bridged.count("NODE") == 1, "the stub of an enclosing bus tap carries no label");
+        }
+    }
+}
+
+void bus_drawn_one_way(SymbolLibrary& lib) {
+    auto circuit = sheet("bus_drawn_one_way",
+        {part("U1", "SN74HCT245PWR:SN74HCT245PWR", "driver"), part("U2", "SN74LVC125ADR:SN74LVC125ADR", "receiver")},
+        {{"+5V", "power", Pins{{"U1", "20"}, {"U1", "1"}, {"U2", "14"}}},
+         {"GND", "ground", Pins{{"U1", "10"}, {"U1", "19"}, {"U2", "7"}, {"U2", "1"}, {"U2", "4"}}},
+         {"IN_A", "port", Pins{{"U1", "2"}}}, {"IN_B", "port", Pins{{"U1", "3"}}},
+         {"OUT_A", "port", Pins{{"U2", "3"}}}, {"OUT_B", "port", Pins{{"U2", "6"}}},
+         {"BUS_A", "signal", Pins{{"U1", "18"}, {"U2", "2"}}}, {"BUS_B", "signal", Pins{{"U1", "17"}, {"U2", "5"}}}});
+    for (const char* number : {"4", "5", "6", "7", "8", "9", "11", "12", "13", "14", "15", "16"}) circuit.nc.push_back({"U1", number});
+    for (const char* number : {"8", "9", "10", "11", "12", "13"}) circuit.nc.push_back({"U2", number});
+    const auto labelled = [&](bool refine) {
+        SchematicSpacing spacing; spacing.refine = refine;
+        const auto page = place_and_route_schematic(circuit, lib, spacing);
+        require(check_visual_geometry(page.geometry).ok, "the two-part bus sheet does not pass the visual check");
+        return page.placement.label_bridged.count("BUS_A") + page.placement.label_bridged.count("BUS_B");
+    };
+    require(labelled(false) == 1, "the ordinary round no longer draws the crossed pair as one wire and one label pair");
+    require(labelled(true) == 2, "the refine round left one member of a bus wired while its sibling is labelled");
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -162,7 +236,7 @@ int main(int argc, char** argv) {
         const fs::path root(argv[1]);
         SymbolLibrary lib(std::vector<fs::path>{root / "schgen/lib", root / "native/tests/data/schematic_place_chain/symbols"});
         ground_template(lib); side_pin_chain(lib); divider_ladder(lib); trunk_port_tail(lib);
-        power_path(lib); compact_retry(lib); pack_relocates(lib);
+        power_path(lib); compact_retry(lib); pack_relocates(lib); enclosing_taps(lib); bus_drawn_one_way(lib); pack_near_served_part(lib);
         std::cout << "schematic place pattern contracts passed\n";
         return 0;
     } catch (const std::exception& error) {

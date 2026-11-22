@@ -24,6 +24,7 @@ inline constexpr double PASSIVE_SPAN = 6 * U, RAIL_SYMBOL_SPAN = 4 * U, LADDER_J
 inline constexpr double TEXT_GAP = 0.42, PIN_CLEAR = 0.01;
 inline constexpr int SEAT_SEARCH_STEPS = 60;
 inline constexpr double ESCAPE_TEXT_CLEAR = U;
+inline constexpr long TRUNK_ENCLOSED_LIMIT = 2;
 inline constexpr double PATH_TAG_RISE = 4 * U;
 inline constexpr double PACK_WIDTH_BUDGET = 380.0, PACK_GAP = 2 * U, PACK_STEP = 2 * U;
 // Count attempted scalar entry, including a throwing quantizer; no arithmetic replay.
@@ -145,6 +146,7 @@ struct FacingPair { std::string net; Point a, b; std::vector<Point> a_extra, b_e
 struct ChainScore { std::array<int, 3> score; OrderedMap<int> orient; };
 struct RungIslet { std::string trunk_net, far_net, ref; };
 struct OpenStub { std::string net; Point at; int rotation; };
+struct TrunkTap { std::size_t path = 0; double node = 0.0; Point pin; std::string side; };
 struct PathLink { std::string ref, a, b; bool multi = false; };
 struct PowerPath { Refs nets; std::vector<PathLink> links; std::optional<std::string> source, sink; };
 struct PlacementMark {
@@ -258,6 +260,7 @@ public:
     std::shared_ptr<Trunk> _rung_of(const std::string&, const TrunkMap&) const;
     void _build_trunk(Trunk&);
     std::vector<double> _trunk_leg_taps(const Trunk&, double node);
+    bool _stub_enclosing_taps(const Trunk&, const std::vector<TrunkTap>& taps, std::vector<double>& nodes);
     double _trunk_chain_column(const FloatChain&, const std::vector<double>& nodes, double ty, double outside);
     void _bottom_port_drop(const std::string&, const SymbolPin&, Point, double row, int direction);
     double _rung_bar_y(const Trunk&) const;
@@ -354,6 +357,7 @@ public:
     void _path_cell(const std::string& ref, double ax, double ay, const std::set<std::string>& rails, Handled&);
     void _power_path_row(Handled&);
     void _pack_since(const PlacementMark&);
+    std::optional<Point> _pack_anchor(const PlacementMark&) const;
     double _clear_label_x(const std::string& name, double x, double y, double lo, double hi) const;
     void _pin_divider_columns();
     SchematicPlacement run();

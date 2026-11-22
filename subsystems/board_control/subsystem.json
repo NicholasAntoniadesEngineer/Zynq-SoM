@@ -1,7 +1,7 @@
 {
   "schema": "schgen.subsystem/1",
   "name": "board_control",
-  "title": "Board control: rail DIP, TCA9535 status expander (I2C 0x20), user LEDs and button, PUDC strap",
+  "title": "Board control: TCA9535 status expander | I2C 0x20, rail DIP, user LEDs and button, PUDC strap",
   "interface": [
     "+3V3_SC",
     "+3V3",

@@ -1,7 +1,7 @@
 {
   "schema": "schgen.subsystem/1",
   "name": "esc_io",
-  "title": "8-ch ESC signal interface: 5 V PWM/DShot drive, read-back, idle bias, telemetry input",
+  "title": "8-channel ESC signal interface | 5 V PWM/DShot drive, read-back, idle bias, telemetry",
   "interface": [
     "+5V",
     "PWR_REQ",

@@ -94,6 +94,17 @@ void refuses_bad_files() {
     const auto load = [](const std::string& text) { return author_subsystem_data(parse_json_text(text), SubsystemMeta{}, {}); };
     rejects([&] { load(replaced(widget, "\"hints\": []", "\"hints\": [], \"extra\": 1")); }, "extra");
     rejects([&] { load(replaced(widget, "schgen.subsystem/1", "schgen.subsystem/0")); }, "schema is not");
+    const std::string two_rows = "Widget sensor with a title of forty glyphs and a continuation row that still fits here";
+    require(title_block_rows(two_rows).size() == kTitleRowLimit, "the two-row title fixture does not fill two rows");
+    require(load(replaced(widget, "Widget sensor", two_rows)).title == two_rows, "a title that fits two rows was changed");
+    rejects([&] { load(replaced(widget, "Widget sensor", two_rows + " and then runs on into a third row of the block")); },
+            "sheet widget: title needs 3 title-block rows; the limit is 2");
+    const std::string name = "Widget sensor", detail = "pull-ups on both lines", stated = name + std::string(kTitleBreak) + detail;
+    require(title_block_rows(stated) == std::vector<std::string>{name, detail}, "a stated break does not split the title there");
+    require(load(replaced(widget, "Widget sensor", stated)).title == stated, "a title with a stated break was changed");
+    rejects([&] { load(replaced(widget, "Widget sensor", stated + std::string(kTitleBreak) + detail)); }, "title states more than one break");
+    rejects([&] { load(replaced(widget, "Widget sensor", two_rows + std::string(kTitleBreak) + detail)); }, "the name before the break is 86 glyphs");
+    rejects([&] { load(replaced(widget, "Widget sensor", name + std::string(kTitleBreak) + two_rows)); }, "the detail after the break is 86 glyphs");
     rejects([&] { load(replaced(widget, "\"role\": \"pull\", \"net\": \"SCL\"", "\"role\": \"pull\", \"net\": \"SCL\", \"pin\": \"R1.2\"")); },
             "exactly one of");
     rejects([&] { load(replaced(widget, "\"instance\": \"non_empty\"", "\"instance\": \"sometimes\"")); }, "unknown per-board mode");

@@ -309,6 +309,7 @@ CircuitSheetIr author_subsystem_data(const JsonNode& document, const SubsystemMe
     if (text(document, "schema", where) != subsystem_data_schema)
         fail(where, std::string("schema is not ") + subsystem_data_schema);
     subsystem_data_facts(document, where);
+    require_title_fits(where, text(document, "title", where));
     CircuitAuthor circuit(text(document, "name", where), text(document, "title", where), context);
     apply_sections(circuit, document, meta, where, true);
     return meta.finish(circuit);
