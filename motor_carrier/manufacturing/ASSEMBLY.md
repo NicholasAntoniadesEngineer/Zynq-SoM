@@ -1,6 +1,6 @@
 # Assembly order — motor_carrier
 
-Board 106.75 x 110.5 mm. 358 placed parts (197 top / 161 bottom); 5 fiducials are bare-copper marks, excluded from every phase and step.
+Board 117.5 x 88.75 mm. 358 placed parts (163 top / 195 bottom); 5 fiducials are bare-copper marks, excluded from every phase and step.
 Section A is the staged hand-assembly + bring-up order; section B is the PCBA process order. Every part appears in exactly one phase and exactly one step.
 
 ## A. Incremental bring-up order
@@ -31,7 +31,7 @@ Section A is the staged hand-assembly + bring-up order; section B is the PCBA pr
 
 ![phase 1](../renders/assembly/phase_01_power_mon.png)
 
-10 parts (2 top / 8 bottom)
+10 parts (1 top / 9 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
@@ -50,7 +50,7 @@ Section A is the staged hand-assembly + bring-up order; section B is the PCBA pr
 
 ![phase 2](../renders/assembly/phase_02_power.png)
 
-51 parts (40 top / 11 bottom)
+51 parts (9 top / 42 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
@@ -183,7 +183,7 @@ CHECKPOINT: boot/debug via debug_boot: J4001, J4002, SW4001, SW4002
 
 ![phase 6](../renders/assembly/phase_06_bringup_en.png)
 
-15 parts (4 top / 11 bottom)
+15 parts (3 top / 12 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
@@ -207,7 +207,7 @@ CHECKPOINT: boot/debug via debug_boot: J4001, J4002, SW4001, SW4002
 
 ![phase 7](../renders/assembly/phase_07_esc_power.png)
 
-48 parts (16 top / 32 bottom)
+48 parts (17 top / 31 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
@@ -356,7 +356,7 @@ CHECKPOINT: verify +VIN_PD at TP10002
 
 ![phase 12](../renders/assembly/phase_12_board_control.png)
 
-33 parts (15 top / 18 bottom)
+33 parts (16 top / 17 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
@@ -440,7 +440,7 @@ CHECKPOINT: verify +5V_FAN at TP1010
 
 ![phase 15](../renders/assembly/phase_15_esc_io.png)
 
-41 parts (16 top / 25 bottom)
+41 parts (13 top / 28 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
@@ -585,7 +585,7 @@ CHECKPOINT: verify +VPRE at TP21002
 
 ![step 1](../renders/assembly/step_1_bottom_smd.png)
 
-161 parts (0 top / 161 bottom)
+195 parts (0 top / 195 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
@@ -607,7 +607,6 @@ CHECKPOINT: verify +VPRE at TP21002
 | C6001 | 100n/100V | C_0603_1608Metric | esc_power |
 | C6002 | 100n | C_0603_1608Metric | esc_power |
 | C6003 | 470u | RVT1H471M1213 | esc_power |
-| C6004 | 470u | RVT1H471M1213 | esc_power |
 | C6005 | 100n/100V | C_0603_1608Metric | esc_power |
 | C6006 | 100n/100V | C_0603_1608Metric | esc_power |
 | C6007 | 1u | C_0603_1608Metric | esc_power |
@@ -618,8 +617,29 @@ CHECKPOINT: verify +VPRE at TP21002
 | C7006 | 100n | C_0603_1608Metric | ethernet |
 | C9003 | 22u | C_0805_2012Metric | microsd |
 | C10004 | 100n | C_0603_1608Metric | pd_input |
+| C11001 | 100n | C_0603_1608Metric | power |
+| C11002 | 10u | C_1206_3216Metric | power |
+| C11003 | 10u | C_1206_3216Metric | power |
+| C11004 | 100n | C_0603_1608Metric | power |
+| C11005 | 22u | C_0805_2012Metric | power |
+| C11006 | 22u | C_0805_2012Metric | power |
+| C11007 | 100n | C_0603_1608Metric | power |
+| C11008 | 22u | C_0805_2012Metric | power |
+| C11009 | 100n | C_0603_1608Metric | power |
+| C11010 | 22u | C_0805_2012Metric | power |
+| C11011 | 22u | C_0805_2012Metric | power |
 | C11012 | 1u | C_0603_1608Metric | power |
 | C11013 | 1u | C_0603_1608Metric | power |
+| C11023 | 22p | C_0603_1608Metric | power |
+| C11024 | 1u | C_0603_1608Metric | power |
+| C11025 | 100n | C_0603_1608Metric | power |
+| C11026 | 22u | C_0805_2012Metric | power |
+| C11027 | 22p | C_0603_1608Metric | power |
+| C11028 | 1u | C_0603_1608Metric | power |
+| C11029 | 100n | C_0603_1608Metric | power |
+| C11030 | 22u | C_0805_2012Metric | power |
+| C11031 | 1u | C_0603_1608Metric | power |
+| C11032 | 1u | C_0603_1608Metric | power |
 | C12001 | 100n | C_0603_1608Metric | power_mon |
 | C12002 | 100n | C_0603_1608Metric | power_mon |
 | C12003 | 10u | C_0805_2012Metric | power_mon |
@@ -655,6 +675,8 @@ CHECKPOINT: verify +VPRE at TP21002
 | D6003 | SS54 | D_SMA | esc_power |
 | D21002 | SS54 | D_SMA | vbat_supply |
 | F6001 | 40A | 0456040.DR | esc_power |
+| L11001 | 10uH | SWPA8040S100MT | power |
+| L11002 | 10uH | SWPA8040S100MT | power |
 | Q1001 | AO3400A | AO3400A | board_control |
 | Q6002 | IPT007N06N | IPT007N06N | esc_power |
 | Q11001 | AO3400A | SOT-23 | power |
@@ -715,13 +737,19 @@ CHECKPOINT: verify +VPRE at TP21002
 | R6012 | 100k | R_0603_1608Metric | esc_power |
 | R6013 | 10k | R_0603_1608Metric | esc_power |
 | R6014 | 10k | R_0603_1608Metric | esc_power |
+| R11001 | 40.2k | R_0603_1608Metric | power |
+| R11002 | 10k | R_0603_1608Metric | power |
 | R11003 | 1k | R_0603_1608Metric | power |
+| R11004 | 23.2k | R_0603_1608Metric | power |
+| R11005 | 10k | R_0603_1608Metric | power |
 | R11006 | 330R | R_0603_1608Metric | power |
 | R11007 | 1k | R_0603_1608Metric | power |
 | R11008 | 100k | R_0603_1608Metric | power |
 | R11009 | 330R | R_0603_1608Metric | power |
-| R11011 | 10R | R_0603_1608Metric | power |
-| R11013 | 10R | R_0603_1608Metric | power |
+| R11010 | 22k | R_0603_1608Metric | power |
+| R11012 | 1k | R_0603_1608Metric | power |
+| R11014 | 22k | R_0603_1608Metric | power |
+| R11015 | 1k | R_0603_1608Metric | power |
 | R12001 | 10k | R_0603_1608Metric | power_mon |
 | R13016 | 1k | R_0603_1608Metric | power_som |
 | R13017 | 10R | R_0603_1608Metric | power_som |
@@ -745,23 +773,30 @@ CHECKPOINT: verify +VPRE at TP21002
 | RS12003 | 10mR | RLM12FTCMR010 | power_mon |
 | RS12004 | 20mR | RLM12FTCMR020 | power_mon |
 | RT6001 | 0.5mR | RLM25FEGMR50M | esc_power |
-| U1002 | SY6280AAC | SY6280AAC | board_control |
 | U2001 | SN74LVC1G08 | SOT-23-5 | bringup_en |
+| U2002 | SN74LVC1G08 | SOT-23-5 | bringup_en |
 | U2003 | SN74LVC1G08 | SOT-23-5 | bringup_en |
+| U5004 | SN74LVC125ADR | SN74LVC125ADR | esc_io |
+| U5006 | SN74LVC1G08 | SOT-23-5 | esc_io |
+| U5007 | SN74LVC1G08 | SOT-23-5 | esc_io |
+| U11001 | LM61460AANRJRR | LM61460AANRJRR | power |
+| U11002 | LM61460AANRJRR | LM61460AANRJRR | power |
 | U11003 | AP2112K-1.8 | SOT-23-5 | power |
+| U12002 | INA3221AIRGVR | INA3221AIRGVR | power_mon |
 | U19001 | CP2102N-A02 | CP2102N-A02-GQFN24R | uart_bridge |
 
 NOTES: diode polarity (D6001, D6002, D6003, D21002): cathode per silkscreen
-NOTES: pin-1 orientation (Q1001, Q6002, Q11001, U1002, U2001, U2003, U11003, U19001): dot per silkscreen
+NOTES: pin-1 orientation (14 parts, U/Q refs): dot per silkscreen
 
 ### Step 2 — Top-side SMD (paste + reflow)
 
 ![step 2](../renders/assembly/step_2_top_smd.png)
 
-176 parts (176 top / 0 bottom)
+142 parts (142 top / 0 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
+| C6004 | 470u | RVT1H471M1213 | esc_power |
 | C7001 | 1n | C_1206_3225Metric | ethernet |
 | C7002 | 1n | C_1206_3225Metric | ethernet |
 | C7003 | 1n | C_1206_3225Metric | ethernet |
@@ -773,27 +808,6 @@ NOTES: pin-1 orientation (Q1001, Q6002, Q11001, U1002, U2001, U2003, U11003, U19
 | C10001 | 100n | C_0603_1608Metric | pd_input |
 | C10002 | 10u | C_1210_3225Metric | pd_input |
 | C10003 | 47n | C_0603_1608Metric | pd_input |
-| C11001 | 100n | C_0603_1608Metric | power |
-| C11002 | 10u | C_1206_3216Metric | power |
-| C11003 | 10u | C_1206_3216Metric | power |
-| C11004 | 100n | C_0603_1608Metric | power |
-| C11005 | 22u | C_0805_2012Metric | power |
-| C11006 | 22u | C_0805_2012Metric | power |
-| C11007 | 100n | C_0603_1608Metric | power |
-| C11008 | 22u | C_0805_2012Metric | power |
-| C11009 | 100n | C_0603_1608Metric | power |
-| C11010 | 22u | C_0805_2012Metric | power |
-| C11011 | 22u | C_0805_2012Metric | power |
-| C11023 | 22p | C_0603_1608Metric | power |
-| C11024 | 1u | C_0603_1608Metric | power |
-| C11025 | 100n | C_0603_1608Metric | power |
-| C11026 | 22u | C_0805_2012Metric | power |
-| C11027 | 22p | C_0603_1608Metric | power |
-| C11028 | 1u | C_0603_1608Metric | power |
-| C11029 | 100n | C_0603_1608Metric | power |
-| C11030 | 22u | C_0805_2012Metric | power |
-| C11031 | 1u | C_0603_1608Metric | power |
-| C11032 | 1u | C_0603_1608Metric | power |
 | C13014 | 100n | C_0603_1608Metric | power_som |
 | C13015 | 10u | C_1206_3216Metric | power_som |
 | C13016 | 10u | C_1206_3216Metric | power_som |
@@ -828,8 +842,6 @@ NOTES: pin-1 orientation (Q1001, Q6002, Q11001, U1002, U2001, U2003, U11003, U19
 | D11003 | red | LED_0603_1608Metric | power |
 | D13004 | red | LED_0603_1608Metric | power_som |
 | D21001 | red | LED_0603_1608Metric | vbat_supply |
-| L11001 | 10uH | SWPA8040S100MT | power |
-| L11002 | 10uH | SWPA8040S100MT | power |
 | L13003 | 10uH | SWPA8040S100MT | power_som |
 | L21001 | 10uH | SWPA8040S100MT | vbat_supply |
 | Q6001 | IPT007N06N | IPT007N06N | esc_power |
@@ -847,14 +859,8 @@ NOTES: pin-1 orientation (Q1001, Q6002, Q11001, U1002, U2001, U2003, U11003, U19
 | R10004 | 5.49k | R_0603_1608Metric | pd_input |
 | R10005 | 5.1k | R_0603_1608Metric | pd_input |
 | R10006 | 100k | R_0603_1608Metric | pd_input |
-| R11001 | 40.2k | R_0603_1608Metric | power |
-| R11002 | 10k | R_0603_1608Metric | power |
-| R11004 | 23.2k | R_0603_1608Metric | power |
-| R11005 | 10k | R_0603_1608Metric | power |
-| R11010 | 22k | R_0603_1608Metric | power |
-| R11012 | 1k | R_0603_1608Metric | power |
-| R11014 | 22k | R_0603_1608Metric | power |
-| R11015 | 1k | R_0603_1608Metric | power |
+| R11011 | 10R | R_0603_1608Metric | power |
+| R11013 | 10R | R_0603_1608Metric | power |
 | R13014 | 47.5k | R_0603_1608Metric | power_som |
 | R13015 | 13k | R_0603_1608Metric | power_som |
 | R13018 | 22k | R_0603_1608Metric | power_som |
@@ -916,31 +922,25 @@ NOTES: pin-1 orientation (Q1001, Q6002, Q11001, U1002, U2001, U2003, U11003, U19
 | TP21003 | +VIN | TestPoint_Pad_D1.5mm | vbat_supply |
 | TP21004 | +VBAT_D | TestPoint_Pad_D1.5mm | vbat_supply |
 | U1001 | TCA9535PWR | TCA9535PWR | board_control |
-| U2002 | SN74LVC1G08 | SOT-23-5 | bringup_en |
+| U1002 | SY6280AAC | SY6280AAC | board_control |
 | U3001 | TCAN1042HGVDR | TCAN1042HGVDR | can_bus |
 | U5001 | SN74HCT245PWR | SN74HCT245PWR | esc_io |
 | U5003 | SY6280AAC | SY6280AAC | esc_io |
-| U5004 | SN74LVC125ADR | SN74LVC125ADR | esc_io |
 | U5005 | SN74LVC125ADR | SN74LVC125ADR | esc_io |
-| U5006 | SN74LVC1G08 | SOT-23-5 | esc_io |
-| U5007 | SN74LVC1G08 | SOT-23-5 | esc_io |
 | U6001 | INA237AIDGSR | INA237AIDGSR | esc_power |
 | U6002 | LM74930QRGERQ1 | LM74930QRGERQ1 | esc_power |
 | U9001 | TXS02612RTWR | TXS02612RTWR | microsd |
 | U9002 | TPD6E001RSER | TPD6E001RSER | microsd |
 | U10001 | TPS26631PWPR | TPS26631PWPR | pd_input |
 | U10002 | USBLC6-2SC6 | USBLC6-2SC6 | pd_input |
-| U11001 | LM61460AANRJRR | LM61460AANRJRR | power |
-| U11002 | LM61460AANRJRR | LM61460AANRJRR | power |
 | U12001 | INA3221AIRGVR | INA3221AIRGVR | power_mon |
-| U12002 | INA3221AIRGVR | INA3221AIRGVR | power_mon |
 | U13004 | LM61460AANRJRR | LM61460AANRJRR | power_som |
 | U20001 | USBLC6-2SC6 | USBLC6-2SC6 | usb_uart_connector |
 | U21001 | TPS26631PWPR | TPS26631PWPR | vbat_supply |
 | U21002 | LM61460AANRJRR | LM61460AANRJRR | vbat_supply |
 
 NOTES: diode polarity (14 parts, D refs): cathode per silkscreen
-NOTES: pin-1 orientation (24 parts, U/Q refs): dot per silkscreen
+NOTES: pin-1 orientation (18 parts, U/Q refs): dot per silkscreen
 
 ### Step 3 — Through-hole (short-to-tall)
 
@@ -984,10 +984,10 @@ NOTES: J3002 ZX-SH1.0-4PWT: mating face toward the S board edge
 NOTES: J5002 ZX-SH1.0-4PWT: mating face toward the S board edge
 NOTES: J6001 XT60PW-M: mating face toward the N board edge
 NOTES: J6002 XT60PW-M: mating face toward the N board edge
-NOTES: J9001 TF-01A (microSD): mating face toward the N board edge
-NOTES: J10001 TYPE-C-31-M-12 (PWR): mating face toward the N board edge
+NOTES: J9001 TF-01A (microSD): mating face toward the E board edge
+NOTES: J10001 TYPE-C-31-M-12 (PWR): mating face toward the W board edge
 NOTES: J14001 KH-5224-8P8C-D (ETH): mates from above
-NOTES: J20001 TYPE-C-31-M-12 (UART): mating face toward the E board edge
+NOTES: J20001 TYPE-C-31-M-12 (UART): mating face toward the N board edge
 NOTES: XT60 pair: J6001 () / J6002 () — IN/OUT per silkscreen label
 NOTES: J16001, J17002, J18003: DF40C SoM receptacles — the SoM module mates onto them (bring-up section, mate phase)
 

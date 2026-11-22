@@ -1,3 +1,4 @@
+#include "schgen/mirror.hpp"
 #include "schgen/pcb_checks.hpp"
 #include "schgen/floorplan.hpp"
 #include "sheet_roles_fixture.hpp"
@@ -104,7 +105,7 @@ Live load_live(const fs::path& root,const std::string& project,bool historical){
     for(const auto& n:ls(live.board.document)){
         if(tag(n,"net"))live.model.net_numbers[atom(ls(n)[2])]=static_cast<int>(num(n,1));
         if(tag(n,"gr_line")){auto layer=sub(n,"layer");if(layer&&atom(ls(*layer)[1])=="Edge.Cuts")for(auto key:{"start","end"}){auto p=sub(n,key);xmax=std::max(xmax,num(*p,1));ymax=std::max(ymax,num(*p,2));xmin=std::min(xmin,num(*p,1));ymin=std::min(ymin,num(*p,2));}}
-        if(!tag(n,"footprint"))continue;PcbCheckInstance inst;inst.ref=prop(n,"Reference");inst.value=prop(n,"Value");inst.footprint=atom(ls(n)[1]);auto at=sub(n,"at");inst.x=num(*at,1);inst.y=num(*at,2);inst.rotation=ls(*at).size()>3?num(*at,3):0;inst.side=atom(ls(*sub(n,"layer"))[1])=="B.Cu"?"bottom":"top";inst.mod=footprint(inst.footprint);std::smatch match;if(std::regex_search(inst.ref,match,std::regex("[0-9]+$"))){auto b=bands.find(std::stoi(match.str())/1000);if(b!=bands.end())inst.sheet=b->second;}inst.module_connector=explicit_sheet_roles(std::vector<std::string>{inst.sheet}).at(inst.sheet).module_connector;
+        if(!tag(n,"footprint"))continue;PcbCheckInstance inst;inst.ref=prop(n,"Reference");inst.value=prop(n,"Value");inst.footprint=atom(ls(n)[1]);auto at=sub(n,"at");inst.x=num(*at,1);inst.y=num(*at,2);inst.rotation=ls(*at).size()>3?num(*at,3):0;inst.side=atom(ls(*sub(n,"layer"))[1])=="B.Cu"?"bottom":"top";inst.mod=footprint(inst.footprint);if(inst.side=="bottom"){const auto flipped=mirrored_footprint(inst.mod->document);inst.mod=pcb_check_footprint(inst.mod->source,sexpr_dumps(flipped),flipped);inst.mirror=true;}std::smatch match;if(std::regex_search(inst.ref,match,std::regex("[0-9]+$"))){auto b=bands.find(std::stoi(match.str())/1000);if(b!=bands.end())inst.sheet=b->second;}inst.module_connector=explicit_sheet_roles(std::vector<std::string>{inst.sheet}).at(inst.sheet).module_connector;
         // The source PcbModel books every numbered pad, including NC pads
         // that KiCad omits from emitted (net ...) clauses.
         if(inst.footprint.find("Fiducial")==std::string::npos)for(const auto& p:inst.mod->pads)if(!std::get<0>(p).empty())inst.pad_nets[std::get<0>(p)]={0,""};

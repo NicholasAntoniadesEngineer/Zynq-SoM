@@ -11,16 +11,16 @@ axes searched: A1 edge assignment of derived edge sheets, A7 arrangement finalis
   constant axis_orders = 8: search axis A8, the base edge order the squeeze rotates and reverses
   constant plan_skips = 4: most arrangement finalists a seed skips: one per board side
 seed | reuses | edge choices | plan skip | order | reached | outline mm | correct | airwire mm | first finding
-0 | - | first | 0 | 0 | S3 | 106.75 x 110.5 | yes | 10222.329700 | -
+0 | - | first | 0 | 0 | S3 | 109.75 x 105.25 | yes | 10996.249300 | -
 1 | - | esc_power#1,pd_input#1,usb_uart_connector#2 | 1 | 23 | S3 | 113 x 98 | yes | 10948.525800 | -
 2 | - | esc_power#3,usb_uart_connector#2 | 0 | 0 | S2 | - | no | - | -
-3 | - | microsd#1,usb_uart_connector#1 | 1 | 0 | S3 | 117.5 x 92.25 | yes | 10430.589000 | -
+3 | - | microsd#1,usb_uart_connector#1 | 1 | 0 | S3 | 107.75 x 98 | yes | 10015.101400 | -
 4 | - | esc_power#3,microsd#1,pd_input#3,usb_uart_connector#3 | 1 | 17 | S1 | - | no | - | In1 plane VOID ethernet_isolation_void_J14001 (165.95, 65.95, 185.45, 83.85) intersects the escape region (110.0, 78.5, 166.0, 126.5) — the return plane under the DF40 field would be perforated (a placement wave moved the ethernet media parts under the SoM?); fail loud
 5 | - | microsd#3,usb_uart_connector#2 | 1 | 4 | S2 | - | no | - | -
 6 | - | esc_power#2,microsd#1,usb_uart_connector#3 | 2 | 22 | S2 | - | no | - | -
-7 | - | microsd#2,pd_input#3 | 3 | 22 | S3 | 115 x 98.25 | yes | 10879.588800 | -
+7 | - | microsd#2,pd_input#3 | 3 | 22 | S3 | 117.5 x 88.75 | yes | 11109.477000 | -
 DETAIL seed 4:
 In1 plane VOID ethernet_isolation_void_J14001 (165.95, 65.95, 185.45, 83.85) intersects the escape region (110.0, 78.5, 166.0, 126.5) — the return plane under the DF40 field would be perforated (a placement wave moved the ethernet media parts under the SoM?); fail loud
-CHOSEN seed 0 by first correct in screening order
-SWEEP: pass rate 4/4; area best 10839.4 median 11074 worst 11795.9 mm2; spread 0.0216456; HANDLED against pass rate 0.8 and spread 0.05 (integrator's decision 2026-11-21; revisit after the first sweeps on three boards)
+CHOSEN seed 7 by objective among the first batch laid out
+SWEEP: pass rate 4/4; area best 10428.1 median 10559.5 worst 11551.2 mm2; spread 0.0125981; HANDLED against pass rate 0.8 and spread 0.05 (integrator's decision 2026-11-21; revisit after the first sweeps on three boards)
 

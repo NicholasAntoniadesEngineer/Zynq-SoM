@@ -2,7 +2,7 @@
   "artifacts": [
     {
       "path": "Zynq_Motor_Carrier.kicad_pcb",
-      "sha256": "91fdb0c16ea10f2d3f02a20b051f4d9494852f25422e1bb083c3edf9f20a2462"
+      "sha256": "dba6160bf6267fda07cb28f2784033d45dc0770c0a863f2a3665a609c13c61a2"
     },
     {
       "path": "Zynq_Motor_Carrier.kicad_pro",
@@ -14,15 +14,15 @@
     },
     {
       "path": "docs/FLOORPLAN.md",
-      "sha256": "21a1ffd39d29b1c82d34f80065053b8b9b143731f2d07f9f9fab155fef3c0405"
+      "sha256": "753e9de3a5851a37cd85e643bbd69765076dd9f9d442382c1f64bb193386f133"
     },
     {
       "path": "docs/FLOORPLAN.svg",
-      "sha256": "74aa8a18ac1b066ddaa5efedbe70d8afaa7d937ad5773a810c5d42d73db57c94"
+      "sha256": "8d3100d73417140add8117e15be0575018420599a96434509a8e2ffff830ea38"
     },
     {
       "path": "docs/RATSNEST.svg",
-      "sha256": "dc09ce3a5a2700a938833554ef9ecf776f490f4e1dfd5d6ec3ea9480c3fe6ed7"
+      "sha256": "fdb04692afc2eb8d58723859b6246a980aa851331d7addc58681863e14c44836"
     },
     {
       "path": "docs/block_diagram.svg",
@@ -50,7 +50,7 @@
     },
     {
       "path": "manufacturing/Zynq_Motor_Carrier_cpl.csv",
-      "sha256": "0948ef2a7c212ea727ba84008c2dedd447e1da84544392c907e23f1b95f61750"
+      "sha256": "e32ad1ee3f41cc507843ba0828e5c1d05caa147a8ea87e142382c22fb618ffa1"
     },
     {
       "path": "manufacturing/Zynq_Motor_Carrier_pcb.kicad_dru",
@@ -94,7 +94,7 @@
     },
     {
       "path": "reports/build_ledger.txt",
-      "sha256": "7a7b990057ef83545dfb17e585a137117f76d0cee3ef03a8c7d56eb9c3ef8976"
+      "sha256": "4d30eede0ee84ada0d86d5939ecb5d9ced37a9dc634444416b3568efa2166666"
     },
     {
       "path": "reports/carrier_structure.txt",
@@ -114,7 +114,7 @@
     },
     {
       "path": "reports/connector_spacing.txt",
-      "sha256": "8ce7dc83fa0c878706ef21fb1dbf1cdd60aac01bf4c6f7419170473bd9bf04c7"
+      "sha256": "bbd070cf17eaf97f06cab2c9eeeded65993937f7a2aadc7284cbeb66e690943d"
     },
     {
       "path": "reports/contract_coverage.txt",
@@ -126,15 +126,15 @@
     },
     {
       "path": "reports/convergence.txt",
-      "sha256": "e8f9a70f6a731da4cebbdaeb17c8d69b3a87acfc057a6242936a308b97f8fffa"
+      "sha256": "41f736f76e1abf69d8bf46f9d9aa7707c0171ea53302f280e57c67a5799ceb25"
     },
     {
       "path": "reports/copper_debt.txt",
-      "sha256": "775079b5098172c9d74ea79f5c8a1a802305171bcd8c5285a909637b349eca4d"
+      "sha256": "56a3852b3216eb5a736a4b0b6bb7e667b3fbc715b52108ae5737b2c052c923f5"
     },
     {
       "path": "reports/decoupling.txt",
-      "sha256": "b8c5366d06bc10b34cc3c03f9ca36be4c0ad8082f66ba30cd8037113db60405e"
+      "sha256": "1db464ed0c9a0bfb6c058845f06b41a244701c5c996fb00ad623a60c488f9acc"
     },
     {
       "path": "reports/design_rules.txt",
@@ -150,15 +150,15 @@
     },
     {
       "path": "reports/fallbacks.txt",
-      "sha256": "091e556c9065c856af92908070f4eda4b2149f0d65c17673bdbae7a9e1114351"
+      "sha256": "4f3def322e41ebeba297c392ffaeb50f6538a340353d6198a1ae2962b90c262c"
     },
     {
       "path": "reports/fanout.txt",
-      "sha256": "17585c5f3b030be3b8c339be3aae2b88e30d9b6079d8de572ed54262fe59150d"
+      "sha256": "cdbcd214fb3a7ff93dc477d7bed31b8435976729283c78fe7a2fe7e846a7d9a0"
     },
     {
       "path": "reports/floorplan_composition.txt",
-      "sha256": "2efbc6de3c6586dd158d0bc706f8d13fedb9b9eee9fe4e046bf5fe0f59b8c109"
+      "sha256": "d372ebfebe48f33efe7183b97a4fa2f1ea8d9f5ad45926d54b9d8c9c1a6ea472"
     },
     {
       "path": "reports/footprint_pads.txt",
@@ -166,7 +166,7 @@
     },
     {
       "path": "reports/gates.txt",
-      "sha256": "1bb689795c72d85dd1fcc2d541082d9579d62e582d529385405c7bf3f29133b6"
+      "sha256": "dac2d41ad303c6039222deaa7be6eba2de4a73513c97966641299754bd0fd398"
     },
     {
       "path": "reports/golden.txt",
@@ -177,16 +177,12 @@
       "sha256": "e9103b7aebc6b7fd813f1b6f9f433a57de552e64e8a0b1e59318f3a7a6a3d851"
     },
     {
-      "path": "reports/label_seats.txt",
-      "sha256": "0352936b8354f2d0fd709ad49b0f25fec9c27ec9928021d8b86dc5a6290475c4"
-    },
-    {
       "path": "reports/layout_intent.txt",
       "sha256": "4047ce31b64280433b692d487e81b0ed8d228cd5c91730aa78fedef35685e216"
     },
     {
       "path": "reports/layout_squeeze.txt",
-      "sha256": "978b86cd0c6f11568836e28bcfa781b0ef1ffe450351156359d7a76cb4b60918"
+      "sha256": "896a38163ecf57f81a3db69fd4023c8dcbe3bd25f2da765b585620a9fe6cf3ef"
     },
     {
       "path": "reports/link_report.txt",
@@ -230,15 +226,15 @@
     },
     {
       "path": "reports/placement_flow.txt",
-      "sha256": "937871ba080d6380e488c7706b86f0d1798263df0505c6cfab4b86fa903bc493"
+      "sha256": "4cc5d8cf97c36e7ba734fca1678b42a5e7d257e609427890a0ccb89b03530684"
     },
     {
       "path": "reports/placement_integrity.txt",
-      "sha256": "1a413f48e959900075343028bc007088c8806fc6085c0ba9506257b96467a2bb"
+      "sha256": "92d596ac8537a1fc9b8dcf8e19c423d354196f0408a96c67b5f144fbac6bd0bb"
     },
     {
       "path": "reports/placement_mech.txt",
-      "sha256": "b4e4952cb282636f636ff3eb5ed1ed1125ecc00403a03574210a889ab3c81dbd"
+      "sha256": "5469a06eb72b6e3547a0f8ba477a0511b14ecf02486407007d40403512a74f8e"
     },
     {
       "path": "reports/placement_requirements.txt",
@@ -262,7 +258,7 @@
     },
     {
       "path": "reports/ratsnest.txt",
-      "sha256": "19f51eacaacac5169774f8ece30c8105135d5a886416368bc4d1e6bed010c639"
+      "sha256": "788859f2302cf1161b19b0f758ebd4e965dea7fb678d4a351db510020111af51"
     },
     {
       "path": "reports/refdes_silk.txt",
@@ -278,7 +274,7 @@
     },
     {
       "path": "reports/search.txt",
-      "sha256": "f9a16845572019f715d5e80280658d33db9a9e759dcf74964bc6477732d0b768"
+      "sha256": "6882a4d6008282250b7ab29a43aa340ca69ae9de2f02703f5eff227af9f430a6"
     },
     {
       "path": "reports/spice.txt",
@@ -294,7 +290,7 @@
     },
     {
       "path": "reports/test_points.txt",
-      "sha256": "2884ccca748253eb73a70a724f3dd39d5e274ee64217c1517e3057019c4d2a06"
+      "sha256": "0c304c7b5a6a1e182c26f5a5511589dc18a0ee1a83d351f858e3e95c9700d1d7"
     },
     {
       "path": "reports/testpoints.txt",
@@ -302,7 +298,7 @@
     },
     {
       "path": "reports/thermal.txt",
-      "sha256": "1b6558a3acca895f5d2a92d7df17d6d524377d67737482a06491e5a9d1fc7c2e"
+      "sha256": "7a3c8e4516e3343677669717a7429d9aae9ce075f60bbc2a64d635b88fa2dce4"
     },
     {
       "path": "schematic/board_control.kicad_sch",

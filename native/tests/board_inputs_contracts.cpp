@@ -110,11 +110,22 @@ void sidecar_independence(const schgen::ProjectPaths& paths,
     require(baseline.floorplan.compose.corridors.empty(), "earlier input snapshot remains unchanged");
 }
 const std::string rtc_id = "RV-3028-C7-32.768kHz-1ppm-TA-QC:RV-3028-C7-32.768kHz-1ppm-TA-QC";
+const std::string hdmi_id = "HDMI-019S:HDMI-019S";
 std::string zero_court_line(const std::string& point) {
     return "\t(fp_line\n\t\t(start " + point + ")\n\t\t(end " + point +
         ")\n\t\t(stroke\n\t\t\t(width 0.05)\n\t\t\t(type solid)\n\t\t)\n\t\t(layer \"F.CrtYd\")\n\t)\n";
 }
 std::string current_footprint_reference(const std::string& id, std::string frozen) {
+    if (id == hdmi_id) {
+        for (const auto* point : {"-6.1 -3.5838", "-6.1 -3.5838", "6.1 -2.5868", "7.5 -3.5838"}) {
+            const auto line = zero_court_line(point);
+            const auto pos = frozen.find(line);
+            require(pos != std::string::npos, "reviewed historical HDMI zero edge " + std::string(point));
+            frozen.erase(pos, line.size());
+        }
+        require(frozen.find(zero_court_line("-6.1 -3.5838")) == std::string::npos, "no HDMI zero edge is left");
+        return frozen;
+    }
     if (id != rtc_id) return frozen;
     // 529c196a removed these exact three lines, not arbitrary degenerate
     // geometry. Delete literal bytes from the immutable oracle so pads, models,

@@ -199,7 +199,9 @@ void pours_follow_their_owner() {
             "a quarter turn exchanges the thermal area's sides");
     Pose flipped = swung;
     flipped.face = Face::bottom;
-    require(!kernel.move_many({{0, flipped}}), "a thermal area does not change face");
+    require(kernel.move_many({{0, flipped}}), "a thermal area goes to the other face with every part it holds");
+    require(kernel.reserves().front() == pour_box(rule, flipped, scene.problem.board),
+            "the thermal area is recomputed for the other face");
 }
 
 void single_part_rules_hold() {

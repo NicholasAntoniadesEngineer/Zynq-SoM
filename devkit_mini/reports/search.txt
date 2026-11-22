@@ -15,10 +15,10 @@ seed | reuses | edge choices | plan skip | order | reached | outline mm | correc
 1 | - | pd_input#1 | 1 | 23 | S3 | 94 x 64.25 | yes | 3283.105000 | -
 2 | - | pd_input#3 | 0 | 0 | S3 | 71.5 x 85.5 | yes | 3459.637300 | -
 3 | - | usb_uart_connector#1 | 1 | 0 | S2 | - | no | - | -
-4 | - | pd_input#3,usb_uart_connector#1 | 1 | 17 | S3 | 74.75 x 89 | yes | 3276.382300 | -
+4 | - | pd_input#3,usb_uart_connector#1 | 1 | 17 | S3 | 77.5 x 84 | yes | 3171.314800 | -
 5 | - | usb_uart_connector#3 | 1 | 4 | S2 | - | no | - | -
-6 | - | pd_input#2,usb_uart_connector#1 | 2 | 22 | S3 | 64.75 x 87.5 | yes | 3196.631900 | -
+6 | - | pd_input#2,usb_uart_connector#1 | 2 | 22 | S3 | 70 x 83 | yes | 2847.911000 | -
 7 | - | usb_uart_connector#2 | 3 | 22 | S2 | - | no | - | -
-CHOSEN seed 1 by first correct in screening order
-SWEEP: pass rate 4/4; area best 5665.62 median 6039.5 worst 6652.75 mm2; spread 0.0659901; FRAGILE against pass rate 0.8 and spread 0.05 (integrator's decision 2026-11-21; revisit after the first sweeps on three boards)
+CHOSEN seed 6 by objective among the first batch laid out
+SWEEP: pass rate 4/4; area best 5810 median 6039.5 worst 6510 mm2; spread 0.0395009; HANDLED against pass rate 0.8 and spread 0.05 (integrator's decision 2026-11-21; revisit after the first sweeps on three boards)
 

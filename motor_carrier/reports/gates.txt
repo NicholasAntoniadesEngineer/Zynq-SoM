@@ -1271,35 +1271,35 @@ native_policy: PASS — NATIVE BOARD POLICY: PROVIDERS COMPLETE — 92 declarati
 pcb: PASS — 363 footprints; deferred: 
 placement_requirements: PASS — NOT APPLICABLE: motor_carrier lists no owned group (board.json owned_groups is empty), so it has no reviewed ownership declaration to check. No qualitative placement approval implied.
 pcb_drc: PASS — 0 non-unrouted errors; 499 unrouted (expected); 
-ratsnest: PASS — LAW-5 RATSNEST GATE: PASS (board 106.75 x 110.5 mm)
+ratsnest: PASS — LAW-5 RATSNEST GATE: PASS (board 117.5 x 88.75 mm)
   off-board parts: 0
   dispersed subsystems: 0 (threshold 9x)
-  cross-subsystem airwire: 4978.3 mm (advisory reference 5213 mm, OK; 209 edges; 4978.3/9294 mm = 53.6% of total)
+  cross-subsystem airwire: 5485.5 mm (advisory reference 4902 mm, OVER; 236 edges; 5485.5/10058.1 mm = 54.5% of total)
   per-subsystem clusters (n, bbox mm, dispersion):
-    board_control          n=32  bbox_area=    2055 disp=  6.0
-    power                  n=51  bbox_area=    2347 disp=  5.3
-    can_bus                n=11  bbox_area=    1010 disp=  4.9
-    pd_input               n=14  bbox_area=    1113 disp=  4.8
-    uart_bridge            n=10  bbox_area=     305 disp=  4.5
-    esc_io                 n=41  bbox_area=    2543 disp=  3.9
-    vbat_supply            n=35  bbox_area=    2319 disp=  3.8
-    power_som              n=20  bbox_area=     698 disp=  3.7
-    debug_boot             n=11  bbox_area=     931 disp=  2.9
-    esc_power              n=48  bbox_area=    4507 disp=  2.6
-    microsd                n=15  bbox_area=     766 disp=  2.2
-    bringup_en             n=15  bbox_area=     216 disp=  2.2
-    ethernet               n=11  bbox_area=     561 disp=  1.7
-    usb_uart_connector     n=5   bbox_area=     157 disp=  1.5
-    power_mon              n=10  bbox_area=     145 disp=  1.5
-    rj45_connector         n=3   bbox_area=     342 disp=  1.1
-placement_mech: PASS — LAW-6 PLACEMENT (mechanical) GATE: PASS (board 106.75 x 110.5 mm)
+    board_control          n=32  bbox_area=    2982 disp=  8.6
+    power                  n=51  bbox_area=    3000 disp=  6.7
+    power_mon              n=10  bbox_area=     628 disp=  6.4
+    debug_boot             n=11  bbox_area=    1630 disp=  5.1
+    esc_io                 n=41  bbox_area=    2956 disp=  4.5
+    can_bus                n=11  bbox_area=     764 disp=  3.7
+    microsd                n=15  bbox_area=    1220 disp=  3.5
+    vbat_supply            n=35  bbox_area=    2060 disp=  3.4
+    pd_input               n=14  bbox_area=     745 disp=  3.2
+    bringup_en             n=15  bbox_area=     266 disp=  2.7
+    power_som              n=20  bbox_area=     497 disp=  2.6
+    uart_bridge            n=10  bbox_area=     154 disp=  2.3
+    ethernet               n=11  bbox_area=     506 disp=  1.5
+    usb_uart_connector     n=5   bbox_area=     161 disp=  1.5
+    esc_power              n=48  bbox_area=    2404 disp=  1.4
+    rj45_connector         n=3   bbox_area=     346 disp=  1.1
+placement_mech: PASS — LAW-6 PLACEMENT (mechanical) GATE: PASS (board 117.5 x 88.75 mm)
   SoM module-body core: (72.8,76.9)..(124.2,120.1) mm — bottom-passives-only, TOP keepout
   off-board connectors: 5 (0 mis-placed)
-    OK  J10001    TYPE-C-31-M-12   edge=N rot=180 mouth->(0, -1) flush=-1.3mm
-    OK  J20001    TYPE-C-31-M-12   edge=E rot= 90 mouth->(1, 0) flush=-1.3mm
+    OK  J10001    TYPE-C-31-M-12   edge=W rot=270 mouth->(-1, 0) flush=-1.3mm
+    OK  J20001    TYPE-C-31-M-12   edge=N rot=180 mouth->(0, -1) flush=-1.3mm
     OK  J6001     XT60PW-M         edge=N rot= 90 mouth->(0, -1) flush=0.3mm
     OK  J6002     XT60PW-M         edge=N rot= 90 mouth->(0, -1) flush=0.3mm
-    OK  J9001     TF-01A           edge=N rot=180 mouth->(0, -1) flush=-2.9mm
+    OK  J9001     TF-01A           edge=E rot= 90 mouth->(1, 0) flush=-2.9mm
   non-passive parts under SoM core: 0
   controls under SoM core: 0
   carrier TOP parts under SoM core (keepout): 0
@@ -1319,53 +1319,53 @@ connector_model: PASS — LAW-6 CONNECTOR-MODEL ORIENTATION GATE: PASS
   non-zero model-Z (flipped opening): 0
   geometry-cross-checked (through-shell): 2 -> 0 conflict(s)
   reviewed geometry exceptions: 7
-connector_spacing: PASS — CONNECTOR OVERMOLD SPACING GATE: PASS (board 106.75 x 110.5 mm)
+connector_spacing: PASS — CONNECTOR OVERMOLD SPACING GATE: PASS (board 117.5 x 88.75 mm)
   same-edge overmold connector pairs: 45 (0 too tight)
-    OK  J3001     <-> J3002     envelope+access gap=  1.55mm along y (need >= 5mm)
-    OK  J1001     <-> J20001    envelope+access gap=  2.82mm along y (need >= 5mm)
-    OK  J10001    <-> J9001     envelope+access gap=  5.01mm along x (need >= 5mm)
-    OK  J3002     <-> J5002     envelope+access gap=  5.10mm along x (need >= 5mm)
-    OK  J6002     <-> J9001     envelope+access gap=  5.17mm along x (need >= 5mm)
-    OK  J6001     <-> J6002     envelope+access gap=  5.24mm along x (need >= 5mm)
-    OK  J3001     <-> J5002     envelope+access gap=  7.70mm along y (need >= 5mm)
-    OK  J14001    <-> J5002     envelope+access gap=  9.03mm along x (need >= 5mm)
-    OK  J14001    <-> J3002     envelope+access gap= 20.53mm along x (need >= 5mm)
-    OK  J14001    <-> J3001     envelope+access gap= 21.44mm along y (need >= 5mm)
-    OK  J6001     <-> J9001     envelope+access gap= 25.91mm along x (need >= 5mm)
-    OK  J10001    <-> J6002     envelope+access gap= 26.90mm along x (need >= 5mm)
-    OK  J1001     <-> J9001     envelope+access gap= 36.89mm along y (need >= 5mm)
-    OK  J3001     <-> J6001     envelope+access gap= 40.58mm along y (need >= 5mm)
-    OK  J3001     <-> J6002     envelope+access gap= 40.58mm along y (need >= 5mm)
-    OK  J10001    <-> J1001     envelope+access gap= 42.59mm along y (need >= 5mm)
-    OK  J1001     <-> J14001    envelope+access gap= 43.37mm along x (need >= 5mm)
-    OK  J1001     <-> J6002     envelope+access gap= 44.26mm along x (need >= 5mm)
-    OK  J20001    <-> J9001     envelope+access gap= 45.20mm along y (need >= 5mm)
-    OK  J3001     <-> J9001     envelope+access gap= 46.44mm along y (need >= 5mm)
-    OK  J3002     <-> J6001     envelope+access gap= 47.63mm along y (need >= 5mm)
-    OK  J3002     <-> J6002     envelope+access gap= 47.63mm along y (need >= 5mm)
-    OK  J10001    <-> J6001     envelope+access gap= 47.64mm along x (need >= 5mm)
-    OK  J10001    <-> J20001    envelope+access gap= 50.91mm along y (need >= 5mm)
-    OK  J14001    <-> J20001    envelope+access gap= 52.42mm along x (need >= 5mm)
-    OK  J20001    <-> J6002     envelope+access gap= 53.31mm along x (need >= 5mm)
-    OK  J3002     <-> J9001     envelope+access gap= 53.49mm along y (need >= 5mm)
-    OK  J5002     <-> J6001     envelope+access gap= 53.77mm along y (need >= 5mm)
-    OK  J5002     <-> J6002     envelope+access gap= 53.77mm along y (need >= 5mm)
-    OK  J5002     <-> J9001     envelope+access gap= 59.64mm along y (need >= 5mm)
-    OK  J10001    <-> J3001     envelope+access gap= 63.24mm along x (need >= 5mm)
-    OK  J10001    <-> J3002     envelope+access gap= 63.24mm along x (need >= 5mm)
-    OK  J1001     <-> J6001     envelope+access gap= 65.00mm along x (need >= 5mm)
-    OK  J10001    <-> J5002     envelope+access gap= 65.34mm along y (need >= 5mm)
-    OK  J14001    <-> J6001     envelope+access gap= 67.52mm along y (need >= 5mm)
-    OK  J14001    <-> J6002     envelope+access gap= 67.52mm along y (need >= 5mm)
-    OK  J1001     <-> J5002     envelope+access gap= 69.10mm along x (need >= 5mm)
-    OK  J14001    <-> J9001     envelope+access gap= 73.38mm along y (need >= 5mm)
-    OK  J20001    <-> J6001     envelope+access gap= 74.05mm along x (need >= 5mm)
-    OK  J20001    <-> J5002     envelope+access gap= 78.15mm along x (need >= 5mm)
-    OK  J10001    <-> J14001    envelope+access gap= 79.08mm along y (need >= 5mm)
-    OK  J1001     <-> J3001     envelope+access gap= 80.60mm along x (need >= 5mm)
-    OK  J1001     <-> J3002     envelope+access gap= 80.60mm along x (need >= 5mm)
-    OK  J20001    <-> J3001     envelope+access gap= 89.65mm along x (need >= 5mm)
-    OK  J20001    <-> J3002     envelope+access gap= 89.65mm along x (need >= 5mm)
+    OK  J3001     <-> J5002     envelope+access gap=  4.45mm along x (need >= 5mm)
+    OK  J20001    <-> J6001     envelope+access gap=  5.14mm along x (need >= 5mm)
+    OK  J6002     <-> J9001     envelope+access gap=  5.56mm along x (need >= 5mm)
+    OK  J10001    <-> J3001     envelope+access gap= 15.25mm along x (need >= 5mm)
+    OK  J1001     <-> J14001    envelope+access gap= 15.90mm along x (need >= 5mm)
+    OK  J1001     <-> J6002     envelope+access gap= 16.78mm along y (need >= 5mm)
+    OK  J14001    <-> J9001     envelope+access gap= 19.72mm along y (need >= 5mm)
+    OK  J10001    <-> J5002     envelope+access gap= 21.04mm along y (need >= 5mm)
+    OK  J1001     <-> J9001     envelope+access gap= 22.25mm along x (need >= 5mm)
+    OK  J1001     <-> J6001     envelope+access gap= 23.41mm along x (need >= 5mm)
+    OK  J3001     <-> J3002     envelope+access gap= 30.87mm along x (need >= 5mm)
+    OK  J10001    <-> J6001     envelope+access gap= 30.89mm along y (need >= 5mm)
+    OK  J6001     <-> J6002     envelope+access gap= 30.99mm along x (need >= 5mm)
+    OK  J14001    <-> J3002     envelope+access gap= 32.73mm along x (need >= 5mm)
+    OK  J14001    <-> J6002     envelope+access gap= 33.33mm along y (need >= 5mm)
+    OK  J3002     <-> J5002     envelope+access gap= 41.72mm along x (need >= 5mm)
+    OK  J1001     <-> J3002     envelope+access gap= 41.76mm along y (need >= 5mm)
+    OK  J10001    <-> J20001    envelope+access gap= 42.45mm along y (need >= 5mm)
+    OK  J1001     <-> J20001    envelope+access gap= 44.05mm along x (need >= 5mm)
+    OK  J14001    <-> J6001     envelope+access gap= 45.71mm along x (need >= 5mm)
+    OK  J1001     <-> J3001     envelope+access gap= 47.70mm along x (need >= 5mm)
+    OK  J3002     <-> J9001     envelope+access gap= 50.43mm along y (need >= 5mm)
+    OK  J20001    <-> J6002     envelope+access gap= 51.63mm along x (need >= 5mm)
+    OK  J6001     <-> J9001     envelope+access gap= 52.05mm along x (need >= 5mm)
+    OK  J10001    <-> J3002     envelope+access gap= 52.52mm along x (need >= 5mm)
+    OK  J3001     <-> J6001     envelope+access gap= 54.42mm along y (need >= 5mm)
+    OK  J3001     <-> J6002     envelope+access gap= 55.29mm along x (need >= 5mm)
+    OK  J1001     <-> J5002     envelope+access gap= 58.55mm along x (need >= 5mm)
+    OK  J5002     <-> J6001     envelope+access gap= 61.78mm along y (need >= 5mm)
+    OK  J3002     <-> J6001     envelope+access gap= 64.04mm along y (need >= 5mm)
+    OK  J3002     <-> J6002     envelope+access gap= 64.04mm along y (need >= 5mm)
+    OK  J20001    <-> J3001     envelope+access gap= 65.99mm along y (need >= 5mm)
+    OK  J5002     <-> J6002     envelope+access gap= 66.14mm along x (need >= 5mm)
+    OK  J14001    <-> J20001    envelope+access gap= 66.35mm along x (need >= 5mm)
+    OK  J10001    <-> J1001     envelope+access gap= 69.35mm along x (need >= 5mm)
+    OK  J14001    <-> J3001     envelope+access gap= 70.00mm along x (need >= 5mm)
+    OK  J20001    <-> J9001     envelope+access gap= 72.69mm along x (need >= 5mm)
+    OK  J20001    <-> J5002     envelope+access gap= 73.34mm along y (need >= 5mm)
+    OK  J20001    <-> J3002     envelope+access gap= 75.61mm along y (need >= 5mm)
+    OK  J3001     <-> J9001     envelope+access gap= 76.35mm along x (need >= 5mm)
+    OK  J10001    <-> J6002     envelope+access gap= 76.94mm along x (need >= 5mm)
+    OK  J14001    <-> J5002     envelope+access gap= 80.85mm along x (need >= 5mm)
+    OK  J5002     <-> J9001     envelope+access gap= 87.20mm along x (need >= 5mm)
+    OK  J10001    <-> J14001    envelope+access gap= 91.65mm along x (need >= 5mm)
+    OK  J10001    <-> J9001     envelope+access gap= 98.00mm along x (need >= 5mm)
 refdes_silk: PASS — emitted-board refdes overlaps checked: top=0 bottom=0
 placement_contract: PASS — PLACEMENT-CONTRACT GATE (can_bus): PASS (contract=none, 0 structures)
   fails: hot_loop=0 same_side=0 bulk=0 bulk_out=0 sw_node=0 fb=0 boot=0 vcc=0 bias=0 rt=0 ldo=0 proximity=0 unknown=0
@@ -1426,22 +1426,22 @@ PLACEMENT-CONTRACT GATE (vbat_supply): PASS (contract=none, 0 structures)
   fails: hot_loop=0 same_side=0 bulk=0 bulk_out=0 sw_node=0 fb=0 boot=0 vcc=0 bias=0 rt=0 ldo=0 proximity=0 unknown=0
   unresolved refs: 0
   violations: 0
-placement_flow: PASS — PLACEMENT-FLOW GATE: PASS (3 external contract(s); board_area=11796mm^2, flow_budget=105.3mm)
+placement_flow: PASS — PLACEMENT-FLOW GATE: PASS (3 external contract(s); board_area=10428mm^2, flow_budget=103.0mm)
   fails: flow=0/1 facing=0/1 far=0/2 near_max=0/2
   unresolved: 0
   n/a (subsystem not in this project): 1
     flow usb_pd->power: n/a — usb_pd not a subsystem of this project
   violations: 0
   advisory preferences (not hardware qualification): 2
-    ADVISORY facing power->power_som: preference NOT satisfied (angle=129.8deg; not hardware qualification) [Reviewed 2026-10-18: all-component centroid direction changes when unrelated test points move; it is a placement preference, not a hardware limit. SNVSBD5D Rev. D section 11.1 requires local loop/layout and power-path quality, not a 90-degree subsystem-centroid cutoff. See native/benchmarks/2026-10-18-facing-centroid-review.json; routing and parasitics remain unverified.]
-    ADVISORY flow power->power_som: 33.30mm / 105.3mm heuristic reference; preference satisfied; not a trace-length or hardware limit
+    ADVISORY facing power->power_som: preference satisfied (angle=76.7deg; not hardware qualification) [Reviewed 2026-10-18: all-component centroid direction changes when unrelated test points move; it is a placement preference, not a hardware limit. SNVSBD5D Rev. D section 11.1 requires local loop/layout and power-path quality, not a 90-degree subsystem-centroid cutoff. See native/benchmarks/2026-10-18-facing-centroid-review.json; routing and parasitics remain unverified.]
+    ADVISORY flow power->power_som: 55.02mm / 103.0mm heuristic reference; preference satisfied; not a trace-length or hardware limit
   detail: 6
-    facing power->power_som: dot=-174.36 angle=129.8deg (output@(126.1582, 116.99) zone@(124.5281, 125.0044) down@(95.2122, 140.797))
-    far ethernet vs power: 77.03mm / >= 10mm
-    far power vs ethernet.line_side: 77.03mm / >= 10mm
-    flow power->power_som: 33.30mm / 105.3mm budget
-    near_max ethernet to rj45_connector: 1.70mm gap / <= 20mm
-    near_max uart_bridge to usb_uart_connector: 2.62mm gap / <= 40mm
+    facing power->power_som: dot=+252.76 angle=76.7deg (output@(86.4972, 138.4099) zone@(83.2316, 118.7106) down@(138.1278, 122.441))
+    far ethernet vs power: 65.41mm / >= 10mm
+    far power vs ethernet.line_side: 65.41mm / >= 10mm
+    flow power->power_som: 55.02mm / 103.0mm budget
+    near_max ethernet to rj45_connector: 0.00mm gap / <= 20mm
+    near_max uart_bridge to usb_uart_connector: 1.56mm gap / <= 40mm
 contract_coverage: PASS (advisory) — CONTRACT COVERAGE: 6 wired(gated) / 0 inert-met / 0 inert-VIOLATED  (authored SI/PI intent not yet placer-enforced)
   ethernet               WIRED-gated      6 chk  0 viol  
   microsd                WIRED-gated      9 chk  0 viol  
@@ -1449,44 +1449,43 @@ contract_coverage: PASS (advisory) — CONTRACT COVERAGE: 6 wired(gated) / 0 ine
   power                  WIRED-gated     20 chk  0 viol  
   uart_bridge            WIRED-gated      6 chk  0 viol  
   usb_uart_connector     WIRED-gated      4 chk  0 viol  
-floorplan_composition: FAIL (advisory) — FLOORPLAN COMPOSITION (T1): 4 hard / 2 soft terms; hard RED 0, soft RED 1 (advisory)
-  hard margins (mm): measured 4, unresolved 0, sum 189.75, min 18.3 (informational)
+floorplan_composition: PASS (advisory) — FLOORPLAN COMPOSITION (T1): 4 hard / 2 soft terms; hard RED 0, soft RED 0 (advisory)
+  hard margins (mm): measured 4, unresolved 0, sum 169.26, min 20.0 (informational)
   hard margins (degrees): measured 0, unresolved 0, sum 0.0, min unavailable (informational)
   hard terms:
-    HARD far_min ethernet->power: 77.03 vs 10.00 (margin +67.03) ok [judgment:10.0 — buck switching node vs Ethernet media/magnetics analog line side]
-    HARD far_min power->ethernet.line_side: 77.03 vs 10.00 (margin +67.03) ok [judgment:10.0 — buck switching node vs Ethernet MDI/magnetics analog line side; datasheet silent on inter-subsystem spacing (SNVSBD5D covers intra-stage only)]
-    HARD near_max ethernet->rj45_connector: 1.70 vs 20.00 (margin +18.30) ok [Pulse v7 p.1 <=25mm part-to-part|judgment:20.0 edge-gap proxy (D11)]
-    HARD near_max uart_bridge->usb_uart_connector: 2.62 vs 40.00 (margin +37.38) ok [judgment:10.0 (D11 edge-gap) — CP2102N's USB DP/DM pair terminates at the UART USB-C; measured 365mm of cross-board airwire (avg 122mm) with the block anchored mid-board and a STALE floorplan near-intent pointing at rj45_connector]
+    HARD far_min ethernet->power: 65.41 vs 10.00 (margin +55.41) ok [judgment:10.0 — buck switching node vs Ethernet media/magnetics analog line side]
+    HARD far_min power->ethernet.line_side: 65.41 vs 10.00 (margin +55.41) ok [judgment:10.0 — buck switching node vs Ethernet MDI/magnetics analog line side; datasheet silent on inter-subsystem spacing (SNVSBD5D covers intra-stage only)]
+    HARD near_max ethernet->rj45_connector: 0.00 vs 20.00 (margin +20.00) ok [Pulse v7 p.1 <=25mm part-to-part|judgment:20.0 edge-gap proxy (D11)]
+    HARD near_max uart_bridge->usb_uart_connector: 1.56 vs 40.00 (margin +38.44) ok [judgment:10.0 (D11 edge-gap) — CP2102N's USB DP/DM pair terminates at the UART USB-C; measured 365mm of cross-board airwire (avg 122mm) with the block anchored mid-board and a STALE floorplan near-intent pointing at rj45_connector]
   soft terms (advisory ledger — repair triggers, never gates):
-    soft facing power->power_som: 129.81 vs 90.00 (margin -39.81) RED [ADVISORY centroid preference: Reviewed 2026-10-18: all-component centroid direction changes when unrelated test points move; it is a placement preference, not a hardware limit. SNVSBD5D Rev. D section 11.1 requires local loop/layout and power-path quality, not a 90-degree subsystem-centroid cutoff. See native/benchmarks/2026-10-18-facing-centroid-review.json; routing and parasitics remain unverified.] dot=-174.36
-    soft flow_hop power->power_som: 33.30 vs 105.27 (margin +71.97) ok [ADVISORY board-size-derived flow preference [placement/v2]]
+    soft facing power->power_som: 76.70 vs 90.00 (margin +13.30) ok [ADVISORY centroid preference: Reviewed 2026-10-18: all-component centroid direction changes when unrelated test points move; it is a placement preference, not a hardware limit. SNVSBD5D Rev. D section 11.1 requires local loop/layout and power-path quality, not a 90-degree subsystem-centroid cutoff. See native/benchmarks/2026-10-18-facing-centroid-review.json; routing and parasitics remain unverified.] dot=+252.76
+    soft flow_hop power->power_som: 55.02 vs 103.00 (margin +47.98) ok [ADVISORY board-size-derived flow preference [placement/v2]]
   n/a terms (endpoint subsystem not instantiated by this project — project-scoped resolution):
     n/a flow_hop usb_pd->power [ADVISORY board-size-derived flow preference [placement/v2]]
   T2 escape corridors (D13 never-close): 6 loaded, 19 UNMANAGED part intrusion(s), 0 T2-coexistence-managed
+    UNMANAGED INTRUSION C15001 (som_decoupling) in escape:J1:S
     UNMANAGED INTRUSION C15003 (som_decoupling) in escape:J1:N
     UNMANAGED INTRUSION C15004 (som_decoupling) in escape:J1:S
-    UNMANAGED INTRUSION C15006 (som_decoupling) in escape:J1:N
+    UNMANAGED INTRUSION C15005 (som_decoupling) in escape:J1:N
     UNMANAGED INTRUSION C15007 (som_decoupling) in escape:J2:S
     UNMANAGED INTRUSION C15009 (som_decoupling) in escape:J3:S
-    UNMANAGED INTRUSION C15010 (som_decoupling) in escape:J3:N
     UNMANAGED INTRUSION C15011 (som_decoupling) in escape:J2:N
-    UNMANAGED INTRUSION C15012 (som_decoupling) in escape:J2:S
+    UNMANAGED INTRUSION C15012 (som_decoupling) in escape:J2:N
     UNMANAGED INTRUSION C15013 (som_decoupling) in escape:J1:N
     UNMANAGED INTRUSION C15014 (som_decoupling) in escape:J1:S
     UNMANAGED INTRUSION C15015 (som_decoupling) in escape:J1:N
     UNMANAGED INTRUSION C15016 (som_decoupling) in escape:J1:N
     UNMANAGED INTRUSION C15018 (som_decoupling) in escape:J1:N
-    UNMANAGED INTRUSION R1002 (board_control) in escape:J3:N
+    UNMANAGED INTRUSION F6001 (esc_power) in escape:J3:N
     UNMANAGED INTRUSION R1008 (board_control) in escape:J3:N
-    UNMANAGED INTRUSION R2001 (bringup_en) in escape:J3:N
-    UNMANAGED INTRUSION R2002 (bringup_en) in escape:J3:N
-    UNMANAGED INTRUSION R2004 (bringup_en) in escape:J3:N
-    UNMANAGED INTRUSION R2005 (bringup_en) in escape:J3:N
+    UNMANAGED INTRUSION R11012 (power) in escape:J2:S
+    UNMANAGED INTRUSION R2006 (bringup_en) in escape:J3:N
+    UNMANAGED INTRUSION R21011 (vbat_supply) in escape:J2:S
+    UNMANAGED INTRUSION U2003 (bringup_en) in escape:J3:N
   D13 channel hotspots (>= 6 cross-airwires; corridor = 2 + 0.2/net mm):
-    ethernet | rj45_connector: 10 airwires (243.0 mm) -> corridor >= 4.0 mm
-    debug_boot | power: 6 airwires (25.9 mm) -> corridor >= 3.2 mm
-    esc_power | power_mon: 6 airwires (38.9 mm) -> corridor >= 3.2 mm
-    power | power_mon: 6 airwires (260.7 mm) -> corridor >= 3.2 mm
+    board_control | bringup_en: 15 airwires (264.0 mm) -> corridor >= 5.0 mm
+    esc_io | power: 15 airwires (123.9 mm) -> corridor >= 5.0 mm
+    ethernet | rj45_connector: 9 airwires (189.8 mm) -> corridor >= 3.8 mm
 return_stitch: PASS — RETURN-STITCH GATE (return-path v2): PASS (radius 2.0 mm, HARD, class-blind)
   remediation set (v1-failing contacts): 29
   covered by som_escape GND vias        : 29
@@ -1581,11 +1580,11 @@ escape_lanes: PASS — ESCAPE-LANE GATE (Tier-2 plan): PASS
 placement_integrity: PASS — PLACEMENT INTEGRITY GATE: PASS
   mechanical/module-mating: checked 300, findings 0 [GATE]
   mechanical/land-spacing: checked 19319, findings 0 [GATE]
-  mechanical/module-clearance: checked 190, findings 0 [GATE]
-  mechanical/module-escape-corridor: checked 528, findings 0 [GATE]
-  mechanical/tall-part-beside-module: checked 199, findings 0 [MEASURED]
+  mechanical/module-clearance: checked 156, findings 0 [GATE]
+  mechanical/module-escape-corridor: checked 630, findings 0 [GATE]
+  mechanical/tall-part-beside-module: checked 165, findings 0 [MEASURED]
   high_speed/controlled-net-needs-ground: checked 6, findings 0 [GATE]
-  high_speed/termination-distance-report: checked 20, findings 0 [MEASURED]
+  high_speed/termination-distance-report: checked 20, findings 1 [MEASURED]
   power/regulator-loop-one-face: checked 4, findings 0 [GATE]
   power/regulator-over-ground: checked 8, findings 0 [GATE]
   power/input-capacitor-nearest: checked 8, findings 2 [MEASURED]
@@ -1594,124 +1593,118 @@ placement_integrity: PASS — PLACEMENT INTEGRITY GATE: PASS
   decoupling/bypass-on-pin-face-or-under: checked 58, findings 0 [GATE]
   sensing/sense-distance-report: checked 16, findings 0 [MEASURED]
   timing/timing-parts-on-crystal-face: checked 0, findings 0 [GATE]
-    FOUND input-capacitor-nearest: U13004 (power_som) input pin VIN1 (pad 8): the nearest authored part is R13015 (power_som) at 0.349901 mm, nearer than its input capacitor C13014 at 2.025 mm
-    FOUND input-capacitor-nearest: U21002 (vbat_supply) input pin VIN2 (pad 12): the nearest authored part is R21009 (vbat_supply) at 0.799901 mm, nearer than its input capacitor C21006 at 1.825 mm
+    FOUND termination-distance-report: RN5001 (esc_io) is 4.10579 mm from U5001.17; the reach of a series part is 4 mm
+    FOUND input-capacitor-nearest: U11002 (power) input pin VIN1 (pad 8): the nearest authored part is R11013 (power) at 0.525001 mm, nearer than its input capacitor C11007 at 0.955001 mm
+    FOUND input-capacitor-nearest: U13004 (power_som) input pin VIN2 (pad 12): the nearest authored part is C13017 (power_som) at 0.424801 mm, nearer than its input capacitor C13016 at 1.30863 mm
     NOTE module-mating: J16001 mates module J1: worst pad error 8.15239e-15 mm over 100 pins, mate-to-receptacle row inset 0.185 mm (the module's own land patterns; self-alignment 0.33 mm)
     NOTE module-mating: J17002 mates module J2: worst pad error 1.58882e-14 mm over 100 pins, mate-to-receptacle row inset 0.185 mm (the module's own land patterns; self-alignment 0.33 mm)
     NOTE module-mating: J18003 mates module J3: worst pad error 1.58882e-14 mm over 100 pins, mate-to-receptacle row inset 0.185 mm (the module's own land patterns; self-alignment 0.33 mm)
     NOTE land-spacing: J16001 (DF40C-100DP-0.4V_51): land gap 0.17 mm below its net-class clearance 0.2 mm; fabricator minimum 0.09 mm; B2 15-30 V (voltage unknown, highest board voltage used); required 0.1 mm; PASS: Hirose DF40 catalogue (2013.11) p.10, DF40C-xxDP header recommended PCB layout: pad 0.23+-0.02 on pitch 0.4+-0.02, end pads 0.35+-0.02
     NOTE land-spacing: J17002 (DF40C-100DP-0.4V_51): land gap 0.17 mm below its net-class clearance 0.2 mm; fabricator minimum 0.09 mm; B2 15-30 V (voltage unknown, highest board voltage used); required 0.1 mm; PASS: Hirose DF40 catalogue (2013.11) p.10, DF40C-xxDP header recommended PCB layout: pad 0.23+-0.02 on pitch 0.4+-0.02, end pads 0.35+-0.02
     NOTE land-spacing: J18003 (DF40C-100DP-0.4V_51): land gap 0.17 mm below its net-class clearance 0.2 mm; fabricator minimum 0.09 mm; B2 15-30 V (voltage unknown, highest board voltage used); required 0.1 mm; PASS: Hirose DF40 catalogue (2013.11) p.10, DF40C-xxDP header recommended PCB layout: pad 0.23+-0.02 on pitch 0.4+-0.02, end pads 0.35+-0.02
-    NOTE tall-part-beside-module: SW4002 (debug_boot) RESET is 1.54991 mm tall, 0.049908 mm above the module underside at 1.5 mm, and 3.05 mm from the module body (switch; highest point of the 3D model ${KIPRJMOD}/../parts/TS-1187A-B-A-B/TS-1187A-B-A-B.wrl)
-    NOTE tall-part-beside-module: U2002 (bringup_en) SN74LVC1G08 is 1.55 mm tall, 0.05 mm above the module underside at 1.5 mm, and 3.05 mm from the module body (integrated_circuit; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Package_TO_SOT_SMD.3dshapes/SOT-23-5.step)
-    NOTE tall-part-beside-module: SW4001 (debug_boot) DIP-4 is 2.35001 mm tall, 0.850008 mm above the module underside at 1.5 mm, and 3.128 mm from the module body (switch; highest point of the 3D model ${KIPRJMOD}/../parts/DSHP04TSGER/DSHP04TSGER.wrl)
-    NOTE tall-part-beside-module: U5006 (esc_io) SN74LVC1G08 is 1.55 mm tall, 0.05 mm above the module underside at 1.5 mm, and 3.15 mm from the module body (integrated_circuit; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Package_TO_SOT_SMD.3dshapes/SOT-23-5.step)
-    NOTE tall-part-beside-module: L11001 (power) 10uH is 4.21005 mm tall, 2.71005 mm above the module underside at 1.5 mm, and 3.17 mm from the module body (inductor; highest point of the 3D model ${KIPRJMOD}/../parts/SWPA8040S100MT/SWPA8040S100MT.wrl)
-    NOTE tall-part-beside-module: U5007 (esc_io) SN74LVC1G08 is 1.55 mm tall, 0.05 mm above the module underside at 1.5 mm, and 3.18 mm from the module body (integrated_circuit; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Package_TO_SOT_SMD.3dshapes/SOT-23-5.step)
-    NOTE tall-part-beside-module: J14001 (rj45_connector) KH-5224-8P8C-D is 16.3001 mm tall, 14.8001 mm above the module underside at 1.5 mm, and 3.23 mm from the module body (connector; highest point of the 3D model ${KIPRJMOD}/../parts/KH-5224-8P8C-D/KH-5224-8P8C-D.wrl)
-    NOTE tall-part-beside-module: J1001 (board_control) ZX-SH1.0-4PWT is 3.13995 mm tall, 1.63995 mm above the module underside at 1.5 mm, and 3.55 mm from the module body (connector; highest point of the 3D model ${KIPRJMOD}/../parts/ZX-SH1.0-4PWT/ZX-SH1.0-4PWT.wrl)
-    NOTE tall-part-beside-module: U5005 (esc_io) SN74LVC125ADR is 1.99949 mm tall, 0.499488 mm above the module underside at 1.5 mm, and 3.6 mm from the module body (integrated_circuit; highest point of the 3D model ${KIPRJMOD}/../parts/SN74LVC125ADR/SN74LVC125ADR.wrl)
-    NOTE tall-part-beside-module: J5001 (esc_io) HX PZ2.54-3x8P ZZ is 8.54 mm tall, 7.04 mm above the module underside at 1.5 mm, and 4.636 mm from the module body (header; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Connector_PinHeader_2.54mm.3dshapes/PinHeader_1x08_P2.54mm_Vertical.step)
-    NOTE tall-part-beside-module: C21003 (vbat_supply) 4u7/100V is 2.5 mm tall, 1 mm above the module underside at 1.5 mm, and 4.84424 mm from the module body (capacitor; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_1210_3225Metric.step)
-    NOTE tall-part-beside-module: U20001 (usb_uart_connector) USBLC6-2SC6 is 1.64897 mm tall, 0.148968 mm above the module underside at 1.5 mm, and 5.6659 mm from the module body (diode; highest point of the 3D model ${KIPRJMOD}/../parts/USBLC6-2SC6/USBLC6-2SC6.wrl)
-    NOTE tall-part-beside-module: T7001 (ethernet) HX5008NLT is 6.37997 mm tall, 4.87997 mm above the module underside at 1.5 mm, and 6.542 mm from the module body (transformer; highest point of the 3D model ${KIPRJMOD}/../parts/HX5008NLT/HX5008NLT.wrl)
-    NOTE tall-part-beside-module: C21013 (vbat_supply) 4u7/100V is 2.5 mm tall, 1 mm above the module underside at 1.5 mm, and 7.18 mm from the module body (capacitor; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_1210_3225Metric.step)
-    NOTE tall-part-beside-module: L11002 (power) 10uH is 4.21005 mm tall, 2.71005 mm above the module underside at 1.5 mm, and 7.2303 mm from the module body (inductor; highest point of the 3D model ${KIPRJMOD}/../parts/SWPA8040S100MT/SWPA8040S100MT.wrl)
-    NOTE tall-part-beside-module: D5003 (esc_io) SRV05-4 is 1.55 mm tall, 0.05 mm above the module underside at 1.5 mm, and 7.9 mm from the module body (diode; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Package_TO_SOT_SMD.3dshapes/SOT-23-6.step)
-    NOTE tall-part-beside-module: C21004 (vbat_supply) 4u7/100V is 2.5 mm tall, 1 mm above the module underside at 1.5 mm, and 9.26419 mm from the module body (capacitor; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_1210_3225Metric.step)
-    NOTE tall-part-beside-module: C11003 (power) 10u is 1.6 mm tall, 0.1 mm above the module underside at 1.5 mm, and 9.6 mm from the module body (capacitor; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_1206_3216Metric.step)
-    NOTE tall-part-beside-module: J4001 (debug_boot) 878311420 is 5.89991 mm tall, 4.39991 mm above the module underside at 1.5 mm, and 9.69 mm from the module body (header; highest point of the 3D model ${KIPRJMOD}/../parts/878311420/878311420.wrl)
-    NOTE tall-part-beside-module: SW1002 (board_control) USER is 1.54991 mm tall, 0.049908 mm above the module underside at 1.5 mm, and 11.55 mm from the module body (switch; highest point of the 3D model ${KIPRJMOD}/../parts/TS-1187A-B-A-B/TS-1187A-B-A-B.wrl)
-    NOTE tall-part-beside-module: SW1001 (board_control) DIP-4 is 2.35001 mm tall, 0.850008 mm above the module underside at 1.5 mm, and 11.8 mm from the module body (switch; highest point of the 3D model ${KIPRJMOD}/../parts/DSHP04TSGER/DSHP04TSGER.wrl)
-    NOTE tall-part-beside-module: J4002 (debug_boot) HX_JN1.27-2x5 is 5.19989 mm tall, 3.69989 mm above the module underside at 1.5 mm, and 11.9425 mm from the module body (header; highest point of the 3D model ${KIPRJMOD}/../parts/HX_JN1.27-2x5_TP_H4.9/HX_JN1.27-2x5_TP_H4.9.wrl)
-    NOTE tall-part-beside-module: J20001 (usb_uart_connector) TYPE-C-31-M-12 is 3.25108 mm tall, 1.75108 mm above the module underside at 1.5 mm, and 12.6019 mm from the module body (connector; highest point of the 3D model ${KIPRJMOD}/../parts/TYPE-C-31-M-12/TYPE-C-31-M-12.wrl)
-    NOTE tall-part-beside-module: Q6001 (esc_power) IPT007N06N is 2.30988 mm tall, 0.809876 mm above the module underside at 1.5 mm, and 13.5242 mm from the module body (transistor; highest point of the 3D model ${KIPRJMOD}/../parts/IPT007N06N/IPT007N06N.wrl)
-    NOTE tall-part-beside-module: J5002 (esc_io) ZX-SH1.0-4PWT is 3.13995 mm tall, 1.63995 mm above the module underside at 1.5 mm, and 13.55 mm from the module body (connector; highest point of the 3D model ${KIPRJMOD}/../parts/ZX-SH1.0-4PWT/ZX-SH1.0-4PWT.wrl)
-    NOTE tall-part-beside-module: C11002 (power) 10u is 1.6 mm tall, 0.1 mm above the module underside at 1.5 mm, and 13.6 mm from the module body (capacitor; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_1206_3216Metric.step)
-    NOTE tall-part-beside-module: SW5001 (esc_io) DIP-4 is 2.35001 mm tall, 0.850008 mm above the module underside at 1.5 mm, and 14.02 mm from the module body (switch; highest point of the 3D model ${KIPRJMOD}/../parts/DSHP04TSGER/DSHP04TSGER.wrl)
-    NOTE tall-part-beside-module: D5002 (esc_io) SRV05-4 is 1.55 mm tall, 0.05 mm above the module underside at 1.5 mm, and 14.286 mm from the module body (diode; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Package_TO_SOT_SMD.3dshapes/SOT-23-6.step)
-    NOTE tall-part-beside-module: U5004 (esc_io) SN74LVC125ADR is 1.99949 mm tall, 0.499488 mm above the module underside at 1.5 mm, and 14.3 mm from the module body (integrated_circuit; highest point of the 3D model ${KIPRJMOD}/../parts/SN74LVC125ADR/SN74LVC125ADR.wrl)
-    NOTE tall-part-beside-module: D5001 (esc_io) SRV05-4 is 1.55 mm tall, 0.05 mm above the module underside at 1.5 mm, and 14.436 mm from the module body (diode; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Package_TO_SOT_SMD.3dshapes/SOT-23-6.step)
-    NOTE tall-part-beside-module: L13003 (power_som) 10uH is 4.21005 mm tall, 2.71005 mm above the module underside at 1.5 mm, and 16.25 mm from the module body (inductor; highest point of the 3D model ${KIPRJMOD}/../parts/SWPA8040S100MT/SWPA8040S100MT.wrl)
-    NOTE tall-part-beside-module: J21001 (vbat_supply) A2541WV-2x3P is 8.54 mm tall, 7.04 mm above the module underside at 1.5 mm, and 16.83 mm from the module body (header; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Connector_PinHeader_2.54mm.3dshapes/PinHeader_2x03_P2.54mm_Vertical.step)
-    NOTE tall-part-beside-module: C13015 (power_som) 10u is 1.6 mm tall, 0.1 mm above the module underside at 1.5 mm, and 17.0499 mm from the module body (capacitor; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_1206_3216Metric.step)
-    NOTE tall-part-beside-module: L21001 (vbat_supply) 10uH is 4.21005 mm tall, 2.71005 mm above the module underside at 1.5 mm, and 18.2055 mm from the module body (inductor; highest point of the 3D model ${KIPRJMOD}/../parts/SWPA8040S100MT/SWPA8040S100MT.wrl)
-    NOTE tall-part-beside-module: J6002 (esc_power) XT60PW-M is 8.10005 mm tall, 6.60005 mm above the module underside at 1.5 mm, and 20.285 mm from the module body (connector; highest point of the 3D model ${KIPRJMOD}/../parts/XT60PW-M/XT60PW-M.wrl)
-    NOTE tall-part-beside-module: SW3001 (can_bus) DIP-4 is 2.35001 mm tall, 0.850008 mm above the module underside at 1.5 mm, and 20.77 mm from the module body (switch; highest point of the 3D model ${KIPRJMOD}/../parts/DSHP04TSGER/DSHP04TSGER.wrl)
-    NOTE tall-part-beside-module: C10002 (pd_input) 10u is 2.5 mm tall, 1 mm above the module underside at 1.5 mm, and 21.95 mm from the module body (capacitor; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_1210_3225Metric.step)
-    NOTE tall-part-beside-module: J6001 (esc_power) XT60PW-M is 8.10005 mm tall, 6.60005 mm above the module underside at 1.5 mm, and 22.3807 mm from the module body (connector; highest point of the 3D model ${KIPRJMOD}/../parts/XT60PW-M/XT60PW-M.wrl)
-    NOTE tall-part-beside-module: C13016 (power_som) 10u is 1.6 mm tall, 0.1 mm above the module underside at 1.5 mm, and 24.3501 mm from the module body (capacitor; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_1206_3216Metric.step)
-    NOTE tall-part-beside-module: U10002 (pd_input) USBLC6-2SC6 is 1.64897 mm tall, 0.148968 mm above the module underside at 1.5 mm, and 24.9159 mm from the module body (diode; highest point of the 3D model ${KIPRJMOD}/../parts/USBLC6-2SC6/USBLC6-2SC6.wrl)
-    NOTE tall-part-beside-module: J3001 (can_bus) ZX-SH1.0-4PWT is 3.13995 mm tall, 1.63995 mm above the module underside at 1.5 mm, and 25.05 mm from the module body (connector; highest point of the 3D model ${KIPRJMOD}/../parts/ZX-SH1.0-4PWT/ZX-SH1.0-4PWT.wrl)
-    NOTE tall-part-beside-module: J3002 (can_bus) ZX-SH1.0-4PWT is 3.13995 mm tall, 1.63995 mm above the module underside at 1.5 mm, and 25.05 mm from the module body (connector; highest point of the 3D model ${KIPRJMOD}/../parts/ZX-SH1.0-4PWT/ZX-SH1.0-4PWT.wrl)
-    NOTE tall-part-beside-module: C7001 (ethernet) 1n is 1.6 mm tall, 0.1 mm above the module underside at 1.5 mm, and 25.3249 mm from the module body (capacitor; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_1206_3216Metric.step)
-    NOTE tall-part-beside-module: J9001 (microsd) TF-01A is 1.94991 mm tall, 0.449906 mm above the module underside at 1.5 mm, and 26.1479 mm from the module body (connector; highest point of the 3D model ${KIPRJMOD}/../parts/TF-01A/TF-01A.wrl)
-    NOTE tall-part-beside-module: C7004 (ethernet) 1n is 1.6 mm tall, 0.1 mm above the module underside at 1.5 mm, and 26.35 mm from the module body (capacitor; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_1206_3216Metric.step)
-    NOTE tall-part-beside-module: C7003 (ethernet) 1n is 1.6 mm tall, 0.1 mm above the module underside at 1.5 mm, and 26.4117 mm from the module body (capacitor; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_1206_3216Metric.step)
-    NOTE tall-part-beside-module: U3001 (can_bus) TCAN1042HGVDR is 1.70002 mm tall, 0.200022 mm above the module underside at 1.5 mm, and 27.05 mm from the module body (integrated_circuit; highest point of the 3D model ${KIPRJMOD}/../parts/TCAN1042HGVDR/TCAN1042HGVDR.wrl)
-    NOTE tall-part-beside-module: C7002 (ethernet) 1n is 1.6 mm tall, 0.1 mm above the module underside at 1.5 mm, and 27.7727 mm from the module body (capacitor; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_1206_3216Metric.step)
-    NOTE tall-part-beside-module: C7005 (ethernet) 1n is 1.6 mm tall, 0.1 mm above the module underside at 1.5 mm, and 29.4909 mm from the module body (capacitor; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_1206_3216Metric.step)
-    NOTE tall-part-beside-module: D10001 (pd_input) SMBJ22A is 2.15 mm tall, 0.65 mm above the module underside at 1.5 mm, and 31.0018 mm from the module body (diode; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Diode_SMD.3dshapes/D_SMB.step)
-    NOTE tall-part-beside-module: J10001 (pd_input) TYPE-C-31-M-12 is 3.25108 mm tall, 1.75108 mm above the module underside at 1.5 mm, and 31.8519 mm from the module body (connector; highest point of the 3D model ${KIPRJMOD}/../parts/TYPE-C-31-M-12/TYPE-C-31-M-12.wrl)
-    NOTE termination-distance-report: D6003 (esc_power) is 3.57159 mm from U6002.22; the reach of a series part is 4 mm
-    NOTE termination-distance-report: C7004 (ethernet) is 2.82416 mm from T7001.15; the reach of a terminate part is 3 mm
-    NOTE termination-distance-report: R11007 (power) is 2.82259 mm from Q11001.1; the reach of a series part is 4 mm
-    NOTE termination-distance-report: RN5002 (esc_io) is 2.10409 mm from U5001.13; the reach of a series part is 4 mm
+    NOTE tall-part-beside-module: SW5001 (esc_io) DIP-4 is 2.35001 mm tall, 0.850008 mm above the module underside at 1.5 mm, and 3.02 mm from the module body (switch; highest point of the 3D model ${KIPRJMOD}/../parts/DSHP04TSGER/DSHP04TSGER.wrl)
+    NOTE tall-part-beside-module: L13003 (power_som) 10uH is 4.21005 mm tall, 2.71005 mm above the module underside at 1.5 mm, and 3.05 mm from the module body (inductor; highest point of the 3D model ${KIPRJMOD}/../parts/SWPA8040S100MT/SWPA8040S100MT.wrl)
+    NOTE tall-part-beside-module: SW1002 (board_control) USER is 1.54991 mm tall, 0.049908 mm above the module underside at 1.5 mm, and 3.05 mm from the module body (switch; highest point of the 3D model ${KIPRJMOD}/../parts/TS-1187A-B-A-B/TS-1187A-B-A-B.wrl)
+    NOTE tall-part-beside-module: SW1001 (board_control) DIP-4 is 2.35001 mm tall, 0.850008 mm above the module underside at 1.5 mm, and 3.10033 mm from the module body (switch; highest point of the 3D model ${KIPRJMOD}/../parts/DSHP04TSGER/DSHP04TSGER.wrl)
+    NOTE tall-part-beside-module: D10001 (pd_input) SMBJ22A is 2.15 mm tall, 0.65 mm above the module underside at 1.5 mm, and 3.1018 mm from the module body (diode; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Diode_SMD.3dshapes/D_SMB.step)
+    NOTE tall-part-beside-module: J4001 (debug_boot) 878311420 is 5.89991 mm tall, 4.39991 mm above the module underside at 1.5 mm, and 3.15 mm from the module body (header; highest point of the 3D model ${KIPRJMOD}/../parts/878311420/878311420.wrl)
+    NOTE tall-part-beside-module: Q6001 (esc_power) IPT007N06N is 2.30988 mm tall, 0.809876 mm above the module underside at 1.5 mm, and 3.25 mm from the module body (transistor; highest point of the 3D model ${KIPRJMOD}/../parts/IPT007N06N/IPT007N06N.wrl)
+    NOTE tall-part-beside-module: D5001 (esc_io) SRV05-4 is 1.55 mm tall, 0.05 mm above the module underside at 1.5 mm, and 4.214 mm from the module body (diode; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Package_TO_SOT_SMD.3dshapes/SOT-23-6.step)
+    NOTE tall-part-beside-module: J6001 (esc_power) XT60PW-M is 8.10005 mm tall, 6.60005 mm above the module underside at 1.5 mm, and 4.535 mm from the module body (connector; highest point of the 3D model ${KIPRJMOD}/../parts/XT60PW-M/XT60PW-M.wrl)
+    NOTE tall-part-beside-module: J5001 (esc_io) HX PZ2.54-3x8P ZZ is 8.54 mm tall, 7.04 mm above the module underside at 1.5 mm, and 4.994 mm from the module body (header; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Connector_PinHeader_2.54mm.3dshapes/PinHeader_1x08_P2.54mm_Vertical.step)
+    NOTE tall-part-beside-module: J1001 (board_control) ZX-SH1.0-4PWT is 3.13995 mm tall, 1.63995 mm above the module underside at 1.5 mm, and 5 mm from the module body (connector; highest point of the 3D model ${KIPRJMOD}/../parts/ZX-SH1.0-4PWT/ZX-SH1.0-4PWT.wrl)
+    NOTE tall-part-beside-module: C10002 (pd_input) 10u is 2.5 mm tall, 1 mm above the module underside at 1.5 mm, and 5.2202 mm from the module body (capacitor; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_1210_3225Metric.step)
+    NOTE tall-part-beside-module: U10002 (pd_input) USBLC6-2SC6 is 1.64897 mm tall, 0.148968 mm above the module underside at 1.5 mm, and 5.4159 mm from the module body (diode; highest point of the 3D model ${KIPRJMOD}/../parts/USBLC6-2SC6/USBLC6-2SC6.wrl)
+    NOTE tall-part-beside-module: J3001 (can_bus) ZX-SH1.0-4PWT is 3.13995 mm tall, 1.63995 mm above the module underside at 1.5 mm, and 5.89 mm from the module body (connector; highest point of the 3D model ${KIPRJMOD}/../parts/ZX-SH1.0-4PWT/ZX-SH1.0-4PWT.wrl)
+    NOTE tall-part-beside-module: U20001 (usb_uart_connector) USBLC6-2SC6 is 1.64897 mm tall, 0.148968 mm above the module underside at 1.5 mm, and 9.1659 mm from the module body (diode; highest point of the 3D model ${KIPRJMOD}/../parts/USBLC6-2SC6/USBLC6-2SC6.wrl)
+    NOTE tall-part-beside-module: C6004 (esc_power) 470u is 13.511 mm tall, 12.011 mm above the module underside at 1.5 mm, and 9.2 mm from the module body (capacitor; highest point of the 3D model ${KIPRJMOD}/../parts/RVT1H471M1213/RVT1H471M1213.wrl)
+    NOTE tall-part-beside-module: C7001 (ethernet) 1n is 1.6 mm tall, 0.1 mm above the module underside at 1.5 mm, and 9.3 mm from the module body (capacitor; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_1206_3216Metric.step)
+    NOTE tall-part-beside-module: U5005 (esc_io) SN74LVC125ADR is 1.99949 mm tall, 0.499488 mm above the module underside at 1.5 mm, and 9.35 mm from the module body (integrated_circuit; highest point of the 3D model ${KIPRJMOD}/../parts/SN74LVC125ADR/SN74LVC125ADR.wrl)
+    NOTE tall-part-beside-module: SW4002 (debug_boot) RESET is 1.54991 mm tall, 0.049908 mm above the module underside at 1.5 mm, and 11.05 mm from the module body (switch; highest point of the 3D model ${KIPRJMOD}/../parts/TS-1187A-B-A-B/TS-1187A-B-A-B.wrl)
+    NOTE tall-part-beside-module: U3001 (can_bus) TCAN1042HGVDR is 1.70002 mm tall, 0.200022 mm above the module underside at 1.5 mm, and 11.46 mm from the module body (integrated_circuit; highest point of the 3D model ${KIPRJMOD}/../parts/TCAN1042HGVDR/TCAN1042HGVDR.wrl)
+    NOTE tall-part-beside-module: SW3001 (can_bus) DIP-4 is 2.35001 mm tall, 0.850008 mm above the module underside at 1.5 mm, and 11.908 mm from the module body (switch; highest point of the 3D model ${KIPRJMOD}/../parts/DSHP04TSGER/DSHP04TSGER.wrl)
+    NOTE tall-part-beside-module: J10001 (pd_input) TYPE-C-31-M-12 is 3.25108 mm tall, 1.75108 mm above the module underside at 1.5 mm, and 12.3519 mm from the module body (connector; highest point of the 3D model ${KIPRJMOD}/../parts/TYPE-C-31-M-12/TYPE-C-31-M-12.wrl)
+    NOTE tall-part-beside-module: J21001 (vbat_supply) A2541WV-2x3P is 8.54 mm tall, 7.04 mm above the module underside at 1.5 mm, and 12.7328 mm from the module body (header; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Connector_PinHeader_2.54mm.3dshapes/PinHeader_2x03_P2.54mm_Vertical.step)
+    NOTE tall-part-beside-module: D5003 (esc_io) SRV05-4 is 1.55 mm tall, 0.05 mm above the module underside at 1.5 mm, and 12.99 mm from the module body (diode; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Package_TO_SOT_SMD.3dshapes/SOT-23-6.step)
+    NOTE tall-part-beside-module: J5002 (esc_io) ZX-SH1.0-4PWT is 3.13995 mm tall, 1.63995 mm above the module underside at 1.5 mm, and 13.3304 mm from the module body (connector; highest point of the 3D model ${KIPRJMOD}/../parts/ZX-SH1.0-4PWT/ZX-SH1.0-4PWT.wrl)
+    NOTE tall-part-beside-module: J6002 (esc_power) XT60PW-M is 8.10005 mm tall, 6.60005 mm above the module underside at 1.5 mm, and 13.3836 mm from the module body (connector; highest point of the 3D model ${KIPRJMOD}/../parts/XT60PW-M/XT60PW-M.wrl)
+    NOTE tall-part-beside-module: T7001 (ethernet) HX5008NLT is 6.37997 mm tall, 4.87997 mm above the module underside at 1.5 mm, and 13.945 mm from the module body (transformer; highest point of the 3D model ${KIPRJMOD}/../parts/HX5008NLT/HX5008NLT.wrl)
+    NOTE tall-part-beside-module: SW4001 (debug_boot) DIP-4 is 2.35001 mm tall, 0.850008 mm above the module underside at 1.5 mm, and 14.05 mm from the module body (switch; highest point of the 3D model ${KIPRJMOD}/../parts/DSHP04TSGER/DSHP04TSGER.wrl)
+    NOTE tall-part-beside-module: D5002 (esc_io) SRV05-4 is 1.55 mm tall, 0.05 mm above the module underside at 1.5 mm, and 14.56 mm from the module body (diode; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Package_TO_SOT_SMD.3dshapes/SOT-23-6.step)
+    NOTE tall-part-beside-module: C7002 (ethernet) 1n is 1.6 mm tall, 0.1 mm above the module underside at 1.5 mm, and 14.92 mm from the module body (capacitor; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_1206_3216Metric.step)
+    NOTE tall-part-beside-module: J3002 (can_bus) ZX-SH1.0-4PWT is 3.13995 mm tall, 1.63995 mm above the module underside at 1.5 mm, and 15.51 mm from the module body (connector; highest point of the 3D model ${KIPRJMOD}/../parts/ZX-SH1.0-4PWT/ZX-SH1.0-4PWT.wrl)
+    NOTE tall-part-beside-module: J20001 (usb_uart_connector) TYPE-C-31-M-12 is 3.25108 mm tall, 1.75108 mm above the module underside at 1.5 mm, and 16.1019 mm from the module body (connector; highest point of the 3D model ${KIPRJMOD}/../parts/TYPE-C-31-M-12/TYPE-C-31-M-12.wrl)
+    NOTE tall-part-beside-module: C13015 (power_som) 10u is 1.6 mm tall, 0.1 mm above the module underside at 1.5 mm, and 16.3624 mm from the module body (capacitor; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_1206_3216Metric.step)
+    NOTE tall-part-beside-module: C7005 (ethernet) 1n is 1.6 mm tall, 0.1 mm above the module underside at 1.5 mm, and 17.24 mm from the module body (capacitor; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_1206_3216Metric.step)
+    NOTE tall-part-beside-module: C13016 (power_som) 10u is 1.6 mm tall, 0.1 mm above the module underside at 1.5 mm, and 18.2001 mm from the module body (capacitor; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_1206_3216Metric.step)
+    NOTE tall-part-beside-module: C21004 (vbat_supply) 4u7/100V is 2.5 mm tall, 1 mm above the module underside at 1.5 mm, and 19.4786 mm from the module body (capacitor; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_1210_3225Metric.step)
+    NOTE tall-part-beside-module: C7003 (ethernet) 1n is 1.6 mm tall, 0.1 mm above the module underside at 1.5 mm, and 21.89 mm from the module body (capacitor; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_1206_3216Metric.step)
+    NOTE tall-part-beside-module: C21003 (vbat_supply) 4u7/100V is 2.5 mm tall, 1 mm above the module underside at 1.5 mm, and 23.7818 mm from the module body (capacitor; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_1210_3225Metric.step)
+    NOTE tall-part-beside-module: L21001 (vbat_supply) 10uH is 4.21005 mm tall, 2.71005 mm above the module underside at 1.5 mm, and 24.3175 mm from the module body (inductor; highest point of the 3D model ${KIPRJMOD}/../parts/SWPA8040S100MT/SWPA8040S100MT.wrl)
+    NOTE tall-part-beside-module: C7004 (ethernet) 1n is 1.6 mm tall, 0.1 mm above the module underside at 1.5 mm, and 26.3601 mm from the module body (capacitor; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_1206_3216Metric.step)
+    NOTE tall-part-beside-module: J14001 (rj45_connector) KH-5224-8P8C-D is 16.3001 mm tall, 14.8001 mm above the module underside at 1.5 mm, and 27.3 mm from the module body (connector; highest point of the 3D model ${KIPRJMOD}/../parts/KH-5224-8P8C-D/KH-5224-8P8C-D.wrl)
+    NOTE tall-part-beside-module: C21013 (vbat_supply) 4u7/100V is 2.5 mm tall, 1 mm above the module underside at 1.5 mm, and 28.5565 mm from the module body (capacitor; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_1210_3225Metric.step)
+    NOTE tall-part-beside-module: J4002 (debug_boot) HX_JN1.27-2x5 is 5.19989 mm tall, 3.69989 mm above the module underside at 1.5 mm, and 31.9777 mm from the module body (header; highest point of the 3D model ${KIPRJMOD}/../parts/HX_JN1.27-2x5_TP_H4.9/HX_JN1.27-2x5_TP_H4.9.wrl)
+    NOTE tall-part-beside-module: J9001 (microsd) TF-01A is 1.94991 mm tall, 0.449906 mm above the module underside at 1.5 mm, and 33.6479 mm from the module body (connector; highest point of the 3D model ${KIPRJMOD}/../parts/TF-01A/TF-01A.wrl)
+    NOTE termination-distance-report: RN5001 (esc_io) is 4.10579 mm from U5001.17; the reach of a series part is 4 mm
+    NOTE termination-distance-report: R11007 (power) is 3.34638 mm from Q11001.1; the reach of a series part is 4 mm
+    NOTE termination-distance-report: D6003 (esc_power) is 3.17501 mm from U6002.22; the reach of a series part is 4 mm
+    NOTE termination-distance-report: C7004 (ethernet) is 2.59897 mm from T7001.15; the reach of a terminate part is 3 mm
+    NOTE termination-distance-report: RN5002 (esc_io) is 2.11535 mm from U5001.13; the reach of a series part is 4 mm
+    NOTE termination-distance-report: R7004 (ethernet) is 1.637 mm from T7001.15; the reach of a terminate part is 3 mm
+    NOTE termination-distance-report: R6014 (esc_power) is 1.55 mm from R6012.2; the reach of a series part is 4 mm
+    NOTE termination-distance-report: C7003 (ethernet) is 1.26626 mm from T7001.18; the reach of a terminate part is 3 mm
+    NOTE termination-distance-report: C7002 (ethernet) is 1.26626 mm from T7001.21; the reach of a terminate part is 3 mm
     NOTE termination-distance-report: C7001 (ethernet) is 1.13 mm from T7001.24; the reach of a terminate part is 3 mm
-    NOTE termination-distance-report: D21002 (vbat_supply) is 0.943399 mm from U21001.2; the reach of a series part is 4 mm
-    NOTE termination-distance-report: C7002 (ethernet) is 0.92515 mm from T7001.21; the reach of a terminate part is 3 mm
-    NOTE termination-distance-report: C7003 (ethernet) is 0.92515 mm from T7001.18; the reach of a terminate part is 3 mm
-    NOTE termination-distance-report: R7001 (ethernet) is 0.77526 mm from T7001.24; the reach of a terminate part is 3 mm
-    NOTE termination-distance-report: R7004 (ethernet) is 0.77526 mm from T7001.15; the reach of a terminate part is 3 mm
-    NOTE termination-distance-report: C7005 (ethernet) is 0.55 mm from R7003.2; the reach of a terminate part is 3 mm
-    NOTE termination-distance-report: R6014 (esc_power) is 0.55 mm from R6012.2; the reach of a series part is 4 mm
-    NOTE termination-distance-report: RN5001 (esc_io) is 0.382436 mm from U5001.17; the reach of a series part is 4 mm
-    NOTE termination-distance-report: R5015 (esc_io) is 0.342997 mm from U5001.19; the reach of a series part is 4 mm
-    NOTE termination-distance-report: R7002 (ethernet) is 0.3225 mm from T7001.21; the reach of a terminate part is 3 mm
-    NOTE termination-distance-report: R7003 (ethernet) is 0.3225 mm from T7001.18; the reach of a terminate part is 3 mm
-    NOTE termination-distance-report: R3002 (can_bus) is 0.230995 mm from U3001.7; the reach of a terminate part is 3 mm
+    NOTE termination-distance-report: R7002 (ethernet) is 0.8225 mm from T7001.21; the reach of a terminate part is 3 mm
+    NOTE termination-distance-report: R7003 (ethernet) is 0.8225 mm from T7001.18; the reach of a terminate part is 3 mm
+    NOTE termination-distance-report: R7001 (ethernet) is 0.731286 mm from T7001.24; the reach of a terminate part is 3 mm
+    NOTE termination-distance-report: C7005 (ethernet) is 0.7 mm from R7003.2; the reach of a terminate part is 3 mm
+    NOTE termination-distance-report: D21002 (vbat_supply) is 0.651671 mm from U21001.2; the reach of a series part is 4 mm
+    NOTE termination-distance-report: R6009 (esc_power) is 0.149994 mm from U6002.10; the reach of a series part is 4 mm
+    NOTE termination-distance-report: R5015 (esc_io) is 0.0929965 mm from U5001.19; the reach of a series part is 4 mm
+    NOTE termination-distance-report: R3002 (can_bus) is 0 mm from U3001.7; the reach of a terminate part is 3 mm
     NOTE termination-distance-report: R6004 (esc_power) is 0 mm from U6002.14; the reach of a series part is 4 mm
-    NOTE termination-distance-report: R6009 (esc_power) is 0 mm from U6002.10; the reach of a series part is 4 mm
     NOTE termination-distance-report: C7006 (ethernet) is 0 mm from T7001.1; the reach of a terminate part is 3 mm
     NOTE input-capacitor-nearest: U11001 (power) VIN2 (pad 12): input capacitor C11025 at 0.955001 mm
     NOTE input-capacitor-nearest: U11001 (power) VIN1 (pad 8): input capacitor C11001 at 0.955001 mm
     NOTE input-capacitor-nearest: U11002 (power) VIN2 (pad 12): input capacitor C11029 at 0.955001 mm
     NOTE input-capacitor-nearest: U11002 (power) VIN1 (pad 8): input capacitor C11007 at 0.955001 mm
-    NOTE input-capacitor-nearest: U13004 (power_som) VIN2 (pad 12): input capacitor C13025 at 0.275001 mm
-    NOTE input-capacitor-nearest: U13004 (power_som) VIN1 (pad 8): input capacitor C13014 at 2.025 mm
-    NOTE input-capacitor-nearest: U21002 (vbat_supply) VIN2 (pad 12): input capacitor C21006 at 1.825 mm
-    NOTE input-capacitor-nearest: U21002 (vbat_supply) VIN1 (pad 8): input capacitor C21013 at 0.827515 mm
-    NOTE nothing-sensitive-under-inductor: inductor L11001 (power): nearest sense or timing part is R19002 (uart_bridge), 33.6006 mm centre to centre
-    NOTE nothing-sensitive-under-inductor: inductor L11002 (power): nearest sense or timing part is R19002 (uart_bridge), 34.6332 mm centre to centre
-    NOTE nothing-sensitive-under-inductor: inductor L13003 (power_som): nearest sense or timing part is R19002 (uart_bridge), 42.559 mm centre to centre
-    NOTE nothing-sensitive-under-inductor: inductor L21001 (vbat_supply): nearest sense or timing part is R21002 (vbat_supply), 13.8494 mm centre to centre
-    NOTE protect-first-after-connector: D3001 (can_bus) is 3.5448 mm from J3001.2 on net /can_bus/CAN_H
-    NOTE protect-first-after-connector: D5001 (esc_io) is 2.96351 mm from J5001.2 on net /esc_io/ESC_OUT1
-    NOTE protect-first-after-connector: D5002 (esc_io) is 3.13177 mm from J5001.6 on net /esc_io/ESC_OUT5
+    NOTE input-capacitor-nearest: U13004 (power_som) VIN2 (pad 12): input capacitor C13016 at 1.30863 mm
+    NOTE input-capacitor-nearest: U13004 (power_som) VIN1 (pad 8): input capacitor C13015 at 0.450001 mm
+    NOTE input-capacitor-nearest: U21002 (vbat_supply) VIN2 (pad 12): input capacitor C21006 at 0.275001 mm
+    NOTE input-capacitor-nearest: U21002 (vbat_supply) VIN1 (pad 8): input capacitor C21003 at 0.749901 mm
+    NOTE nothing-sensitive-under-inductor: inductor L11001 (power): nearest sense or timing part is R21002 (vbat_supply), 30.3199 mm centre to centre
+    NOTE nothing-sensitive-under-inductor: inductor L11002 (power): nearest sense or timing part is RS12004 (power_mon), 39.8661 mm centre to centre
+    NOTE nothing-sensitive-under-inductor: inductor L13003 (power_som): nearest sense or timing part is R21001 (vbat_supply), 12.3913 mm centre to centre
+    NOTE nothing-sensitive-under-inductor: inductor L21001 (vbat_supply): nearest sense or timing part is R21001 (vbat_supply), 28.2123 mm centre to centre
+    NOTE protect-first-after-connector: D3001 (can_bus) is 5.73154 mm from J3001.2 on net /can_bus/CAN_H
+    NOTE protect-first-after-connector: D5001 (esc_io) is 7.888 mm from J5001.2 on net /esc_io/ESC_OUT1
+    NOTE protect-first-after-connector: D5002 (esc_io) is 4.01914 mm from J5001.6 on net /esc_io/ESC_OUT5
     NOTE protect-first-after-connector: D5003 (esc_io) is 5.2499 mm from J5002.2 on net /esc_io/TLM_CONN
     NOTE protect-first-after-connector: D6001 (esc_power) protects F6001.2, which is not a connector pin; its order is not judged
     NOTE protect-first-after-connector: D6002 (esc_power) protects D6001.2, which is not a connector pin; its order is not judged
     NOTE protect-first-after-connector: U9002 (microsd) is 5.64808 mm from J9001.5 on net /microsd/SD_CARD_CLK
-    NOTE protect-first-after-connector: D10001 (pd_input) is 4.3 mm from J10001.A4B9 on net +VBUS_IN
-    NOTE protect-first-after-connector: U10002 (pd_input) is 4.23462 mm from J10001.A6 on net /pd_input/PD_USB_DP_CONN
-    NOTE protect-first-after-connector: U20001 (usb_uart_connector) is 5.57391 mm from J20001.A6 on net /usb_uart_connector/USB_UART_DP_CONN
-    NOTE bypass-on-pin-face-or-under: bypass distance to the served pin over 58 capacitors: least 0 mm, median 0.567186 mm, greatest 2.18016 mm; 2 beyond the 2 mm bypass reach; 26 on the pin's face, 32 directly under
-    NOTE sense-distance-report: R19003 (uart_bridge) is 4.31379 mm from U19001.8 (same face)
-    NOTE sense-distance-report: R19002 (uart_bridge) is 3.9936 mm from U19001.8 (same face)
-    NOTE sense-distance-report: R10004 (pd_input) is 2.6035 mm from U10001.8 (same face)
-    NOTE sense-distance-report: RS12003 (power_mon) is 2.53539 mm from U12001.2 (opposite face)
-    NOTE sense-distance-report: RS12002 (power_mon) is 2.28134 mm from U12001.15 (opposite face)
-    NOTE sense-distance-report: R6012 (esc_power) is 1.875 mm from J6002.2 (opposite face)
-    NOTE sense-distance-report: R21003 (vbat_supply) is 1.65175 mm from U21001.8 (opposite face)
-    NOTE sense-distance-report: R10003 (pd_input) is 1.08506 mm from U10001.8 (same face)
-    NOTE sense-distance-report: RS12001 (power_mon) is 0.98359 mm from U12001.12 (opposite face)
-    NOTE sense-distance-report: R21002 (vbat_supply) is 0.853499 mm from U21001.7 (opposite face)
-    NOTE sense-distance-report: R6013 (esc_power) is 0.55 mm from R6012.2 (same face)
-    NOTE sense-distance-report: R6005 (esc_power) is 0.399994 mm from U6002.20 (opposite face)
-    NOTE sense-distance-report: RS12004 (power_mon) is 0.12139 mm from U12002.12 (opposite face)
+    NOTE protect-first-after-connector: D10001 (pd_input) is 2.8 mm from J10001.A4B9 on net +VBUS_IN
+    NOTE protect-first-after-connector: U10002 (pd_input) is 3.67372 mm from J10001.A6 on net /pd_input/PD_USB_DP_CONN
+    NOTE protect-first-after-connector: U20001 (usb_uart_connector) is 5.76827 mm from J20001.A6 on net /usb_uart_connector/USB_UART_DP_CONN
+    NOTE bypass-on-pin-face-or-under: bypass distance to the served pin over 58 capacitors: least 0 mm, median 0.875001 mm, greatest 2.18016 mm; 3 beyond the 2 mm bypass reach; 30 on the pin's face, 28 directly under
+    NOTE sense-distance-report: RS12002 (power_mon) is 5.16271 mm from U12001.15 (opposite face)
+    NOTE sense-distance-report: RS12004 (power_mon) is 4.91769 mm from U12002.12 (same face)
+    NOTE sense-distance-report: R19003 (uart_bridge) is 3.885 mm from U19001.8 (same face)
+    NOTE sense-distance-report: R19002 (uart_bridge) is 3.39689 mm from U19001.8 (same face)
+    NOTE sense-distance-report: RS12001 (power_mon) is 3.06539 mm from U12001.12 (opposite face)
+    NOTE sense-distance-report: R6013 (esc_power) is 2.82668 mm from R6012.2 (same face)
+    NOTE sense-distance-report: R10003 (pd_input) is 1.8597 mm from U10001.8 (same face)
+    NOTE sense-distance-report: RS12003 (power_mon) is 1.76359 mm from U12001.2 (opposite face)
+    NOTE sense-distance-report: RS6001 (esc_power) is 1.122 mm from U6001.10 (opposite face)
+    NOTE sense-distance-report: R10004 (pd_input) is 0.724991 mm from U10001.8 (same face)
+    NOTE sense-distance-report: R21003 (vbat_supply) is 0.651748 mm from U21001.8 (opposite face)
+    NOTE sense-distance-report: R21001 (vbat_supply) is 0.603499 mm from U21001.7 (opposite face)
+    NOTE sense-distance-report: R6012 (esc_power) is 0.375004 mm from J6002.2 (opposite face)
     NOTE sense-distance-report: RT6001 (esc_power) is 0.0640075 mm from J6001.1 (opposite face)
-    NOTE sense-distance-report: RS6001 (esc_power) is 0 mm from U6001.10 (opposite face)
-    NOTE sense-distance-report: R21001 (vbat_supply) is 0 mm from U21001.7 (opposite face)
+    NOTE sense-distance-report: R6005 (esc_power) is 0 mm from U6002.20 (opposite face)
+    NOTE sense-distance-report: R21002 (vbat_supply) is 0 mm from U21001.7 (opposite face)
 
 return_path: FAIL (advisory) — REPORT-ONLY: fixed SoM interface; remediation judged by return_stitch.
 RETURN-PATH GATE (HS pairs): FAIL (K=2 contact steps)
@@ -1765,18 +1758,18 @@ fanout: PASS — FAN-OUT CLEARANCE GATE (D13, report-first ratchet): PASS
   OFFENDERS (starved, worst slack first):
     (none)
   (tightest PASSING subjects:)
-    ok      U2002     bringup_en         5pin clr=1.500 need=1.50 slack=+0.000
-    ok      J4002     debug_boot        10pin clr=1.500 need=1.50 slack=+0.000
-    ok      Q6001     esc_power          3pin clr=1.503 need=1.50 slack=+0.003
-    ok      U5006     esc_io             5pin clr=1.510 need=1.50 slack=+0.010
-    ok      U20001    usb_uart_connector   6pin clr=1.516 need=1.50 slack=+0.016
+    ok      U6002     esc_power         25pin clr=2.000 need=2.00 slack=+0.000
+    ok      D5003     esc_io             6pin clr=1.508 need=1.50 slack=+0.008
+    ok      SW4001    debug_boot         8pin clr=1.508 need=1.50 slack=+0.008
+    ok      Q6002     esc_power          3pin clr=1.515 need=1.50 slack=+0.015
+    ok      U5004     esc_io            14pin clr=2.015 need=2.00 slack=+0.015
 pcb_geometry: PASS — independent final-board gates complete
 testpoint_map: PASS — 43 test points; 5 waived nets
 decoupling_report: PASS — 94 rows; 0 failing
 assembly: PASS — ASSEMBLY: 4 steps + 19 phases, 358 parts -> manufacturing/ASSEMBLY.md + renders/assembly (23 PNGs)
 ratsnest_images: PASS (advisory) — ratsnest: renders/ratsnest_top.png + renders/ratsnest_bottom.png + docs/RATSNEST.svg
-  board 106.75 x 110.5 mm  (top 202 / bottom 161)
-  airwires: 9294 mm total, 4978.3 mm cross-subsystem (209 edges, 53.6% of length)
+  board 117.5 x 88.75 mm  (top 168 / bottom 195)
+  airwires: 10058.1 mm total, 5485.5 mm cross-subsystem (236 edges, 54.5% of length)
 
 thermal: PASS — schgen per-device thermal (Tj) gate
 ==============================================================================
@@ -1807,7 +1800,7 @@ datasheet provenance (every RthJA / Tj_max / Rds_on cited):
 
 pour-aware effective RthJA (* rows) — basis, per part (bare->credited, cited; conservative, bench-verify at bring-up):
   LM61460AANRJRR   bare 58.7 -> eff 35 C/W ; DS 7.3: bare 58.7 C/W (JESD51-7) vs 25 C/W on a 4-layer PCB (DS note + LM61460-Q1 EVM). Credit gated on EMITTED copper, verified in the .kicad_pcb per build: In1.Cu GND plane + 8-via PGND field + local F.Cu/B.Cu pours (SNVSBD5D 11.1.1). Credited 35 C/W — 10 C/W above the DS 4-layer 25, ~30% of the bare->4L delta held back (0.5-oz inner plane, modest pours vs the EVM, 3-buck mutual heating)
-                   emitted-copper evidence (verified in the board file): In1 GND plane + U11001: 8/6 GND vias<=5.2mm, local F+B pour YES; U11002: 8/6 GND vias<=5.2mm, local F+B pour YES; U13004: 8/6 GND vias<=5.2mm, local F+B pour YES; U21002: 8/6 GND vias<=5.2mm, local F+B pour YES
+                   emitted-copper evidence (verified in the board file): In1 GND plane + U11001: 8/6 GND vias<=5.2mm, local B+F pour YES; U11002: 8/6 GND vias<=5.2mm, local B+F pour YES; U13004: 8/6 GND vias<=5.2mm, local F+B pour YES; U21002: 8/6 GND vias<=5.2mm, local F+B pour YES
 
 errors: none
 
@@ -1861,7 +1854,7 @@ CD-06  Ethernet isolation moat (In1 plane voids)   [PARTIAL]
 CD-07  DP90/DP100 L2 reference plane   [EMITTED]
   assumes: the DP90_USB / DP100_TMDS trace geometry (widths/gaps in the .kicad_dru + net classes) is an OUTER-layer microstrip referenced to a CONTINUOUS L2 GND plane through one 7628 prepreg sheet
   where:   subsystems/copper_claims.json#CD-07
-  emits:   In1.Cu GND plane zone 37.75,38.25 -> 143.5,147.75 mm (unfilled-on-disk, DRC-refilled); ethernet voids punch it locally (CD-06)
+  emits:   In1.Cu GND plane zone 53.75,54 -> 170.25,141.75 mm (unfilled-on-disk, DRC-refilled); ethernet voids punch it locally (CD-06)
   risk:    without the L2 plane every impedance number in the dru is unmoored (return path undefined, impedance wrong by design); with the plane emitted the residual risk is fill VOIDS/splits under a future route path (checked at the routing wave)
 
 CD-08  Under-SoM decoupling fanout vias   [PARTIAL]
@@ -2242,10 +2235,10 @@ vbat_supply          parts= 35  structured=  0  free= 0  UNGATED= 35  (no contra
 fallbacks: PASS — FALLBACK RATCHET: PASS — 3 registered paths, 0 firing
 SEARCH EFFORT: observational, no acceptance ceiling; counts include rejected work. Exhaustion is not proof of infeasibility. Hardware gates remain independent.
   bottom_variant_contract_reject: 0
-  cand_cap_truncated: 36
+  cand_cap_truncated: 18
   contract_group_orientation_retry: 0
-  corridor_evict_moved: 13
-  edge_geometry_replan_retry: 1
+  corridor_evict_moved: 12
+  edge_geometry_replan_retry: 0
   edge_run_translation: 0
   facing_replan_retry: 0
   interior_failed_first_retry: 0
@@ -2284,7 +2277,7 @@ SEARCH EFFORT: observational, no acceptance ceiling; counts include rejected wor
   legalize_neighbour_retry: 0
   legalize_only_compaction: 0
   legalize_reservation_retry: 0
-  punch_free_plan_rejected: 2
+  punch_free_plan_rejected: 1
   screened_incumbent_retained: 0
   seat_node_budget: 0
   thermal_repair_moved: 0
@@ -2298,74 +2291,73 @@ pipeline_doc: PASS — updated
 === board native exclusive timing (wall s; audits included) ===
 Nested scopes pause parents; parallel batches use launch/join wall time, never summed worker spans.
 Scope: pipeline entry through build-ledger publication; excludes final summary publications and caller/process setup. Mixed stages remain mixed; not a generation-only total.
-pipeline_setup_and_other: 0.007019
-inputs: 0.008079
-authoring_audit: 10.012201
-authoring_guard_reporting_and_recheck: 0.000861
-input_factory_generation_and_ir_conversion: 0.014397
-input_circuit_validation: 0.007367
-input_publication: 0.011759
-board_definition: 0.044164
-subsystem_structure: 0.023075
-carrier_structure: 0.012717
-sheet_prepare_other: 0.005177
-sheet_electrical_validation: 0.003489
-sheet_place_route_with_internal_checks: 1.498777
-sheet_cc_validation: 0.007299
-sheet_emit_and_publish: 0.047520
-sheet_visual_validation: 0.020229
-sheet_parallel_checks_and_render_wall: 23.863100
-symbol_law: 0.000264
-link: 0.001700
-constraints: 0.000842
-diagram: 0.001253
-board_schematic: 5.676394
-bom_footprints: 0.000653
-power_tree: 0.003007
-rail_ampacity: 0.000252
-testpoints: 0.000460
-design_rules: 0.001725
-part_rules: 0.001034
-bom_values: 0.001635
-footprint_pads: 0.009771
-pin_completeness: 0.001012
-spice: 0.122550
-pcb: 0.019315
-pcb_input_loading_and_netlist_validation: 1.747390
-pcb_build_model_with_internal_checks: 3.761837
-pcb_layout_squeeze: 683.425245
-pcb_label_seats: 0.002853
-pcb_render: 0.028184
-placement_requirements: 0.001491
-pcb_drc: 1.997498
-pcb_geometry: 0.052767
-testpoint_map: 0.000377
-decoupling_report: 0.002157
-assembly: 0.315515
-ratsnest_images: 0.524090
-thermal: 0.030397
-copper_debt: 0.057733
-order_files: 0.004960
-fab_profile: 0.033669
-stage_movement: 0.000002
-xdc: 1.469808
-power_sequence: 0.001193
-floorplan: 0.000581
-model3d: 3.422612
-render3d: 38.123567
-gallery: 0.001027
-si: 0.001060
-i2c_bus_map: 0.000922
-module_pin_map: 1.439465
-connector_pinout: 0.001420
-bom_ratings: 0.000960
-manifest: 0.038730
-golden: 1.382291
-contract_coverage_lint: 0.001623
-fallbacks: 0.000883
-ledger_import: 0.001231
-quantize_census: 0.000369
-source_audit: 197.309945
-pipeline_doc: 0.000497
-MEASURED SCOPE TOTAL (not process wall): 976.613446
+pipeline_setup_and_other: 0.006416
+inputs: 0.008258
+authoring_audit: 9.946812
+authoring_guard_reporting_and_recheck: 0.000648
+input_factory_generation_and_ir_conversion: 0.014393
+input_circuit_validation: 0.006504
+input_publication: 0.012905
+board_definition: 0.045140
+subsystem_structure: 0.024154
+carrier_structure: 0.012899
+sheet_prepare_other: 0.005350
+sheet_electrical_validation: 0.003568
+sheet_place_route_with_internal_checks: 1.498923
+sheet_cc_validation: 0.007286
+sheet_emit_and_publish: 0.047223
+sheet_visual_validation: 0.020277
+sheet_parallel_checks_and_render_wall: 25.367017
+symbol_law: 0.000251
+link: 0.002255
+constraints: 0.001104
+diagram: 0.001261
+board_schematic: 5.769612
+bom_footprints: 0.000507
+power_tree: 0.003950
+rail_ampacity: 0.000233
+testpoints: 0.000451
+design_rules: 0.001631
+part_rules: 0.000975
+bom_values: 0.001581
+footprint_pads: 0.013478
+pin_completeness: 0.001108
+spice: 0.121714
+pcb: 0.019046
+pcb_input_loading_and_netlist_validation: 1.739419
+pcb_build_model_with_internal_checks: 3.755419
+pcb_layout_squeeze: 737.617304
+pcb_render: 0.027483
+placement_requirements: 0.001430
+pcb_drc: 2.003874
+pcb_geometry: 0.053461
+testpoint_map: 0.000417
+decoupling_report: 0.002166
+assembly: 0.303833
+ratsnest_images: 0.626768
+thermal: 0.030223
+copper_debt: 0.063428
+order_files: 0.004751
+fab_profile: 0.034038
+stage_movement: 0.000003
+xdc: 1.473386
+power_sequence: 0.001341
+floorplan: 0.000811
+model3d: 3.331970
+render3d: 36.346074
+gallery: 0.001109
+si: 0.000923
+i2c_bus_map: 0.000848
+module_pin_map: 1.435185
+connector_pinout: 0.001091
+bom_ratings: 0.000949
+manifest: 0.040293
+golden: 1.382268
+contract_coverage_lint: 0.001504
+fallbacks: 0.000785
+ledger_import: 0.001192
+quantize_census: 0.000605
+source_audit: 202.320772
+pipeline_doc: 0.000574
+MEASURED SCOPE TOTAL (not process wall): 1035.572627
 BOARD: FAIL (21 sheets)

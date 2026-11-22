@@ -1,38 +1,30 @@
-CONVERGENCE: 6 breaches of staged rules (connector spacing, face pairs, protection orders) handed over by the placer; 6 repair steps kept of 32 tried; 0 left
+CONVERGENCE: 4 breaches of staged rules (connector spacing, face pairs, protection orders) handed over by the placer; 4 repair steps kept of 24 tried; 0 left
 level | rule | subject | action | breaches before>after | kept
-0 | connector access and envelope | J37002 / J37003 | slide J37003 along its edge; 178 off_board board; 74 reserved board; 59 edge_mount board; 45 overlap C22018 | 1>1 | no
-0 | connector access and envelope | J37002 / J37003 | slide J37002 along its edge; 178 off_board board; 62 edge_mount board; 33 overlap C36003; 27 overlap TP36001 | 1>1 | no
-1 | connector access and envelope | J37002 / J37003 | slide J37003 with the parts tied to it; 178 off_board J37003/board; 74 reserved J37003/board; 59 edge_mount J37003/board; 45 overlap J37003/C22018 | 1>1 | no
-1 | connector access and envelope | J37002 / J37003 | slide J37002 with the parts tied to it; 178 off_board J37002/board; 62 edge_mount J37002/board; 33 overlap J37002/C36003; 27 overlap J37002/TP36001 | 1>1 | no
-4 | connector access and envelope | J37002 / J37003 | open the board between them and shift everything beyond the gap | 1>0 | yes
-0 | owner of U18001 | U18001 -> R18002 | reseat at the pin on its face | 5>5 | no
-1 | owner of U18001 | U18001 -> R18002 | reseat after moving small parts aside | 5>5 | no
-1 | owner of U18001 | U18001 -> R18002 | reseat in the wide ring | 5>5 | no
-1 | owner of U18001 | U18001 -> R18002 | reseat together with the parts tied to it | 5>5 | no
-1 | owner of U18001 | U18001 -> R18002 | take the seat at the pin and reseat the parts in it by their own rules | 5>5 | no
-2 | owner of U18001 | U18001 -> R18002 | move R18002 and its face-tied set to the other face | 5>5 | no
-2 | owner of U18001 | U18001 -> R18002 | move R18002 to the face of U18001 at the nearest free seat and reseat | 5>4 | yes
-0 | owner of U18002 | U18002 -> R18006 | reseat at the pin on its face | 4>4 | no
-1 | owner of U18002 | U18002 -> R18006 | reseat after moving small parts aside | 4>4 | no
-1 | owner of U18002 | U18002 -> R18006 | reseat in the wide ring | 4>4 | no
-1 | owner of U18002 | U18002 -> R18006 | reseat together with the parts tied to it | 4>4 | no
-1 | owner of U18002 | U18002 -> R18006 | take the seat at the pin and reseat the parts in it by their own rules | 4>4 | no
-2 | owner of U18002 | U18002 -> R18006 | move R18006 and its face-tied set to the other face | 4>3 | yes
-0 | owner of U18003 | U18003 -> R18010 | reseat at the pin on its face | 3>3 | no
-1 | owner of U18003 | U18003 -> R18010 | reseat after moving small parts aside | 3>3 | no
-1 | owner of U18003 | U18003 -> R18010 | reseat in the wide ring | 3>3 | no
-1 | owner of U18003 | U18003 -> R18010 | reseat together with the parts tied to it | 3>3 | no
-1 | owner of U18003 | U18003 -> R18010 | take the seat at the pin and reseat the parts in it by their own rules | 3>3 | no
-2 | owner of U18003 | U18003 -> R18010 | move R18010 and its face-tied set to the other face | 3>3 | no
-2 | owner of U18003 | U18003 -> R18010 | move R18010 to the face of U18003 at the nearest free seat and reseat | 3>2 | yes
-0 | owner of U18004 | U18004 -> R18014 | reseat at the pin on its face | 2>2 | no
-1 | owner of U18004 | U18004 -> R18014 | reseat after moving small parts aside | 2>2 | no
-1 | owner of U18004 | U18004 -> R18014 | reseat in the wide ring | 2>2 | no
-1 | owner of U18004 | U18004 -> R18014 | reseat together with the parts tied to it | 2>2 | no
-1 | owner of U18004 | U18004 -> R18014 | take the seat at the pin and reseat the parts in it by their own rules | 2>2 | no
-2 | owner of U18004 | U18004 -> R18014 | move R18014 and its face-tied set to the other face | 2>1 | yes
-1 | protection order | D37001 -> J37002 | seat the protection part first and move the parts nearer than it back | 1>0 | yes
-ILLEGAL handed over: module_core:C30003/C30003 connector_gap:J37002/J37003 (2)
-ILLEGAL after connector separation: module_core:C30003/C30003 (1)
-ILLEGAL after repair: (0)
+0 | owner of U18001 | U18001 -> R18002 | reseat at the pin on its face | 4>4 | no
+1 | owner of U18001 | U18001 -> R18002 | reseat after moving small parts aside | 4>4 | no
+1 | owner of U18001 | U18001 -> R18002 | reseat in the wide ring | 4>4 | no
+1 | owner of U18001 | U18001 -> R18002 | reseat together with the parts tied to it | 4>4 | no
+1 | owner of U18001 | U18001 -> R18002 | take the seat at the pin and reseat the parts in it by their own rules | 4>4 | no
+2 | owner of U18001 | U18001 -> R18002 | move R18002 and its face-tied set to the other face | 4>3 | yes
+0 | owner of U18002 | U18002 -> R18006 | reseat at the pin on its face | 3>3 | no
+1 | owner of U18002 | U18002 -> R18006 | reseat after moving small parts aside | 3>3 | no
+1 | owner of U18002 | U18002 -> R18006 | reseat in the wide ring | 3>3 | no
+1 | owner of U18002 | U18002 -> R18006 | reseat together with the parts tied to it | 3>3 | no
+1 | owner of U18002 | U18002 -> R18006 | take the seat at the pin and reseat the parts in it by their own rules | 3>3 | no
+2 | owner of U18002 | U18002 -> R18006 | move R18006 and its face-tied set to the other face | 3>2 | yes
+0 | owner of U18003 | U18003 -> R18010 | reseat at the pin on its face | 2>2 | no
+1 | owner of U18003 | U18003 -> R18010 | reseat after moving small parts aside | 2>2 | no
+1 | owner of U18003 | U18003 -> R18010 | reseat in the wide ring | 2>2 | no
+1 | owner of U18003 | U18003 -> R18010 | reseat together with the parts tied to it | 2>2 | no
+1 | owner of U18003 | U18003 -> R18010 | take the seat at the pin and reseat the parts in it by their own rules | 2>2 | no
+2 | owner of U18003 | U18003 -> R18010 | move R18010 and its face-tied set to the other face | 2>1 | yes
+0 | owner of U18004 | U18004 -> R18014 | reseat at the pin on its face | 1>1 | no
+1 | owner of U18004 | U18004 -> R18014 | reseat after moving small parts aside | 1>1 | no
+1 | owner of U18004 | U18004 -> R18014 | reseat in the wide ring | 1>1 | no
+1 | owner of U18004 | U18004 -> R18014 | reseat together with the parts tied to it | 1>1 | no
+1 | owner of U18004 | U18004 -> R18014 | take the seat at the pin and reseat the parts in it by their own rules | 1>1 | no
+2 | owner of U18004 | U18004 -> R18014 | move R18014 and its face-tied set to the other face | 1>0 | yes
+ILLEGAL handed over: overlap:C17002/FID1 (1)
+ILLEGAL after connector separation: overlap:C17002/FID1 (1)
+ILLEGAL after repair: overlap:C17002/FID1 (1)
 
