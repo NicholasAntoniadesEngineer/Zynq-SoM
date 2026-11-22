@@ -507,26 +507,6 @@
     }
   ],
   "layout": {
-    "access": [
-      {
-        "handling": "grip_sides",
-        "side_mm": 25.0,
-        "front_mm": 0.0,
-        "basis": "MIL-STD-1472H (15 Sep 2020) para 5.9.14.7.2 Bare finger operation: spacing between adjacent connectors not less than 25 mm, measured from the outermost portion of the connector (para 5.9.14.7.4); front: the standard gives spacing between connectors only"
-      },
-      {
-        "handling": "latch",
-        "side_mm": 25.0,
-        "front_mm": 0.0,
-        "basis": "MIL-STD-1472H (15 Sep 2020) para 5.9.14.7.2 Bare finger operation: spacing between adjacent connectors not less than 25 mm, measured from the outermost portion of the connector (para 5.9.14.7.4); the paragraph covers every bare-finger connector, latched plugs included; front: none given"
-      },
-      {
-        "handling": "card",
-        "side_mm": 25.0,
-        "front_mm": 0.0,
-        "basis": "borrowed from the nearest sourced class: MIL-STD-1472H (15 Sep 2020) para 5.9.14.7.2 Bare finger operation: spacing between adjacent connectors not less than 25 mm, measured from the outermost portion of the connector (para 5.9.14.7.4); no source gives a figure for a push-push card"
-      }
-    ],
     "functions": [
       {
         "part": "esc_power.J1",

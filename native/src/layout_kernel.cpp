@@ -362,7 +362,8 @@ Kernel::Shape Kernel::shape_of(std::size_t part, const Pose& pose) const {
     for (std::size_t pad = 0; pad < variant.pads.size(); ++pad) {
         const Box box = placed(variant.pads[pad].box, pose.at, pose.turn);
         shape.lands.push_back({box, nets[pad], variant.pads[pad].through,
-                               {placed(variant.pads[pad].centre, pose.at, pose.turn), variant.pads[pad].radius}});
+                               {placed(variant.pads[pad].centre, pose.at, pose.turn), variant.pads[pad].radius},
+                               variant.pads[pad].drill});
         if (variant.pads[pad].through) shape.holes.push_back(box);
     }
     for (const auto& box : variant.name_boxes) shape.named.push_back(placed(box, pose.at, pose.turn));
@@ -489,9 +490,11 @@ bool Kernel::via_blocked(std::size_t owner, const Pose& pose, const Shape& guest
         const Point at = placed(site, pose.at, pose.turn);
         const Box point{at.x, at.y, at.x, at.y};
         for (const Land& land : guest.lands) {
-            const Nm need = std::max(land.net != no_net && land.net == rules.via_net ? rules.via_ground : rules.via_pad,
-                                     land.through ? rules.via_hole : Nm{0});
+            const Nm need = land.net != no_net && land.net == rules.via_net ? rules.via_ground : rules.via_pad;
             if (!gap_at_least(point, land.box, need)) return true;
+            if (land.drill > 0 && !gap_at_least(point, Box{land.disc.centre.x, land.disc.centre.y, land.disc.centre.x, land.disc.centre.y},
+                                                rules.via_hole + (land.drill + 1) / 2))
+                return true;
         }
     }
     return false;

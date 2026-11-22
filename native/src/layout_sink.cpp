@@ -1,4 +1,5 @@
 #include "schgen/layout_sink.hpp"
+#include "schgen/layout_squeeze.hpp"
 
 #include "schgen/roles.hpp"
 
@@ -266,6 +267,7 @@ bool seat_first(Kernel& kernel, const NetOrder& rule, Nm pitch) {
     for (const auto& box : pins) pin = united(pin, box);
     const Point target{(pin.x0 + pin.x1) / 2, (pin.y0 + pin.y1) / 2};
     const std::vector<Point> ring = seat_ring(pitch, static_cast<Nm>(constants::ring_limit.value), {0, 0});
+    const std::vector<Point> far_ring = seat_ring(static_cast<Nm>(constants::far_pitch.value), static_cast<Nm>(constants::wide_reach.value), {0, 0});
     const auto gap_of = [&](std::size_t part, const Pose& pose) {
         return squared_net_gap(problem, rule.anchor, anchor, rule.anchor_names, part, pose, rule.net);
     };
@@ -277,13 +279,9 @@ bool seat_first(Kernel& kernel, const NetOrder& rule, Nm pitch) {
             seats.push_back({pose, gap_of(rule.lead, pose)});
         }
     std::stable_sort(seats.begin(), seats.end(), [](const Seat& a, const Seat& b) { return a.gap < b.gap; });
-    std::size_t tries = 0;
-    for (const Seat& seat : seats) {
-        if (tries >= static_cast<std::size_t>(constants::order_tries.value)) break;
-        if (crowds_escape(problem, kernel.placement(), rule.lead, seat.pose)) continue;
-        ++tries;
+    const auto settle = [&](const Seat& seat) {
         const Snapshot before = kernel.snapshot();
-        if (!kernel.force({{rule.lead, seat.pose}})) continue;
+        if (!kernel.force({{rule.lead, seat.pose}})) return false;
         bool sound = true;
         for (const std::size_t rival : rule.rivals) {
             const Pose from = kernel.placement()[rival];
@@ -293,7 +291,8 @@ bool seat_first(Kernel& kernel, const NetOrder& rule, Nm pitch) {
                 break;
             }
             bool moved = false;
-            for (const Point by : ring) {
+            for (const std::vector<Point>* offsets : {&ring, &far_ring}) {
+              for (const Point by : *offsets) {
                 for (int turn = 0; turn < turn_count && !moved; ++turn) {
                     const Pose pose{shifted(from.at, by), static_cast<Turn>(turn), from.face};
                     if (gap_of(rival, pose) <= seat.gap || crowds_escape(problem, kernel.placement(), rival, pose) ||
@@ -302,6 +301,8 @@ bool seat_first(Kernel& kernel, const NetOrder& rule, Nm pitch) {
                     moved = kernel.move(rival, pose);
                 }
                 if (moved) break;
+              }
+              if (moved) break;
             }
             if (!moved) {
                 sound = false;
@@ -311,7 +312,21 @@ bool seat_first(Kernel& kernel, const NetOrder& rule, Nm pitch) {
         if (sound && !kernel.breach(rule.lead) && net_order_met(problem, rule, kernel.placement(), rule.lead, nullptr))
             return true;
         kernel.restore(before);
+        return false;
+        };
+    std::size_t tries = 0;
+    for (const Seat& seat : seats) {
+        if (tries >= static_cast<std::size_t>(constants::order_tries.value)) break;
+        if (crowds_escape(problem, kernel.placement(), rule.lead, seat.pose)) continue;
+        const Probe probe = kernel.probe({{rule.lead, seat.pose}});
+        if (!probe.placeable || std::any_of(probe.blockers.begin(), probe.blockers.end(), [&](std::size_t blocker) {
+                return std::find(rule.rivals.begin(), rule.rivals.end(), blocker) == rule.rivals.end();
+            }))
+            continue;
+        ++tries;
+        if (settle(seat)) return true;
     }
+    if (settle({lead_from, gap_of(rule.lead, lead_from)})) return true;
     return false;
 }
 

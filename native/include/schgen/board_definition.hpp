@@ -115,19 +115,12 @@ inline const std::vector<std::string>& connector_handling_classes() {
     return classes;
 }
 
-struct BoardAccess {
-    std::string handling;
-    double side_mm = 0, front_mm = 0;
-    std::string basis;
-};
-
 struct BoardFunction {
     std::string sheet, reference, serves, basis;
 };
 
 struct BoardLayout {
     bool stated = false;
-    std::vector<BoardAccess> access;
     std::vector<BoardFunction> functions;
 };
 

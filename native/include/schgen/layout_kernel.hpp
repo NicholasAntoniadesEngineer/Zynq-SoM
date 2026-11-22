@@ -83,6 +83,7 @@ private:
         int net = no_net;
         bool through = false;
         Disc disc;
+        Nm drill = 0;
     };
     struct Shape {
         Box gate, bound;

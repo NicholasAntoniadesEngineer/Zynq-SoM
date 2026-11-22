@@ -166,7 +166,7 @@ const std::vector<DocumentKey>& board_document_keys() {
         {"schema", true}, {"name", true}, {"files", true}, {"files.stem", true}, {"root_readme", true}, {"owned_groups", true},
         {"module", true}, {"module.folder", true}, {"module.pairs", true}, {"module.loads", true},
         {"power", true}, {"power.sources", true}, {"power.rails", true}, {"power.inlet", true}, {"sheets", true},
-        {"layout", false}, {"layout.access", false}, {"layout.functions", false}};
+        {"layout", false}, {"layout.functions", false}};
     return keys;
 }
 
@@ -312,24 +312,6 @@ BoardLayout layout_of(const JsonNode& document, const std::string& source) {
     if (node->kind != JsonKind::Object) fail(where, "is not an object");
     reject_unknown_keys(*node, document_keys_at(board_document_keys(), "layout"), where);
     out.stated = true;
-    std::set<std::string> classes;
-    for (const JsonNode& row : rows(*node, "access", where)) {
-        reject_unknown_keys(row, {"handling", "side_mm", "front_mm", "basis"}, where + " access");
-        BoardAccess access;
-        access.handling = text(row, "handling", where + " access");
-        const auto& known = connector_handling_classes();
-        if (std::find(known.begin(), known.end(), access.handling) == known.end())
-            fail(where + " access", "handling " + access.handling + " is not one of grip_sides, latch, card, flat_cable, pins, none");
-        if (!classes.insert(access.handling).second) fail(where + " access", "handling " + access.handling + " is stated twice");
-        for (const auto* key : {"side_mm", "front_mm"}) {
-            const double value = member(row, key, JsonKind::Number, where + " access").number_value;
-            if (!std::isfinite(value) || value < 0) fail(where + " access", std::string("field '") + key + "' is negative");
-        }
-        access.side_mm = member(row, "side_mm", JsonKind::Number, where).number_value;
-        access.front_mm = member(row, "front_mm", JsonKind::Number, where).number_value;
-        access.basis = text(row, "basis", where + " access");
-        out.access.push_back(std::move(access));
-    }
     std::set<std::string> parts;
     for (const JsonNode& row : rows(*node, "functions", where)) {
         reject_unknown_keys(row, {"part", "serves", "basis"}, where + " functions");

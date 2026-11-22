@@ -20,6 +20,7 @@ struct PadShape {
     Box box;
     bool through = false;
     Nm radius = 0;
+    Nm drill = 0;
 };
 
 struct Variant {

@@ -702,7 +702,9 @@ ConnectorFacts connectors_from(const JsonNode& section, const std::map<std::stri
                 refuse(at + ": a stated plug dimension needs a cite");
             fact.mating = row;
         }
-        if (const JsonNode* access = object_field(entry, "access")) {
+        const JsonNode* access = object_field(entry, "access");
+        if (!access) refuse(where + ": a connector must state access (side_mm, front_mm and cite; zero is stated, never implied)");
+        {
             const std::string at = where + " access";
             if (access->kind != JsonKind::Object) refuse(at + " must be an object");
             reject_unknown_keys(*access, {"side_mm", "front_mm", "cite"}, at);

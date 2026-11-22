@@ -113,6 +113,9 @@ Variant read_variant(const PcbCheckFootprint& footprint) {
     variant.gate_box = box_nm(footprint.bbox->x0, footprint.bbox->y0, footprint.bbox->x1, footprint.bbox->y1);
     read_courtyard(footprint, variant);
     const auto forms = pad_forms(footprint);
+    const auto drilled = scan_mod_pads(footprint.document);
+    if (drilled.size() != footprint.pads.size())
+        throw LayoutError("layout: drill list of " + footprint.source + " disagrees with its pad list");
     for (const auto& [name, type, x, y, rotation, width, height] : footprint.pads) {
         const auto half = pad_half_extent(width, height, rotation);
         const Point centre{nearest_nm(x), nearest_nm(y)};
@@ -122,6 +125,7 @@ Variant read_variant(const PcbCheckFootprint& footprint) {
         pad.centre = centre;
         pad.box = {centre.x - reach_x, centre.y - reach_y, centre.x + reach_x, centre.y + reach_y};
         pad.through = type == "thru_hole" || type == "np_thru_hole";
+        pad.drill = ceil_nm(std::get<6>(drilled[variant.pads.size()]));
         if (forms[variant.pads.size()] == "circle") pad.radius = ceil_nm(std::max(width, height) / 2);
         variant.pad_hull = variant.pad_hull ? united(*variant.pad_hull, pad.box) : pad.box;
         variant.pads.push_back(std::move(pad));

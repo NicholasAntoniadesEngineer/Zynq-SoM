@@ -118,12 +118,6 @@ PcbPlacementInput load_board_inputs(const ProjectPaths& paths,
         }
     }
     floor.project.connectors = facts.connectors;
-    for (const BoardAccess& row : load_board(paths.project_root, paths.module).layout.access)
-        for (auto& [name, fact] : floor.project.connectors) {
-            (void)name;
-            if (!fact.access && fact.handling == row.handling)
-                fact.access = ConnectorAccess{row.side_mm, row.front_mm, "board statement for handling " + row.handling + ": " + row.basis};
-        }
     floor.project.isolation = facts.isolation;
     floor.project.thermal_copper = facts.thermal_copper;
     floor.project.regulators = facts.regulators;
