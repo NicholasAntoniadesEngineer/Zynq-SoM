@@ -45,6 +45,7 @@ DrcFloors drc_floors_of(const FabricationSelection &selection) {
 PcbEmitPolicy pcb_emit_policy(const ProjectConfig &c) {
     auto p = default_pcb_emit_policy();
     p.drc_floors = drc_floors_of(board_fabrication());
+    p.silk_to_floor = true;
     p.interface_reference_labels_only = true;
     p.labels = c.labels;
     p.board_stem = c.file_stem;

@@ -427,7 +427,7 @@
 		oval
 		(at 4.3251 2.4741)
 		(size 1.199998 1.799996)
-		(drill oval 0.799998 1.399997)
+		(drill oval 0.6 1.4)
 		(layers "*.Cu" "*.Mask")
 	)
 	(pad
@@ -436,7 +436,7 @@
 		oval
 		(at 4.3251 -1.7057)
 		(size 1.199998 1.999996)
-		(drill oval 0.799998 1.599971)
+		(drill oval 0.6 1.7)
 		(layers "*.Cu" "*.Mask")
 	)
 	(pad
@@ -445,7 +445,7 @@
 		oval
 		(at -4.3251 -1.7057)
 		(size 1.199998 1.999996)
-		(drill oval 0.799998 1.600022)
+		(drill oval 0.6 1.7)
 		(layers "*.Cu" "*.Mask")
 	)
 	(pad
@@ -454,7 +454,7 @@
 		oval
 		(at -4.3251 2.4741)
 		(size 1.199998 1.799996)
-		(drill oval 0.799998 1.399997)
+		(drill oval 0.6 1.4)
 		(layers "*.Cu" "*.Mask")
 	)
 	(model

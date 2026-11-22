@@ -10,6 +10,7 @@
 #include <iostream>
 #include <iterator>
 #include <limits>
+#include <optional>
 #include <stdexcept>
 
 namespace fs = std::filesystem;
@@ -146,6 +147,59 @@ void project(const fs::path &fixtures, const fs::path &output, const std::string
     auto p = policy(raw);
     auto result = render_pcb(m, p);
     equal(result.pcb, read(fixtures / (name + ".kicad_pcb")), name + " exact board", output);
+    {
+        const auto finest = [](const Sexpr& document) {
+            using schgen::pcb_emission::child;
+            using schgen::pcb_emission::tag;
+            double stroke = std::numeric_limits<double>::infinity(), height = stroke;
+            const auto number = [](Sexpr* holder, std::size_t at) -> std::optional<double> {
+                if (!holder) return std::nullopt;
+                auto& items = std::get<SexprList>(holder->v);
+                if (items.size() <= at || !std::holds_alternative<double>(items[at].v)) return std::nullopt;
+                return std::get<double>(items[at].v);
+            };
+            for (auto footprint : std::get<SexprList>(document.v)) {
+                if (!tag(footprint, "footprint")) continue;
+                for (auto& item : std::get<SexprList>(footprint.v)) {
+                    if (!std::holds_alternative<SexprList>(item.v)) continue;
+                    Sexpr* layer = child(item, "layer");
+                    if (!layer) continue;
+                    const auto& named = std::get<SexprList>(layer->v);
+                    if (named.size() < 2 || !std::holds_alternative<std::string>(named[1].v)) continue;
+                    const auto& where = std::get<std::string>(named[1].v);
+                    if (where.size() < 6 || where.compare(where.size() - 6, 6, ".SilkS") != 0) continue;
+                    if (tag(item, "fp_text") || tag(item, "property")) {
+                        Sexpr* effects = child(item, "effects");
+                        Sexpr* font = effects ? child(*effects, "font") : nullptr;
+                        if (!font) continue;
+                        if (const auto tall = number(child(*font, "size"), 2)) height = std::min(height, *tall);
+                        if (const auto wide = number(child(*font, "thickness"), 1)) stroke = std::min(stroke, *wide);
+                        continue;
+                    }
+                    Sexpr* fill = child(item, "fill");
+                    if (fill) {
+                        const auto& mode = std::get<SexprList>(fill->v);
+                        if (mode.size() > 1 && std::holds_alternative<Sexpr::Sym>(mode[1].v) &&
+                            std::get<Sexpr::Sym>(mode[1].v).name != "none" && std::get<Sexpr::Sym>(mode[1].v).name != "no") continue;
+                    }
+                    if (Sexpr* line = child(item, "stroke"))
+                        if (const auto wide = number(child(*line, "width"), 1); wide && *wide > 0.0) stroke = std::min(stroke, *wide);
+                }
+            }
+            return std::pair<double, double>{stroke, height};
+        };
+        auto raised_policy = p;
+        raised_policy.silk_to_floor = true;
+        const auto before = finest(result.document), after = finest(render_pcb(m, raised_policy).document);
+        require(before.first < p.drc_floors->text_thickness && before.second < p.drc_floors->text_height,
+                name + ": the fixture holds silk finer than the fabricator minimum");
+        require(after.first >= p.drc_floors->text_thickness && after.second >= p.drc_floors->text_height,
+                name + ": footprint silk is raised to the fabricator minimum");
+        raised_policy.drc_floors.reset();
+        bool refused = false;
+        try { render_pcb(m, raised_policy); } catch (const PcbEmissionError&) { refused = true; }
+        require(refused, name + ": raising silk without fabricator floors is refused");
+    }
     auto repaired_policy = p;
     repaired_policy.model_overrides = repository_part_facts().model_overrides;
     const auto repaired = render_pcb(m, repaired_policy);

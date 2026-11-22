@@ -24,7 +24,7 @@ level | rule | subject | action | breaches before>after | kept
 1 | owner of U18004 | U18004 -> R18014 | reseat together with the parts tied to it | 1>1 | no
 1 | owner of U18004 | U18004 -> R18014 | take the seat at the pin and reseat the parts in it by their own rules | 1>1 | no
 2 | owner of U18004 | U18004 -> R18014 | move R18014 and its face-tied set to the other face | 1>0 | yes
-ILLEGAL handed over: overlap:C17002/FID1 (1)
-ILLEGAL after connector separation: overlap:C17002/FID1 (1)
-ILLEGAL after repair: overlap:C17002/FID1 (1)
+ILLEGAL handed over: (0)
+ILLEGAL after connector separation: (0)
+ILLEGAL after repair: (0)
 

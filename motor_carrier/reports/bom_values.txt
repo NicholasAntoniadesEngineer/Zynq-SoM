@@ -3,7 +3,7 @@ bom value gate (LCSC actual value == declared value)
 catalog: 103 LCSC codes; 213 inline-passive checks
 mismatches: none
 
-UNVERIFIED — reported, NOT failing (33):
+UNVERIFIED — reported, NOT failing (35):
   can_bus:D1 'NUP2105LT1G' LCSC C14486 (not in catalog)
   can_bus:R2 '120R' LCSC C22787 (not in catalog)
   can_bus:U1 'TCAN1042HGVDR' LCSC C124014 (not in catalog)
@@ -17,6 +17,8 @@ UNVERIFIED — reported, NOT failing (33):
   esc_power:C5 '100n/100V' LCSC C15725 (not in catalog)
   esc_power:C6 '100n/100V' LCSC C15725 (not in catalog)
   esc_power:C8 '1u/100V' LCSC C282823 (not in catalog)
+  esc_power:D1 'SMBJ28A' LCSC C178227 (not in catalog)
+  esc_power:D2 'SMBJ28A' LCSC C178227 (not in catalog)
   esc_power:D3 'SS54' LCSC C22452 (not in catalog)
   esc_power:F1 '40A' LCSC C720195 (not in catalog)
   esc_power:Q1 'IPT007N06N' LCSC C122552 (not in catalog)

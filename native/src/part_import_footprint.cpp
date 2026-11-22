@@ -170,6 +170,7 @@ std::vector<Sexpr> part_silk_plus_nodes(const std::string& lcsc) {
             fp_line({-5.6,-0.6},{-5.6,0.6},0.15,"F.SilkS")};
 }
 
+const std::string catalog_model_prefix="${KIPRJMOD}/../parts/";
 PartFootprint part_convert_footprint(const JsonNode& result,const std::string& name,const PartImportInfo& info,
                                     const std::vector<std::string>& model_files,const std::optional<CatalogPin>& ep) {
     const auto& pkg=field(result,"packageDetail");const auto& data=field(pkg,"dataStr");
@@ -269,7 +270,7 @@ PartFootprint part_convert_footprint(const JsonNode& result,const std::string& n
         if(std::abs(m.tx)>hx+5 || std::abs(m.ty)>hy+5) {
             out.diagnostics.push_back("implausible model offset reset to 0 (EasyEDA c_origin unit mismatch)");m.tx=m.ty=0;
         }
-        append(fp,list({sym("model"),str(model_files[0]),list({sym("offset"),list({sym("xyz"),num(m.tx),num(m.ty),num(m.tz)})}),
+        append(fp,list({sym("model"),str(catalog_model_prefix+name+"/"+model_files[0]),list({sym("offset"),list({sym("xyz"),num(m.tx),num(m.ty),num(m.tz)})}),
             list({sym("scale"),list({sym("xyz"),num(1),num(1),num(1)})}),list({sym("rotate"),list({sym("xyz"),num(m.rx),num(m.ry),num(m.rz)})})}));
     }
     out.tree=std::move(fp);out.pad_count=pads.size();return out;

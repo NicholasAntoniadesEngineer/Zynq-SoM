@@ -1,24 +1,7 @@
 ASSEMBLY PARTS
-  79 BOM lines, 78 codes, facts rows read from 2026-11-21T16:44:10Z
-  FAIL: C710260 0.5mR (RS6001,RT6001) has no row in /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/parts/assembly_facts.json; run schgen assembly-refresh
-  FAIL: C15725 100n/100V (C6001,C6005,C6006,C6011,C21002,C21005,C21006) has no row in /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/parts/assembly_facts.json; run schgen assembly-refresh
-  FAIL: C22787 120R (R3002) has no row in /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/parts/assembly_facts.json; run schgen assembly-refresh
-  FAIL: C282823 1u/100V (C6008) has no row in /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/parts/assembly_facts.json; run schgen assembly-refresh
-  FAIL: C720195 40A (F6001) has no row in /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/parts/assembly_facts.json; run schgen assembly-refresh
-  FAIL: C90272 470u (C6003,C6004,C21014) has no row in /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/parts/assembly_facts.json; run schgen assembly-refresh
-  FAIL: C49451356 4u7/100V (C21003,C21004,C21013) has no row in /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/parts/assembly_facts.json; run schgen assembly-refresh
-  FAIL: C225518 A2541WV-2x3P (J21001) has no row in /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/parts/assembly_facts.json; run schgen assembly-refresh
-  FAIL: C2864837 INA237AIDGSR (U6001) has no row in /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/parts/assembly_facts.json; run schgen assembly-refresh
-  FAIL: C122552 IPT007N06N (Q6001,Q6002) has no row in /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/parts/assembly_facts.json; run schgen assembly-refresh
-  FAIL: C22428070 LM74930QRGERQ1 (U6002) has no row in /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/parts/assembly_facts.json; run schgen assembly-refresh
-  FAIL: C14486 NUP2105LT1G (D3001) has no row in /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/parts/assembly_facts.json; run schgen assembly-refresh
-  FAIL: C42440491 SMBJ28A (D6001,D6002) is not in the JLCPCB assembly library
-  FAIL: C22452 SS54 (D6003,D21002) has no row in /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/parts/assembly_facts.json; run schgen assembly-refresh
-  FAIL: C124014 TCAN1042HGVDR (U3001) has no row in /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/parts/assembly_facts.json; run schgen assembly-refresh
-  FAIL: C20917 is on 2 BOM lines: AO3400A (Q1001),AO3400A (Q11001)
-  FAIL: one value spelled 2 ways: 47.5k,47k5
+  78 BOM lines, 78 codes, facts rows read from 2026-11-22T16:59:01Z
   ADVISORY: out of stock today: 2 lines
   ADVISORY:   C7666 SN74LVC1G08: need 25 (5 per board x 5 boards), JLCPCB stock 2
   ADVISORY:   C2866319 TPS26631PWPR: need 10 (2 per board x 5 boards), JLCPCB stock 0
-ASSEMBLY PARTS: FAIL
+ASSEMBLY PARTS: PASS
 

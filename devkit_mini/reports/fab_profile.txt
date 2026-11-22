@@ -11,31 +11,12 @@ FAB PROFILE GATE  (JLCPCB standard 6-layer (1oz))
   min hole-to-hole rule         0.4500 mm    0.4500 mm   PASS
   min PTH pad annular           0.1524 mm    0.1500 mm   PASS
   min NPTH drill                0.7500 mm    0.5000 mm   PASS
-  min plated slot width         0.8000 mm    0.3500 mm   PASS
-  min plated slot ratio          1.7500 x    2.0000 x   FAIL (finer than fab)
-  min silk text height          0.5080 mm    1.0000 mm   FAIL (finer than fab)
-  min silk stroke               0.0600 mm    0.1500 mm   FAIL (finer than fab)
+  min plated slot width         0.6000 mm    0.3500 mm   PASS
+  min plated slot ratio          2.3333 x    2.0000 x   PASS
+  min silk text height          1.0000 mm    1.0000 mm   PASS
+  min silk stroke               0.1500 mm    0.1500 mm   PASS
 
   segments 15, vias 32, drilled holes 66
   (.kicad_pro min_via_annular_width DRC floor: 0.0500 mm — permissive rule, not what the board emits)
 
-  below the floor, min plated slot ratio:
-    1.750001 x x2  '2'  e.g. J12001 J3001
-    1.750001 x x2  '3'  e.g. J12001 J3001
-    1.999969 x x2  '1'  e.g. J12001 J3001
-
-  below the floor, min silk text height:
-    0.508000 mm x4  'ON'  e.g. SW1001
-
-  below the floor, min silk stroke:
-    0.060000 mm x22  'fp_circle'  e.g. J1001 J1002 J12001
-    0.100000 mm x4  'text ON'  e.g. SW1001
-    0.120000 mm x21  'fp_circle'  e.g. J10003 J8001 J9002
-    0.120000 mm x233  'fp_line'  e.g. C11001 C11002 C11003
-    0.127000 mm x6  'fp_line'  e.g. J10003 J8001 J9002
-
-  VERDICT: FAIL — the board demands geometry finer than the fab can produce
-
-  FAIL: min plated slot ratio: board demands 1.7500 x but JLCPCB standard 6-layer (1oz) floor is 2.0000 x (finer than the fab can produce)
-  FAIL: min silk text height: board demands 0.5080 mm but JLCPCB standard 6-layer (1oz) floor is 1.0000 mm (finer than the fab can produce)
-  FAIL: min silk stroke: board demands 0.0600 mm but JLCPCB standard 6-layer (1oz) floor is 0.1500 mm (finer than the fab can produce)
+  VERDICT: PASS — every demanded feature is at or above the fab floor

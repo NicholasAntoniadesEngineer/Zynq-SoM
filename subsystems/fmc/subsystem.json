@@ -6,7 +6,7 @@
   "placement": {"region": "board", "silk_label": null, "far_guard_mm": null, "escape_basis": null, "escape_escalates": false, "reserves_edge": false},
   "checks": {"dividers": [], "divider_sources": [], "iset_window_ma": null, "iset_basis": null},
   "parts": [
-    {"ref": "J1", "symbol": "Connector_Generic:Conn_02x20_Odd_Even", "value": "Header_2x20_2.54mm", "footprint": "Connector_PinHeader_2.54mm:PinHeader_2x20_P2.54mm_Vertical"},
+    {"ref": "J1", "symbol": "Connector_Generic:Conn_02x20_Odd_Even", "value": "Header_2x20_2.54mm", "footprint": "Connector_PinHeader_2.54mm:PinHeader_2x20_P2.54mm_Vertical", "fields": {"LCSC": "C50980"}},
     {"ref": "U1", "part": "TLV75725PDYDR", "footprint": "TLV75725PDYDR:TLV75725PDYDR"},
     {
       "ref": "C1",

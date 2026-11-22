@@ -2,14 +2,14 @@
   "schema": "schgen.part/1",
   "mpn": "SMBJ28A",
   "safe_name": "SMBJ28A",
-  "lcsc": "C42440491",
-  "description": "SMBJ28A_C42440491 (DO-214AA_L5.6-W4.0-RD)",
-  "manufacturer": "TECH PUBLIC(台舟)",
-  "package": "DO-214AA_L5.6-W4.0-RD",
-  "jlc_class": "",
+  "lcsc": "C178227",
+  "description": "SMBJ28A-C178227 (SMB_L4.6-W3.6-LS5.3-RD)",
+  "manufacturer": "Littelfuse(美国力特)",
+  "package": "SMB_L4.6-W3.6-LS5.3-RD",
+  "jlc_class": "Extended Part",
   "prefix": "D",
-  "datasheet": "https://www.lcsc.com/datasheet/C42440491.pdf",
-  "product_url": "",
+  "datasheet": "https://www.lcsc.com/datasheet/C178227.pdf",
+  "product_url": "https://lcsc.com/product-detail/TVS_Littelfuse_SMBJ28A_SMBJ28A_C178227.html",
   "lib_id": "SMBJ28A:SMBJ28A",
   "footprint": "SMBJ28A:SMBJ28A",
   "models_3d": [
@@ -18,13 +18,13 @@
   ],
   "pins": [
     {
-      "num": "2",
-      "name": "A",
+      "num": "1",
+      "name": "C",
       "etype": "passive"
     },
     {
-      "num": "1",
-      "name": "K",
+      "num": "2",
+      "name": "A",
       "etype": "passive"
     }
   ]

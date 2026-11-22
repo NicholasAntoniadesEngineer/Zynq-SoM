@@ -70,7 +70,7 @@ power_som            parts= 20  structured=  0  free= 0  UNGATED= 20  (no contra
     UNGATED C25    -> C6025    100n                   nets: +VIN_SYS, GND
     UNGATED D4     -> D6004    red                    nets: +5V_SOM, PG_5V_SOM
     UNGATED L3     -> L6003    10uH                   nets: +5V_SOM, SW_5V_SOM
-    UNGATED R14    -> R6014    47.5k                  nets: +5V_SOM, FB_5V_SOM
+    UNGATED R14    -> R6014    47k5                   nets: +5V_SOM, FB_5V_SOM
     UNGATED R15    -> R6015    13k                    nets: FB_5V_SOM, GND
     UNGATED R16    -> R6016    1k                     nets: GND, PG_5V_SOM
     UNGATED R17    -> R6017    10R                    nets: +5V_SOM, BIAS_5V_SOM

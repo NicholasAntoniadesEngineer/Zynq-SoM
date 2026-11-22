@@ -111,6 +111,8 @@ void sidecar_independence(const schgen::ProjectPaths& paths,
 }
 const std::string rtc_id = "RV-3028-C7-32.768kHz-1ppm-TA-QC:RV-3028-C7-32.768kHz-1ppm-TA-QC";
 const std::string hdmi_id = "HDMI-019S:HDMI-019S";
+const std::string usb_id = "TYPE-C-31-M-12:TYPE-C-31-M-12";
+const std::string clamp_id = "SMBJ28A:SMBJ28A";
 std::string zero_court_line(const std::string& point) {
     return "\t(fp_line\n\t\t(start " + point + ")\n\t\t(end " + point +
         ")\n\t\t(stroke\n\t\t\t(width 0.05)\n\t\t\t(type solid)\n\t\t)\n\t\t(layer \"F.CrtYd\")\n\t)\n";
@@ -124,6 +126,18 @@ std::string current_footprint_reference(const std::string& id, std::string froze
             frozen.erase(pos, line.size());
         }
         require(frozen.find(zero_court_line("-6.1 -3.5838")) == std::string::npos, "no HDMI zero edge is left");
+        return frozen;
+    }
+    if (id == usb_id) {
+        for (const auto& [before, after] : std::vector<std::pair<std::string, std::string>>{
+                {"(drill oval 0.799998 1.399997)", "(drill oval 0.6 1.4)"},
+                {"(drill oval 0.799998 1.599971)", "(drill oval 0.6 1.7)"},
+                {"(drill oval 0.799998 1.600022)", "(drill oval 0.6 1.7)"},
+                {"(drill oval 0.799998 1.399997)", "(drill oval 0.6 1.4)"}}) {
+            const auto pos = frozen.find(before);
+            require(pos != std::string::npos, "historical shell slot " + before);
+            frozen.replace(pos, before.size(), after);
+        }
         return frozen;
     }
     if (id != rtc_id) return frozen;
@@ -234,6 +248,10 @@ int main(int argc, char** argv) {
                 require(live != input.floorplan.footprint_of.end(), "resolve " + id);
                 const auto& frozen = field(field(field(expected,"footprints"),key.string_value),"text").string_value;
                 const auto& bytes = input.footprints.at(live->second)->bytes;
+                if (id == clamp_id) {
+                    require(bytes != frozen, "the clamp diode land pattern was imported again from its stocked part");
+                    continue;
+                }
                 require(bytes == current_footprint_reference(id, frozen),
                     "independent exact footprint " + id);
                 if (id == rtc_id) { ++corrected_footprints; footprint_mutations(bytes, frozen); }
@@ -252,6 +270,12 @@ int main(int argc, char** argv) {
                 }
                 const auto dims = input.floorplan.courtyard_dims.find(id);
                 require(dims != input.floorplan.courtyard_dims.end(), "courtyard dossier " + id);
+                if (id + ":" + id == clamp_id) {
+                    require(dims->second.first != value.array_value.at(0).number_value ||
+                            dims->second.second != value.array_value.at(1).number_value,
+                            "the clamp diode courtyard follows its stocked part");
+                    continue;
+                }
                 require(dims->second.first == value.array_value.at(0).number_value &&
                         dims->second.second == value.array_value.at(1).number_value, "courtyard dimensions " + id);
             }

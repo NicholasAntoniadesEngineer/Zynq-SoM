@@ -548,6 +548,52 @@ std::string squeeze_summary(const SqueezeReport& report) {
     return text.str();
 }
 
+std::vector<RepairRow> legalise_rest(Kernel& kernel, const SqueezeOptions& settings) {
+    const Problem& problem = kernel.problem();
+    std::vector<RepairRow> rows;
+    std::set<std::tuple<int, std::size_t, std::size_t>> seen;
+    const std::vector<Point> near = seat_ring(settings.pitch, static_cast<Nm>(constants::aside_reach.value), {0, 0});
+    const std::vector<Point> wide = seat_ring(static_cast<Nm>(constants::far_pitch.value), static_cast<Nm>(constants::wide_reach.value), {0, 0});
+    for (;;) {
+        std::optional<Violation> next;
+        for (const Violation& violation : kernel.violations())
+            if (violation.kind != Breach::connector_gap &&
+                seen.insert({static_cast<int>(violation.kind), std::min(violation.part, violation.other),
+                             std::max(violation.part, violation.other)}).second) {
+                next = violation;
+                break;
+            }
+        if (!next) break;
+        std::vector<std::size_t> movers{next->part};
+        if (next->other != next->part && next->other < problem.parts.size()) movers.push_back(next->other);
+        std::stable_sort(movers.begin(), movers.end(), [&](std::size_t a, std::size_t b) {
+            return problem.parts[a].fanout_pins < problem.parts[b].fanout_pins;
+        });
+        const std::string subject = problem.parts[next->part].reference +
+            (movers.size() > 1 ? " / " + problem.parts[next->other].reference : std::string());
+        for (const std::size_t mover : movers) {
+            if (problem.parts[mover].fixed || problem.parts[mover].corner || problem.parts[mover].edge) continue;
+            RepairRow row{"2", std::string(breach_name(next->kind)), subject,
+                          "move " + problem.parts[mover].reference + " to the nearest legal seat"};
+            row.before = kernel.violations().size();
+            const std::vector<Violation> known = kernel.violations();
+            const Snapshot snap = kernel.snapshot();
+            const bool done = steps_aside(kernel, mover, near) || steps_aside(kernel, mover, wide);
+            row.after = kernel.violations().size();
+            const std::string added = done ? added_breach(kernel, known, kernel.violations()) : std::string();
+            row.kept = done && row.after < row.before && added.empty();
+            if (done && !added.empty()) row.action += "; refused: it adds " + added;
+            if (!row.kept) {
+                kernel.restore(snap);
+                row.after = row.before;
+            }
+            rows.push_back(row);
+            if (row.kept) break;
+        }
+    }
+    return rows;
+}
+
 void repair_start(Kernel& kernel, const SqueezeOptions& settings, StageResult& result, const std::function<void(bool)>& mark) {
     const std::size_t gaps_inherited = gap_count(kernel);
     mark(false);
@@ -557,6 +603,8 @@ void repair_start(Kernel& kernel, const SqueezeOptions& settings, StageResult& r
     result.order = lead_first(kernel, settings.pitch);
     std::vector<RepairRow> more = repair_inherited(kernel, settings, bundle(kernel.problem()), result.inherited);
     result.repairs.insert(result.repairs.end(), more.begin(), more.end());
+    std::vector<RepairRow> rest = legalise_rest(kernel, settings);
+    result.repairs.insert(result.repairs.end(), rest.begin(), rest.end());
     result.inherited += gaps_inherited;
 }
 

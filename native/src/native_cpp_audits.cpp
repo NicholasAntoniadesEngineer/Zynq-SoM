@@ -9,6 +9,8 @@
 #include <cctype>
 #include <cstring>
 #include <memory>
+#include <mutex>
+#include <map>
 #include <array>
 #include <unistd.h>
 
@@ -402,7 +404,21 @@ NativeAuditResult check_native_audits(const CppSourceCensus& census,const Native
     r.ok=r.absent.empty()&&r.undeclared.empty()&&r.buried.empty()&&r.stale.empty()&&r.problems.empty()&&r.unregistered_quantization.empty();return r;
 }
 NativeAuditResult check_native_audits(const std::filesystem::path& root,const std::vector<CppAuditSource>& files,const NativeLedger& ledger,const NativeQuantizations& quantize,const CppAuditOptions& options){
-    return check_native_audits(scan_cpp_audit_sources(root,files,options),ledger,quantize);
+    if(options.timings)return check_native_audits(scan_cpp_audit_sources(root,files,options),ledger,quantize);
+    static std::mutex guard;
+    static std::map<std::string,std::shared_ptr<const CppSourceCensus>> scanned;
+    std::string key=std::filesystem::absolute(root).lexically_normal().string()+'\n'+options.compiler+'\n';
+    for(const auto& flag:options.flags)key+=flag+'\n';
+    for(const auto& file:files){
+        const auto path=std::filesystem::absolute(root/std::filesystem::path(file.path)).lexically_normal();
+        if(!std::filesystem::is_regular_file(path))throw std::runtime_error("native audit source is missing/not a file: "+path.string());
+        const auto bytes=model_checks::read(path);
+        key+=file.path+'\n'+std::to_string(bytes.size())+'\n'+bytes;
+    }
+    const std::lock_guard<std::mutex> lock(guard);
+    auto found=scanned.find(key);
+    if(found==scanned.end())found=scanned.emplace(key,std::make_shared<const CppSourceCensus>(scan_cpp_audit_sources(root,files,options))).first;
+    return check_native_audits(*found->second,ledger,quantize);
 }
 std::string NativeAuditResult::summary()const{
     std::vector<std::string> lines={"NATIVE POLICY AUDIT: "+std::string(ok?"PASS":"FAIL")+" — "+std::to_string(n_files)+" C++ files, "+std::to_string(n_constants)+" constants, "+std::to_string(n_transforms)+" registered transforms"};

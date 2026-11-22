@@ -109,7 +109,36 @@ inline void restore_module_connector(schgen::CircuitSheetIr& live, const std::st
             if (pin.ref == ref && pin.pin == mate) pin.pin = symbol;
     }
 }
+inline void restore_code(schgen::CircuitSheetIr& live, const std::string& stocked, const std::string& historical, std::size_t count) {
+    std::size_t seen = 0;
+    for (auto& part : live.parts)
+        for (auto& field : part.fields)
+            if (field.key == "LCSC" && field.value == stocked) { field.value = historical; ++seen; }
+    require(seen == count, "reviewed stocked part count " + live.name + " " + stocked);
+}
+inline void drop_code(schgen::CircuitSheetIr& live, const std::string& ref, const std::string& stocked) {
+    auto& part = unique_part(live, ref);
+    require(lcsc_code(part) == stocked, "reviewed stocked identity " + live.name + "." + ref);
+    part.fields.erase(std::remove_if(part.fields.begin(), part.fields.end(), [](const auto& f) { return f.key == "LCSC"; }), part.fields.end());
+}
+inline void restore_value(schgen::CircuitSheetIr& live, const std::string& ref, const std::string& current, const std::string& historical) {
+    auto& part = unique_part(live, ref);
+    require(part.value == current, "reviewed value spelling " + live.name + "." + ref);
+    part.value = historical;
+}
+inline void restore_clamp(schgen::CircuitSheetIr& live, const std::string& ref) {
+    auto& part = unique_part(live, ref);
+    require(lcsc_code(part) == "C178227" && part.pin_names.size() == 2 && part.pin_names[0].name == "C" &&
+            part.pin_names[0].numbers == std::vector<std::string>{"1"} && part.pin_names[1].name == "A" &&
+            part.pin_names[1].numbers == std::vector<std::string>{"2"}, "reviewed clamp identity " + live.name + "." + ref);
+    for (auto& field : part.fields) if (field.key == "LCSC") field.value = "C42440491";
+    part.pin_names = {{"A", {"2"}}, {"K", {"1"}}};
+}
 inline schgen::CircuitSheetIr project_reviewed_circuit(schgen::CircuitSheetIr live, const std::string& project_name) {
+    if (project_name == "carrier" && live.name == "fmc") drop_code(live, "J1", "C50980");
+    if (project_name == "carrier" && live.name == "usb_jtag") restore_code(live, "C327125", "C162205", 2);
+    if (live.name == "power_som") restore_value(live, "R14", "47k5", "47.5k");
+    if (project_name == "carrier" && live.name == "motor_sense") restore_clamp(live, "D1");
     if (live.name == "som_j1") restore_module_connector(live, "J1");
     if (live.name == "som_j2") restore_module_connector(live, "J2");
     if (live.name == "som_j3") restore_module_connector(live, "J3");

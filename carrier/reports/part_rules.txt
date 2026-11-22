@@ -10,7 +10,7 @@ author waivers, verbatim (1):
 notes / advisory (1):
   + WAIVED CAP_V lcd:C2 (2.2u, LCSC C125847): 50V X7R on a 30V rail — needs >= 2x = 60V (margin 1.7x). Pick a higher-V part or c.waive_part_rule('C2', reason) [MLCC 50V on LCD_VLED_P: the 30V is the rare open-LED OVP-clamp transient, not continuous (string ~9.6V); 50V/X7R dossier-sized for it (lcd_backlight.md). 2x derate targets continuous DC bias, not a fault clamp]
 
-UNSPEC — reported, NOT failing (70):
+UNSPEC — reported, NOT failing (72):
   ? board_aux:C5 (100p) — cap rail unresolved
   ? board_aux:SW1 (DSHP04TSGER, LCSC C3293144) — no ratings row
   ? board_qwiic:J1 (ZX-SH1.0-4PWT, LCSC C7430446) — no ratings row
@@ -34,6 +34,7 @@ UNSPEC — reported, NOT failing (70):
   ? ethernet:C5 (1n) — cap rail unresolved
   ? ethernet:C6 (100n) — cap rail unresolved
   ? ethernet:T1 (HX5008NLT, LCSC C962544) — no ratings row
+  ? fmc:J1 (Header_2x20_2.54mm, LCSC C50980) — no ratings row
   ? hdmi_rx:J1 (HDMI-019S, LCSC C111617) — no ratings row
   ? hdmi_tx:J1 (HDMI-019S, LCSC C111617) — no ratings row
   ? lcd:J1 (AFC07-S40FCA-00, LCSC C262572) — no ratings row
@@ -41,6 +42,7 @@ UNSPEC — reported, NOT failing (70):
   ? motor_pwm:J1 (HX PZ2.54-3x8P ZZ, LCSC C32713295) — no ratings row
   ? motor_sense:C1 (100n) — cap rail unresolved
   ? motor_sense:C4 (470uF/35V) — cap rail unresolved
+  ? motor_sense:D1 (SMBJ28A, LCSC C178227) — no ratings row
   ? motor_sense:J2 (XT60PW-M, LCSC C98732) — no ratings row
   ? motor_sense:J3 (XT60PW-M, LCSC C98732) — no ratings row
   ? pd_input:C3 (47n) — cap rail unresolved
@@ -64,8 +66,8 @@ UNSPEC — reported, NOT failing (70):
   ? som_j1:J1 (DF40C-100DP-0.4V(51), LCSC C531031) — no ratings row
   ? som_j2:J2 (DF40C-100DP-0.4V(51), LCSC C531031) — no ratings row
   ? som_j3:J3 (DF40C-100DP-0.4V(51), LCSC C531031) — no ratings row
-  ? usb_jtag:C5 (16p, LCSC C162205) — no ratings row
-  ? usb_jtag:C6 (16p, LCSC C162205) — no ratings row
+  ? usb_jtag:C5 (16p, LCSC C327125) — no ratings row
+  ? usb_jtag:C6 (16p, LCSC C327125) — no ratings row
   ? usb_jtag:SW1 (DSHP04TSGER, LCSC C3293144) — no ratings row
   ? usb_jtag:U1 (CH347T, LCSC C5122332) — no ratings row
   ? usb_jtag:U2 (SN74LVC125ADR, LCSC C7661) — no ratings row
@@ -84,4 +86,4 @@ UNSPEC — reported, NOT failing (70):
 
 errors: none
 
-PART RULES: PASS (167 checks, 0 findings, 70 unspeced, 1 waived)
+PART RULES: PASS (167 checks, 0 findings, 72 unspeced, 1 waived)
