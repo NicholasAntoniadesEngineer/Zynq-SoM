@@ -52,5 +52,6 @@ OrderReport lead_first(Kernel& kernel, Nm pitch);
 std::string seat_obstacles(const Kernel& kernel, const PadGap& rule, Nm pitch);
 bool seat_first(Kernel& kernel, const NetOrder& rule, Nm pitch);
 bool seat_faced(Kernel& kernel, const PadGap& rule, Nm pitch, Nm radius, bool evict, std::size_t& moved_aside);
+bool seat_faced_together(Kernel& kernel, const PadGap& rule, Nm pitch, Nm radius);
 
 }

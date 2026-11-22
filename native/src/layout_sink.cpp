@@ -354,6 +354,62 @@ bool seat_faced(Kernel& kernel, const PadGap& rule, Nm pitch, Nm radius, bool ev
     return false;
 }
 
+bool seat_faced_together(Kernel& kernel, const PadGap& rule, Nm pitch, Nm radius) {
+    const Problem& problem = kernel.problem();
+    const std::size_t part = rule.member;
+    std::vector<std::size_t> set{part};
+    for (std::size_t index = 0; index < set.size(); ++index) {
+        const auto follow = [&](const PadGap& tie) {
+            if (tie.anchor == set[index] && !problem.parts[tie.member].fixed &&
+                std::find(set.begin(), set.end(), tie.member) == set.end())
+                set.push_back(tie.member);
+        };
+        for (const PadGap& tie : problem.constraints.pad_gaps) follow(tie);
+        for (const PadGap& tie : problem.constraints.soft_gaps) follow(tie);
+    }
+    if (set.size() == 1) return false;
+    const Pose& anchor = kernel.placement()[rule.anchor];
+    const std::vector<Box> pins = named_boxes(problem, rule.anchor, anchor, rule.anchor_names);
+    if (pins.empty()) return false;
+    Box pin = pins.front();
+    for (const auto& box : pins) pin = united(pin, box);
+    const Point target{(pin.x0 + pin.x1) / 2, (pin.y0 + pin.y1) / 2};
+    const Pose from = kernel.placement()[part];
+    std::vector<Seat> seats;
+    for (const Point by : seat_ring(pitch, radius, {0, 0}))
+        for (int turn = 0; turn < turn_count; ++turn) {
+            const Pose pose{shifted(target, by), static_cast<Turn>(turn), anchor.face};
+            if (!pair_faced(problem, kernel.board(), rule.anchor, anchor, part, pose, rule.or_under)) continue;
+            seats.push_back({pose, squared_pad_gap(problem, rule, anchor, pose)});
+        }
+    std::stable_sort(seats.begin(), seats.end(), [](const Seat& a, const Seat& b) { return a.gap < b.gap; });
+    for (const Seat& seat : seats) {
+        const Point by{seat.pose.at.x - from.at.x, seat.pose.at.y - from.at.y};
+        std::vector<Move> moves{{part, seat.pose}};
+        bool possible = true;
+        for (std::size_t index = 1; index < set.size(); ++index) {
+            const Part& item = problem.parts[set[index]];
+            Pose pose = kernel.placement()[set[index]];
+            pose.at = shifted(pose.at, by);
+            if (pose.face != seat.pose.face) {
+                if (!problem.footprints[item.footprint].flippable || (item.top_only && seat.pose.face == Face::bottom)) {
+                    possible = false;
+                    break;
+                }
+                pose.face = seat.pose.face;
+            }
+            moves.push_back({set[index], pose});
+        }
+        if (!possible) continue;
+        const Snapshot before = kernel.snapshot();
+        if (kernel.force(moves) &&
+            std::none_of(set.begin(), set.end(), [&](std::size_t member) { return kernel.breach(member).has_value(); }))
+            return true;
+        kernel.restore(before);
+    }
+    return false;
+}
+
 std::string seat_obstacles(const Kernel& kernel, const PadGap& rule, Nm pitch) {
     const Problem& problem = kernel.problem();
     const std::size_t part = rule.member;
