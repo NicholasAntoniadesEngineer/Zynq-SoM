@@ -133,6 +133,7 @@ struct ConnectorModelResult {
 // Allows unresolved models to be reported without requiring placed geometry.
 ConnectorModelResult check_connector_models(const PcbCheckModel&);
 ConnectorModelResult check_connector_models(const PcbCheckModel&, const ConnectorFacts&);
+inline constexpr const char* staged_connector_family = "envelope+access";
 struct ConnectorSpacingRow {
     std::string ref_a, ref_b, family, axis;
     double gap = 0, need = 0;

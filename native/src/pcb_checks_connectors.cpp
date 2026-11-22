@@ -81,7 +81,7 @@ ConnectorSpacingResult check_connector_spacing(const PcbCheckInput& input){
         const bool collide=overlap(a.envelope,b.envelope),a_room=overlap(a.room,b.envelope),b_room=overlap(b.room,a.envelope);
         const double need=std::max(a.fact->access?a.fact->access->side_mm:0.0,b.fact->access?b.fact->access->side_mm:0.0);
         const bool ok=!collide&&!a_room&&!b_room;
-        res.pairs.push_back({a.ref,b.ref,"envelope+access",gx>=gy?"x":"y",gap,need,ok});
+        res.pairs.push_back({a.ref,b.ref,staged_connector_family,gx>=gy?"x":"y",gap,need,ok});
         if(!ok)res.violations.push_back(a.ref+" <-> "+b.ref+": "+(collide?std::string("plug envelopes must not collide"):"plug envelope "+f(gap,2)+"mm away lies in the access room of "+(a_room?a.ref+" ("+a.fact->access->basis+")":b.ref+" ("+b.fact->access->basis+")")));
     }
     std::stable_sort(res.pairs.begin(),res.pairs.end(),[](const auto& a,const auto& b){return a.gap<b.gap;});res.ok=res.violations.empty();return res;

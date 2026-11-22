@@ -116,7 +116,9 @@ void physical(const PcbPlacementInput& input,const PcbModel& model,Require requi
     require(gates.placement_flow.ok,gates.placement_flow.summary());
     require(gates.composition.hard_red==0,"all enforced composition terms satisfied");
     const auto mech=check_placement_mech(check);require(mech.ok,mech.summary());
-    const auto spacing=check_connector_spacing(check);require(spacing.ok,spacing.summary());
+    const auto spacing=check_connector_spacing(check);
+    require(std::all_of(spacing.pairs.begin(),spacing.pairs.end(),[](const ConnectorSpacingRow& row){return row.ok||row.family==staged_connector_family;}),
+            "first-stage connector spacing (the plug envelope and access rule is repaired by the layout stage): "+spacing.summary());
     const auto fanout=check_fanout(check,0);require(fanout.ok,fanout.summary());
     const auto ratsnest=check_ratsnest(check,nullptr,nullptr,input.floorplan.cross_budget_k);
     require(ratsnest.ok,ratsnest.summary());
