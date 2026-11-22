@@ -150,82 +150,134 @@ BalanceReport balance_faces(Kernel& kernel, Nm pitch, Nm reach) {
                      [](const Candidate& a, const Candidate& b) { return a.area > b.area; });
     report.sets = candidates.size();
     const std::vector<Point> offsets = seat_ring(pitch, reach, {0, 0});
+    const auto mirrored = [&](const std::vector<std::size_t>& members, const std::string& lead, std::string& why) {
+            const Box hull = hull_at(problem, kernel.placement(), members);
+            std::size_t along_x = 0, along_y = 0;
+            for (const std::size_t part : members) {
+                const Part& item = problem.parts[part];
+                if (!item.edge) continue;
+                const Pose& pose = kernel.placement()[part];
+                (turned(item.edge->mouth_on(pose.face), pose.turn).x != 0 ? along_x : along_y) += 1;
+            }
+            if (along_x != 0 && along_y != 0) {
+                why = lead + ": edge parts face both axes";
+                return false;
+            }
+            const bool about_x = along_x == 0;
+            const Nm pivot = about_x ? hull.x0 + hull.x1 : hull.y0 + hull.y1;
+            std::vector<Move> mirror;
+            for (const std::size_t part : members) {
+                const Pose& from = kernel.placement()[part];
+                const bool across_x = *mirrors_across_x(problem.footprints[problem.parts[part].footprint]);
+                const int back = (turn_count - static_cast<int>(from.turn) + (across_x == about_x ? 0 : 2)) % turn_count;
+                const Point at = about_x ? Point{pivot - from.at.x, from.at.y} : Point{from.at.x, pivot - from.at.y};
+                mirror.push_back({part, {at, static_cast<Turn>(back), Face::bottom}});
+            }
+            bool flipped = false;
+            std::map<std::string, std::size_t> blocked;
+            std::size_t sampled = 0;
+            for (const Point by : offsets) {
+                std::vector<Move> moves = mirror;
+                for (auto& move : moves) move.pose.at = shifted(move.pose.at, by);
+                if (std::any_of(moves.begin(), moves.end(), [&](const Move& move) {
+                        return crowds_escape(problem, kernel.placement(), move.part, move.pose);
+                    })) {
+                    ++blocked["crowds an escape on the other face"];
+                    continue;
+                }
+                if (kernel.move_many(moves)) {
+                    flipped = true;
+                    break;
+                }
+                if (sampled++ >= static_cast<std::size_t>(constants::balance_samples.value)) continue;
+                const Snapshot before = kernel.snapshot();
+                if (!kernel.force(moves)) {
+                    ++blocked["move refused"];
+                } else {
+                    for (const std::size_t part : members)
+                        if (const auto found = kernel.breach(part)) {
+                            const std::size_t other = found->part == part ? found->other : found->part;
+                            ++blocked[std::string(breach_name(found->kind)) + " " + problem.parts[part].reference + "/" +
+                                      (other != part && other < count ? problem.parts[other].reference : "board")];
+                            break;
+                        }
+                }
+                kernel.restore(before);
+            }
+            if (!flipped) {
+                std::vector<std::pair<std::size_t, std::string>> ranked;
+                for (const auto& [reason, tally] : blocked) ranked.emplace_back(tally, reason);
+                std::sort(ranked.begin(), ranked.end(), [](const auto& a, const auto& b) {
+                    return a.first != b.first ? a.first > b.first : a.second < b.second;
+                });
+                why = lead + ": no mirrored seat within reach";
+                for (std::size_t index = 0; index < ranked.size() && index < static_cast<std::size_t>(constants::obstacle_rows.value); ++index)
+                    why += "; " + std::to_string(ranked[index].first) + " " + ranked[index].second;
+                return false;
+            }
+        return true;
+    };
+    const auto contract_set = [&](const std::vector<std::size_t>& members) {
+        std::vector<char> taken(count, 0);
+        std::vector<std::size_t> grown = members;
+        for (const std::size_t part : members) taken[part] = 1;
+        for (std::size_t index = 0; index < grown.size(); ++index)
+            for (const PadGap& tie : problem.constraints.pad_gaps) {
+                if (tie.sense != Sense::at_most || (tie.anchor != grown[index] && tie.member != grown[index])) continue;
+                const std::size_t partner = tie.anchor == grown[index] ? tie.member : tie.anchor;
+                for (const std::size_t part : sets[root(partner)])
+                    if (!taken[part]) {
+                        taken[part] = 1;
+                        grown.push_back(part);
+                    }
+            }
+        return grown;
+    };
+    const auto on_top = [&](const std::vector<std::size_t>& members) {
+        return std::all_of(members.begin(), members.end(), [&](std::size_t part) {
+            return kernel.placement()[part].face == Face::top && may_sink(problem, kernel.placement(), part) &&
+                   mirrors_across_x(problem.footprints[problem.parts[part].footprint]).has_value();
+        });
+    };
+    const auto area_of = [&](const std::vector<std::size_t>& members) {
+        double area = 0;
+        for (const std::size_t part : members) area += area_mm2(gate_at(problem, part, kernel.placement()[part]));
+        return area;
+    };
     for (const auto& candidate : candidates) {
         const auto& members = sets[candidate.lead];
         const std::string lead = problem.parts[candidate.lead].reference;
+        if (std::any_of(members.begin(), members.end(), [&](std::size_t part) { return kernel.placement()[part].face != Face::top; }) &&
+            !std::all_of(members.begin(), members.end(), [&](std::size_t part) { return kernel.placement()[part].face == Face::top; }))
+            continue;
         if (rear + candidate.area > top - candidate.area) {
             report.kept_on_top.emplace_back(candidate.area, lead + ": the rear would hold more than the top");
             continue;
         }
-        const Box hull = hull_at(problem, kernel.placement(), members);
-        std::size_t along_x = 0, along_y = 0;
-        for (const std::size_t part : members) {
-            const Part& item = problem.parts[part];
-            if (!item.edge) continue;
-            const Pose& pose = kernel.placement()[part];
-            (turned(item.edge->mouth_on(pose.face), pose.turn).x != 0 ? along_x : along_y) += 1;
-        }
-        if (along_x != 0 && along_y != 0) {
-            report.kept_on_top.emplace_back(candidate.area, lead + ": edge parts face both axes");
-            continue;
-        }
-        const bool about_x = along_x == 0;
-        const Nm pivot = about_x ? hull.x0 + hull.x1 : hull.y0 + hull.y1;
-        std::vector<Move> mirror;
-        for (const std::size_t part : members) {
-            const Pose& from = kernel.placement()[part];
-            const bool across_x = *mirrors_across_x(problem.footprints[problem.parts[part].footprint]);
-            const int back = (turn_count - static_cast<int>(from.turn) + (across_x == about_x ? 0 : 2)) % turn_count;
-            const Point at = about_x ? Point{pivot - from.at.x, from.at.y} : Point{from.at.x, pivot - from.at.y};
-            mirror.push_back({part, {at, static_cast<Turn>(back), Face::bottom}});
-        }
-        bool flipped = false;
-        std::map<std::string, std::size_t> blocked;
-        std::size_t sampled = 0;
-        for (const Point by : offsets) {
-            std::vector<Move> moves = mirror;
-            for (auto& move : moves) move.pose.at = shifted(move.pose.at, by);
-            if (std::any_of(moves.begin(), moves.end(), [&](const Move& move) {
-                    return crowds_escape(problem, kernel.placement(), move.part, move.pose);
-                })) {
-                ++blocked["crowds an escape on the other face"];
-                continue;
-            }
-            if (kernel.move_many(moves)) {
+        std::string why;
+        std::vector<std::size_t> moved = members;
+        bool flipped = on_top(members) && mirrored(members, lead, why);
+        if (!flipped) {
+            const std::vector<std::size_t> wider = contract_set(members);
+            const double area = area_of(wider);
+            std::string wider_why;
+            if (wider.size() > members.size() && on_top(wider) && rear + area <= top - area &&
+                mirrored(wider, lead + " with the parts its contracts tie to it", wider_why)) {
                 flipped = true;
-                break;
+                moved = wider;
+            } else if (!wider_why.empty()) {
+                why += "; " + wider_why;
             }
-            if (sampled++ >= static_cast<std::size_t>(constants::balance_samples.value)) continue;
-            const Snapshot before = kernel.snapshot();
-            if (!kernel.force(moves)) {
-                ++blocked["move refused"];
-            } else {
-                for (const std::size_t part : members)
-                    if (const auto found = kernel.breach(part)) {
-                        const std::size_t other = found->part == part ? found->other : found->part;
-                        ++blocked[std::string(breach_name(found->kind)) + " " + problem.parts[part].reference + "/" +
-                                  (other != part && other < count ? problem.parts[other].reference : "board")];
-                        break;
-                    }
-            }
-            kernel.restore(before);
         }
         if (!flipped) {
-            std::vector<std::pair<std::size_t, std::string>> ranked;
-            for (const auto& [reason, tally] : blocked) ranked.emplace_back(tally, reason);
-            std::sort(ranked.begin(), ranked.end(), [](const auto& a, const auto& b) {
-                return a.first != b.first ? a.first > b.first : a.second < b.second;
-            });
-            std::string why = lead + ": no mirrored seat within reach";
-            for (std::size_t index = 0; index < ranked.size() && index < static_cast<std::size_t>(constants::obstacle_rows.value); ++index)
-                why += "; " + std::to_string(ranked[index].first) + " " + ranked[index].second;
-            report.kept_on_top.emplace_back(candidate.area, why);
+            if (!why.empty()) report.kept_on_top.emplace_back(candidate.area, why);
             continue;
         }
+        const double area = area_of(moved);
         ++report.flipped;
-        report.parts += members.size();
-        top -= candidate.area;
-        rear += candidate.area;
+        report.parts += moved.size();
+        top -= area;
+        rear += area;
     }
     report.top_after = face_area(Face::top);
     report.rear_after = face_area(Face::bottom);
