@@ -11,6 +11,8 @@
 #include "schgen/pack_geometry_precision.hpp"
 #include "schgen/pack_precision.hpp"
 #include "schgen/output_precision.hpp"
+#include <optional>
+#include <set>
 #include <array>
 #include <iostream>
 #include <limits>
@@ -162,23 +164,44 @@ void contract_retry(const std::filesystem::path& root){
     if(mode!=0)require(attempts==(mode>=2?1:4),"retry exceeded one additional two-policy solve");
  }
 }
+void redirect(PcbPlacementInput& input,const std::string& to){
+    std::size_t changed=0;
+    for(auto& [key,external]:input.contracts.at("power_som").object_value)
+        if(key=="external")for(auto& [field,value]:external.object_value)
+            if(field=="output_roles")for(auto& role:value.array_value){
+                require(role.string_value=="cout_bulk","directional fixture preimage");
+                role.string_value=to;++changed;
+            }
+    require(changed==1,"exactly one test-only directional role changed");
+}
+std::string failing_direction(const std::filesystem::path& root){
+    auto base=placement_fixture::load(root,"carrier");
+    placement_fixture::reviewed_power_policy(base.input,root);
+    std::set<std::string> roles;
+    for(const auto& [key,table]:base.input.contracts.at("power_som").object_value)
+        if(key=="roles")for(const auto& [part,role]:table.object_value){(void)part;roles.insert(role.string_value.substr(0,role.string_value.find('@')));}
+    roles.erase("cout_bulk");
+    for(const auto& role:roles){
+        auto trial=base;redirect(trial.input,role);
+        std::optional<PcbPlacementResult> built;
+        try{built=build_pcb_model(trial.input);}catch(const std::exception&){continue;}
+        const auto events=pcb_placement_accounting(*built).fallback_events;
+        if(std::count(events.begin(),events.end(),"facing_replan_retry")==1)return role;
+    }
+    throw std::runtime_error("no directional role of the fixture makes the first model face away");
+}
+bool replans_unaided(const std::filesystem::path& root,const std::string& board){
+    auto base=placement_fixture::load(root,board);
+    placement_fixture::reviewed_power_policy(base.input,root);
+    const auto events=pcb_placement_accounting(build_pcb_model(base.input)).fallback_events;
+    return std::count(events.begin(),events.end(),"facing_replan_retry")!=0;
+}
 void facing_retry(const std::filesystem::path& root){
+    const std::string away=failing_direction(root);
     for(int mode:{0,1,2,3}){
         auto fixture=placement_fixture::load(root,mode==2?"devkit_mini":"carrier");
         placement_fixture::reviewed_power_policy(fixture.input,root);
-        if(mode<2){
-            // Test-only alternative directional group creates a genuine final
-            // facing failure followed by a strict replan. No hardware contract
-            // is edited, and the production checker supplies the retry verdict.
-            std::size_t changed=0;
-            for(auto& [key,external]:fixture.input.contracts.at("power_som").object_value)
-                if(key=="external")for(auto& [field,value]:external.object_value)
-                    if(field=="output_roles")for(auto& role:value.array_value){
-                        require(role.string_value=="cout_bulk","directional fixture preimage");
-                        role.string_value="cin_bulk";++changed;
-                    }
-            require(changed==1,"exactly one test-only directional role changed");
-        }
+        if(mode<2)redirect(fixture.input,away);
         auto observer=std::make_shared<FloorplanExperiment>();
         observer->multiscale_outline=true;
         bool second_solve=false;
@@ -195,10 +218,11 @@ void facing_retry(const std::filesystem::path& root){
         catch(const Injected&){injected=true;receipt=failure.accounting;}
         observing=false;
         require(injected==(mode==1)&&failure.captured==(mode==1),"facing retry preserves original exception and receipt ownership");
-        require(second_solve==(mode<2),"valid incumbent must not replan; controlled failure must replan: mode="+
+        const bool expected=mode<2||replans_unaided(root,mode==2?"devkit_mini":"carrier");
+        require(second_solve==expected,"valid incumbent must not replan; controlled failure must replan: mode="+
             std::to_string(mode)+" observed_second_solve="+std::to_string(second_solve));
         require(std::count(receipt.fallback_events.begin(),receipt.fallback_events.end(),"facing_replan_retry")==
-                (mode<2?1:0),"one facing retry event including interrupted solve");
+                (expected?1:0),"one facing retry event including interrupted solve");
         verify(receipt,"facing retry mode "+std::to_string(mode));
         inbox(receipt);reject_receipt_mutations(receipt);
         if(result){

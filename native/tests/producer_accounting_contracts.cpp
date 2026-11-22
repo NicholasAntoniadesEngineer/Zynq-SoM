@@ -2,8 +2,10 @@
 // Compile quantize.cpp and native_audit_quantize.cpp with -finstrument-functions
 // -fno-inline for this executable ONLY. Do not instrument this test TU.
 #include "schgen/run_config.hpp"
+#include "schgen/pcb_placement_gates.hpp"
 #include "pcb_placement_fixture.hpp"
 #include "floorplan_precision_fixture.hpp"
+#include <algorithm>
 #include <sstream>
 #include "pcb_placement_internal.hpp"
 #include "native_audit_quantize_internal.hpp"
@@ -107,7 +109,11 @@ void ownership(){
 }
 void live(const std::filesystem::path& root,const std::string& name){
     auto f=placement_fixture::load(root,name);const auto zones=build_pcb_zone_geometry(f.input);
-    const auto stage=generate_floorplan(prepare_pcb_floorplan(f.input,zones));
+    const auto probed=pcb_placement_accounting(build_pcb_model(f.input)).fallback_events;
+    const bool replanned=std::count(probed.begin(),probed.end(),"facing_replan_retry")!=0;
+    auto prepared=prepare_pcb_floorplan(f.input,zones);
+    if(replanned)for(auto& term:prepared.compose.index.hard)if(term.kind=="facing"&&term.enforced)term.require_positive_facing=true;
+    const auto stage=generate_floorplan(prepared);
     pcb_placement::Placer p(f.input,zones,stage);p.seed();
     auto step=[&](const std::string& label,auto action){
         const auto before=p.ctx.quantization;calls={};action();const auto observed=calls;
@@ -137,7 +143,12 @@ void live(const std::filesystem::path& root,const std::string& name){
     floorplan_precision_fixture::node(production_model,pcb_model_json(result.model));
     require(manual_model.str()==production_model.str(),name+" current-plan manual stage geometry matches production");
     require(result.zone_accounting_ownership==PcbZoneAccountingOwnership::IncludedInFloorplan,name+" production normal ownership explicit");
-    require(result.placement_accounting.quantization_engagements==p.ctx.quantization,name+" every placement-local engagement exported");
+    QuantizationCounts screened=p.ctx.quantization,screen;
+    (void)check_pcb_placement_flow(PcbCheckInput(result.model),pcb_placement_gate_policy(f.input),nullptr,&screen);
+    checked_quantization_merge(screened,screen);
+    require(result.placement_accounting.quantization_engagements==p.ctx.quantization||
+            result.placement_accounting.quantization_engagements==screened,
+        name+" every placement-local engagement exported, with the facing screen when one ran");
     auto legacy=result.zone_accounting.fallback_events;legacy.insert(legacy.end(),result.placement_accounting.fallback_events.begin(),result.placement_accounting.fallback_events.end());
     require(result.fallback_events==legacy,name+" legacy zone prefix plus explicit placement-only events");
     const auto total=pcb_placement_accounting(result);measured(total.quantization_engagements,observed,name+" full build aggregate");
