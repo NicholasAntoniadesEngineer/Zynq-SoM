@@ -99,6 +99,12 @@ void refuses_bad_files() {
     require(load(replaced(widget, "Widget sensor", two_rows)).title == two_rows, "a title that fits two rows was changed");
     rejects([&] { load(replaced(widget, "Widget sensor", two_rows + " and then runs on into a third row of the block")); },
             "sheet widget: title needs 3 title-block rows; the limit is 2");
+    const std::string name = "Widget sensor", detail = "pull-ups on both lines", stated = name + std::string(kTitleBreak) + detail;
+    require(title_block_rows(stated) == std::vector<std::string>{name, detail}, "a stated break does not split the title there");
+    require(load(replaced(widget, "Widget sensor", stated)).title == stated, "a title with a stated break was changed");
+    rejects([&] { load(replaced(widget, "Widget sensor", stated + std::string(kTitleBreak) + detail)); }, "title states more than one break");
+    rejects([&] { load(replaced(widget, "Widget sensor", two_rows + std::string(kTitleBreak) + detail)); }, "the name before the break is 86 glyphs");
+    rejects([&] { load(replaced(widget, "Widget sensor", name + std::string(kTitleBreak) + two_rows)); }, "the detail after the break is 86 glyphs");
     rejects([&] { load(replaced(widget, "\"role\": \"pull\", \"net\": \"SCL\"", "\"role\": \"pull\", \"net\": \"SCL\", \"pin\": \"R1.2\"")); },
             "exactly one of");
     rejects([&] { load(replaced(widget, "\"instance\": \"non_empty\"", "\"instance\": \"sometimes\"")); }, "unknown per-board mode");

@@ -41,6 +41,8 @@ constexpr Point north_first{30 * unit, 6 * unit / 5}, north_second{40 * unit, 6 
 constexpr Point inland_site{30 * unit, 3 * unit}, north_slide{20 * unit, 6 * unit / 5};
 constexpr Point north_crowd{37 * unit, 6 * unit / 5};
 constexpr Point order_lead{16 * unit, 20 * unit}, order_rival{13 * unit, 20 * unit}, order_past{10 * unit, 20 * unit};
+constexpr Point via_site{3 * unit, 0}, via_near{24 * unit, 20 * unit}, via_clear{241 * unit / 10, 20 * unit};
+constexpr Nm via_pad = 11 * unit / 20, via_ground = unit / 4, via_hole = 3 * unit / 5;
 constexpr std::uint64_t walk_seed = 20261111;
 constexpr int walk_steps = 400;
 constexpr Nm walk_range = 4 * unit, walk_grid = unit / 20;
@@ -475,6 +477,38 @@ void walks_repeat_exactly() {
 
 }
 
+void via_sites_stay_clear() {
+    Scene scene;
+    scene.problem.rules.via_pad = fixture::via_pad;
+    scene.problem.rules.via_ground = fixture::via_ground;
+    scene.problem.rules.via_hole = fixture::via_hole;
+    const auto body = scene.footprint("body", square_variant(fixture::body_half, fixture::passive_pins, false));
+    const auto smd = scene.footprint("smd", square_variant(fixture::pad_half, fixture::passive_pins, false));
+    scene.add("U", "one", body, fixture::subject_site).via_sites.push_back(fixture::via_site);
+    scene.add("C", "two", smd, fixture::via_near, Face::bottom);
+    const auto signal = scene.net("signal", Category::signal);
+    scene.connect(signal, 1);
+    scene.problem.parts.back().pad_nets.assign(scene.problem.parts.back().pad_nets.size(), static_cast<int>(signal));
+    require(has(Kernel(scene.problem, scene.placement).violations(), Breach::via_field),
+            "a pad on either face inside the clearance of a planned thermal via blocks it");
+    scene.placement.back().at = fixture::via_clear;
+    const Kernel clear(scene.problem, scene.placement);
+    require(!has(clear.violations(), Breach::via_field), "a pad at the via clearance leaves the site free");
+    require(clear.rejection(1, {fixture::via_near, Turn::none, Face::bottom})->kind == Breach::via_field,
+            "a part may not move onto a planned thermal via");
+    scene.placement.back().at = fixture::via_near;
+    scene.placement.front().turn = Turn::quarter;
+    require(!has(Kernel(scene.problem, scene.placement).violations(), Breach::via_field),
+            "the planned vias turn with their owner");
+    scene.placement.front().turn = Turn::none;
+    scene.problem.rules.via_net = static_cast<int>(signal);
+    require(!has(Kernel(scene.problem, scene.placement).violations(), Breach::via_field),
+            "a pad on the via net needs only the hole-to-pad distance");
+    scene.placement.front().face = Face::bottom;
+    require(has(Kernel(scene.problem, scene.placement).violations(), Breach::locked),
+            "a part with planned thermal vias stays on the face they were planned for");
+}
+
 int main() {
     try {
         courtyards_block_their_face();
@@ -489,6 +523,7 @@ int main() {
         subsystem_rules_bind_groups();
         connectors_stay_at_their_edge();
         groups_stay_together();
+        via_sites_stay_clear();
         walks_repeat_exactly();
         std::cout << "layout kernel contracts ok\n";
         return 0;

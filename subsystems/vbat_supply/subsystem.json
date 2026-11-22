@@ -1,7 +1,7 @@
 {
   "schema": "schgen.subsystem/1",
   "name": "vbat_supply",
-  "title": "Battery logic feed: TPS26631 eFuse + LM61460 8 V pre-regulator + supply selector",
+  "title": "Battery logic feed: TPS26631 eFuse | LM61460 8 V pre-regulator, supply selector",
   "interface": [
     "+VBAT",
     "+VBAT_D",

@@ -17,7 +17,7 @@ inline constexpr std::array kernel_registry{hash_cell, key_shift};
 
 enum class Breach : std::uint8_t {
     overlap, off_board, fanout, module_core, bottom_face, dispersion, copper, contract, group_bound,
-    edge_mount, connector_gap, reserved, locked, corner, under_inductor
+    edge_mount, connector_gap, reserved, locked, corner, under_inductor, via_field
 };
 
 struct Violation {
@@ -39,6 +39,7 @@ struct Snapshot {
     Placement placement;
     Board board;
     std::vector<Box> reserves;
+    std::vector<std::vector<std::size_t>> fields, freed;
 };
 
 struct Probe {
@@ -59,7 +60,8 @@ public:
     const Placement& placement() const { return placement_; }
     const Board& board() const { return board_; }
     void set_board(const Board& board);
-    Snapshot snapshot() const { return {placement_, board_, reserve_boxes_}; }
+    Snapshot snapshot() const { return {placement_, board_, reserve_boxes_, fields_, freed_}; }
+    bool release(std::size_t part);
     void restore(const Snapshot& snapshot);
     const std::vector<Box>& reserves() const { return reserve_boxes_; }
     bool outline_holds() const;
@@ -120,7 +122,8 @@ private:
     std::optional<double> group_distance(const GroupGap& rule, std::size_t moved, const Shape* shape,
                                          const Pose* pose) const;
     bool edge_met(const Part& item, const Shape& shape, const Pose& pose) const;
-    bool connectors_met(std::size_t part, const Shape& shape, std::size_t other, const Shape& other_shape, Nm guard) const;
+    bool connectors_met(std::size_t part, const Shape& shape, const Pose& pose, std::size_t other, const Shape& other_shape,
+                        Nm guard) const;
     template <typename Sink>
     bool geometry_breaches(std::size_t part, const Shape& shape, const Pose& pose, Nm guard, bool owned,
                            Sink&& sink) const;
@@ -134,6 +137,8 @@ private:
                          std::vector<std::size_t>& carried) const;
     bool attempt(const std::vector<Move>& moves, std::vector<std::size_t>* blockers, bool keep);
     bool owns(std::size_t reserve, std::size_t part) const;
+    Nm rules_reach() const;
+    bool via_blocked(std::size_t owner, const Pose& pose, const Shape& guest) const;
     void place(std::size_t part, const Pose& pose);
     void refresh_nets(const std::vector<Move>& moves);
     void rebuild();
@@ -143,14 +148,14 @@ private:
     const Problem& problem_;
     Board board_;
     std::vector<Box> reserve_boxes_;
-    std::vector<std::vector<std::size_t>> fields_;
+    std::vector<std::vector<std::size_t>> fields_, freed_;
     Placement placement_;
     std::vector<Shape> shapes_;
     std::unordered_map<Key, std::vector<std::size_t>> cells_;
     std::map<std::string, std::vector<std::size_t>> groups_, members_;
     std::map<std::string, std::vector<std::size_t>> group_rules_;
     std::vector<std::vector<std::size_t>> pad_rules_, nearest_rules_, face_rules_, order_rules_;
-    std::vector<std::size_t> connectors_;
+    std::vector<std::size_t> connectors_, via_owners_;
     std::vector<Nm> net_lengths_;
     Nm routed_ = 0, reach_ = 0;
 };

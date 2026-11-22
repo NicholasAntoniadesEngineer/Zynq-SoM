@@ -34,6 +34,31 @@ std::size_t unmet_count(const Kernel& kernel) {
     return count;
 }
 
+bool adds_breach(const std::vector<Violation>& before, const std::vector<Violation>& after) {
+    const auto key = [](const Violation& violation) {
+        return std::make_tuple(static_cast<int>(violation.kind), std::min(violation.part, violation.other),
+                               std::max(violation.part, violation.other));
+    };
+    std::set<std::tuple<int, std::size_t, std::size_t>> known;
+    for (const Violation& violation : before) known.insert(key(violation));
+    return std::any_of(after.begin(), after.end(), [&](const Violation& violation) { return !known.count(key(violation)); });
+}
+
+std::string added_breach(const Kernel& kernel, const std::vector<Violation>& before, const std::vector<Violation>& after) {
+    const auto key = [](const Violation& violation) {
+        return std::make_tuple(static_cast<int>(violation.kind), std::min(violation.part, violation.other),
+                               std::max(violation.part, violation.other));
+    };
+    std::set<std::tuple<int, std::size_t, std::size_t>> known;
+    for (const Violation& violation : before) known.insert(key(violation));
+    const auto& parts = kernel.problem().parts;
+    for (const Violation& violation : after)
+        if (!known.count(key(violation)))
+            return std::string(breach_name(violation.kind)) + " " + parts[violation.part].reference +
+                   (violation.other != violation.part && violation.other < parts.size() ? " / " + parts[violation.other].reference : "");
+    return {};
+}
+
 bool flip_set(Kernel& kernel, std::size_t anchor) {
     const Problem& problem = kernel.problem();
     const Face to = kernel.placement()[anchor].face == Face::top ? Face::bottom : Face::top;
@@ -59,6 +84,28 @@ bool flip_set(Kernel& kernel, std::size_t anchor) {
     return true;
 }
 
+bool reface(Kernel& kernel, const PadGap& rule, Nm pitch, Nm radius, std::size_t& aside) {
+    const Problem& problem = kernel.problem();
+    const std::size_t anchor = rule.anchor;
+    const Part& item = problem.parts[anchor];
+    const Pose from = kernel.placement()[anchor];
+    const Face to = kernel.placement()[rule.member].face;
+    if (to == from.face || item.fixed || item.edge || !problem.footprints[item.footprint].flippable ||
+        (item.top_only && to == Face::bottom))
+        return false;
+    for (const Point by : seat_ring(pitch, radius, {0, 0})) {
+        Pose pose = from;
+        pose.at = shifted(from.at, by);
+        pose.face = to;
+        if (kernel.rejection(anchor, pose)) continue;
+        const Snapshot before = kernel.snapshot();
+        if (!kernel.move(anchor, pose)) continue;
+        if (seat_faced(kernel, rule, pitch, radius, true, aside)) return true;
+        kernel.restore(before);
+    }
+    return false;
+}
+
 std::vector<RepairRow> repair_inherited(Kernel& kernel, const SqueezeOptions& settings, const Bundles& clusters,
                                         std::size_t& inherited) {
     const Problem& problem = kernel.problem();
@@ -69,10 +116,13 @@ std::vector<RepairRow> repair_inherited(Kernel& kernel, const SqueezeOptions& se
     const Nm coarse = static_cast<Nm>(constants::far_pitch.value);
     const auto attempt = [&](RepairRow row, const auto& step) {
         row.before = unmet_count(kernel);
+        const std::vector<Violation> known = kernel.violations();
         const Snapshot snap = kernel.snapshot();
         const bool done = step();
         row.after = unmet_count(kernel);
-        row.kept = done && row.after < row.before && kernel.violations().empty();
+        const std::string added = done ? added_breach(kernel, known, kernel.violations()) : std::string();
+        row.kept = done && row.after < row.before && added.empty();
+        if (done && !added.empty()) row.action += "; refused: it adds " + added;
         if (!row.kept) {
             kernel.restore(snap);
             row.after = row.before;
@@ -80,7 +130,11 @@ std::vector<RepairRow> repair_inherited(Kernel& kernel, const SqueezeOptions& se
         rows.push_back(row);
         return row.kept;
     };
-    for (const PadGap& rule : problem.constraints.soft_gaps) {
+    std::vector<const PadGap*> tightest;
+    for (const PadGap& rule : problem.constraints.soft_gaps) tightest.push_back(&rule);
+    std::stable_sort(tightest.begin(), tightest.end(), [](const PadGap* a, const PadGap* b) { return a->reach < b->reach; });
+    for (const PadGap* next : tightest) {
+        const PadGap& rule = *next;
         const auto faced = [&] {
             return pair_faced(problem, kernel.board(), rule.anchor, kernel.placement()[rule.anchor], rule.member,
                               kernel.placement()[rule.member], rule.or_under);
@@ -91,18 +145,28 @@ std::vector<RepairRow> repair_inherited(Kernel& kernel, const SqueezeOptions& se
         const auto seat = [&](Nm pitch, Nm radius, bool evict) {
             return [&, pitch, radius, evict] { return seat_faced(kernel, rule, pitch, radius, evict, aside); };
         };
-        if (attempt({"L0", rule.source, subject, "reseat at the pin on its face"}, seat(settings.pitch, near, false))) continue;
-        if (attempt({"L1", rule.source, subject, "reseat after moving small parts aside"}, seat(settings.pitch, near, true))) continue;
-        if (attempt({"L1", rule.source, subject, "reseat in the wide ring"}, seat(coarse, wide, true))) continue;
-        if (attempt({"L2", rule.source, subject, "move " + problem.parts[rule.anchor].reference + " and its face-tied set to the other face"},
+        if (attempt({"0", rule.source, subject, "reseat at the pin on its face"}, seat(settings.pitch, near, false))) continue;
+        if (attempt({"1", rule.source, subject, "reseat after moving small parts aside"}, seat(settings.pitch, near, true))) continue;
+        if (attempt({"1", rule.source, subject, "reseat in the wide ring"}, seat(coarse, wide, true))) continue;
+        if (attempt({"1", rule.source, subject, "reseat together with the parts tied to it"},
+                    [&] { return seat_faced_together(kernel, rule, coarse, wide); }))
+            continue;
+        if (attempt({"1", rule.source, subject, "take the seat at the pin and reseat the parts in it by their own rules"},
+                    [&] { return seat_faced_chain(kernel, rule, settings.pitch, near, aside); }))
+            continue;
+        if (attempt({"2", rule.source, subject, "move " + problem.parts[rule.anchor].reference + " and its face-tied set to the other face"},
                     [&] { return flip_set(kernel, rule.anchor); }))
             continue;
-        if (attempt({"L3", rule.source, subject, "re-home the cluster of " + problem.parts[rule.anchor].reference + " and reseat"}, [&] {
+        if (attempt({"2", rule.source, subject, "move " + problem.parts[rule.anchor].reference + " to the face of " +
+                                                     problem.parts[rule.member].reference + " at the nearest free seat and reseat"},
+                    [&] { return reface(kernel, rule, coarse, wide, aside); }))
+            continue;
+        if (attempt({"3", rule.source, subject, "re-home the cluster of " + problem.parts[rule.anchor].reference + " and reseat"}, [&] {
                 return rehome(kernel, clusters.units[clusters.unit_of[rule.anchor]]) &&
                        seat_faced(kernel, rule, coarse, wide, true, aside);
             }))
             continue;
-        attempt({"L4", rule.source, subject, "widen every side one step at a time and reseat"}, [&] {
+        attempt({"4", rule.source, subject, "widen every side one step at a time and reseat"}, [&] {
             for (std::size_t step = 0; step < static_cast<std::size_t>(constants::widen_steps.value); ++step) {
                 for (const Side side : {Side::north, Side::south, Side::west, Side::east})
                     widen(kernel, settings, side, settings.first_step);
@@ -114,10 +178,10 @@ std::vector<RepairRow> repair_inherited(Kernel& kernel, const SqueezeOptions& se
     for (const NetOrder& rule : net_orders_of(problem)) {
         if (net_order_met(problem, rule, kernel.placement(), rule.lead, nullptr)) continue;
         const std::string subject = problem.parts[rule.lead].reference + " -> " + problem.parts[rule.anchor].reference;
-        if (attempt({"L1", "protection order", subject, "seat the protection part first and move the parts nearer than it back"},
+        if (attempt({"1", "protection order", subject, "seat the protection part first and move the parts nearer than it back"},
                     [&] { return seat_first(kernel, rule, settings.pitch); }))
             continue;
-        attempt({"L4", "protection order", subject, "widen every side one step at a time and reorder"}, [&] {
+        attempt({"4", "protection order", subject, "widen every side one step at a time and reorder"}, [&] {
             for (std::size_t step = 0; step < static_cast<std::size_t>(constants::widen_steps.value); ++step) {
                 for (const Side side : {Side::north, Side::south, Side::west, Side::east})
                     widen(kernel, settings, side, settings.first_step);
@@ -136,26 +200,126 @@ std::size_t gap_count(const Kernel& kernel) {
         [](const Violation& violation) { return violation.kind == Breach::connector_gap; }));
 }
 
-bool slide(Kernel& kernel, std::size_t part, Nm pitch, Nm reach) {
+Nm clearing_reach(const Problem& problem, std::size_t first, std::size_t second) {
+    const auto need = [&](std::size_t part) {
+        const Part& item = problem.parts[part];
+        return item.access.value_or(0) + item.access_front.value_or(0) + item.plug_width.value_or(0);
+    };
+    return static_cast<Nm>(constants::wide_reach.value) + std::max(need(first), need(second));
+}
+
+bool slide(Kernel& kernel, std::size_t part, Nm pitch, Nm reach, std::map<std::string, std::size_t>& blocked) {
     const Part& item = kernel.problem().parts[part];
     const Pose from = kernel.placement()[part];
     const bool along_x = !item.edge || item.edge->mouth.y != 0;
     const bool along_y = !item.edge || item.edge->mouth.x != 0;
+    const std::size_t gaps = gap_count(kernel);
     for (Nm distance = pitch; distance <= reach; distance += pitch)
         for (const Nm sign : {Nm{1}, Nm{-1}})
             for (const bool x : {true, false}) {
                 if ((x && !along_x) || (!x && !along_y)) continue;
                 Pose pose = from;
                 pose.at = shifted(from.at, x ? Point{sign * distance, 0} : Point{0, sign * distance});
-                if (!kernel.rejection(part, pose) && kernel.move(part, pose)) return true;
+                if (const auto found = kernel.rejection(part, pose)) {
+                    const std::size_t other = found->part == part ? found->other : found->part;
+                    ++blocked[std::string(breach_name(found->kind)) + " " +
+                              (other < kernel.problem().parts.size() && other != part ? kernel.problem().parts[other].reference : "board")];
+                    continue;
+                }
+                const Snapshot before = kernel.snapshot();
+                if (!kernel.move(part, pose)) {
+                    ++blocked["move refused"];
+                    continue;
+                }
+                if (gap_count(kernel) < gaps) return true;
+                ++blocked["gap not cleared"];
+                kernel.restore(before);
             }
     return false;
 }
 
-std::vector<RepairRow> separate_connectors(Kernel& kernel, const SqueezeOptions& settings) {
+bool open_gap(Kernel& kernel, const SqueezeOptions& settings, const Bundles& clusters, std::size_t first, std::size_t second,
+              std::map<std::string, std::size_t>& blocked) {
+    const Problem& problem = kernel.problem();
+    const Box a = gate_at(problem, first, kernel.placement()[first]);
+    const Box b = gate_at(problem, second, kernel.placement()[second]);
+    const Nm dx = (b.x0 + b.x1) - (a.x0 + a.x1), dy = (b.y0 + b.y1) - (a.y0 + a.y1);
+    const bool along_x = (dx < 0 ? -dx : dx) >= (dy < 0 ? -dy : dy);
+    const Box& low = (along_x ? dx : dy) >= 0 ? a : b;
+    const Box& high = (along_x ? dx : dy) >= 0 ? b : a;
+    const Nm split = along_x ? (low.x1 + high.x0) / 2 : (low.y1 + high.y0) / 2;
+    const Nm reach = clearing_reach(problem, first, second);
+    for (const bool move_high : {true, false}) {
+        std::vector<char> moving(problem.parts.size(), 0);
+        bool held = false, any = false;
+        const std::size_t low_unit = clusters.unit_of[(along_x ? dx : dy) >= 0 ? first : second];
+        const std::size_t high_unit = clusters.unit_of[(along_x ? dx : dy) >= 0 ? second : first];
+        if (low_unit == high_unit) {
+            ++blocked["the two connectors are tied into one cluster"];
+            break;
+        }
+        for (std::size_t unit = 0; unit < clusters.units.size(); ++unit) {
+            const Box hull = hull_at(problem, kernel.placement(), clusters.units[unit]);
+            const Nm centre = along_x ? (hull.x0 + hull.x1) / 2 : (hull.y0 + hull.y1) / 2;
+            const bool high = unit == high_unit || (unit != low_unit && centre >= split);
+            if (high != move_high) continue;
+            for (const std::size_t part : clusters.units[unit]) {
+                if (problem.parts[part].corner) continue;
+                held = held || problem.parts[part].fixed;
+                moving[part] = 1;
+                any = true;
+            }
+        }
+        if (held || !any) {
+            ++blocked[held ? "a fixed part is on the side to shift" : "nothing lies beyond the gap"];
+            continue;
+        }
+        const Side side = along_x ? (move_high ? Side::east : Side::west) : (move_high ? Side::south : Side::north);
+        const Nm sign = move_high ? 1 : -1;
+        for (Nm by = settings.first_step; by <= reach; by += settings.first_step) {
+            const Snapshot before = kernel.snapshot();
+            const std::vector<Violation> known = kernel.violations();
+            const std::size_t illegal = known.size();
+            if (!open_side(kernel, settings, side, by)) {
+                ++blocked["the board could not be widened"];
+                continue;
+            }
+            std::vector<Move> moves;
+            for (std::size_t part = 0; part < problem.parts.size(); ++part) {
+                if (problem.parts[part].corner) continue;
+                Pose pose = before.placement[part];
+                if (moving[part]) pose.at = shifted(pose.at, along_x ? Point{sign * by, 0} : Point{0, sign * by});
+                if (pose != kernel.placement()[part]) moves.push_back({part, pose});
+            }
+            if (!kernel.force(moves)) {
+                ++blocked["the shift was refused"];
+            } else if (kernel.violations().size() >= illegal || adds_breach(known, kernel.violations())) {
+                const auto found = kernel.violations();
+                std::map<std::string, std::size_t> kinds;
+                std::string sample;
+                for (const Violation& violation : found) {
+                    if (++kinds[breach_name(violation.kind)] > 2) continue;
+                    sample += " " + std::string(breach_name(violation.kind)) + ":" + problem.parts[violation.part].reference + "/" +
+                              (violation.other < problem.parts.size() ? problem.parts[violation.other].reference : "board");
+                }
+                ++blocked["the shift by " + std::to_string(by / 1000000) + " mm " + (move_high ? "high" : "low") + " half left " +
+                          std::to_string(found.size()) + " breaches of " + std::to_string(illegal) + ":" + sample];
+            } else if (const auto a = kernel.rejection(first, kernel.placement()[first])) {
+                ++blocked[std::string(breach_name(a->kind)) + " at " + problem.parts[first].reference];
+            } else if (const auto b = kernel.rejection(second, kernel.placement()[second])) {
+                ++blocked[std::string(breach_name(b->kind)) + " at " + problem.parts[second].reference];
+            } else {
+                return true;
+            }
+            kernel.restore(before);
+        }
+    }
+    return false;
+}
+
+std::vector<RepairRow> separate_connectors(Kernel& kernel, const SqueezeOptions& settings, const Bundles& clusters) {
     const Problem& problem = kernel.problem();
     std::vector<RepairRow> rows;
-    const Nm wide = static_cast<Nm>(constants::wide_reach.value);
     std::set<std::pair<std::size_t, std::size_t>> seen;
     for (;;) {
         std::optional<Violation> next;
@@ -169,10 +333,13 @@ std::vector<RepairRow> separate_connectors(Kernel& kernel, const SqueezeOptions&
         const std::string subject = problem.parts[next->part].reference + " / " + problem.parts[next->other].reference;
         const auto attempt = [&](RepairRow row, const auto& step) {
             row.before = gap_count(kernel);
+            const std::vector<Violation> known = kernel.violations();
             const Snapshot snap = kernel.snapshot();
             const bool done = step();
             row.after = gap_count(kernel);
-            row.kept = done && row.after < row.before;
+            const std::string added = done ? added_breach(kernel, known, kernel.violations()) : std::string();
+            row.kept = done && row.after < row.before && added.empty();
+            if (done && !added.empty()) row.action += "; refused: it adds " + added;
             if (!row.kept) {
                 kernel.restore(snap);
                 row.after = row.before;
@@ -183,24 +350,43 @@ std::vector<RepairRow> separate_connectors(Kernel& kernel, const SqueezeOptions&
         bool done = false;
         for (const std::size_t mover : {next->other, next->part}) {
             if (problem.parts[mover].fixed) continue;
-            done = attempt({"L0", "connector access and envelope", subject, "slide " + problem.parts[mover].reference + " along its edge"},
-                           [&] { return slide(kernel, mover, settings.pitch, wide); });
+            std::map<std::string, std::size_t> blocked;
+            done = attempt({"0", "connector access and envelope", subject, "slide " + problem.parts[mover].reference + " along its edge"},
+                           [&] { return slide(kernel, mover, settings.pitch, clearing_reach(problem, next->part, next->other), blocked); });
+            if (!done && !rows.empty()) {
+                std::vector<std::pair<std::size_t, std::string>> ranked;
+                for (const auto& [reason, count] : blocked) ranked.emplace_back(count, reason);
+                std::sort(ranked.begin(), ranked.end(), [](const auto& a, const auto& b) {
+                    return a.first != b.first ? a.first > b.first : a.second < b.second;
+                });
+                for (std::size_t index = 0; index < ranked.size() && index < stuck_rows; ++index)
+                    rows.back().action += "; " + std::to_string(ranked[index].first) + " " + ranked[index].second;
+            }
             if (done) break;
         }
         if (done) continue;
         for (const std::size_t mover : {next->other, next->part}) {
-            if (problem.parts[mover].fixed) continue;
-            done = attempt({"L4", "connector access and envelope", subject,
-                            "widen every side one step at a time and slide " + problem.parts[mover].reference}, [&] {
-                for (std::size_t step = 0; step < static_cast<std::size_t>(constants::widen_steps.value); ++step) {
-                    for (const Side side : {Side::north, Side::south, Side::west, Side::east})
-                        widen(kernel, settings, side, settings.first_step);
-                    if (slide(kernel, mover, settings.pitch, wide)) return true;
-                }
-                return false;
-            });
+            if (problem.parts[mover].edge || problem.parts[mover].fixed) continue;
+            const std::vector<std::size_t>& unit = clusters.units[clusters.unit_of[mover]];
+            const std::string name = problem.parts[mover].reference;
+            done = attempt({"3", "connector access and envelope", subject, "re-home the cluster of " + name},
+                           [&] { return rehome(kernel, unit); }) ||
+                   attempt({"4", "connector access and envelope", subject, "widen every side one step at a time and re-home the cluster of " + name}, [&] {
+                       for (std::size_t step = 0; step < static_cast<std::size_t>(constants::widen_steps.value); ++step) {
+                           for (const Side side : {Side::north, Side::south, Side::west, Side::east})
+                               open_side(kernel, settings, side, settings.first_step);
+                           if (rehome(kernel, unit)) return true;
+                       }
+                       return false;
+                   });
             if (done) break;
         }
+        if (done) continue;
+        std::map<std::string, std::size_t> blocked;
+        const bool opened = attempt({"4", "connector access and envelope", subject, "open the board between them and shift everything beyond the gap"},
+                                    [&] { return open_gap(kernel, settings, clusters, next->part, next->other, blocked); });
+        if (!opened && !rows.empty())
+            for (const auto& [reason, count] : blocked) rows.back().action += "; " + std::to_string(count) + " " + reason;
     }
     return rows;
 }
@@ -258,7 +444,7 @@ std::string squeeze_summary(const SqueezeReport& report) {
 }
 
 StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model, const PcbEmitPolicy& policy,
-                          const AdapterOptions& options) {
+                          const AdapterOptions& options, const SearchChoice& choice) {
     const PcbPlacementGatePolicy gates = pcb_placement_gate_policy(inputs);
     const ModelBinding binding = bind_model(model, policy, &gates, options);
     Kernel attracted(binding.problem, binding.placement);
@@ -268,9 +454,24 @@ StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model
     };
     StageResult result;
     result.rear_before = rear(attracted.placement());
-    const SqueezeOptions settings = default_squeeze();
+    SqueezeOptions settings = default_squeeze();
+    settings.order = choice.order;
+    settings.plan_skip = choice.plan_skip;
     const std::size_t gaps_inherited = gap_count(attracted);
-    result.repairs = separate_connectors(attracted, settings);
+    const auto listed = [&](const char* when) {
+        std::string text = std::string("ILLEGAL ") + when + ":";
+        const Problem& entry = attracted.problem();
+        std::size_t shown = 0;
+        for (const Violation& violation : attracted.violations()) {
+            if (++shown > straggler_rows) break;
+            text += " " + std::string(breach_name(violation.kind)) + ":" + entry.parts[violation.part].reference + "/" +
+                    (violation.other < entry.parts.size() ? entry.parts[violation.other].reference : "board");
+        }
+        return text + " (" + std::to_string(attracted.violations().size()) + ")\n";
+    };
+    const std::string illegal_entry = listed("handed over");
+    result.repairs = separate_connectors(attracted, settings, bundle(binding.problem));
+    const std::string illegal_separated = listed("after connector separation");
     result.attract = attract(attracted, settings.pitch, static_cast<Nm>(constants::sink_reach.value));
     result.order = lead_first(attracted, settings.pitch);
     {
@@ -280,7 +481,17 @@ StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model
     }
     {
         const std::size_t left = unmet_count(attracted) + gap_count(attracted);
-        result.convergence = convergence_text(result, left);
+        result.convergence = convergence_text(result, left) + illegal_entry + illegal_separated + listed("after repair");
+        const Problem& entry = attracted.problem();
+        for (const PadGap& rule : entry.constraints.soft_gaps)
+            if (rule.same_face && !pair_faced(entry, attracted.board(), rule.anchor, attracted.placement()[rule.anchor], rule.member,
+                                              attracted.placement()[rule.member], rule.or_under))
+                result.convergence += "LEFT " + entry.parts[rule.member].reference + " -> " + entry.parts[rule.anchor].reference +
+                                      " (" + rule.source + ") on the other face: " + seat_obstacles(attracted, rule, settings.pitch) + "\n";
+        for (const Violation& violation : attracted.violations())
+            if (violation.kind == Breach::connector_gap)
+                result.convergence += "LEFT connector spacing " + entry.parts[violation.part].reference + " / " +
+                                      entry.parts[violation.other].reference + "\n";
         if (left > 0)
             throw LayoutError("layout: " + std::to_string(left) +
                               " face pairs or protection orders could not be repaired within the stated budget\n" + result.convergence);
@@ -301,6 +512,7 @@ StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model
     tighten_holds(held, attracted.placement(), hold_policy());
     held.rules.tall_module_clearance = to_nm(constants::tall_module_clearance.value);
     Kernel kernel(held, attracted.placement());
+    kernel.set_board(attracted.board());
     const Bundles clusters = bundle(held);
     for (const Violation& crowding : kernel.violations()) {
         if (crowding.kind != Breach::module_core) continue;

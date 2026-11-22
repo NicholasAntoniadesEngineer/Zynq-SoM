@@ -1,7 +1,7 @@
 {
   "schema": "schgen.subsystem/1",
   "name": "esc_io",
-  "title": "8-ch ESC signal interface: 5 V PWM/DShot drive, read-back, idle bias, telemetry input",
+  "title": "8-channel ESC signal interface | 5 V PWM/DShot drive, read-back, idle bias, telemetry",
   "interface": [
     "+5V",
     "PWR_REQ",
@@ -1084,7 +1084,7 @@
     {
       "part": "R13",
       "role": "limit",
-      "pin": "J2.2"
+      "pin": "U7.1"
     },
     {
       "part": "R14",
@@ -1119,42 +1119,42 @@
     {
       "part": "R4",
       "role": "pull",
-      "pin": "J1.1"
+      "pin": "RN1.8"
     },
     {
       "part": "R5",
       "role": "pull",
-      "pin": "J1.2"
+      "pin": "RN1.7"
     },
     {
       "part": "R6",
       "role": "pull",
-      "pin": "J1.3"
+      "pin": "RN1.6"
     },
     {
       "part": "R7",
       "role": "pull",
-      "pin": "J1.4"
+      "pin": "RN1.5"
     },
     {
       "part": "R8",
       "role": "pull",
-      "pin": "J1.5"
+      "pin": "RN2.8"
     },
     {
       "part": "R9",
       "role": "pull",
-      "pin": "J1.6"
+      "pin": "RN2.7"
     },
     {
       "part": "R10",
       "role": "pull",
-      "pin": "J1.7"
+      "pin": "RN2.6"
     },
     {
       "part": "R11",
       "role": "pull",
-      "pin": "J1.8"
+      "pin": "RN2.5"
     }
   ],
   "free": [

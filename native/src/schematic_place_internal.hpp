@@ -25,6 +25,8 @@ inline constexpr double TEXT_GAP = 0.42, PIN_CLEAR = 0.01;
 inline constexpr int SEAT_SEARCH_STEPS = 60;
 inline constexpr double ESCAPE_TEXT_CLEAR = U;
 inline constexpr long TRUNK_ENCLOSED_LIMIT = 2;
+inline constexpr int TAP_STUB_STEPS = 12;
+inline constexpr double TAP_STUB_MARGIN = 0.25;
 inline constexpr double PATH_TAG_RISE = 4 * U;
 inline constexpr double PACK_WIDTH_BUDGET = 380.0, PACK_GAP = 2 * U, PACK_STEP = 2 * U;
 // Count attempted scalar entry, including a throwing quantizer; no arithmetic replay.
@@ -357,6 +359,7 @@ public:
     void _path_cell(const std::string& ref, double ax, double ay, const std::set<std::string>& rails, Handled&);
     void _power_path_row(Handled&);
     void _pack_since(const PlacementMark&);
+    std::optional<Point> _pack_anchor(const PlacementMark&) const;
     double _clear_label_x(const std::string& name, double x, double y, double lo, double hi) const;
     void _pin_divider_columns();
     SchematicPlacement run();

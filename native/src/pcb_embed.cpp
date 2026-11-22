@@ -248,6 +248,7 @@ ThermalNodes thermal_nodes(const PcbModel &m, const PcbEmitPolicy &p, const Uid 
 } // namespace schgen::pcb_emission
 
 namespace schgen {
+const char* thermal_ground_net() { return "GND"; }
 std::vector<PreferredThermalField> plan_preferred_thermal_vias(
     const PcbCheckModel& m, const PcbEmitPolicy& p, QuantizationCounts* counts) {
     using namespace pcb_emission;

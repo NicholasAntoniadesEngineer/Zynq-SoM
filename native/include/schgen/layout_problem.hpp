@@ -66,10 +66,13 @@ struct Part {
     bool fanout_subject = false, never_crowds = false, cluster_passive = false;
     bool fixed = false, top_only = false, core_exempt = false, cohesion_member = true;
     bool connector = false, overmold = false, module = false;
-    std::optional<Nm> access, plug_width;
+    std::optional<Nm> access, access_front, plug_width;
+    std::optional<Point> mouth;
     bool field_source = false, field_sensitive = false;
     std::optional<EdgeRule> edge;
     std::optional<CornerRule> corner;
+    std::vector<Point> via_sites = {};
+    Face via_face = Face::top;
 };
 
 struct Pin {
@@ -183,6 +186,8 @@ struct Reserve {
 struct Rules {
     Nm compare_guard = 0, group_guard = 0;
     Nm module_clearance = 0, module_stack_height = 0, tall_module_clearance = 0, copper_clearance = 0, edge_clearance = 0, edge_setback = 0, plane_margin = 0;
+    Nm via_pad = 0, via_ground = 0, via_hole = 0;
+    int via_net = no_net;
     double dispersion_limit = 0;
     std::size_t dispersion_floor = 0;
 };

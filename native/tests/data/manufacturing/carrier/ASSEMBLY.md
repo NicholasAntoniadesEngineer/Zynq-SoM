@@ -1558,7 +1558,7 @@ NOTES: J17001 TYPE-C-31-M-12 (PWR): mating face toward the N board edge
 NOTES: J18001 DS1024-2x6R2 (PMOD): mating face toward the S board edge
 NOTES: J18002 DS1024-2x6R2 (PMOD): mating face toward the S board edge
 NOTES: J19001 DS1024-2x6R2 (PMOD): mating face toward the S board edge
-NOTES: J23001 KH-5224-8P8C-D (ETH): mating face toward the W board edge
+NOTES: J23001 KH-5224-8P8C-D (ETH): mates from above
 NOTES: J29001 TYPE-C-31-M-12 (JTAG): mating face toward the N board edge
 NOTES: J31001 TYPE-C-31-M-12 (UART): mating face toward the N board edge
 NOTES: J32002 TYPE-C-31-M-12 (USB OTG): mating face toward the N board edge

@@ -1270,7 +1270,14 @@ std::size_t circuit_catalog_count() {
     }
 }
 
+static std::size_t title_glyphs(const std::string& text) {
+    return static_cast<std::size_t>(std::count_if(text.begin(), text.end(),
+        [](char ch) { return (static_cast<unsigned char>(ch) & kUtf8LeadMask) != kUtf8ContinuationTag; }));
+}
+
 std::vector<std::string> title_block_rows(const std::string& title) {
+    if (const auto at = title.find(kTitleBreak); at != std::string::npos)
+        return {title.substr(0, at), title.substr(at + kTitleBreak.size())};
     std::vector<std::string> lines;
     std::string remaining = title;
     while (!remaining.empty()) {
@@ -1292,12 +1299,23 @@ std::vector<std::string> title_block_rows(const std::string& title) {
 }
 
 void require_title_fits(const std::string& sheet, const std::string& title) {
+    const std::string room = std::to_string(kTitleFieldGlyphs) + " glyphs in the title field, then one row of " +
+        std::to_string(kTitleContinuationGlyphs);
+    const auto fail = [&](const std::string& what) {
+        throw std::runtime_error("sheet " + sheet + ": " + what + " (" + room + "): \"" + title + "\"");
+    };
     const auto rows = title_block_rows(title);
-    if (rows.size() <= kTitleRowLimit) return;
-    throw std::runtime_error("sheet " + sheet + ": title needs " + std::to_string(rows.size()) +
-        " title-block rows; the limit is " + std::to_string(kTitleRowLimit) + " (" + std::to_string(kTitleFieldGlyphs) +
-        " glyphs, then one continuation row of " + std::to_string(kTitleContinuationGlyphs) +
-        ", broken at spaces); shorten the title: \"" + title + "\"");
+    if (title.find(kTitleBreak) == std::string::npos) {
+        if (rows.size() > kTitleRowLimit)
+            fail("title needs " + std::to_string(rows.size()) + " title-block rows; the limit is " + std::to_string(kTitleRowLimit));
+        return;
+    }
+    if (rows.back().find(kTitleBreak) != std::string::npos) fail("title states more than one break");
+    if (rows.front().empty() || rows.back().empty()) fail("title has nothing on one side of its break");
+    if (title_glyphs(rows.front()) > kTitleFieldGlyphs)
+        fail("the name before the break is " + std::to_string(title_glyphs(rows.front())) + " glyphs");
+    if (title_glyphs(rows.back()) > kTitleContinuationGlyphs)
+        fail("the detail after the break is " + std::to_string(title_glyphs(rows.back())) + " glyphs");
 }
 
 }  // namespace schgen

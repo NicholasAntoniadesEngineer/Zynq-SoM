@@ -326,7 +326,7 @@ SchematicPlacedPage place_and_route_with(const CircuitSheetIr& c, SymbolLibrary&
         if (!b.present) throw SchematicPlaceError("cannot size placement without boxes or routed segments");
         const double w = b.x1 - b.x0, h = b.y1 - b.y0;
         if (!spacing.compact && (w > A3_FIT_W || h > A3_FIT_H)) {
-            last = oversized(w, h); spacing.compact = true; continue;
+            last = result.ok ? oversized(w, h) : result.summary(); spacing.compact = true; continue;
         }
         if (result.ok) {
             if (w <= 272.0 && h <= 180.0) return {c, std::move(pl), std::move(routed), std::move(geometry)};

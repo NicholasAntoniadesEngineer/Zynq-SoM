@@ -931,7 +931,14 @@ void Engine::_build_trunk(Trunk& trunk) {
             pl.plan(trunk.net, {pt, {fx, ty}}); nodes.push_back(fx);
         }
     }
+    const std::vector<double> wired = nodes;
     const bool stubbed = _stub_enclosing_taps(trunk, taps, nodes);
+    const auto reach = [&](int sign) {
+        std::vector<double> columns = nodes;
+        if (stubbed) columns.insert(columns.end(), wired.begin(), wired.end());
+        if (columns.empty()) return 0.0;
+        return sign > 0 ? *std::max_element(columns.begin(), columns.end()) : *std::min_element(columns.begin(), columns.end());
+    };
     const auto port_tail = [&](const ChainPtr& chain) {
         require(bool(chain), "null trunk chain");
         return !chain->legs.empty() && net(chain->legs.back().b).net_class == "port";
@@ -956,10 +963,8 @@ void Engine::_build_trunk(Trunk& trunk) {
     for (const auto& chain : trunk.chains) if (!port_tail(chain)) draw_chain(chain);
     for (const auto& ref : take(hang, trunk.net)) {
         const auto ext = _extent();
-        const double right = gceil(_band_edge(ty - 2 * U, ty + 10 * U, 1,
-            nodes.empty() ? 0.0 : *std::max_element(nodes.begin(), nodes.end())) + 4 * U);
-        const double left = gfloor(_band_edge(ty - 2 * U, ty + 10 * U, -1,
-            nodes.empty() ? 0.0 : *std::min_element(nodes.begin(), nodes.end())) - 4 * U);
+        const double right = gceil(_band_edge(ty - 2 * U, ty + 10 * U, 1, reach(1)) + 4 * U);
+        const double left = gfloor(_band_edge(ty - 2 * U, ty + 10 * U, -1, reach(-1)) - 4 * U);
         const double grow_r = std::max(0.0, right + 2 * U - ext.x1), grow_l = std::max(0.0, ext.x0 - (left - 2 * U));
         const double x = grow_l < grow_r ? left : right; nodes.push_back(x);
         const auto [pt, far] = _vertical_2pin(ref, x, ty, trunk.net, true); power(far, pt.first, pt.second);
@@ -1029,10 +1034,20 @@ bool Engine::_stub_enclosing_taps(const Trunk& trunk, const std::vector<TrunkTap
     for (const auto& tap : taps) {
         const bool side = tap.side == "left" || tap.side == "right";
         const int sign = tap.side == "left" || tap.side == "top" ? -1 : 1;
-        const Point end = side ? Point{py_round(tap.pin.first + sign * sp.port_run, 3), tap.pin.second}
-                               : Point{tap.pin.first, py_round(tap.pin.second + sign * sp.port_run, 3)};
+        const int rot = tap.side == "left" ? 180 : 0;
+        Point end = tap.pin;
+        bool seated = false;
+        for (int k = 0; k < TAP_STUB_STEPS && !seated; ++k) {
+            const double run = sp.port_run + 2 * U * k;
+            end = side ? Point{py_round(tap.pin.first + sign * run, 3), tap.pin.second}
+                       : Point{tap.pin.first, py_round(tap.pin.second + sign * run, 3)};
+            seated = _spot_free(llabel_box(trunk.net, end.first, end.second, rot), TAP_STUB_MARGIN)
+                && (side ? _corridor_free(tap.pin.second, tap.pin.first + sign * TAP_STUB_MARGIN, end.first, {trunk.net})
+                         : _corridor_clear_vert(tap.pin.first, tap.pin.second, end.second, trunk.net));
+        }
+        require(seated, "trunk " + trunk.net + ": no free seat for the label of a stubbed tap");
         pl.plan(trunk.net, {tap.pin, end});
-        llabel(trunk.net, end.first, end.second, tap.side == "left" ? 180 : 0);
+        llabel(trunk.net, end.first, end.second, rot);
     }
     _bridge(trunk.net);
     return true;
