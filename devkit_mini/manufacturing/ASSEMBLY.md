@@ -1,6 +1,6 @@
 # Assembly order — devkit_mini
 
-Board 71.75 x 83 mm. 156 placed parts (99 top / 57 bottom); 5 fiducials are bare-copper marks, excluded from every phase and step.
+Board 94 x 64.25 mm. 156 placed parts (99 top / 57 bottom); 5 fiducials are bare-copper marks, excluded from every phase and step.
 Section A is the staged hand-assembly + bring-up order; section B is the PCBA process order. Every part appears in exactly one phase and exactly one step.
 
 ## A. Incremental bring-up order
@@ -468,7 +468,7 @@ No parts in this step on this board.
 | J10003 | DF40C-100DP-0.4V(51) | HRS_DF40C-100DP-0.4V_51_ | som_j3 | SMD |
 | J12001 | TYPE-C-31-M-12 | TYPE-C-31-M-12 | usb_uart_connector | SMD |
 
-NOTES: J3001 TYPE-C-31-M-12 (PWR): mating face toward the N board edge
+NOTES: J3001 TYPE-C-31-M-12 (PWR): mating face toward the E board edge
 NOTES: J12001 TYPE-C-31-M-12 (UART): mating face toward the N board edge
 NOTES: J8001, J9002, J10003: DF40C SoM receptacles — the SoM module mates onto them (bring-up section, mate phase)
 

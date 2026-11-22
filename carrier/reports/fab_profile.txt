@@ -26,6 +26,11 @@ FAB PROFILE GATE  (JLCPCB standard 6-layer (1oz))
 
   below the floor, min silk text height:
     0.508000 mm x24  'ON'  e.g. SW1001 SW19001 SW28001
+    0.780000 mm x1  'MOD: HTX HRX LCD CAM SD '  e.g. board
+    0.850000 mm x1  'RAIL: 5V 3V3 1V8 LED'  e.g. board
+    0.950000 mm x1  '5V: HTX LCD'  e.g. board
+    0.950000 mm x1  'ESC PWR IN'  e.g. board
+    0.950000 mm x1  'ESC PWR OUT'  e.g. board
     0.999998 mm x1  '1'  e.g. SW7002
     0.999998 mm x1  '2'  e.g. SW7002
     0.999998 mm x1  '3'  e.g. SW7002
@@ -43,7 +48,9 @@ FAB PROFILE GATE  (JLCPCB standard 6-layer (1oz))
     0.100000 mm x24  'text ON'  e.g. SW1001 SW19001 SW28001
     0.120000 mm x61  'fp_circle'  e.g. J24001 J25002 J26003
     0.120000 mm x920  'fp_line'  e.g. C10001 C10002 C10003
+    0.125000 mm x1  'text MOD: HTX HRX LCD CAM SD '  e.g. board
     0.127000 mm x12  'fp_line'  e.g. D37001 J24001 J25002
+    0.136000 mm x1  'text RAIL: 5V 3V3 1V8 LED'  e.g. board
 
   VERDICT: FAIL — the board demands geometry finer than the fab can produce
 

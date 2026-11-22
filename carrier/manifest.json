@@ -2,7 +2,7 @@
   "artifacts": [
     {
       "path": "Zynq_Carrier.kicad_pcb",
-      "sha256": "7be091910339adb2f796f1b679c797a1aab3f82c05c5678934fe31d3c586d6e9"
+      "sha256": "27f25145a513bf0bac60a0be1856e92e06490eba016e57e5e52a0b15110b27c6"
     },
     {
       "path": "Zynq_Carrier.kicad_pro",
@@ -94,7 +94,7 @@
     },
     {
       "path": "reports/build_ledger.txt",
-      "sha256": "2b75da32fb9e17ebbbe6567a864fda41f7f38e8298634be321f4b83458abe03c"
+      "sha256": "d4483b2c143bce323b1e40732e14959df2775bcb4cd611a5e2e3a7bb801247bd"
     },
     {
       "path": "reports/carrier_structure.txt",
@@ -146,7 +146,7 @@
     },
     {
       "path": "reports/fab_profile.txt",
-      "sha256": "f34f3d1cd68ed89886c740f723365466d522313f054ca8e83e4f227e2a0aca54"
+      "sha256": "be27aef0d1ed933f07f44981a5fc531597c15e237f290c5fadddd4e229a43e4d"
     },
     {
       "path": "reports/fallbacks.txt",
@@ -166,15 +166,19 @@
     },
     {
       "path": "reports/gates.txt",
-      "sha256": "17390e7574eaaedc3ad9920d6e68315d9e329980b2a797160561d34202d189a7"
+      "sha256": "26cd1493c0e5df9829a1cf5b865d55f7c8168dce4d2e23e373c73a416c93c1c3"
     },
     {
       "path": "reports/golden.txt",
-      "sha256": "da5a1cbb1fa4d80fe726d930cd09eecbca91bfff7e5ae90edbc431ce04edfd23"
+      "sha256": "4eb2c55c2cbdfafadf1c081a5f05d3941288d375aa8f4cf8af85bed3ddc33f37"
     },
     {
       "path": "reports/i2c_bus_map.txt",
       "sha256": "f4f39a72941b6b09b9311a2533d143497e14907aeeb16743027279047914b409"
+    },
+    {
+      "path": "reports/label_seats.txt",
+      "sha256": "1fc66ad8c1454aaa2cd615d99b39b636db88ef92022279caa962ab5e5ec65857"
     },
     {
       "path": "reports/layout_intent.txt",
@@ -182,7 +186,7 @@
     },
     {
       "path": "reports/layout_squeeze.txt",
-      "sha256": "38fd9c7afad4a9bfc4bc63607713a2beb632a56932d23a9eac2db5929675522e"
+      "sha256": "05834ff4b9b0575e4dc56b0ad97bc17fe5bef4ce9f96da97d4ed3e8809e20f0c"
     },
     {
       "path": "reports/link_report.txt",
@@ -274,7 +278,7 @@
     },
     {
       "path": "reports/search.txt",
-      "sha256": "246cca8c309d1fe7daf5211093b41c92ce2eb6673f1e7ce67cfb86bb4ba1b2d1"
+      "sha256": "8a8616a24c9dd22a33854c4c43239f071c67574a617108d3134c7be7dc1371a2"
     },
     {
       "path": "reports/spice.txt",

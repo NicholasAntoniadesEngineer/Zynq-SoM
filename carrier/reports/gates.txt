@@ -2579,6 +2579,11 @@ fab_profile: FAIL — FAB PROFILE GATE  (JLCPCB standard 6-layer (1oz))
 
   below the floor, min silk text height:
     0.508000 mm x24  'ON'  e.g. SW1001 SW19001 SW28001
+    0.780000 mm x1  'MOD: HTX HRX LCD CAM SD '  e.g. board
+    0.850000 mm x1  'RAIL: 5V 3V3 1V8 LED'  e.g. board
+    0.950000 mm x1  '5V: HTX LCD'  e.g. board
+    0.950000 mm x1  'ESC PWR IN'  e.g. board
+    0.950000 mm x1  'ESC PWR OUT'  e.g. board
     0.999998 mm x1  '1'  e.g. SW7002
     0.999998 mm x1  '2'  e.g. SW7002
     0.999998 mm x1  '3'  e.g. SW7002
@@ -2596,7 +2601,9 @@ fab_profile: FAIL — FAB PROFILE GATE  (JLCPCB standard 6-layer (1oz))
     0.100000 mm x24  'text ON'  e.g. SW1001 SW19001 SW28001
     0.120000 mm x61  'fp_circle'  e.g. J24001 J25002 J26003
     0.120000 mm x920  'fp_line'  e.g. C10001 C10002 C10003
+    0.125000 mm x1  'text MOD: HTX HRX LCD CAM SD '  e.g. board
     0.127000 mm x12  'fp_line'  e.g. D37001 J24001 J25002
+    0.136000 mm x1  'text RAIL: 5V 3V3 1V8 LED'  e.g. board
 
   VERDICT: FAIL — the board demands geometry finer than the fab can produce
 
@@ -2629,9 +2636,9 @@ connector_pinout: PASS — 293 pins on 19 connectors; 18 unconnected; 18 protect
 bom_ratings: PASS — 105 lines; 167 checks of 167 evaluated; 0 failing of 0 findings; 29 unrated
 manifest: PASS — artifacts hashed after SI; final reports rehashed at publication
 golden: FAIL (advisory) — golden renders: DRIFT (explicit --bless to accept):
-3d_persp: drift 43/256 bits
-3d_persp_rear: drift 51/256 bits
-3d_top: drift 40/256 bits
+3d_persp: drift 44/256 bits
+3d_persp_rear: drift 55/256 bits
+3d_top: drift 46/256 bits
 board_aux: drift 44/256 bits
 board_qwiic: drift 19/256 bits
 bringup_en_modules: drift 16/256 bits
@@ -3024,73 +3031,74 @@ pipeline_doc: PASS — updated
 === board native exclusive timing (wall s; audits included) ===
 Nested scopes pause parents; parallel batches use launch/join wall time, never summed worker spans.
 Scope: pipeline entry through build-ledger publication; excludes final summary publications and caller/process setup. Mixed stages remain mixed; not a generation-only total.
-pipeline_setup_and_other: 0.006218
-inputs: 0.008323
-authoring_audit: 6.688319
-authoring_guard_reporting_and_recheck: 0.000536
-input_factory_generation_and_ir_conversion: 0.017531
-input_circuit_validation: 0.007295
-input_publication: 0.013315
-board_definition: 0.040766
-subsystem_structure: 0.015428
-carrier_structure: 0.014149
-sheet_prepare_other: 0.005922
-sheet_electrical_validation: 0.003539
-sheet_place_route_with_internal_checks: 0.110981
-sheet_cc_validation: 0.006913
-sheet_emit_and_publish: 0.047582
-sheet_visual_validation: 0.017306
-sheet_parallel_checks_and_render_wall: 29.107252
-symbol_law: 0.000199
-link: 0.001566
-constraints: 0.001282
-diagram: 0.001475
-board_schematic: 6.465179
-bom_footprints: 0.000534
-power_tree: 0.002674
-rail_ampacity: 0.000146
-testpoints: 0.000383
-design_rules: 0.001718
-part_rules: 0.000993
-bom_values: 0.001516
-footprint_pads: 0.008427
-pin_completeness: 0.000905
-spice: 0.103605
-pcb: 0.013373
-pcb_input_loading_and_netlist_validation: 1.726749
-pcb_build_model_with_internal_checks: 5.986563
-pcb_layout_squeeze: 264.155419
-pcb_render: 0.028114
-placement_requirements: 0.002790
-pcb_drc: 1.664240
-pcb_geometry: 0.051647
-testpoint_map: 0.000345
-decoupling_report: 0.002229
-assembly: 0.435668
-ratsnest_images: 0.664176
-thermal: 0.030638
-copper_debt: 0.054690
-order_files: 0.007019
-fab_profile: 0.033632
-stage_movement: 0.000001
-xdc: 0.965823
-power_sequence: 0.000836
-floorplan: 0.000352
-model3d: 2.169323
-render3d: 30.136926
-gallery: 0.000850
-si: 0.000933
-i2c_bus_map: 0.000877
-module_pin_map: 0.970133
-connector_pinout: 0.001314
-bom_ratings: 0.000811
-manifest: 0.037260
-golden: 1.575693
-contract_coverage_lint: 0.001421
-fallbacks: 0.000601
-ledger_import: 0.000844
-quantize_census: 0.000279
-source_audit: 141.119526
-pipeline_doc: 0.000355
-MEASURED SCOPE TOTAL (not process wall): 494.543429
+pipeline_setup_and_other: 0.009624
+inputs: 0.012094
+authoring_audit: 9.968047
+authoring_guard_reporting_and_recheck: 0.000686
+input_factory_generation_and_ir_conversion: 0.022996
+input_circuit_validation: 0.010224
+input_publication: 0.019934
+board_definition: 0.060659
+subsystem_structure: 0.023226
+carrier_structure: 0.021566
+sheet_prepare_other: 0.008834
+sheet_electrical_validation: 0.005053
+sheet_place_route_with_internal_checks: 0.167286
+sheet_cc_validation: 0.010516
+sheet_emit_and_publish: 0.072151
+sheet_visual_validation: 0.026390
+sheet_parallel_checks_and_render_wall: 40.015711
+symbol_law: 0.000262
+link: 0.002800
+constraints: 0.001811
+diagram: 0.002208
+board_schematic: 9.517213
+bom_footprints: 0.000958
+power_tree: 0.004675
+rail_ampacity: 0.000247
+testpoints: 0.000634
+design_rules: 0.002478
+part_rules: 0.001607
+bom_values: 0.002175
+footprint_pads: 0.012922
+pin_completeness: 0.001534
+spice: 0.138931
+pcb: 0.021463
+pcb_input_loading_and_netlist_validation: 2.584434
+pcb_build_model_with_internal_checks: 15.630024
+pcb_layout_squeeze: 399.266466
+pcb_label_seats: 0.005012
+pcb_render: 0.044634
+placement_requirements: 0.004181
+pcb_drc: 2.374694
+pcb_geometry: 0.078565
+testpoint_map: 0.000482
+decoupling_report: 0.003218
+assembly: 0.610459
+ratsnest_images: 0.997553
+thermal: 0.046044
+copper_debt: 0.086035
+order_files: 0.006078
+fab_profile: 0.050837
+stage_movement: 0.000002
+xdc: 1.466454
+power_sequence: 0.001180
+floorplan: 0.000520
+model3d: 3.373330
+render3d: 45.573618
+gallery: 0.001016
+si: 0.001266
+i2c_bus_map: 0.001260
+module_pin_map: 1.462370
+connector_pinout: 0.001929
+bom_ratings: 0.001169
+manifest: 0.065093
+golden: 2.406564
+contract_coverage_lint: 0.002125
+fallbacks: 0.000733
+ledger_import: 0.001267
+quantize_census: 0.000693
+source_audit: 198.988251
+pipeline_doc: 0.000506
+MEASURED SCOPE TOTAL (not process wall): 735.304977
 BOARD: FAIL (37 sheets)

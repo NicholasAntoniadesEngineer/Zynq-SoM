@@ -2,7 +2,7 @@
   "artifacts": [
     {
       "path": "Zynq_Motor_Carrier.kicad_pcb",
-      "sha256": "96308f6e089f5cd00406d539032aa7199b1ba84eed9fb76eaa984cd793369d30"
+      "sha256": "91fdb0c16ea10f2d3f02a20b051f4d9494852f25422e1bb083c3edf9f20a2462"
     },
     {
       "path": "Zynq_Motor_Carrier.kicad_pro",
@@ -78,7 +78,7 @@
     },
     {
       "path": "reports/board_definition.txt",
-      "sha256": "2f134001945991f7bd18f421b76da6d17c28dfb7a432a37cfa09c0cb5cd82fe1"
+      "sha256": "68969e673e910e1217ca37d2e74a8da7397003cb549d3858f4494444a304cf8f"
     },
     {
       "path": "reports/board_gate.txt",
@@ -94,7 +94,7 @@
     },
     {
       "path": "reports/build_ledger.txt",
-      "sha256": "77d8de58f716afbac4dcb055210d6474c8670fd9aaa0efd9b1e0ea1ac2496258"
+      "sha256": "7a7b990057ef83545dfb17e585a137117f76d0cee3ef03a8c7d56eb9c3ef8976"
     },
     {
       "path": "reports/carrier_structure.txt",
@@ -150,11 +150,11 @@
     },
     {
       "path": "reports/fallbacks.txt",
-      "sha256": "b12cb0b3399cb7fd048c5a13d5c45e02153a1545abfa656c83e3a1791ae58a8d"
+      "sha256": "091e556c9065c856af92908070f4eda4b2149f0d65c17673bdbae7a9e1114351"
     },
     {
       "path": "reports/fanout.txt",
-      "sha256": "346847643c39c947be2b2b09c5af8a096f25f79d52043c440ddab8bec000beda"
+      "sha256": "17585c5f3b030be3b8c339be3aae2b88e30d9b6079d8de572ed54262fe59150d"
     },
     {
       "path": "reports/floorplan_composition.txt",
@@ -166,7 +166,7 @@
     },
     {
       "path": "reports/gates.txt",
-      "sha256": "1ce3aa7063e287c38f807af22b9d9bfc588ae20c80144b2eeb213f662a5e1302"
+      "sha256": "1bb689795c72d85dd1fcc2d541082d9579d62e582d529385405c7bf3f29133b6"
     },
     {
       "path": "reports/golden.txt",
@@ -177,12 +177,16 @@
       "sha256": "e9103b7aebc6b7fd813f1b6f9f433a57de552e64e8a0b1e59318f3a7a6a3d851"
     },
     {
+      "path": "reports/label_seats.txt",
+      "sha256": "0352936b8354f2d0fd709ad49b0f25fec9c27ec9928021d8b86dc5a6290475c4"
+    },
+    {
       "path": "reports/layout_intent.txt",
       "sha256": "4047ce31b64280433b692d487e81b0ed8d228cd5c91730aa78fedef35685e216"
     },
     {
       "path": "reports/layout_squeeze.txt",
-      "sha256": "0249ff486410ae95e94db1df6840798efed88bbe161aa69fdc3dc528c8cfbc0d"
+      "sha256": "978b86cd0c6f11568836e28bcfa781b0ef1ffe450351156359d7a76cb4b60918"
     },
     {
       "path": "reports/link_report.txt",
@@ -274,7 +278,7 @@
     },
     {
       "path": "reports/search.txt",
-      "sha256": "04a3e920db788de4d2bf2833e9c658706b23fe0e18447208ef1d0b22b7bc7c73"
+      "sha256": "f9a16845572019f715d5e80280658d33db9a9e759dcf74964bc6477732d0b768"
     },
     {
       "path": "reports/spice.txt",

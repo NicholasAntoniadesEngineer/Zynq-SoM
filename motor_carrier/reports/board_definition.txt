@@ -1,4 +1,4 @@
-BOARD DEFINITION motor_carrier: 102 rows; 94 present, 0 missing, 0 invalid, 8 absent (optional), 0 blocked
+BOARD DEFINITION motor_carrier: 103 rows; 96 present, 0 missing, 0 invalid, 7 absent (optional), 0 blocked
 status | file | item | message
 present | board.json | file | 
 present | board.json | schema | 
@@ -80,7 +80,8 @@ present | board.json | sheets.vbat_supply |
 present | research/si_spec.json | file | 
 present | research/si_spec.json | loads | 
 absent | floorplan.json | file | 
-absent | sheet_index.json | file | 
+present | sheet_index.json | file | 
+present | sheet_index.json | loads | 
 present | component_basis.json | file | 
 present | component_basis.json | coverage | 
 present | parts/part_facts.json | loads | 

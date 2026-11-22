@@ -26,6 +26,7 @@ FAB PROFILE GATE  (JLCPCB standard 6-layer (1oz))
 
   below the floor, min silk text height:
     0.508000 mm x4  'ON'  e.g. SW1001
+    0.850000 mm x1  'BOOT: DFU BSEL BSEL'  e.g. board
 
   below the floor, min silk stroke:
     0.060000 mm x22  'fp_circle'  e.g. J1001 J1002 J12001
@@ -33,6 +34,7 @@ FAB PROFILE GATE  (JLCPCB standard 6-layer (1oz))
     0.120000 mm x21  'fp_circle'  e.g. J10003 J8001 J9002
     0.120000 mm x233  'fp_line'  e.g. C11001 C11002 C11003
     0.127000 mm x6  'fp_line'  e.g. J10003 J8001 J9002
+    0.136000 mm x1  'text BOOT: DFU BSEL BSEL'  e.g. board
 
   VERDICT: FAIL — the board demands geometry finer than the fab can produce
 

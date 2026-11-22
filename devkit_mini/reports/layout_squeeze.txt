@@ -1,53 +1,51 @@
 SAME FACE: 65 parts held on the face of the pin they serve (regulator loops, timing parts); 0 could not be brought to that face
 PROTECTION ORDER: 3 of 3 protection parts are the first part on their net after the connector pin and are held so; 0 were moved nearer to become so, and 0 parts ahead of one were moved back
-TALL PARTS: 4 clusters moved to give parts taller than the module's underside 3 mm from the module
-CLUSTER ARRANGEMENT: 53 tied clusters; parts and module span 87.4575 x 92.5899 mm as placed; squeezes to 6139.69 mm2 without rearranging
-        keep north: span 79.417 x 91.6917 mm, 17 clusters moved after opening 0 mm on the kept sides, 13 tightening moves, 5 could not leave: power/C4001 (dispersion against the board), power_som/C6014 (overlap against C4012), debug_boot/J1001 (module_core against the board), power_mon/C5001 (dispersion against the board)
-        keep north+south: span 68.7435 x 103.692 mm, 17 clusters moved after opening 12 mm on the kept sides, 27 tightening moves, 4 could not leave: power_som/C6014 (overlap against C4028), debug_boot/J1001 (reserved against the board), power_mon/C5001 (reserved against the board), som_decoupling/C7010 (contract against J10003)
-        keep north+west: span 82.1 x 104.082 mm, 12 clusters moved after opening 19 mm on the kept sides, 27 tightening moves, 3 could not leave: power/C4007 (module_core against the board), debug_boot/J1001 (module_core against the board), som_decoupling/C7010 (contract against J10003)
-        keep north+south+west: span 72.0064 x 96.6917 mm, 5 clusters moved after opening 5 mm on the kept sides, 21 tightening moves, squeezes to 6336 mm2, 3 could not leave: power_som/C6014 (overlap against C4012), debug_boot/J1002 (module_core against the board), som_decoupling/C7010 (contract against J10003)
-        keep north+east: span 79.417 x 108.692 mm, 16 clusters moved after opening 17 mm on the kept sides, 12 tightening moves, 2 could not leave: power/C4001 (dispersion against the board), power_mon/C5001 (dispersion against the board)
-        keep north+south+east: span 73.2 x 95.6917 mm, 18 clusters moved after opening 4 mm on the kept sides, 1 tightening moves, squeezes to 6297.69 mm2, 1 could not leave: power/C4012 (overlap against C4023)
-        keep north+west+east: span 90.1202 x 93.0816 mm, 9 clusters moved after opening 8 mm on the kept sides, 9 tightening moves, 1 could not leave: power/C4007 (dispersion against the board)
-        keep north+south+west+east: span 83.1504 x 91.6917 mm, 0 clusters moved after opening 0 mm on the kept sides, 8 tightening moves, 0 could not leave
-  span of the taken arrangement is held by: north C3002, south C4026, west RS5003, east J1001
-  sides that cannot be cleared because a fixed or edge-bound cluster sits there: north
-  arranging took 0.913721 s for 8 plans and 73.6987 s to squeeze the finalists
+TALL PARTS: 3 clusters moved to give parts taller than the module's underside 3 mm from the module
+CLUSTER ARRANGEMENT: 52 tied clusters; parts and module span 102.157 x 76.5558 mm as placed; squeezes to 6417 mm2 without rearranging
+        keep north+east: span 114.692 x 90.0318 mm, 9 clusters moved after opening 16 mm on the kept sides, 9 tightening moves, 4 could not leave: power/C4001 (dispersion against the board), debug_boot/J1001 (module_core against the board), power_mon/C5001 (overlap against R6016), som_decoupling/C7007 (contract against J9002)
+        keep north+south+east: span 97.0816 x 81.4318 mm, 11 clusters moved after opening 6 mm on the kept sides, 9 tightening moves, squeezes to 6885 mm2, 1 could not leave: power/C4001 (module_core against the board)
+  TAKEN keep north+west+east: span 103.692 x 79.0318 mm, 8 clusters moved after opening 5 mm on the kept sides, 8 tightening moves, squeezes to 6208.12 mm2, 4 could not leave: power/TP4003 (module_core against the board), debug_boot/J1001 (module_core against the board), power_mon/C5001 (overlap against R4009), som_decoupling/C7007 (contract against J9002)
+        keep north+south+west+east: span 101.92 x 75.4318 mm, 0 clusters moved after opening 0 mm on the kept sides, 5 tightening moves, 0 could not leave
+  span of the taken arrangement is held by: north R12001, south TP5003, west R4015, east D3001
+  sides that cannot be cleared because a fixed or edge-bound cluster sits there: north, east
+  arranging took 0.348237 s for 4 plans and 81.6772 s to squeeze the finalists
 OWNERSHIP: 113 authored 22 released; 0 off-sheet owners not found
-  parts within reach of the pin they serve: 62 to 112 of 113
-    L6003 is 3.94999 mm from U6004 (reach 3 mm): L6003 at 105.65,107 top, U6004 at 103.875,99.5 top; 2116 seats within reach; 1962 module_core board; 130 overlap C6014; 24 off_board board
-OWNER HOLDS: 113 small parts held to the pin they serve; farthest 33.0357 mm before, 12.2578 mm after
-OWNER ATTRACTION: 51 parts wanted a seat at the pin they serve, 51 seated (0 to the rear, 2 blockers moved aside, 0 seated together with the parts they are tied to, 0 took the nearest room beyond the first search); preferences met 62 to 112 of 113
-  routed airwire 3385.7 to 3064.11 mm
+  parts within reach of the pin they serve: 65 to 109 of 113
+    C6017 is 4.17174 mm from U6004 (reach 3 mm): C6017 at 52.475,44.0999 top, U6004 at 56.875,41.25 top; 2116 seats within reach; 600 overlap C6023; 342 overlap C6022; 284 overlap U6004; 248 overlap C6025; 146 module_core board; 128 overlap L6003; 120 overlap R6019; 112 overlap C6014
+    R6014 is 4.14999 mm from U6004 (reach 4 mm): R6014 at 58.9499,35.225 top, U6004 at 56.875,41.25 top; 3604 seats within reach; 914 overlap L6003; 834 overlap C6014; 478 overlap C6023; 398 overlap C6022; 342 overlap U6004; 194 overlap R6015; 144 overlap R6019; 118 overlap C6025
+    L6003 is 3.80001 mm from U6004 (reach 3 mm): L6003 at 65.65,39.2 top, U6004 at 56.875,41.25 top; 2116 seats within reach; 1508 module_core board; 608 overlap C6014
+    C6022 is 2.18016 mm from U6004 (reach 2 mm): C6022 at 61.6999,44.025 top, U6004 at 56.875,41.25 top; 1012 seats within reach; 434 overlap C6023; 154 overlap U6004; 144 overlap L6003; 120 overlap R6019; 86 overlap R6015; 72 overlap C6014; 2 overlap C6025
+OWNER HOLDS: 113 small parts held to the pin they serve; farthest 39.7759 mm before, 13.4107 mm after
+OWNER ATTRACTION: 53 parts wanted a seat at the pin they serve, 46 seated (0 to the rear, 1 blockers moved aside, 0 seated together with the parts they are tied to, 0 took the nearest room beyond the first search); preferences met 60 to 106 of 113
+  routed airwire 3723.61 to 3420.14 mm
 FACE BALANCE: 5 of 7 movable clusters mirrored to the rear (14 parts); courtyard area top 1874.25 to 1774.27 mm2, rear 213.301 to 313.285 mm2
-  squeezed area with mirroring 6258.12 mm2, without 6139.69 mm2; kept the unmirrored board
-  on the squeezed board 5 of 7 movable clusters mirrored to the rear (14 parts); squeezed again 6139.69 to 5955.25 mm2; kept
+  squeezed area with mirroring 6039.5 mm2, without 6208.12 mm2; kept the mirrored board
   rear-capable courtyard left on top, largest clusters:
     178.328 mm2 C4001: no mirrored seat within reach
-    167.342 mm2 C6014: tied to top-only TP6001
+    167.342 mm2 C6014: tied to C6021 already on the rear
     163.832 mm2 C4007: no mirrored seat within reach
     42.7106 mm2 C3004: tied to C3004 already on the rear
     40.6496 mm2 C3001: tied to top-only U3001
     25.2406 mm2 C5001: tied to C5001 already on the rear
     25.2406 mm2 C5002: tied to C5002 already on the rear
     25.1678 mm2 C12001: tied to top-only J12001
-LAYOUT SQUEEZE: 98 x 98 mm to 71.75 x 83 mm, area 9604 to 5955.25 mm2 (-37.992%)
-  routed airwire 3082.11 to 3175.82 mm
-  56 of 216 edge steps kept, 113 relocations, 10 pushes, 0 parts sunk to the rear, 8 jams freed (1 by moving neighbours aside in a chain, 5 by re-seating the cluster elsewhere on the board)
-  east stopped by C6018 off_board C6018; of 1792 nearby positions for C6018 (cluster of 18), 835 off_board against the board, 369 module_core against the board, 130 overlap against J1001, 93 overlap against H2003
-  height stopped by C6019 overlap H2003; of 1792 nearby positions for C6019 (cluster of 18), 788 off_board against the board, 375 module_core against the board, 144 overlap against J1001, 123 overlap against H2003
-  north stopped by U12001 module_core U12001; of 1792 nearby positions for U12001 (cluster of 5), 863 module_core against the board, 595 off_board against the board, 74 overlap against J3001, 61 overlap against D3001
-  south stopped by C6019 overlap H2003; of 1792 nearby positions for C6019 (cluster of 18), 788 off_board against the board, 375 module_core against the board, 144 overlap against J1001, 123 overlap against H2003
-  west stopped by U5002 off_board U5002; of 1792 nearby positions for U5002 (cluster of 3), 896 off_board against the board, 346 dispersion against the board, 305 module_core against the board, 30 overlap against R11002
-  width stopped by C6018 off_board C6018; of 1792 nearby positions for C6018 (cluster of 18), 835 off_board against the board, 369 module_core against the board, 130 overlap against J1001, 93 overlap against H2003
-  3026 cluster steps taken toward the module before the edges moved
-  best of 2 edge orders, areas mm2: 6139.69 6368.62
-RESEAT AFTER SQUEEZE: 14 parts had drifted from the pin they serve, 13 reseated (0 to the rear, 0 to the nearest room beyond the first search); preferences met 99 to 112
+LAYOUT SQUEEZE: 114 x 94 mm to 94 x 64.25 mm, area 10716 to 6039.5 mm2 (-43.6404%)
+  routed airwire 3761.41 to 3283.11 mm
+  41 of 192 edge steps kept, 239 relocations, 73 pushes, 0 parts sunk to the rear, 6 jams freed (2 by moving neighbours aside in a chain, 2 by re-seating the cluster elsewhere on the board)
+  east stopped by SW1001 overlap D3001; of 1792 nearby positions for SW1001 (cluster of 5), 519 dispersion against the board, 455 off_board against the board, 239 module_core against the board, 226 reserved against the board
+  height stopped by U12001 module_core U12001; of 1792 nearby positions for U12001 (cluster of 5), 735 module_core against the board, 674 off_board against the board, 130 reserved against the board, 80 overlap against L6003
+  north stopped by U12001 module_core U12001; of 1792 nearby positions for U12001 (cluster of 5), 735 module_core against the board, 674 off_board against the board, 130 reserved against the board, 80 overlap against L6003
+  south stopped by FID3 reserved FID3
+  west stopped by C4023 off_board C4023; of 1792 nearby positions for C4023 (cluster of 17), 952 off_board against the board, 363 module_core against the board, 138 reserved against the board, 74 overlap against L4001
+  width stopped by C4023 off_board C4023; of 1792 nearby positions for C4023 (cluster of 17), 952 off_board against the board, 363 module_core against the board, 138 reserved against the board, 74 overlap against L4001
+  2988 cluster steps taken toward the module before the edges moved
+  best of 2 edge orders, areas mm2: 6039.5 6039.5
+RESEAT AFTER SQUEEZE: 19 parts had drifted from the pin they serve, 15 reseated (0 to the rear, 0 to the nearest room beyond the first search); preferences met 94 to 109
 FACES: top 105 to 104, rear 56 to 57
-EDGE north: 71.75 mm long, connector bodies 19.7 mm (27.4564%): J12001 J3001
-EDGE south: 71.75 mm long, connector bodies 0 mm (0%):
-EDGE west: 83 mm long, connector bodies 0 mm (0%):
-EDGE east: 83 mm long, connector bodies 0 mm (0%):
+EDGE north: 94 mm long, connector bodies 9.85 mm (10.4787%): J12001
+EDGE south: 94 mm long, connector bodies 0 mm (0%):
+EDGE west: 64.25 mm long, connector bodies 0 mm (0%):
+EDGE east: 64.25 mm long, connector bodies 9.85 mm (15.3307%): J3001
 TOP FACE courtyard area by reason (rear holds 313.285 mm2):
     161.895 mm2 edge connectors
     477.342 mm2 fixed parts
@@ -68,56 +66,55 @@ PLACEMENT INTEGRITY GATE: PASS
   high_speed/termination-distance-report: checked 1, findings 0 [MEASURED]
   power/regulator-loop-one-face: checked 3, findings 0 [GATE]
   power/regulator-over-ground: checked 6, findings 0 [GATE]
-  power/input-capacitor-nearest: checked 6, findings 1 [MEASURED]
+  power/input-capacitor-nearest: checked 6, findings 0 [MEASURED]
   power/nothing-sensitive-under-inductor: checked 69, findings 0 [GATE]
   protection/protect-first-after-connector: checked 3, findings 0 [GATE]
   decoupling/bypass-on-pin-face-or-under: checked 31, findings 0 [GATE]
   sensing/sense-distance-report: checked 8, findings 0 [MEASURED]
   timing/timing-parts-on-crystal-face: checked 0, findings 0 [GATE]
-    FOUND input-capacitor-nearest: U6004 (power_som) input pin VIN2 (pad 12): the nearest authored part is C6023 (power_som) at 0.275001 mm, nearer than its input capacitor C6025 at 1.17527 mm
     NOTE module-mating: J10003 mates module J3: worst pad error 1.58882e-14 mm over 100 pins, mate-to-receptacle row inset 0.185 mm (the module's own land patterns; self-alignment 0.33 mm)
     NOTE module-mating: J8001 mates module J1: worst pad error 7.94411e-15 mm over 100 pins, mate-to-receptacle row inset 0.185 mm (the module's own land patterns; self-alignment 0.33 mm)
     NOTE module-mating: J9002 mates module J2: worst pad error 1.58882e-14 mm over 100 pins, mate-to-receptacle row inset 0.185 mm (the module's own land patterns; self-alignment 0.33 mm)
     NOTE land-spacing: J10003 (DF40C-100DP-0.4V_51): land gap 0.17 mm below its net-class clearance 0.2 mm; fabricator minimum 0.09 mm; B2 15-30 V (voltage unknown, highest board voltage used); required 0.1 mm; PASS: Hirose DF40 catalogue (2013.11) p.10, DF40C-xxDP header recommended PCB layout: pad 0.23+-0.02 on pitch 0.4+-0.02, end pads 0.35+-0.02
     NOTE land-spacing: J8001 (DF40C-100DP-0.4V_51): land gap 0.17 mm below its net-class clearance 0.2 mm; fabricator minimum 0.09 mm; B2 15-30 V (voltage unknown, highest board voltage used); required 0.1 mm; PASS: Hirose DF40 catalogue (2013.11) p.10, DF40C-xxDP header recommended PCB layout: pad 0.23+-0.02 on pitch 0.4+-0.02, end pads 0.35+-0.02
     NOTE land-spacing: J9002 (DF40C-100DP-0.4V_51): land gap 0.17 mm below its net-class clearance 0.2 mm; fabricator minimum 0.09 mm; B2 15-30 V (voltage unknown, highest board voltage used); required 0.1 mm; PASS: Hirose DF40 catalogue (2013.11) p.10, DF40C-xxDP header recommended PCB layout: pad 0.23+-0.02 on pitch 0.4+-0.02, end pads 0.35+-0.02
+    NOTE tall-part-beside-module: J1002 (debug_boot) HX_JN1.27-2x5 is 5.19989 mm tall, 3.69989 mm above the module underside at 1.5 mm, and 3.05 mm from the module body (header; highest point of the 3D model ${KIPRJMOD}/../parts/HX_JN1.27-2x5_TP_H4.9/HX_JN1.27-2x5_TP_H4.9.wrl)
     NOTE tall-part-beside-module: SW1001 (debug_boot) DIP-4 is 2.35001 mm tall, 0.850008 mm above the module underside at 1.5 mm, and 3.05 mm from the module body (switch; highest point of the 3D model ${KIPRJMOD}/../parts/DSHP04TSGER/DSHP04TSGER.wrl)
-    NOTE tall-part-beside-module: U12001 (usb_uart_connector) USBLC6-2SC6 is 1.64897 mm tall, 0.148968 mm above the module underside at 1.5 mm, and 3.1118 mm from the module body (diode; highest point of the 3D model ${KIPRJMOD}/../parts/USBLC6-2SC6/USBLC6-2SC6.wrl)
-    NOTE tall-part-beside-module: U3002 (pd_input) USBLC6-2SC6 is 1.64897 mm tall, 0.148968 mm above the module underside at 1.5 mm, and 3.1659 mm from the module body (diode; highest point of the 3D model ${KIPRJMOD}/../parts/USBLC6-2SC6/USBLC6-2SC6.wrl)
-    NOTE tall-part-beside-module: C6016 (power_som) 10u is 1.6 mm tall, 0.1 mm above the module underside at 1.5 mm, and 3.2001 mm from the module body (capacitor; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_1206_3216Metric.step)
-    NOTE tall-part-beside-module: SW1002 (debug_boot) RESET is 1.54991 mm tall, 0.049908 mm above the module underside at 1.5 mm, and 4.3 mm from the module body (switch; highest point of the 3D model ${KIPRJMOD}/../parts/TS-1187A-B-A-B/TS-1187A-B-A-B.wrl)
-    NOTE tall-part-beside-module: L4002 (power) 10uH is 4.21005 mm tall, 2.71005 mm above the module underside at 1.5 mm, and 5.1197 mm from the module body (inductor; highest point of the 3D model ${KIPRJMOD}/../parts/SWPA8040S100MT/SWPA8040S100MT.wrl)
-    NOTE tall-part-beside-module: J1001 (debug_boot) 878311420 is 5.89991 mm tall, 4.39991 mm above the module underside at 1.5 mm, and 5.856 mm from the module body (header; highest point of the 3D model ${KIPRJMOD}/../parts/878311420/878311420.wrl)
-    NOTE tall-part-beside-module: D3001 (pd_input) SMBJ22A is 2.15 mm tall, 0.65 mm above the module underside at 1.5 mm, and 6.5018 mm from the module body (diode; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Diode_SMD.3dshapes/D_SMB.step)
-    NOTE tall-part-beside-module: L6003 (power_som) 10uH is 4.21005 mm tall, 2.71005 mm above the module underside at 1.5 mm, and 7.05142 mm from the module body (inductor; highest point of the 3D model ${KIPRJMOD}/../parts/SWPA8040S100MT/SWPA8040S100MT.wrl)
-    NOTE tall-part-beside-module: C6015 (power_som) 10u is 1.6 mm tall, 0.1 mm above the module underside at 1.5 mm, and 7.70111 mm from the module body (capacitor; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_1206_3216Metric.step)
-    NOTE tall-part-beside-module: C4002 (power) 10u is 1.6 mm tall, 0.1 mm above the module underside at 1.5 mm, and 7.7499 mm from the module body (capacitor; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_1206_3216Metric.step)
-    NOTE tall-part-beside-module: J12001 (usb_uart_connector) TYPE-C-31-M-12 is 3.25108 mm tall, 1.75108 mm above the module underside at 1.5 mm, and 8.1019 mm from the module body (connector; highest point of the 3D model ${KIPRJMOD}/../parts/TYPE-C-31-M-12/TYPE-C-31-M-12.wrl)
-    NOTE tall-part-beside-module: J3001 (pd_input) TYPE-C-31-M-12 is 3.25108 mm tall, 1.75108 mm above the module underside at 1.5 mm, and 8.1019 mm from the module body (connector; highest point of the 3D model ${KIPRJMOD}/../parts/TYPE-C-31-M-12/TYPE-C-31-M-12.wrl)
-    NOTE tall-part-beside-module: C4003 (power) 10u is 1.6 mm tall, 0.1 mm above the module underside at 1.5 mm, and 8.4999 mm from the module body (capacitor; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_1206_3216Metric.step)
-    NOTE tall-part-beside-module: L4001 (power) 10uH is 4.21005 mm tall, 2.71005 mm above the module underside at 1.5 mm, and 11.6299 mm from the module body (inductor; highest point of the 3D model ${KIPRJMOD}/../parts/SWPA8040S100MT/SWPA8040S100MT.wrl)
-    NOTE tall-part-beside-module: C3002 (pd_input) 10u is 2.5 mm tall, 1 mm above the module underside at 1.5 mm, and 11.7 mm from the module body (capacitor; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_1210_3225Metric.step)
-    NOTE tall-part-beside-module: J1002 (debug_boot) HX_JN1.27-2x5 is 5.19989 mm tall, 3.69989 mm above the module underside at 1.5 mm, and 16.456 mm from the module body (header; highest point of the 3D model ${KIPRJMOD}/../parts/HX_JN1.27-2x5_TP_H4.9/HX_JN1.27-2x5_TP_H4.9.wrl)
-    NOTE termination-distance-report: R4007 (power) is 2.625 mm from Q4001.1; the reach of a series part is 4 mm
+    NOTE tall-part-beside-module: U12001 (usb_uart_connector) USBLC6-2SC6 is 1.64897 mm tall, 0.148968 mm above the module underside at 1.5 mm, and 3.1659 mm from the module body (diode; highest point of the 3D model ${KIPRJMOD}/../parts/USBLC6-2SC6/USBLC6-2SC6.wrl)
+    NOTE tall-part-beside-module: L4001 (power) 10uH is 4.21005 mm tall, 2.71005 mm above the module underside at 1.5 mm, and 3.31 mm from the module body (inductor; highest point of the 3D model ${KIPRJMOD}/../parts/SWPA8040S100MT/SWPA8040S100MT.wrl)
+    NOTE tall-part-beside-module: L4002 (power) 10uH is 4.21005 mm tall, 2.71005 mm above the module underside at 1.5 mm, and 3.31 mm from the module body (inductor; highest point of the 3D model ${KIPRJMOD}/../parts/SWPA8040S100MT/SWPA8040S100MT.wrl)
+    NOTE tall-part-beside-module: J1001 (debug_boot) 878311420 is 5.89991 mm tall, 4.39991 mm above the module underside at 1.5 mm, and 3.856 mm from the module body (header; highest point of the 3D model ${KIPRJMOD}/../parts/878311420/878311420.wrl)
+    NOTE tall-part-beside-module: L6003 (power_som) 10uH is 4.21005 mm tall, 2.71005 mm above the module underside at 1.5 mm, and 4.3 mm from the module body (inductor; highest point of the 3D model ${KIPRJMOD}/../parts/SWPA8040S100MT/SWPA8040S100MT.wrl)
+    NOTE tall-part-beside-module: U3002 (pd_input) USBLC6-2SC6 is 1.64897 mm tall, 0.148968 mm above the module underside at 1.5 mm, and 4.6659 mm from the module body (diode; highest point of the 3D model ${KIPRJMOD}/../parts/USBLC6-2SC6/USBLC6-2SC6.wrl)
+    NOTE tall-part-beside-module: C6016 (power_som) 10u is 1.6 mm tall, 0.1 mm above the module underside at 1.5 mm, and 6.8999 mm from the module body (capacitor; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_1206_3216Metric.step)
+    NOTE tall-part-beside-module: SW1002 (debug_boot) RESET is 1.54991 mm tall, 0.049908 mm above the module underside at 1.5 mm, and 7.03 mm from the module body (switch; highest point of the 3D model ${KIPRJMOD}/../parts/TS-1187A-B-A-B/TS-1187A-B-A-B.wrl)
+    NOTE tall-part-beside-module: C3002 (pd_input) 10u is 2.5 mm tall, 1 mm above the module underside at 1.5 mm, and 9 mm from the module body (capacitor; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_1210_3225Metric.step)
+    NOTE tall-part-beside-module: J12001 (usb_uart_connector) TYPE-C-31-M-12 is 3.25108 mm tall, 1.75108 mm above the module underside at 1.5 mm, and 9.1019 mm from the module body (connector; highest point of the 3D model ${KIPRJMOD}/../parts/TYPE-C-31-M-12/TYPE-C-31-M-12.wrl)
+    NOTE tall-part-beside-module: D3001 (pd_input) SMBJ22A is 2.15 mm tall, 0.65 mm above the module underside at 1.5 mm, and 9.7518 mm from the module body (diode; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Diode_SMD.3dshapes/D_SMB.step)
+    NOTE tall-part-beside-module: C6015 (power_som) 10u is 1.6 mm tall, 0.1 mm above the module underside at 1.5 mm, and 10.6501 mm from the module body (capacitor; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_1206_3216Metric.step)
+    NOTE tall-part-beside-module: J3001 (pd_input) TYPE-C-31-M-12 is 3.25108 mm tall, 1.75108 mm above the module underside at 1.5 mm, and 11.1019 mm from the module body (connector; highest point of the 3D model ${KIPRJMOD}/../parts/TYPE-C-31-M-12/TYPE-C-31-M-12.wrl)
+    NOTE tall-part-beside-module: C4003 (power) 10u is 1.6 mm tall, 0.1 mm above the module underside at 1.5 mm, and 13.7401 mm from the module body (capacitor; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_1206_3216Metric.step)
+    NOTE tall-part-beside-module: C4002 (power) 10u is 1.6 mm tall, 0.1 mm above the module underside at 1.5 mm, and 14.4901 mm from the module body (capacitor; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_1206_3216Metric.step)
+    NOTE termination-distance-report: R4007 (power) is 0.725 mm from Q4001.1; the reach of a series part is 4 mm
     NOTE input-capacitor-nearest: U4001 (power) VIN2 (pad 12): input capacitor C4025 at 0.955001 mm
     NOTE input-capacitor-nearest: U4001 (power) VIN1 (pad 8): input capacitor C4001 at 0.955001 mm
     NOTE input-capacitor-nearest: U4002 (power) VIN2 (pad 12): input capacitor C4029 at 0.955001 mm
     NOTE input-capacitor-nearest: U4002 (power) VIN1 (pad 8): input capacitor C4007 at 0.955001 mm
-    NOTE input-capacitor-nearest: U6004 (power_som) VIN2 (pad 12): input capacitor C6025 at 1.17527 mm
-    NOTE input-capacitor-nearest: U6004 (power_som) VIN1 (pad 8): input capacitor C6014 at 0.275001 mm
-    NOTE nothing-sensitive-under-inductor: inductor L4001 (power): nearest sense or timing part is R3004 (pd_input), 13.9819 mm centre to centre
-    NOTE nothing-sensitive-under-inductor: inductor L4002 (power): nearest sense or timing part is RS5004 (power_mon), 23.9428 mm centre to centre
-    NOTE nothing-sensitive-under-inductor: inductor L6003 (power_som): nearest sense or timing part is R3003 (pd_input), 16.5979 mm centre to centre
-    NOTE protect-first-after-connector: D3001 (pd_input) is 4.3 mm from J3001.A4B9 on net +VBUS_IN
-    NOTE protect-first-after-connector: U3002 (pd_input) is 2.76927 mm from J3001.A6 on net /pd_input/PD_USB_DP_CONN
-    NOTE protect-first-after-connector: U12001 (usb_uart_connector) is 5.12335 mm from J12001.A6 on net /usb_uart_connector/USB_UART_DP_CONN
-    NOTE bypass-on-pin-face-or-under: bypass distance to the served pin over 31 capacitors: least 0 mm, median 0.875001 mm, greatest 1.99765 mm; 0 beyond the 2 mm bypass reach; 16 on the pin's face, 15 directly under
-    NOTE sense-distance-report: R11003 (uart_bridge) is 3.885 mm from U11001.8 (same face)
-    NOTE sense-distance-report: R11002 (uart_bridge) is 3.875 mm from U11001.8 (same face)
-    NOTE sense-distance-report: R3004 (pd_input) is 2.8535 mm from U3001.8 (same face)
-    NOTE sense-distance-report: RS5002 (power_mon) is 2.11483 mm from U5001.15 (opposite face)
-    NOTE sense-distance-report: R3003 (pd_input) is 0.535129 mm from U3001.8 (same face)
-    NOTE sense-distance-report: RS5003 (power_mon) is 0.105997 mm from U5001.2 (opposite face)
+    NOTE input-capacitor-nearest: U6004 (power_som) VIN2 (pad 12): input capacitor C6025 at 0.275001 mm
+    NOTE input-capacitor-nearest: U6004 (power_som) VIN1 (pad 8): input capacitor C6014 at 0.425736 mm
+    NOTE nothing-sensitive-under-inductor: inductor L4001 (power): nearest sense or timing part is RS5002 (power_mon), 22.6114 mm centre to centre
+    NOTE nothing-sensitive-under-inductor: inductor L4002 (power): nearest sense or timing part is RS5002 (power_mon), 6.9981 mm centre to centre
+    NOTE nothing-sensitive-under-inductor: inductor L6003 (power_som): nearest sense or timing part is R11003 (uart_bridge), 11.6819 mm centre to centre
+    NOTE protect-first-after-connector: D3001 (pd_input) is 8.6 mm from J3001.A4B9 on net +VBUS_IN
+    NOTE protect-first-after-connector: U3002 (pd_input) is 3.54713 mm from J3001.A6 on net /pd_input/PD_USB_DP_CONN
+    NOTE protect-first-after-connector: U12001 (usb_uart_connector) is 4.78093 mm from J12001.A6 on net /usb_uart_connector/USB_UART_DP_CONN
+    NOTE bypass-on-pin-face-or-under: bypass distance to the served pin over 31 capacitors: least 0 mm, median 0.842997 mm, greatest 2.18016 mm; 1 beyond the 2 mm bypass reach; 16 on the pin's face, 15 directly under
+    NOTE sense-distance-report: R11003 (uart_bridge) is 4.22656 mm from U11001.8 (same face)
+    NOTE sense-distance-report: RS5002 (power_mon) is 3.606 mm from U5001.15 (opposite face)
+    NOTE sense-distance-report: R11002 (uart_bridge) is 3.43422 mm from U11001.8 (same face)
+    NOTE sense-distance-report: R3003 (pd_input) is 2.3535 mm from U3001.8 (same face)
+    NOTE sense-distance-report: R3004 (pd_input) is 2.3535 mm from U3001.8 (same face)
+    NOTE sense-distance-report: RS5003 (power_mon) is 0.605997 mm from U5001.2 (opposite face)
+    NOTE sense-distance-report: RS5004 (power_mon) is 0.455542 mm from U5002.12 (opposite face)
     NOTE sense-distance-report: RS5001 (power_mon) is 0 mm from U5001.12 (opposite face)
-    NOTE sense-distance-report: RS5004 (power_mon) is 0 mm from U5002.12 (opposite face)
 

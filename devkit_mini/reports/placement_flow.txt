@@ -1,4 +1,4 @@
-PLACEMENT-FLOW GATE: PASS (2 external contract(s); board_area=5955mm^2, flow_budget=94.3mm)
+PLACEMENT-FLOW GATE: PASS (2 external contract(s); board_area=6040mm^2, flow_budget=94.5mm)
   fails: flow=0/1 facing=0/1 far=0/0 near_max=0/1
   unresolved: 0
   n/a (subsystem not in this project): 2
@@ -6,9 +6,9 @@ PLACEMENT-FLOW GATE: PASS (2 external contract(s); board_area=5955mm^2, flow_bud
     flow usb_pd->power: n/a — usb_pd not a subsystem of this project
   violations: 0
   advisory preferences (not hardware qualification): 2
-    ADVISORY facing power->power_som: preference NOT satisfied (angle=93.7deg; not hardware qualification) [Reviewed 2026-10-18: all-component centroid direction changes when unrelated test points move; it is a placement preference, not a hardware limit. SNVSBD5D Rev. D section 11.1 requires local loop/layout and power-path quality, not a 90-degree subsystem-centroid cutoff. See native/benchmarks/2026-10-18-facing-centroid-review.json; routing and parasitics remain unverified.]
-    ADVISORY flow power->power_som: 39.34mm / 94.3mm heuristic reference; preference satisfied; not a trace-length or hardware limit
+    ADVISORY facing power->power_som: preference NOT satisfied (angle=128.9deg; not hardware qualification) [Reviewed 2026-10-18: all-component centroid direction changes when unrelated test points move; it is a placement preference, not a hardware limit. SNVSBD5D Rev. D section 11.1 requires local loop/layout and power-path quality, not a 90-degree subsystem-centroid cutoff. See native/benchmarks/2026-10-18-facing-centroid-review.json; routing and parasitics remain unverified.]
+    ADVISORY flow power->power_som: 29.44mm / 94.5mm heuristic reference; preference satisfied; not a trace-length or hardware limit
   detail: 3
-    facing power->power_som: dot=-32.04 angle=93.7deg (output@(64.21, 113.1238) zone@(64.2397, 100.5588) down@(103.5062, 98.1017))
-    flow power->power_som: 39.34mm / 94.3mm budget
+    facing power->power_som: dot=-46.96 angle=128.9deg (output@(48.9199, 70.2678) zone@(47.5852, 68.1082) down@(57.3399, 40.3339))
+    flow power->power_som: 29.44mm / 94.5mm budget
     near_max uart_bridge to usb_uart_connector: 0.00mm gap / <= 40mm

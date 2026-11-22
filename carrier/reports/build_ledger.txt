@@ -204,6 +204,8 @@ STEP   census
   CALC   quantize_engagement[pack_zone_component_precision4dp] = 4456          calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[pcb_project_class_precision4dp] = 28            calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[pcb_project_integer_trunc] = 53            calls      <- klass=pre-proof value=trunc(value)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[pcb_silk_position_precision3dp] = 64            calls      <- klass=pre-proof value=round(value, 3)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[pcb_silk_stroke_precision3dp] = 32            calls      <- klass=pre-proof value=round(value, 3)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[placeholder_zone_half_mm] = 4             calls      <- klass=pre-proof value=round(round(v * 2) / 2, 1)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[placement_edge_seat_precision4dp] = 28            calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[placement_emission_pose_precision4dp] = 19006         calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
@@ -231,7 +233,7 @@ STEP   census
   CALC   quantize_engagement[seat_slide] = 50            calls      <- klass=pre-proof value=1.2  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[seat_upper_index] = 7             calls      <- klass=pre-proof value=long(floor(value))  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[seat_vertical_extent] = 7             calls      <- klass=pre-proof value=int(value)  ::  count of calls that ran this registered transform
-  CALC   quantize_engagement[silk_cell_floor] = 11316         calls      <- klass=pre-proof value=int(floor(value / cell))  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[silk_cell_floor] = 14784         calls      <- klass=pre-proof value=int(floor(value / cell))  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[snap_erosion_bound] = 464           calls      <- klass=proof-preserving value=bound - 0.75 if bound >= 5.0 else bound  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[snap_erosion_pad] = 6             calls      <- klass=proof-preserving value=mm + (0.75 if mm >= 5.0 else 0.0)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[som_pose_half_mm] = 8788          calls      <- klass=pre-proof value=round(round(v * 2) / 2, 1)  ::  count of calls that ran this registered transform
@@ -256,4 +258,4 @@ STEP   census
   CALC   fallback_engagement[edge_geometry_replan_retry] = 1             firings    <- stage=plan_lattice ceiling=observational  ::  count of times this registered degraded path bound
   CALC   fallback_engagement[interior_reseat_retry] = 406           firings    <- stage=plan_lattice ceiling=observational  ::  count of times this registered degraded path bound
   CALC   fallback_engagement[punch_free_plan_rejected] = 2             firings    <- stage=plan_lattice ceiling=observational  ::  count of times this registered degraded path bound
-  CALC   register_silence               = 74            registrations <- quantize_registered=156 quantize_engaged=130 fallback_registered=52 fallback_fired=4  ::  registered - engaged = declared machinery this build never used
+  CALC   register_silence               = 72            registrations <- quantize_registered=156 quantize_engaged=132 fallback_registered=52 fallback_fired=4  ::  registered - engaged = declared machinery this build never used

@@ -8,7 +8,7 @@ inputs: PASS — live C++ factories authored once; canonical snapshots published
 layout_intent: PASS — LAYOUT INTENT GATE: PASS
   generic support parts: 237; declarations: 252 serving a pin or net, 49 released with a reason; undeclared: 0
 
-board_definition: PASS — BOARD DEFINITION motor_carrier: 102 rows; 94 present, 0 missing, 0 invalid, 8 absent (optional), 0 blocked
+board_definition: PASS — BOARD DEFINITION motor_carrier: 103 rows; 96 present, 0 missing, 0 invalid, 7 absent (optional), 0 blocked
 subsystem_structure: PASS — schgen subsystem-structure gate (NATIVE HARD)
 ============================================================
 
@@ -1770,7 +1770,6 @@ fanout: PASS — FAN-OUT CLEARANCE GATE (D13, report-first ratchet): PASS
     ok      Q6001     esc_power          3pin clr=1.503 need=1.50 slack=+0.003
     ok      U5006     esc_io             5pin clr=1.510 need=1.50 slack=+0.010
     ok      U20001    usb_uart_connector   6pin clr=1.516 need=1.50 slack=+0.016
-  no stored baseline at reports/fanout_baseline.json in the board folder: held to 0, the strictest ceiling
 pcb_geometry: PASS — independent final-board gates complete
 testpoint_map: PASS — 43 test points; 5 waived nets
 decoupling_report: PASS — 94 rows; 0 failing
@@ -2241,7 +2240,6 @@ vbat_supply          parts= 35  structured=  0  free= 0  UNGATED= 35  (no contra
     UNGATED U1     -> U21001   TPS26631PWPR           nets: +VBAT_D, +VBAT_SW, DVDT_SET, GND, ILIM_SET, OVP_SET (+2 more)
     UNGATED U2     -> U21002   LM61460AANRJRR         nets: +VBAT_SW, BIAS_PRE, BOOT_PRE, FB_PRE, GND, RT_PRE (+2 more)
 fallbacks: PASS — FALLBACK RATCHET: PASS — 3 registered paths, 0 firing
-  no stored baseline: every non-search path held to zero firings, the strictest ceiling
 SEARCH EFFORT: observational, no acceptance ceiling; counts include rejected work. Exhaustion is not proof of infeasibility. Hardware gates remain independent.
   bottom_variant_contract_reject: 0
   cand_cap_truncated: 36
@@ -2300,73 +2298,74 @@ pipeline_doc: PASS — updated
 === board native exclusive timing (wall s; audits included) ===
 Nested scopes pause parents; parallel batches use launch/join wall time, never summed worker spans.
 Scope: pipeline entry through build-ledger publication; excludes final summary publications and caller/process setup. Mixed stages remain mixed; not a generation-only total.
-pipeline_setup_and_other: 0.005315
-inputs: 0.007593
-authoring_audit: 9.901488
-authoring_guard_reporting_and_recheck: 0.000651
-input_factory_generation_and_ir_conversion: 0.015113
-input_circuit_validation: 0.008149
-input_publication: 0.011274
-board_definition: 0.044697
-subsystem_structure: 0.023225
-carrier_structure: 0.012682
-sheet_prepare_other: 0.005047
-sheet_electrical_validation: 0.003495
-sheet_place_route_with_internal_checks: 1.504150
-sheet_cc_validation: 0.007285
-sheet_emit_and_publish: 0.046760
-sheet_visual_validation: 0.020114
-sheet_parallel_checks_and_render_wall: 26.141466
-symbol_law: 0.000227
-link: 0.003889
-constraints: 0.000984
-diagram: 0.001428
-board_schematic: 5.502981
-bom_footprints: 0.000389
-power_tree: 0.002640
-rail_ampacity: 0.000161
-testpoints: 0.000340
-design_rules: 0.001215
-part_rules: 0.000800
-bom_values: 0.001094
-footprint_pads: 0.007592
-pin_completeness: 0.000704
-spice: 0.095790
-pcb: 0.011106
-pcb_input_loading_and_netlist_validation: 1.189111
-pcb_build_model_with_internal_checks: 1.056454
-pcb_layout_squeeze: 185.790193
-pcb_render: 0.018230
-placement_requirements: 0.000960
-pcb_drc: 1.466635
-pcb_geometry: 0.034829
-testpoint_map: 0.000252
-decoupling_report: 0.001431
-assembly: 0.212499
-ratsnest_images: 0.344554
-thermal: 0.019887
-copper_debt: 0.044262
-order_files: 0.003408
-fab_profile: 0.022303
-stage_movement: 0.000001
-xdc: 0.976523
-power_sequence: 0.000751
-floorplan: 0.000372
-model3d: 2.206409
-render3d: 26.192470
-gallery: 0.000615
-si: 0.000612
-i2c_bus_map: 0.000577
-module_pin_map: 0.969648
-connector_pinout: 0.000798
-bom_ratings: 0.000617
-manifest: 0.025591
-golden: 0.902527
-contract_coverage_lint: 0.001048
-fallbacks: 0.000349
-ledger_import: 0.000775
-quantize_census: 0.000277
-source_audit: 142.514105
-pipeline_doc: 0.000330
-MEASURED SCOPE TOTAL (not process wall): 407.389248
+pipeline_setup_and_other: 0.007019
+inputs: 0.008079
+authoring_audit: 10.012201
+authoring_guard_reporting_and_recheck: 0.000861
+input_factory_generation_and_ir_conversion: 0.014397
+input_circuit_validation: 0.007367
+input_publication: 0.011759
+board_definition: 0.044164
+subsystem_structure: 0.023075
+carrier_structure: 0.012717
+sheet_prepare_other: 0.005177
+sheet_electrical_validation: 0.003489
+sheet_place_route_with_internal_checks: 1.498777
+sheet_cc_validation: 0.007299
+sheet_emit_and_publish: 0.047520
+sheet_visual_validation: 0.020229
+sheet_parallel_checks_and_render_wall: 23.863100
+symbol_law: 0.000264
+link: 0.001700
+constraints: 0.000842
+diagram: 0.001253
+board_schematic: 5.676394
+bom_footprints: 0.000653
+power_tree: 0.003007
+rail_ampacity: 0.000252
+testpoints: 0.000460
+design_rules: 0.001725
+part_rules: 0.001034
+bom_values: 0.001635
+footprint_pads: 0.009771
+pin_completeness: 0.001012
+spice: 0.122550
+pcb: 0.019315
+pcb_input_loading_and_netlist_validation: 1.747390
+pcb_build_model_with_internal_checks: 3.761837
+pcb_layout_squeeze: 683.425245
+pcb_label_seats: 0.002853
+pcb_render: 0.028184
+placement_requirements: 0.001491
+pcb_drc: 1.997498
+pcb_geometry: 0.052767
+testpoint_map: 0.000377
+decoupling_report: 0.002157
+assembly: 0.315515
+ratsnest_images: 0.524090
+thermal: 0.030397
+copper_debt: 0.057733
+order_files: 0.004960
+fab_profile: 0.033669
+stage_movement: 0.000002
+xdc: 1.469808
+power_sequence: 0.001193
+floorplan: 0.000581
+model3d: 3.422612
+render3d: 38.123567
+gallery: 0.001027
+si: 0.001060
+i2c_bus_map: 0.000922
+module_pin_map: 1.439465
+connector_pinout: 0.001420
+bom_ratings: 0.000960
+manifest: 0.038730
+golden: 1.382291
+contract_coverage_lint: 0.001623
+fallbacks: 0.000883
+ledger_import: 0.001231
+quantize_census: 0.000369
+source_audit: 197.309945
+pipeline_doc: 0.000497
+MEASURED SCOPE TOTAL (not process wall): 976.613446
 BOARD: FAIL (21 sheets)
