@@ -15,6 +15,7 @@
 #include "schgen/ratsnest_gate.hpp"
 #include "schgen/stackup.hpp"
 #include "schgen/thermal_checks.hpp"
+#include "schgen/thermal_via_planning.hpp"
 #include "schgen/turn.hpp"
 
 #include <algorithm>
@@ -373,6 +374,28 @@ void reserve_thermal_fields(const PcbModel& model, const PcbEmitPolicy& policy, 
     }
 }
 
+void claim_via_fields(const PcbModel& model, const PcbEmitPolicy& policy, const Placement& placement, Problem& problem) {
+    const auto fields = plan_preferred_thermal_vias(model, policy, nullptr);
+    if (fields.empty()) return;
+    const Nm guard = problem.rules.compare_guard;
+    problem.rules.via_pad = ceil_nm(policy.thermal_via_size / 2 + policy.thermal_via_clear) + guard;
+    problem.rules.via_ground = ceil_nm(policy.thermal_via_drill / 2 + policy.hole_samenet_pad) + guard;
+    problem.rules.via_hole = ceil_nm(policy.thermal_via_drill / 2 + policy.thermal_via_h2h) + guard;
+    for (std::size_t net = 0; net < problem.nets.size(); ++net)
+        if (problem.nets[net].name == thermal_ground_net()) problem.rules.via_net = static_cast<int>(net);
+    for (const auto& field : fields) {
+        const auto owner = std::find_if(problem.parts.begin(), problem.parts.end(),
+                                        [&](const Part& part) { return part.reference == field.ref; });
+        if (owner == problem.parts.end()) throw LayoutError("layout: thermal via field names no part: " + field.ref);
+        const std::size_t index = static_cast<std::size_t>(owner - problem.parts.begin());
+        const Pose& pose = placement[index];
+        const Turn back = static_cast<Turn>((turn_count - static_cast<int>(pose.turn)) % turn_count);
+        owner->via_face = pose.face;
+        for (const auto& site : field.sites.chosen)
+            owner->via_sites.push_back(turned(Point{nearest_nm(site.first) - pose.at.x, nearest_nm(site.second) - pose.at.y}, back));
+    }
+}
+
 void mark_connectors(const PcbModel& model, const AdapterOptions& options, const Placement& placement,
                      Problem& problem) {
     std::map<std::string, PlacementMechRow> rows;
@@ -685,6 +708,7 @@ ModelBinding bind_model(const PcbModel& model, const PcbEmitPolicy& policy, cons
     problem.rules.group_guard = static_cast<Nm>(constants::group_guard.value);
     mark_connectors(model, options, binding.placement, problem);
     reserve_thermal_fields(model, policy, binding.placement, problem);
+    claim_via_fields(model, policy, binding.placement, problem);
     if (gates) translate_gates(model, *gates, problem);
     for (std::size_t index = 0; index < model.insts.size(); ++index) {
         const auto& instance = model.insts[index];
@@ -713,6 +737,8 @@ ModelBinding bind_model(const PcbModel& model, const PcbEmitPolicy& policy, cons
             for (Reserve& reserve : problem.reserves)
                 if (!reserve.pour && reserve.members == std::vector<std::size_t>{claim.owner})
                     reserve.guests.push_back(claim.part);
+        for (Reserve& reserve : problem.reserves)
+            if (reserve.pour && reserve.pour->owner == claim.owner) reserve.guests.push_back(claim.part);
         Part& part = problem.parts[claim.part];
         part.field_sensitive = part.field_sensitive || role.field_sensitive;
         part.field_source = part.field_source || loop_inductor[claim.part] != 0;

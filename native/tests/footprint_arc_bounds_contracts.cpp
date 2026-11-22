@@ -19,6 +19,11 @@ int main(){try{
         bool rejected=false;try{(void)footprint_bbox(sexpr_loads(std::string("(footprint arc (fp_arc ")+points+" (layer F.CrtYd)))"),6);}
         catch(const std::runtime_error&){rejected=true;}require(rejected,"invalid modern arc silently reduced to endpoint bounds");
     }
+    const char* shaped="(pts (xy 0 0) (xy 3 0) (xy 3 -4))";
+    const auto custom=footprint_bbox(sexpr_loads(std::string("(footprint pad (pad \"1\" smd custom (at 1 2) (size 1 1) (layers F.Cu) (primitives (gr_poly ")+shaped+" (width 0)))))"),6);
+    require(custom.x0==.5&&custom.y0==-2&&custom.x1==4&&custom.y1==2.5,"custom pad copper outside the anchor pad was omitted");
+    const auto swung=footprint_bbox(sexpr_loads(std::string("(footprint pad (pad \"1\" smd custom (at 1 2 90) (size 1 1) (layers F.Cu) (primitives (gr_poly ")+shaped+" (width 0)))))"),6);
+    require(swung.x0==-4&&swung.y0==-3&&swung.x1==6&&swung.y1==7,"a turned custom pad must be bounded by its copper reach");
     const double pi=std::acos(-1.);std::size_t cases=0;
     for(double start:{10.,70.,170.,250.,350.})for(double sweep:{20.,100.,200.,340.,-20.,-100.,-200.,-340.})
     for(double radius:{.1,5.,100.}){

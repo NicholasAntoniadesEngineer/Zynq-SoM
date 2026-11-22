@@ -44,6 +44,21 @@ bool adds_breach(const std::vector<Violation>& before, const std::vector<Violati
     return std::any_of(after.begin(), after.end(), [&](const Violation& violation) { return !known.count(key(violation)); });
 }
 
+std::string added_breach(const Kernel& kernel, const std::vector<Violation>& before, const std::vector<Violation>& after) {
+    const auto key = [](const Violation& violation) {
+        return std::make_tuple(static_cast<int>(violation.kind), std::min(violation.part, violation.other),
+                               std::max(violation.part, violation.other));
+    };
+    std::set<std::tuple<int, std::size_t, std::size_t>> known;
+    for (const Violation& violation : before) known.insert(key(violation));
+    const auto& parts = kernel.problem().parts;
+    for (const Violation& violation : after)
+        if (!known.count(key(violation)))
+            return std::string(breach_name(violation.kind)) + " " + parts[violation.part].reference +
+                   (violation.other != violation.part && violation.other < parts.size() ? " / " + parts[violation.other].reference : "");
+    return {};
+}
+
 bool flip_set(Kernel& kernel, std::size_t anchor) {
     const Problem& problem = kernel.problem();
     const Face to = kernel.placement()[anchor].face == Face::top ? Face::bottom : Face::top;
@@ -105,7 +120,9 @@ std::vector<RepairRow> repair_inherited(Kernel& kernel, const SqueezeOptions& se
         const Snapshot snap = kernel.snapshot();
         const bool done = step();
         row.after = unmet_count(kernel);
-        row.kept = done && row.after < row.before && !adds_breach(known, kernel.violations());
+        const std::string added = done ? added_breach(kernel, known, kernel.violations()) : std::string();
+        row.kept = done && row.after < row.before && added.empty();
+        if (done && !added.empty()) row.action += "; refused: it adds " + added;
         if (!row.kept) {
             kernel.restore(snap);
             row.after = row.before;
@@ -113,7 +130,11 @@ std::vector<RepairRow> repair_inherited(Kernel& kernel, const SqueezeOptions& se
         rows.push_back(row);
         return row.kept;
     };
-    for (const PadGap& rule : problem.constraints.soft_gaps) {
+    std::vector<const PadGap*> tightest;
+    for (const PadGap& rule : problem.constraints.soft_gaps) tightest.push_back(&rule);
+    std::stable_sort(tightest.begin(), tightest.end(), [](const PadGap* a, const PadGap* b) { return a->reach < b->reach; });
+    for (const PadGap* next : tightest) {
+        const PadGap& rule = *next;
         const auto faced = [&] {
             return pair_faced(problem, kernel.board(), rule.anchor, kernel.placement()[rule.anchor], rule.member,
                               kernel.placement()[rule.member], rule.or_under);
@@ -124,25 +145,28 @@ std::vector<RepairRow> repair_inherited(Kernel& kernel, const SqueezeOptions& se
         const auto seat = [&](Nm pitch, Nm radius, bool evict) {
             return [&, pitch, radius, evict] { return seat_faced(kernel, rule, pitch, radius, evict, aside); };
         };
-        if (attempt({"L0", rule.source, subject, "reseat at the pin on its face"}, seat(settings.pitch, near, false))) continue;
-        if (attempt({"L1", rule.source, subject, "reseat after moving small parts aside"}, seat(settings.pitch, near, true))) continue;
-        if (attempt({"L1", rule.source, subject, "reseat in the wide ring"}, seat(coarse, wide, true))) continue;
-        if (attempt({"L1", rule.source, subject, "reseat together with the parts tied to it"},
+        if (attempt({"0", rule.source, subject, "reseat at the pin on its face"}, seat(settings.pitch, near, false))) continue;
+        if (attempt({"1", rule.source, subject, "reseat after moving small parts aside"}, seat(settings.pitch, near, true))) continue;
+        if (attempt({"1", rule.source, subject, "reseat in the wide ring"}, seat(coarse, wide, true))) continue;
+        if (attempt({"1", rule.source, subject, "reseat together with the parts tied to it"},
                     [&] { return seat_faced_together(kernel, rule, coarse, wide); }))
             continue;
-        if (attempt({"L2", rule.source, subject, "move " + problem.parts[rule.anchor].reference + " and its face-tied set to the other face"},
+        if (attempt({"1", rule.source, subject, "take the seat at the pin and reseat the parts in it by their own rules"},
+                    [&] { return seat_faced_chain(kernel, rule, settings.pitch, near, aside); }))
+            continue;
+        if (attempt({"2", rule.source, subject, "move " + problem.parts[rule.anchor].reference + " and its face-tied set to the other face"},
                     [&] { return flip_set(kernel, rule.anchor); }))
             continue;
-        if (attempt({"L2", rule.source, subject, "move " + problem.parts[rule.anchor].reference + " to the face of " +
+        if (attempt({"2", rule.source, subject, "move " + problem.parts[rule.anchor].reference + " to the face of " +
                                                      problem.parts[rule.member].reference + " at the nearest free seat and reseat"},
                     [&] { return reface(kernel, rule, coarse, wide, aside); }))
             continue;
-        if (attempt({"L3", rule.source, subject, "re-home the cluster of " + problem.parts[rule.anchor].reference + " and reseat"}, [&] {
+        if (attempt({"3", rule.source, subject, "re-home the cluster of " + problem.parts[rule.anchor].reference + " and reseat"}, [&] {
                 return rehome(kernel, clusters.units[clusters.unit_of[rule.anchor]]) &&
                        seat_faced(kernel, rule, coarse, wide, true, aside);
             }))
             continue;
-        attempt({"L4", rule.source, subject, "widen every side one step at a time and reseat"}, [&] {
+        attempt({"4", rule.source, subject, "widen every side one step at a time and reseat"}, [&] {
             for (std::size_t step = 0; step < static_cast<std::size_t>(constants::widen_steps.value); ++step) {
                 for (const Side side : {Side::north, Side::south, Side::west, Side::east})
                     widen(kernel, settings, side, settings.first_step);
@@ -154,10 +178,10 @@ std::vector<RepairRow> repair_inherited(Kernel& kernel, const SqueezeOptions& se
     for (const NetOrder& rule : net_orders_of(problem)) {
         if (net_order_met(problem, rule, kernel.placement(), rule.lead, nullptr)) continue;
         const std::string subject = problem.parts[rule.lead].reference + " -> " + problem.parts[rule.anchor].reference;
-        if (attempt({"L1", "protection order", subject, "seat the protection part first and move the parts nearer than it back"},
+        if (attempt({"1", "protection order", subject, "seat the protection part first and move the parts nearer than it back"},
                     [&] { return seat_first(kernel, rule, settings.pitch); }))
             continue;
-        attempt({"L4", "protection order", subject, "widen every side one step at a time and reorder"}, [&] {
+        attempt({"4", "protection order", subject, "widen every side one step at a time and reorder"}, [&] {
             for (std::size_t step = 0; step < static_cast<std::size_t>(constants::widen_steps.value); ++step) {
                 for (const Side side : {Side::north, Side::south, Side::west, Side::east})
                     widen(kernel, settings, side, settings.first_step);
@@ -313,7 +337,9 @@ std::vector<RepairRow> separate_connectors(Kernel& kernel, const SqueezeOptions&
             const Snapshot snap = kernel.snapshot();
             const bool done = step();
             row.after = gap_count(kernel);
-            row.kept = done && row.after < row.before && !adds_breach(known, kernel.violations());
+            const std::string added = done ? added_breach(kernel, known, kernel.violations()) : std::string();
+            row.kept = done && row.after < row.before && added.empty();
+            if (done && !added.empty()) row.action += "; refused: it adds " + added;
             if (!row.kept) {
                 kernel.restore(snap);
                 row.after = row.before;
@@ -325,7 +351,7 @@ std::vector<RepairRow> separate_connectors(Kernel& kernel, const SqueezeOptions&
         for (const std::size_t mover : {next->other, next->part}) {
             if (problem.parts[mover].fixed) continue;
             std::map<std::string, std::size_t> blocked;
-            done = attempt({"L0", "connector access and envelope", subject, "slide " + problem.parts[mover].reference + " along its edge"},
+            done = attempt({"0", "connector access and envelope", subject, "slide " + problem.parts[mover].reference + " along its edge"},
                            [&] { return slide(kernel, mover, settings.pitch, clearing_reach(problem, next->part, next->other), blocked); });
             if (!done && !rows.empty()) {
                 std::vector<std::pair<std::size_t, std::string>> ranked;
@@ -339,8 +365,25 @@ std::vector<RepairRow> separate_connectors(Kernel& kernel, const SqueezeOptions&
             if (done) break;
         }
         if (done) continue;
+        for (const std::size_t mover : {next->other, next->part}) {
+            if (problem.parts[mover].edge || problem.parts[mover].fixed) continue;
+            const std::vector<std::size_t>& unit = clusters.units[clusters.unit_of[mover]];
+            const std::string name = problem.parts[mover].reference;
+            done = attempt({"3", "connector access and envelope", subject, "re-home the cluster of " + name},
+                           [&] { return rehome(kernel, unit); }) ||
+                   attempt({"4", "connector access and envelope", subject, "widen every side one step at a time and re-home the cluster of " + name}, [&] {
+                       for (std::size_t step = 0; step < static_cast<std::size_t>(constants::widen_steps.value); ++step) {
+                           for (const Side side : {Side::north, Side::south, Side::west, Side::east})
+                               open_side(kernel, settings, side, settings.first_step);
+                           if (rehome(kernel, unit)) return true;
+                       }
+                       return false;
+                   });
+            if (done) break;
+        }
+        if (done) continue;
         std::map<std::string, std::size_t> blocked;
-        const bool opened = attempt({"L4", "connector access and envelope", subject, "open the board between them and shift everything beyond the gap"},
+        const bool opened = attempt({"4", "connector access and envelope", subject, "open the board between them and shift everything beyond the gap"},
                                     [&] { return open_gap(kernel, settings, clusters, next->part, next->other, blocked); });
         if (!opened && !rows.empty())
             for (const auto& [reason, count] : blocked) rows.back().action += "; " + std::to_string(count) + " " + reason;

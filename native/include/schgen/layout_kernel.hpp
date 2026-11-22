@@ -17,7 +17,7 @@ inline constexpr std::array kernel_registry{hash_cell, key_shift};
 
 enum class Breach : std::uint8_t {
     overlap, off_board, fanout, module_core, bottom_face, dispersion, copper, contract, group_bound,
-    edge_mount, connector_gap, reserved, locked, corner, under_inductor
+    edge_mount, connector_gap, reserved, locked, corner, under_inductor, via_field
 };
 
 struct Violation {
@@ -137,6 +137,8 @@ private:
                          std::vector<std::size_t>& carried) const;
     bool attempt(const std::vector<Move>& moves, std::vector<std::size_t>* blockers, bool keep);
     bool owns(std::size_t reserve, std::size_t part) const;
+    Nm rules_reach() const;
+    bool via_blocked(std::size_t owner, const Pose& pose, const Shape& guest) const;
     void place(std::size_t part, const Pose& pose);
     void refresh_nets(const std::vector<Move>& moves);
     void rebuild();
@@ -153,7 +155,7 @@ private:
     std::map<std::string, std::vector<std::size_t>> groups_, members_;
     std::map<std::string, std::vector<std::size_t>> group_rules_;
     std::vector<std::vector<std::size_t>> pad_rules_, nearest_rules_, face_rules_, order_rules_;
-    std::vector<std::size_t> connectors_;
+    std::vector<std::size_t> connectors_, via_owners_;
     std::vector<Nm> net_lengths_;
     Nm routed_ = 0, reach_ = 0;
 };

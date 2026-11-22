@@ -70,6 +70,7 @@ const char* breach_name(Breach breach) {
     case Breach::locked: return "locked";
     case Breach::corner: return "corner";
     case Breach::under_inductor: return "under_inductor";
+    case Breach::via_field: return "via_field";
     }
     return "unknown";
 }
@@ -89,6 +90,7 @@ Kernel::Kernel(const Problem& problem, Placement placement)
         if (problem_.parts[part].cohesion_member) groups_[problem_.parts[part].group].push_back(part);
         members_[problem_.parts[part].group].push_back(part);
         if (problem_.parts[part].connector) connectors_.push_back(part);
+        if (!problem_.parts[part].via_sites.empty()) via_owners_.push_back(part);
     }
     const Constraints& rules = problem_.constraints;
     pad_rules_.resize(placement_.size());
@@ -471,6 +473,24 @@ bool Kernel::copper_clear(const Shape& shape, Face face) const {
     return true;
 }
 
+Nm Kernel::rules_reach() const {
+    return std::max({problem_.rules.via_pad, problem_.rules.via_ground, problem_.rules.via_hole});
+}
+
+bool Kernel::via_blocked(std::size_t owner, const Pose& pose, const Shape& guest) const {
+    const Rules& rules = problem_.rules;
+    for (const Point& site : problem_.parts[owner].via_sites) {
+        const Point at = placed(site, pose.at, pose.turn);
+        const Box point{at.x, at.y, at.x, at.y};
+        for (const Land& land : guest.lands) {
+            const Nm need = std::max(land.net != no_net && land.net == rules.via_net ? rules.via_ground : rules.via_pad,
+                                     land.through ? rules.via_hole : Nm{0});
+            if (!gap_at_least(point, land.box, need)) return true;
+        }
+    }
+    return false;
+}
+
 Nm Kernel::land_clearance(int net) const {
     return net == no_net ? problem_.rules.copper_clearance : problem_.nets[static_cast<std::size_t>(net)].clearance;
 }
@@ -790,6 +810,29 @@ bool Kernel::rule_breaches(std::size_t part, const Shape& shape, const Pose& pos
         group_dispersed(item.group, part, &shape) && sink(Violation{Breach::dispersion, part, part}))
         return true;
     if (item.edge && !edge_met(item, shape, pose) && sink(Violation{Breach::edge_mount, part, part})) return true;
+    if (pose.face != item.via_face && !item.via_sites.empty() && sink(Violation{Breach::locked, part, part})) return true;
+    if (!item.via_sites.empty()) {
+        Box field{pose.at.x, pose.at.y, pose.at.x, pose.at.y};
+        for (const Point& site : item.via_sites) {
+            const Point at = placed(site, pose.at, pose.turn);
+            field = united(field, Box{at.x, at.y, at.x, at.y});
+        }
+        for (const auto& obstacle : problem_.obstacles)
+            if (obstacle.disc && !gap_at_least(field, obstacle.box, problem_.rules.via_pad))
+                for (const Point& site : item.via_sites) {
+                    const Point at = placed(site, pose.at, pose.turn);
+                    if (!gap_at_least(Box{at.x, at.y, at.x, at.y}, *obstacle.disc, problem_.rules.via_pad) &&
+                        sink(Violation{Breach::via_field, part, part}))
+                        return true;
+                }
+        for (const std::size_t peer : neighbours(grown(field, rules_reach()), part))
+            if (via_blocked(part, pose, shapes_[peer]) && sink(Violation{Breach::via_field, part, peer})) return true;
+    }
+    if (!owned)
+        for (const std::size_t owner : via_owners_)
+            if (owner != part && via_blocked(owner, placement_[owner], shape) &&
+                sink(Violation{Breach::via_field, part, owner}))
+                return true;
     if (item.connector)
         for (const std::size_t peer : connectors_) {
             if (peer == part || (owned && peer < part)) continue;
