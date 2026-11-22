@@ -284,13 +284,6 @@ BalanceReport balance_faces(Kernel& kernel, Nm pitch, Nm reach) {
     return report;
 }
 
-namespace {
-
-struct Seat {
-    Pose pose;
-    Nm gap = 0;
-};
-
 bool steps_aside(Kernel& kernel, std::size_t part, const std::vector<Point>& offsets) {
     const Problem& problem = kernel.problem();
     const Pose from = kernel.placement()[part];
@@ -307,6 +300,13 @@ bool steps_aside(Kernel& kernel, std::size_t part, const std::vector<Point>& off
         }
     return false;
 }
+
+namespace {
+
+struct Seat {
+    Pose pose;
+    Nm gap = 0;
+};
 
 bool evicts(Kernel& kernel, std::size_t guest, const Pose& seat, const std::vector<char>& settled,
             const std::vector<Point>& aside, std::size_t& moved_aside) {
