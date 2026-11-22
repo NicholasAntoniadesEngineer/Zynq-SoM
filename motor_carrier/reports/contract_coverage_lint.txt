@@ -218,7 +218,7 @@ power_som            parts= 20  structured=  0  free= 0  UNGATED= 20  (no contra
     UNGATED C25    -> C13025   100n                   nets: +VIN_SYS, GND
     UNGATED D4     -> D13004   red                    nets: +5V_SOM, PG_5V_SOM
     UNGATED L3     -> L13003   10uH                   nets: +5V_SOM, SW_5V_SOM
-    UNGATED R14    -> R13014   47.5k                  nets: +5V_SOM, FB_5V_SOM
+    UNGATED R14    -> R13014   47k5                   nets: +5V_SOM, FB_5V_SOM
     UNGATED R15    -> R13015   13k                    nets: FB_5V_SOM, GND
     UNGATED R16    -> R13016   1k                     nets: GND, PG_5V_SOM
     UNGATED R17    -> R13017   10R                    nets: +5V_SOM, BIAS_5V_SOM
@@ -285,7 +285,7 @@ vbat_supply          parts= 35  structured=  0  free= 0  UNGATED= 35  (no contra
     UNGATED R5     -> R21005   100k                   nets: +3V3_SC, VBAT_FLT_N
     UNGATED R6     -> R21006   10R                    nets: +VPRE, BIAS_PRE
     UNGATED R7     -> R21007   22k                    nets: GND, RT_PRE
-    UNGATED R8     -> R21008   47.5k                  nets: +VPRE, FB_PRE
+    UNGATED R8     -> R21008   47k5                   nets: +VPRE, FB_PRE
     UNGATED R9     -> R21009   6.8k                   nets: FB_PRE, GND
     UNGATED R10    -> R21010   1k                     nets: CFF_PRE, FB_PRE
     UNGATED R11    -> R21011   1k                     nets: GND, PG_PRE

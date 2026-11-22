@@ -27,6 +27,7 @@ struct DrcFloors {
 };
 struct PcbEmitPolicy {
     bool interface_reference_labels_only = false, labels = true;
+    bool silk_to_floor = false;
     FootprintAliasFacts footprint_aliases;
     ConnectorFacts connectors;
     ProjectStrings header_descriptions, switch_descriptions;

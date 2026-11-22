@@ -121,6 +121,7 @@ void board(std::ostream& out,const std::filesystem::path& root,const std::string
     // still uses the current production policy and checks reproducibility.
     policy.interface_reference_labels_only=false;
     policy.drc_floors=DrcFloors{0.25, 0.8, 0.08, 0.0, 0.0};
+    policy.silk_to_floor=false;
     out<<"BOARD "<<name<<'\n';
     QuantizationCounts counts;
     // The immutable rendering oracle was captured with a supplied plan whose

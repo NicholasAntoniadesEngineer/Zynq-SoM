@@ -149,7 +149,7 @@ struct CppAuditTiming {
 struct CppAuditOptions {
     std::string compiler="clang++";
     std::vector<std::string> flags; // same include paths/defines/target as build
-    std::chrono::milliseconds timeout{30000};
+    std::chrono::milliseconds timeout{180000};
     // Bound concurrent full translation-unit scans. Census order is always
     // manifest order, independent of worker completion. One is the serial path.
     std::size_t workers=2;

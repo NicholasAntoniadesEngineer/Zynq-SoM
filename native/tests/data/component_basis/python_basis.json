@@ -1214,7 +1214,7 @@
     ],
     [
       "carrier.power_som.fb_top",
-      "47.5k",
+      "47k5",
       "ohm",
       "FB divider top. LM61460 Vref = 1.0 V (SNVSBD5D 8.3.11), so Vout = 1.0*(1+Rtop/Rbot); 47.5k/13k -> 4.654 V nom, worst-case corner [4.582, 4.728] V, inside the SoM 4.2-5.0 V input window (PWR-5 re-centred BELOW 5 V). LCSC C23061.",
       "datasheet"
@@ -1445,7 +1445,7 @@
     ],
     [
       "devkit_mini.power_som.fb_top",
-      "47.5k",
+      "47k5",
       "ohm",
       "FB divider top. LM61460 Vref = 1.0 V (SNVSBD5D 8.3.11), so Vout = 1.0*(1+Rtop/Rbot); 47.5k/13k -> 4.654 V nom, worst-case corner [4.582, 4.728] V, inside the SoM 4.2-5.0 V input window (PWR-5 re-centred BELOW 5 V). LCSC C23061.",
       "datasheet"

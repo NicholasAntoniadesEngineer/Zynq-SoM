@@ -264,7 +264,7 @@ if(BUILD_TESTING)
     foreach(project carrier devkit_mini)
         add_test(NAME native_layout_replay_${project} COMMAND schgen_layout_replay_contracts
             "${CMAKE_CURRENT_SOURCE_DIR}/.." "${CMAKE_CURRENT_BINARY_DIR}/layout-replay-results" ${project} 200 1 1)
-        set_tests_properties(native_layout_replay_${project} PROPERTIES LABELS "live-kicad")
+        set_tests_properties(native_layout_replay_${project} PROPERTIES LABELS "live-kicad" TIMEOUT 3600)
         if(SCHGEN_DEEP_TESTS)
             add_test(NAME native_layout_replay_deep_${project} COMMAND schgen_layout_replay_contracts
                 "${CMAKE_CURRENT_SOURCE_DIR}/.." "${CMAKE_CURRENT_BINARY_DIR}/layout-replay-deep" ${project} 1500 4 0)

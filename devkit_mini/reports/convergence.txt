@@ -1,6 +1,17 @@
-CONVERGENCE: 0 breaches of staged rules (connector spacing, face pairs, protection orders) handed over by the placer; 0 repair steps kept of 0 tried; 0 left
+CONVERGENCE: 6 breaches of staged rules (connector spacing, face pairs, protection orders) handed over by the placer; 7 repair steps kept of 11 tried; 0 left
 level | rule | subject | action | breaches before>after | kept
-ILLEGAL handed over: (0)
-ILLEGAL after connector separation: (0)
+0 | owner of C6022 | C6022 -> U6004 | reseat at the pin on its face | 6>5 | yes
+0 | owner of C6025 | C6025 -> U6004 | reseat at the pin on its face | 5>4 | yes
+0 | owner of C6017 | C6017 -> U6004 | reseat at the pin on its face | 4>3 | yes
+0 | owner of R6019 | R6019 -> U6004 | reseat at the pin on its face | 3>3 | no
+1 | owner of R6019 | R6019 -> U6004 | reseat after moving small parts aside | 3>3 | no
+1 | owner of R6019 | R6019 -> U6004 | reseat in the wide ring | 3>3 | no
+1 | owner of R6019 | R6019 -> U6004 | reseat together with the parts tied to it | 3>3 | no
+1 | owner of R6019 | R6019 -> U6004 | take the seat at the pin and reseat the parts in it by their own rules | 3>2 | yes
+0 | owner of C6018 | C6018 -> L6003 | reseat at the pin on its face | 2>1 | yes
+0 | owner of C6019 | C6019 -> L6003 | reseat at the pin on its face | 1>0 | yes
+2 | overlap | R3005 / FID2 | move R3005 to the nearest legal seat | 1>0 | yes
+ILLEGAL handed over: under_inductor:L6003/R6014 under_inductor:L6003/R6015 under_inductor:L6003/R6019 overlap:R3005/FID2 (4)
+ILLEGAL after connector separation: under_inductor:L6003/R6014 under_inductor:L6003/R6015 under_inductor:L6003/R6019 overlap:R3005/FID2 (4)
 ILLEGAL after repair: (0)
 

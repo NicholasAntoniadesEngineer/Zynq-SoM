@@ -23,6 +23,64 @@ Box4 courtyard(const PcbFootprintInst &i) {
             throw PcbEmissionError(i.ref + ": nonfinite footprint courtyard");
     return b;
 }
+namespace {
+const std::string silk_layer_suffix = ".SilkS";
+const std::vector<std::string> silk_text_tags{"fp_text", "property"};
+const std::vector<std::string> silk_line_tags{"fp_line", "fp_arc", "fp_rect", "fp_circle", "fp_poly", "fp_curve"};
+bool on_silk(Sexpr &n) {
+    Sexpr *layer = child(n, "layer");
+    if (!layer) return false;
+    const auto &a = std::get<SexprList>(layer->v);
+    if (a.size() < 2 || !std::holds_alternative<std::string>(a[1].v)) return false;
+    const std::string &name = std::get<std::string>(a[1].v);
+    return name.size() >= silk_layer_suffix.size() &&
+           name.compare(name.size() - silk_layer_suffix.size(), silk_layer_suffix.size(), silk_layer_suffix) == 0;
+}
+bool raise_number(Sexpr *holder, std::size_t at, double floor) {
+    if (!holder) return false;
+    auto &a = std::get<SexprList>(holder->v);
+    if (a.size() <= at || !std::holds_alternative<double>(a[at].v)) return false;
+    const double value = std::get<double>(a[at].v);
+    if (value <= 0.0 || value >= floor) return false;
+    a[at] = num(floor);
+    return true;
+}
+bool unfilled(Sexpr &n) {
+    Sexpr *fill = child(n, "fill");
+    if (!fill) return true;
+    const auto &a = std::get<SexprList>(fill->v);
+    if (a.size() < 2 || !std::holds_alternative<Sexpr::Sym>(a[1].v)) return true;
+    const std::string &mode = std::get<Sexpr::Sym>(a[1].v).name;
+    return mode == "none" || mode == "no";
+}
+void raise_silk(Sexpr &doc, const DrcFloors &floors) {
+    for (auto &n : std::get<SexprList>(doc.v)) {
+        if (!std::holds_alternative<SexprList>(n.v) || !on_silk(n)) continue;
+        const auto is = [&](const std::vector<std::string> &tags) {
+            return std::any_of(tags.begin(), tags.end(), [&](const std::string &t) { return tag(n, t); });
+        };
+        if (is(silk_text_tags)) {
+            Sexpr *effects = child(n, "effects");
+            Sexpr *font = effects ? child(*effects, "font") : nullptr;
+            if (!font) continue;
+            Sexpr *size = child(*font, "size");
+            if (size) {
+                auto &a = std::get<SexprList>(size->v);
+                if (a.size() > 2 && std::holds_alternative<double>(a[1].v) && std::holds_alternative<double>(a[2].v)) {
+                    const double width = std::get<double>(a[1].v), height = std::get<double>(a[2].v);
+                    if (height > 0.0 && height < floors.text_height) {
+                        a[1] = num(width * floors.text_height / height);
+                        a[2] = num(floors.text_height);
+                    }
+                }
+            }
+            raise_number(child(*font, "thickness"), 1, floors.text_thickness);
+        } else if (is(silk_line_tags) && unfilled(n)) {
+            if (Sexpr *stroke = child(n, "stroke")) raise_number(child(*stroke, "width"), 1, floors.text_thickness);
+        }
+    }
+}
+}
 Sexpr embed(const PcbFootprintInst &i, const PcbEmitPolicy &p, const Uid &uid) {
     if (!i.mod)
         throw PcbEmissionError(i.ref + ": unresolved footprint");
@@ -67,8 +125,13 @@ Sexpr embed(const PcbFootprintInst &i, const PcbEmitPolicy &p, const Uid &uid) {
                 i.footprint.find("TestPoint") != std::string::npos;
     if(p.interface_reference_labels_only)hide=!interface_label_part(i,p);
     if(!p.labels)hide=true;
-    return embed_footprint_decorate(std::move(doc), i.ref, i.value, i.rotation, hide, nets,
-                                    inherited, uid);
+    Sexpr out = embed_footprint_decorate(std::move(doc), i.ref, i.value, i.rotation, hide, nets,
+                                         inherited, uid);
+    if (p.silk_to_floor) {
+        if (!p.drc_floors) throw PcbEmissionError(i.ref + ": raising silk to the fabricator minimum needs the fabricator floors");
+        raise_silk(out, *p.drc_floors);
+    }
+    return out;
 }
 
 std::vector<ViaObstacle> thermal_obstacles(const PcbCheckModel &m, QuantizationCounts* counts) {

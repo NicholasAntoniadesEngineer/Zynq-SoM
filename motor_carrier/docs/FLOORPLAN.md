@@ -21,34 +21,34 @@ SoM outline: **50 x 42 mm**.
 
 Derived board: **147 x 147 mm**; SoM origin at **(48.5, 52.5)** (centered). All coordinates below are board-frame mm, origin top-left, +y down (KiCad convention).
 
-Outline derivation: SoM 50x42 + 7mm halo + 11mm connector band/edge -> core 86x78; component area 4549mm2 / 0.6 fill -> area floor 111x101; + 3mm perimeter keepout -> 120x110 mm (rounded up to 5mm grid); then bounded search over aspects 1, 1.0909, 1.1, 1.2, 1.3, 1.4 -> 147x147 mm (the smallest feasible board FOUND by this bounded aspect/grid search and greedy packing order, not a global minimum; holding the REAL 2-sided packed blocks with the estimated cross-subsystem airwire 6625 mm; advisory airwire reference 7497 mm, not an acceptance constraint), SoM 50x42 centered.
+Outline derivation: SoM 50x42 + 7mm halo + 11mm connector band/edge -> core 86x78; component area 4530mm2 / 0.6 fill -> area floor 111x100; + 3mm perimeter keepout -> 120x110 mm (rounded up to 5mm grid); then bounded search over aspects 1, 1.0909, 1.1, 1.2, 1.3, 1.4 -> 147x147 mm (the smallest feasible board FOUND by this bounded aspect/grid search and greedy packing order, not a global minimum; holding the REAL 2-sided packed blocks with the estimated cross-subsystem airwire 6179 mm; advisory airwire reference 7497 mm, not an acceptance constraint), SoM 50x42 centered.
 
 ## Edge connectors (pinned to edges by their mating direction)
 
 | edge | sheet | block (x, y, w x h) | connector(s) | notes |
 |---|---|---|---|---|
-| N | usb_uart_connector | (30.0547, 1.5, 10.9881 x 12.6341) | TYPE-C-31-M-12 (USB-C receptacle) |  |
-| N | esc_power | (46.0478, 1.5, 63.656 x 46.3) | XT60PW-M (XT60 ESC power inlet (horizontal)), XT60PW-M (XT60 ESC power inlet (horizontal)) |  |
-| W | pd_input | (1.5, 38.1494, 16.6982 x 35.7012) | TYPE-C-31-M-12 (USB-C receptacle) |  |
-| E | microsd | (120.758, 46.3052, 24.7417 x 24.7743) | TF-01A (microSD push-pull) |  |
+| N | esc_power | (15.6096, 1.5, 63.55 x 46.124) | XT60PW-M (XT60 ESC power inlet (horizontal)), XT60PW-M (XT60 ESC power inlet (horizontal)) |  |
+| N | pd_input | (84.1646, 1.5, 24.4554 x 22.0264) | TYPE-C-31-M-12 (USB-C receptacle) |  |
+| E | usb_uart_connector | (132.866, 68.0059, 12.6342 x 10.9881) | TYPE-C-31-M-12 (USB-C receptacle) |  |
+| S | microsd | (67.6575, 118.653, 19.685 x 26.8467) | TF-01A (microSD push-pull) |  |
 
 ## Interior blocks (zone = dominant SoM connector side, or the power cluster)
 
 | sheet | anchor | block (x, y, w x h) | parts | est mm2 | notes |
 |---|---|---|---|---|---|
-| board_control | E | (102, 55, 16.95 x 28.52) | 33 | 483.4 |  |
-| bringup_en | E | (120, 74, 19.5 x 7.5) | 15 | 146.2 |  |
-| can_bus | S | (59, 127, 26.63 x 13.65) | 11 | 363.5 |  |
-| debug_boot | N | (58, 109, 31.58 x 16.25) | 11 | 513.2 |  |
-| esc_io | E | (23, 54, 22.89 x 39.8) | 41 | 911 |  |
-| ethernet | N | (101, 84, 21.745 x 29.5176) | 11 | 641.9 |  |
-| mechanical | E | (112, 31, 13 x 13) | 4 | 169 |  |
-| power | E | (3, 97, 53.6604 x 24.1899) | 51 | 1298 |  |
-| power_mon | E | (92, 98, 6.124 x 17.748) | 10 | 108.7 |  |
-| power_som | E | (62, 98, 28.1 x 9.1) | 20 | 255.7 |  |
-| rj45_connector | E | (124, 84, 19.4 x 19.76) | 3 | 383.3 |  |
-| uart_bridge | @usb_uart_connector | (27, 16, 16.78 x 10.805) | 10 | 181.3 |  |
-| vbat_supply | E | (91, 117, 42.39 x 18.642) | 35 | 790.2 |  |
+| board_control | E | (102, 55, 17.1 x 27.533) | 33 | 470.8 |  |
+| bringup_en | E | (101, 83, 8.2 x 14.4) | 15 | 118.1 |  |
+| can_bus | S | (14, 51, 7.78 x 43.694) | 11 | 339.9 |  |
+| debug_boot | N | (80, 33, 31.58 x 16.25) | 11 | 513.2 |  |
+| esc_io | E | (23, 53, 22.89 x 39.8) | 41 | 911 |  |
+| ethernet | N | (41, 97, 21.745 x 29.5176) | 11 | 641.9 |  |
+| mechanical | E | (110, 84, 13 x 13) | 4 | 169 |  |
+| power | E | (92.846, 98.1001, 53.6604 x 24.1899) | 51 | 1298 |  |
+| power_mon | E | (73, 109, 19.546 x 6.124) | 10 | 119.7 |  |
+| power_som | E | (64.446, 98.95, 28.1 x 9.1) | 20 | 255.7 |  |
+| rj45_connector | E | (20, 95, 19.4 x 21.72) | 3 | 421.4 |  |
+| uart_bridge | @usb_uart_connector | (121, 65, 10.805 x 16.78) | 10 | 181.3 |  |
+| vbat_supply | E | (120, 26, 21.36 x 37.692) | 35 | 805.1 |  |
 
 ## Routing constraint classes (JLC06161H-3313 — from native/src/constraints.cpp)
 

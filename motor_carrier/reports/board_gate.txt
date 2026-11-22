@@ -253,6 +253,6 @@ board netlist gate
   ok   rail 'CHASSIS_GND': 1 net, 14 pins across 5 sheet(s) [ethernet, mechanical, pd_input, rj45_connector, usb_uart_connector]
   ok   rail 'GND': 1 net, 287 pins across 20 sheet(s) [board_control, bringup_en, can_bus, debug_boot, esc_io, esc_power, ethernet, microsd, pd_input, power, power_mon, power_som, rj45_connector, som_decoupling, som_j1, som_j2, som_j3, uart_bridge, usb_uart_connector, vbat_supply]
   ok   rail 'GND_MOTOR': 1 net, 45 pins across 3 sheet(s) [can_bus, esc_io, esc_power]
-  (info) undriven-input PORT check: 9 input-bearing PORT nets examined (73 expect-deferred)
+  (info) undriven-input PORT check: 10 input-bearing PORT nets examined (73 expect-deferred)
 BOARD GATE: PASS — every linked net merged across sheets
   (info) root ERC errors: 0

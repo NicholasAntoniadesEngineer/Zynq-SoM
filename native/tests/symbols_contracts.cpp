@@ -282,7 +282,7 @@ void golden_contracts(SymbolLibrary& library, const JsonNode& golden) {
         for (std::size_t i = 0; i < 4; ++i) require(actual.body[i] == num(body[i]), id + ": body coordinate");
         const auto raw = schgen::sexpr_dumps(actual.raw);
         require(fingerprint(raw) == str(field(record, "raw_fnv1a64"))
-                && raw.size() == num(field(record, "raw_bytes")), id + ": raw expression changed");
+                && raw.size() == num(field(record, "raw_bytes")), id + ": raw expression changed (now " + fingerprint(raw) + ", " + std::to_string(raw.size()) + " bytes)");
         const auto& pins = field(record, "pins").array_value;
         require(actual.pins.size() == pins.size(), id + ": pin count");
         std::set<std::string> numbers;

@@ -100,6 +100,21 @@ void project(const fs::path& root,const fs::path& scratch,const std::string& nam
         require(pos!=std::string::npos&&current_expected.find(before,pos+before.size())==std::string::npos,"unique historical BOM-line preimage");
         current_expected.replace(pos,before.size(),after);
     }
+    if(name=="carrier") {
+        const auto swap_once=[&](const std::string& before,const std::string& after){
+            const auto pos=current_expected.find(before);
+            require(pos!=std::string::npos&&current_expected.find(before,pos+before.size())==std::string::npos,"unique stocked-part preimage: "+before);
+            current_expected.replace(pos,before.size(),after);
+        };
+        swap_once("\"lines\": 105","\"lines\": 104");
+        swap_once("\"missing\": [\n      \"fmc:J1\"\n    ]","\"missing\": []");
+    }
+    if(name=="devkit_mini") {
+        const std::string before="\"lines\": 42",after="\"lines\": 41";
+        const auto pos=current_expected.find(before);
+        require(pos!=std::string::npos&&current_expected.find(before,pos+before.size())==std::string::npos,"unique feedback-resistor BOM-line preimage");
+        current_expected.replace(pos,before.size(),after);
+    }
     const std::string reviewed_parts=name=="carrier"?"\"parts\": 499":"\"parts\": 133",current_parts=name=="carrier"?"\"parts\": 501":"\"parts\": 134";
     const auto parts_pos=current_expected.find(reviewed_parts);
     require(parts_pos!=std::string::npos&&current_expected.find(reviewed_parts,parts_pos+reviewed_parts.size())==std::string::npos,"unique reviewed part-count preimage");

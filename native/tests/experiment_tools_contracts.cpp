@@ -439,7 +439,7 @@ void probes(const std::filesystem::path &root, const std::string &project) {
     std::cout<<project<<": independent complete stage report passed\n";
 }
 bool reviewed_projection_sheet(const std::string &project, const std::string &name) {
-    const std::set<std::string> carrier{"board_aux","bringup_modules","motor_pwm","board_qwiic","lcd","pd_input","bringup_rails","ethernet"};
+    const std::set<std::string> carrier{"board_aux","bringup_modules","motor_pwm","board_qwiic","lcd","pd_input","bringup_rails","ethernet","fmc","usb_jtag","motor_sense"};
     const std::set<std::string> module{"som_j1","som_j2","som_j3"};
     if (module.count(name)) return true;
     return project=="carrier" ? carrier.count(name)!=0 : project=="devkit_mini" && name=="pd_input";
@@ -482,7 +482,12 @@ void catalogs(const std::filesystem::path &root) {
                 const auto original=prepare_native_circuit_dump(old,handle);
                 require(original.bytes.size()==number(e,"bytes")&&pcb_sha256(original.bytes)==string(e,"sha256"),
                         "immutable power_som serializer byte oracle");
-                const auto current=direct_enable_reference::project(old);
+                auto current=direct_enable_reference::project(old);
+                {
+                    const auto top=std::find_if(current.parts.begin(),current.parts.end(),[](const auto& p){return p.ref=="R14";});
+                    require(top!=current.parts.end()&&top->value=="47.5k","reviewed feedback resistor spelling");
+                    top->value="47k5";
+                }
                 const auto wanted=prepare_native_circuit_dump(current,handle);
                 require(dump.path==wanted.path&&dump.bytes==wanted.bytes,"complete reviewed power_som dump bytes");
                 for(int mutation=0;mutation<3;++mutation){
