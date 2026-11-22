@@ -82,6 +82,8 @@ struct SqueezeReport {
 SqueezeReport squeeze(Kernel& kernel, const SqueezeOptions& options);
 bool widen(Kernel& kernel, const SqueezeOptions& options, Side side, Nm by);
 bool open_side(Kernel& kernel, const SqueezeOptions& options, Side side, Nm by);
+std::size_t separate(Kernel& kernel, const SqueezeOptions& options, Breach kind);
+bool legalise(Kernel& kernel, const SqueezeOptions& options, std::string& blocker);
 SqueezeReport squeeze_best(Kernel& kernel, const SqueezeOptions& options);
 
 }

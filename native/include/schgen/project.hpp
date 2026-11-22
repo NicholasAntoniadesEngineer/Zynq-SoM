@@ -8,6 +8,7 @@
 #include <array>
 #include <cstdint>
 #include <filesystem>
+#include <map>
 #include <optional>
 #include <stdexcept>
 #include <string>
@@ -38,11 +39,13 @@ struct ProjectPaths {
     std::string file_stem;
     bool root_readme = false;
     std::vector<std::string> owned_groups;
+    std::map<std::string, int> sheet_density;
 };
 
 struct ProjectConfig {
     std::string name, stackup, file_stem;
     bool labels = true, arrange = false;
+    int density = 0;
     // Set-like membership in Python; retained in source order here.
     std::vector<std::string> wired_sheets, pilot_prox_sheets;
     std::array<double, 2> module_offset{};

@@ -750,6 +750,7 @@ ModelBinding bind_model(const PcbModel& model, const PcbEmitPolicy& policy, cons
         part.field_source = part.field_source || loop_inductor[claim.part] != 0;
     }
     derive_ownership(problem, binding.placement, hold_policy(), intent);
+    apply_density(problem, options.density);
     validate(problem, binding.placement);
     return binding;
 }

@@ -17,7 +17,7 @@ inline constexpr std::array kernel_registry{hash_cell, key_shift};
 
 enum class Breach : std::uint8_t {
     overlap, off_board, fanout, module_core, bottom_face, dispersion, copper, contract, group_bound,
-    edge_mount, connector_gap, reserved, locked, corner, under_inductor, via_field
+    edge_mount, connector_gap, reserved, locked, corner, under_inductor, via_field, spacing
 };
 
 struct Violation {
@@ -112,6 +112,7 @@ private:
     bool crowds(const Part& crowder, const Part& subject) const;
     bool copper_clear(const Shape& shape, Face face) const;
     Nm land_clearance(int net) const;
+    Nm spacing_needed(std::size_t first, std::size_t second) const;
     bool lands_clear(const Shape& first, Face first_face, const Shape& second, Face second_face) const;
     bool group_dispersed(const std::string& group, std::size_t moved, const Shape* shape) const;
     Nm named_gap(const Shape& anchor, const std::vector<std::size_t>& names, const Shape& member) const;
@@ -154,6 +155,7 @@ private:
     Placement placement_;
     std::vector<Shape> shapes_;
     std::unordered_map<Key, std::vector<std::size_t>> cells_;
+    std::unordered_map<Key, Nm> spacing_limits_;
     std::map<std::string, std::vector<std::size_t>> groups_, members_;
     std::map<std::string, std::vector<std::size_t>> group_rules_;
     std::vector<std::vector<std::size_t>> pad_rules_, nearest_rules_, face_rules_, order_rules_;

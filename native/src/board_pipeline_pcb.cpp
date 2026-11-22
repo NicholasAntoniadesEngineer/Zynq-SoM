@@ -181,6 +181,8 @@ void pcb_stages(Context& c){
             c.report("native_policy.txt",policy.report());
             c.gate("native_policy",policy.providers_complete(),policy.report());
         }
+        const layout::DensityChoice density{stage.inputs.floorplan.project.density,c.paths.sheet_density};
+        if(!c.options.layout&&density.spaced())throw ProjectError("a density below the densest level needs the layout squeeze; set 'squeeze' in the run configuration");
         const auto run_file=c.paths.run_config?*c.paths.run_config:c.paths.repository_root/run_config_file;
         const SearchConfig search=load_run_config(run_file).search;
         const auto started=std::chrono::steady_clock::now();
@@ -232,7 +234,7 @@ void pcb_stages(Context& c){
         } else {
             const auto layout_options=[&]{return layout::AdapterOptions{c.options.layout->plane_net,
                 layout::project_edge_clearance(pcb_project_board_settings(pcb_emit_policy(stage.inputs.floorplan.project))),
-                c.options.layout->overmold_parts,stage.inputs.floorplan.place_clear,layout::authored_intent(stage.inputs)};};
+                c.options.layout->overmold_parts,stage.inputs.floorplan.place_clear,layout::authored_intent(stage.inputs),density};};
             const auto lay=[&](SearchAttempt& a){
                 a.promoted=true;
                 try{
@@ -310,9 +312,10 @@ void pcb_stages(Context& c){
             auto& squeezed=*best.layout;
             c.report("layout_squeeze.txt",squeezed.report);
             c.report("convergence.txt",squeezed.convergence);
+            c.report("layout_density.txt",squeezed.density);
             stage.placement.model=std::move(squeezed.model);
             stage.reached=rules::Stage::layout;
-        }
+        } else c.report("layout_density.txt",layout::density_statement(density));
         const auto emit_policy=pcb_emit_policy(stage.inputs.floorplan.project);
         std::optional<labels::LabelSeating> seats;
         if(emit_policy.labels){

@@ -74,6 +74,7 @@ struct Part {
     std::optional<CornerRule> corner;
     std::vector<Point> via_sites = {};
     Face via_face = Face::top;
+    Nm spacing = 0;
 };
 
 struct Pin {
@@ -147,6 +148,12 @@ struct GroupGap {
     std::string source;
 };
 
+struct SpacingLimit {
+    std::size_t first = 0, second = 0;
+    Nm limit = 0;
+    std::string source;
+};
+
 struct ConnectorRules {
     Nm overlap_slack = 0, overmold_gap = 0, boot_gap = 0;
     double band_share = 0;
@@ -166,6 +173,7 @@ struct Constraints {
     std::vector<NetOrder> net_orders;
     std::vector<GroupGap> group_gaps;
     ConnectorRules connectors;
+    std::vector<SpacingLimit> spacing_limits = {};
 };
 
 struct PourRule {

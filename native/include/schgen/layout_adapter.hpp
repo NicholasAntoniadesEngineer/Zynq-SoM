@@ -2,6 +2,7 @@
 
 #include "schgen/roles.hpp"
 #include "schgen/layout_problem.hpp"
+#include "schgen/layout_density.hpp"
 #include "schgen/pcb_emit.hpp"
 #include "schgen/pcb_placement_gates.hpp"
 #include "schgen/pcb_model.hpp"
@@ -79,6 +80,7 @@ struct AdapterOptions {
     std::vector<std::string> overmold_parts;
     double edge_setback = 0;
     AuthoredIntent intent;
+    DensityChoice density;
 };
 
 struct ModelBinding {

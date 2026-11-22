@@ -14,7 +14,7 @@ using json_text::object;
 using json_text::text_value;
 
 inline constexpr std::size_t reserve_corners = 4;
-const char* const schema_name = "schgen.layout-problem/11";
+const char* const schema_name = "schgen.layout-problem/12";
 inline constexpr std::size_t point_fields = 2, disc_fields = 3, box_fields = 4;
 
 std::string point_json(Point point) { return array({integer(point.x), integer(point.y)}); }
@@ -181,7 +181,12 @@ Sense sense_of(const std::string& name) {
 }
 
 std::string constraints_json(const Constraints& rules) {
-    std::vector<std::string> pad_gaps, soft_gaps, nearest_gaps, face_pairs, net_orders, group_gaps;
+    std::vector<std::string> pad_gaps, soft_gaps, nearest_gaps, face_pairs, net_orders, group_gaps, spacing_limits;
+    for (const auto& limit : rules.spacing_limits)
+        spacing_limits.push_back(object({{"first", integer(static_cast<long long>(limit.first))},
+                                         {"second", integer(static_cast<long long>(limit.second))},
+                                         {"limit", integer(limit.limit)},
+                                         {"source", text_value(limit.source)}}));
     const auto gap_json = [](const PadGap& rule) {
         return object({{"anchor", integer(static_cast<long long>(rule.anchor))},
                        {"member", integer(static_cast<long long>(rule.member))},
@@ -231,6 +236,7 @@ std::string constraints_json(const Constraints& rules) {
                    {"face_pairs", array(face_pairs)},
                    {"net_orders", array(net_orders)},
                    {"group_gaps", array(group_gaps)},
+                   {"spacing_limits", array(spacing_limits)},
                    {"connectors", object({{"overlap_slack", integer(rules.connectors.overlap_slack)},
                                           {"overmold_gap", integer(rules.connectors.overmold_gap)},
                                           {"boot_gap", integer(rules.connectors.boot_gap)},
@@ -238,7 +244,7 @@ std::string constraints_json(const Constraints& rules) {
 }
 
 Constraints constraints_of(const JsonNode& node) {
-    reject_unknown_keys(node, {"pad_gaps", "soft_gaps", "nearest_gaps", "face_pairs", "net_orders", "group_gaps", "connectors"},
+    reject_unknown_keys(node, {"pad_gaps", "soft_gaps", "nearest_gaps", "face_pairs", "net_orders", "group_gaps", "spacing_limits", "connectors"},
                         "layout constraints");
     Constraints rules;
     const auto gap_of = [](const JsonNode& entry) {
@@ -284,6 +290,11 @@ Constraints constraints_of(const JsonNode& node) {
                                     whole(field(entry, "limit", JsonKind::Number)), sense_of(text(entry, "sense")),
                                     text(entry, "source")});
     }
+    for (const auto& entry : field(node, "spacing_limits", JsonKind::Array).array_value) {
+        reject_unknown_keys(entry, {"first", "second", "limit", "source"}, "layout spacing limit");
+        rules.spacing_limits.push_back({index_of(entry, "first"), index_of(entry, "second"),
+                                        whole(field(entry, "limit", JsonKind::Number)), text(entry, "source")});
+    }
     const JsonNode& connectors = field(node, "connectors", JsonKind::Object);
     reject_unknown_keys(connectors, {"overlap_slack", "overmold_gap", "boot_gap", "band_share"}, "layout connector rules");
     rules.connectors.overlap_slack = whole(field(connectors, "overlap_slack", JsonKind::Number));
@@ -321,6 +332,7 @@ std::string document_json(const Problem& problem, const Placement& placement) {
                                 {"pad_nets", array(pad_nets)},
                                 {"fanout_pins", integer(part.fanout_pins)},
                                 {"fanout_need", integer(part.fanout_need)},
+                                {"spacing", integer(part.spacing)},
                                 {"fanout_subject", boolean(part.fanout_subject)},
                                 {"escape_top", flags_json(part.escape_top)},
                                 {"escape_bottom", flags_json(part.escape_bottom)},
@@ -468,7 +480,7 @@ Document read_document(const JsonNode& root) {
     }
     for (const auto& entry : field(root, "parts", JsonKind::Array).array_value) {
         reject_unknown_keys(entry, {"reference", "group", "value", "footprint_name", "part_class", "height", "footprint", "pad_nets",
-                                    "fanout_pins", "fanout_need", "fanout_subject", "escape_top",
+                                    "fanout_pins", "fanout_need", "spacing", "fanout_subject", "escape_top",
                                     "escape_bottom", "never_crowds",
                                     "cluster_passive", "fixed", "top_only", "core_exempt", "cohesion_member", "module",
                                     "field_source", "field_sensitive", "connector", "overmold", "edge", "corner", "tie", "owner", "via_sites",
@@ -488,6 +500,7 @@ Document read_document(const JsonNode& root) {
         part.footprint = static_cast<std::size_t>(whole(field(entry, "footprint", JsonKind::Number)));
         part.fanout_pins = static_cast<int>(whole(field(entry, "fanout_pins", JsonKind::Number)));
         part.fanout_need = whole(field(entry, "fanout_need", JsonKind::Number));
+        part.spacing = whole(field(entry, "spacing", JsonKind::Number));
         part.fanout_subject = flag(entry, "fanout_subject");
         part.escape_top = flags_of(field(entry, "escape_top", JsonKind::Array));
         part.escape_bottom = flags_of(field(entry, "escape_bottom", JsonKind::Array));

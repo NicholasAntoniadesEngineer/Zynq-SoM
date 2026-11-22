@@ -151,6 +151,7 @@ ProjectPaths resolve_project_paths(const fs::path& repository_root,
         out.file_stem = header.files.stem;
         out.root_readme = header.flags.root_readme;
         out.owned_groups = header.flags.owned_groups;
+        out.sheet_density = header.sheet_density;
         out.subsystems_dir = out.project_root / "subsystems";
         out.library_dir = out.repository_root / subsystem_library_folder;
         out.sheet_index_file = out.project_root / "sheet_index.json";
@@ -218,6 +219,7 @@ ProjectConfig load_project_config(const ProjectPaths& paths) {
         out.stackup = run.stackup_of(out.name);
         out.labels = run.labels;
         out.arrange = run.arrange;
+        out.density = run.density_of(out.name);
         const auto& placement = field(out.raw, "placement");
         reject_unknown_project_keys(placement, "placement");
         out.wired_sheets = strings(field(placement, "wired_sheets"), "placement.wired_sheets");

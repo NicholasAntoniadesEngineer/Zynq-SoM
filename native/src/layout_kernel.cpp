@@ -47,6 +47,23 @@ bool beside_escape(const std::array<bool, edge_count>& escape, Box subject, Box 
            (above && escape[crowder.y0 + crowder.y1 >= subject.y0 + subject.y1 ? south_slot : north_slot]);
 }
 
+bool courts_apart(const std::vector<Box>& boxes, const std::vector<Disc>& discs, const std::vector<Box>& other_boxes,
+                  const std::vector<Disc>& other_discs, Nm need) {
+    for (const auto& box : boxes) {
+        for (const auto& other : other_boxes)
+            if (!gap_at_least(box, other, need)) return false;
+        for (const auto& other : other_discs)
+            if (!gap_at_least(box, other, need)) return false;
+    }
+    for (const auto& disc : discs) {
+        for (const auto& other : other_boxes)
+            if (!gap_at_least(other, disc, need)) return false;
+        for (const auto& other : other_discs)
+            if (!gap_at_least(disc, other, need)) return false;
+    }
+    return true;
+}
+
 double area_of(Box box) {
     return static_cast<double>(box.width()) * static_cast<double>(box.height());
 }
@@ -71,6 +88,7 @@ const char* breach_name(Breach breach) {
     case Breach::corner: return "corner";
     case Breach::under_inductor: return "under_inductor";
     case Breach::via_field: return "via_field";
+    case Breach::spacing: return "spacing";
     }
     return "unknown";
 }
@@ -78,8 +96,17 @@ const char* breach_name(Breach breach) {
 Kernel::Kernel(const Problem& problem, Placement placement)
     : problem_(problem), board_(problem.board), placement_(std::move(placement)) {
     validate(problem_, placement_);
-    for (const auto& part : problem_.parts)
+    for (const auto& part : problem_.parts) {
         if (part.fanout_subject) reach_ = std::max(reach_, part.fanout_need);
+        reach_ = std::max(reach_, part.spacing);
+    }
+    for (const SpacingLimit& limit : problem_.constraints.spacing_limits) {
+        if (limit.first >= placement_.size() || limit.second >= placement_.size() || limit.first == limit.second || limit.limit < 0)
+            throw LayoutError("layout: a spacing limit names an unknown pair or a negative gap: " + limit.source);
+        const Key key = key_of(static_cast<Nm>(std::min(limit.first, limit.second)), static_cast<Nm>(std::max(limit.first, limit.second)));
+        const auto found = spacing_limits_.find(key);
+        if (found == spacing_limits_.end() || limit.limit < found->second) spacing_limits_[key] = limit.limit;
+    }
     fields_.resize(placement_.size());
     freed_.resize(placement_.size());
     for (std::size_t reserve = 0; reserve < problem_.reserves.size(); ++reserve) {
@@ -521,6 +548,16 @@ Nm Kernel::land_clearance(int net) const {
     return net == no_net ? problem_.rules.copper_clearance : problem_.nets[static_cast<std::size_t>(net)].clearance;
 }
 
+Nm Kernel::spacing_needed(std::size_t first, std::size_t second) const {
+    const Part& a = problem_.parts[first];
+    const Part& b = problem_.parts[second];
+    const Nm wanted = std::max(a.spacing, b.spacing);
+    if (wanted <= 0 || (a.fixed && b.fixed)) return 0;
+    const auto found = spacing_limits_.find(
+        key_of(static_cast<Nm>(std::min(first, second)), static_cast<Nm>(std::max(first, second))));
+    return found == spacing_limits_.end() ? wanted : std::min(wanted, found->second);
+}
+
 bool Kernel::lands_clear(const Shape& first, Face first_face, const Shape& second, Face second_face) const {
     if (gap_at_least(first.bound, second.bound, problem_.rules.copper_clearance)) return true;
     for (const auto& a : first.lands)
@@ -594,6 +631,9 @@ std::optional<Breach> Kernel::pair_breach(std::size_t first, const Shape& first_
     if (courts_overlap(first_shape.courts, first_shape.discs, second_shape.courts, second_shape.discs))
         return Breach::overlap;
     if (!lands_clear(first_shape, first_face, second_shape, second_face)) return Breach::copper;
+    const Nm spacing = spacing_needed(first, second);
+    if (spacing > 0 && !courts_apart(first_shape.courts, first_shape.discs, second_shape.courts, second_shape.discs, spacing))
+        return Breach::spacing;
     const Part& a = problem_.parts[first];
     const Part& b = problem_.parts[second];
     if (a.fanout_subject && crowds(b, a) && !gap_at_least(first_shape.gate, second_shape.gate, a.fanout_need) &&

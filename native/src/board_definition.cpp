@@ -91,7 +91,7 @@ BoardModule module_of(const JsonNode& node, const std::string& where) {
 }
 
 BoardSheet sheet_of(const JsonNode& row, const std::string& where) {
-    reject_unknown_keys(row, {"name", "module_connector", "title", "settings", "additions"}, where + " sheet");
+    reject_unknown_keys(row, {"name", "module_connector", "title", "settings", "additions", "density"}, where + " sheet");
     BoardSheet sheet;
     sheet.name = text(row, "name", where);
     sheet.settings.kind = JsonKind::Object;
@@ -109,6 +109,10 @@ BoardSheet sheet_of(const JsonNode& row, const std::string& where) {
     if (const JsonNode* additions = object_field(row, "additions")) {
         if (additions->kind != JsonKind::Object) fail(where, "sheet " + sheet.name + " additions is not an object");
         sheet.additions = *additions;
+    }
+    if (const JsonNode* density = object_field(row, "density")) {
+        sheet.density = density_level(*density);
+        if (!sheet.density) fail(where, "sheet " + sheet.name + " field 'density' must be " + density_range());
     }
     return sheet;
 }
@@ -159,6 +163,17 @@ BoardFiles files_of(const JsonNode& node, const std::string& where) {
     return files;
 }
 
+}
+
+std::optional<int> density_level(const JsonNode& node) {
+    if (node.kind != JsonKind::Number || !std::isfinite(node.number_value)) return std::nullopt;
+    for (int level = sparsest_density; level <= densest_density; ++level)
+        if (node.number_value == static_cast<double>(level)) return level;
+    return std::nullopt;
+}
+
+std::string density_range() {
+    return "a whole number from " + std::to_string(sparsest_density) + " to " + std::to_string(densest_density);
 }
 
 const std::vector<DocumentKey>& board_document_keys() {
@@ -212,6 +227,10 @@ BoardHeader board_header_of(const JsonNode& document, const std::string& file) {
     if (std::set<std::string>(header.flags.owned_groups.begin(), header.flags.owned_groups.end()).size() != header.flags.owned_groups.size())
         fail(source, "'owned_groups' lists a sheet twice");
     header.module_folder = folder_name(member(document, "module", JsonKind::Object, source), "folder", source + " module");
+    for (const JsonNode& row : rows(document, "sheets", source)) {
+        const BoardSheet sheet = sheet_of(row, source);
+        if (sheet.density) header.sheet_density[sheet.name] = *sheet.density;
+    }
     return header;
 }
 
