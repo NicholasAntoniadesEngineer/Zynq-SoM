@@ -65,7 +65,9 @@ void mechanical_mutations(const ConnectorFacts& connectors){
 void rotations(std::ostream& output,const ConnectorFacts& connectors){
     for(const auto* value:{"TYPE-C-31-M-12","HDMI-019S","AFC07-S40FCA-00","KH-5224-8P8C-D","TF-01A","SFW15R-1STE1LF","ZX-SH1.0-4PWT","DS1024-2x6R2","XT60PW-M","unknown"}){
         const bool xt=std::string(value)=="XT60PW-M";
-        const std::map<std::string,std::size_t> expected=xt?std::map<std::string,std::size_t>{{"N",3},{"E",2},{"S",6},{"W",4}}:std::map<std::string,std::size_t>{{"N",5},{"E",3},{"S",2},{"W",5}};
+        const auto* stated=connector_fact(connectors,value);const bool above=stated&&mating_face_vector(*stated)==std::pair<int,int>{0,0};
+        require(above==(std::string(value)=="KH-5224-8P8C-D"),"exactly the jack mated from above has no edge direction");
+        const std::map<std::string,std::size_t> expected=above?std::map<std::string,std::size_t>{}:xt?std::map<std::string,std::size_t>{{"N",3},{"E",2},{"S",6},{"W",4}}:std::map<std::string,std::size_t>{{"N",5},{"E",3},{"S",2},{"W",5}};
         for(const auto* edge:{"N","E","S","W","n","e","s","w","","bad"}){
             std::string key=edge;if(key.size()==1&&key[0]>='a'&&key[0]<='z')key[0]=static_cast<char>(key[0]-'a'+'A');
             const auto found=expected.find(key);QuantizationCounts wanted;if(found!=expected.end())wanted[stage]=found->second;
