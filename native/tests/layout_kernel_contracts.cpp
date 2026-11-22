@@ -1,3 +1,4 @@
+#include "schgen/layout_construct.hpp"
 #include "schgen/layout_json.hpp"
 #include "schgen/layout_kernel.hpp"
 
@@ -44,6 +45,7 @@ constexpr Point order_lead{16 * unit, 20 * unit}, order_rival{13 * unit, 20 * un
 constexpr Point via_site{3 * unit, 0}, via_near{24 * unit, 20 * unit}, via_clear{241 * unit / 10, 20 * unit};
 constexpr Point via_mirror{16 * unit, 20 * unit};
 constexpr Nm via_pad = 11 * unit / 20, via_ground = unit / 4, via_hole = 3 * unit / 5;
+constexpr Nm construct_pitch = unit / 4, construct_reach = 6 * unit;
 constexpr std::uint64_t walk_seed = 20261111;
 constexpr int walk_steps = 400;
 constexpr Nm walk_range = 4 * unit, walk_grid = unit / 20;
@@ -516,8 +518,71 @@ void via_sites_stay_clear() {
             "a pad at the mirrored site blocks it from either face");
 }
 
+void parts_wait_off_the_board() {
+    Scene scene;
+    scene.problem.rules.compare_guard = 1;
+    const auto smd = scene.footprint("smd", square_variant(fixture::body_half, fixture::passive_pins, false));
+    scene.add("A", "one", smd, fixture::first_site);
+    scene.add("B", "two", smd, fixture::crossing_site);
+    scene.add("C", "two", smd, fixture::remote_site);
+    scene.problem.constraints.pad_gaps.push_back({0, 2, {}, fixture::unit, Sense::at_most, "near"});
+    Kernel kernel(scene.problem, scene.placement);
+    require(has(kernel.violations(), Breach::overlap) && has(kernel.violations(), Breach::contract),
+            "the scene starts with an overlap and a broken tie");
+    const Snapshot start = kernel.snapshot();
+    kernel.park(1);
+    kernel.park(2);
+    require(kernel.parked(1) && kernel.parked_count() == 2 && kernel.violations().empty(),
+            "a part off the board breaks no rule and binds no neighbour");
+    const auto refused = kernel.seat_rejection(1, {fixture::crossing_site, Turn::none, Face::top});
+    require(refused && refused->kind == Breach::overlap && !kernel.seat(1, {fixture::crossing_site, Turn::none, Face::top}),
+            "a seat is judged by the same rules as a move");
+    require(kernel.seat(1, {fixture::cluster_second, Turn::none, Face::top}) && !kernel.parked(1), "a legal seat puts the part on the board");
+    const auto far = kernel.seat_rejection(2, {fixture::remote_site, Turn::none, Face::top});
+    require(far && far->kind == Breach::contract, "a seat beyond the part's tie is refused");
+    bool threw = false;
+    try {
+        kernel.move(2, {fixture::remote_site, Turn::none, Face::top});
+    } catch (const LayoutError&) {
+        threw = true;
+    }
+    require(threw, "a part off the board cannot be moved, only seated");
+    kernel.restore(start);
+    require(kernel.parked_count() == 0 && has(kernel.violations(), Breach::overlap), "a snapshot restores which parts are on the board");
+}
+
+void owned_parts_are_seated_by_rule() {
+    Scene scene;
+    scene.problem.rules.compare_guard = 1;
+    const auto strip = scene.footprint("strip", strip_variant());
+    const auto small = scene.footprint("small", square_variant(fixture::pad_half, fixture::passive_pins, false));
+    scene.add("U", "one", strip, fixture::subject_site);
+    scene.add("C", "one", small, fixture::remote_site);
+    scene.add("R", "one", small, fixture::cluster_first);
+    PadGap first{0, 1, {1}, fixture::unit, Sense::at_most, "owner of C", true, false, fixture::unit};
+    PadGap second{0, 2, {1}, 2 * fixture::unit, Sense::at_most, "owner of R", true, false, 2 * fixture::unit};
+    scene.problem.constraints.soft_gaps = {first, second};
+    first.source = "hold of C";
+    second.source = "hold of R";
+    scene.problem.constraints.pad_gaps = {first, second};
+    scene.problem.ownership = {{Tie::none, std::nullopt}, {Tie::authored, 0}, {Tie::authored, 0}};
+    Kernel kernel(scene.problem, scene.placement);
+    require(kernel.violations().size() == 2, "both owned parts start beyond their ties");
+    const ConstructReport report = construct_owned(kernel, fixture::construct_pitch, fixture::construct_reach);
+    require(report.taken == 2 && report.seated == 2 && report.unseated.empty() && report.returned == 0,
+            "the constructor seats every owned part");
+    require(kernel.parked_count() == 0 && kernel.violations().empty(), "the constructed placement breaks no rule");
+    require(kernel.placement()[0] == scene.placement[0], "the owner keeps its place");
+    require(pad_gap_length(scene.problem, first, kernel.placement()) <= first.limit &&
+                pad_gap_length(scene.problem, second, kernel.placement()) <= second.limit,
+            "each part sits within its tie");
+    require(report.length_after <= report.length_before, "the constructed placement is no longer in wire");
+}
+
 int main() {
     try {
+        parts_wait_off_the_board();
+        owned_parts_are_seated_by_rule();
         courtyards_block_their_face();
         round_courtyards_use_their_shape();
         fanout_follows_the_gate_rule();

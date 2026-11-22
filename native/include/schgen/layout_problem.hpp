@@ -251,7 +251,7 @@ std::optional<NetOrder> net_order_of(const Problem& problem, const PadGap& claim
 std::vector<NetOrder> net_orders_of(const Problem& problem);
 Nm rival_bound(const Problem& problem, const NetOrder& rule, const Placement& placement);
 bool net_order_met(const Problem& problem, const NetOrder& rule, const Placement& placement, std::size_t moved,
-                   const Pose* pose);
+                   const Pose* pose, const std::vector<char>* absent = nullptr);
 void derive_ownership(Problem& problem, const Placement& placement, const HoldPolicy& policy, const Intent& intent);
 void tighten_holds(Problem& problem, const Placement& placement, const HoldPolicy& policy);
 const char* tie_name(Tie tie);

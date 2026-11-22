@@ -40,6 +40,7 @@ struct Snapshot {
     Board board;
     std::vector<Box> reserves;
     std::vector<std::vector<std::size_t>> fields, freed;
+    std::vector<char> absent = {};
 };
 
 struct Probe {
@@ -60,7 +61,13 @@ public:
     const Placement& placement() const { return placement_; }
     const Board& board() const { return board_; }
     void set_board(const Board& board);
-    Snapshot snapshot() const { return {placement_, board_, reserve_boxes_, fields_, freed_}; }
+    Snapshot snapshot() const { return {placement_, board_, reserve_boxes_, fields_, freed_, absent_}; }
+    void park(std::size_t part);
+    bool parked(std::size_t part) const { return absent_[part] != 0; }
+    bool movable_alone(std::size_t part) const { return !problem_.parts[part].fixed && fields_[part].empty(); }
+    std::size_t parked_count() const;
+    std::optional<Violation> seat_rejection(std::size_t part, const Pose& pose) const;
+    bool seat(std::size_t part, const Pose& pose);
     bool release(std::size_t part);
     void restore(const Snapshot& snapshot);
     const std::vector<Box>& reserves() const { return reserve_boxes_; }
@@ -151,6 +158,7 @@ private:
     Board board_;
     std::vector<Box> reserve_boxes_;
     std::vector<std::vector<std::size_t>> fields_, freed_;
+    std::vector<char> absent_;
     Placement placement_;
     std::vector<Shape> shapes_;
     std::unordered_map<Key, std::vector<std::size_t>> cells_;

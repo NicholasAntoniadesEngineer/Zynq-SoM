@@ -1,3 +1,5 @@
+#include "schgen/layout_construct.hpp"
+#include "schgen/layout_squeeze.hpp"
 #include "schgen/layout_cli.hpp"
 
 #include "schgen/atomic_file.hpp"
@@ -23,8 +25,10 @@ const char* const usage =
     "usage: schgen layout-export [--repo DIR] [--project NAME] [--kicad-cli PATH]\n"
     "                            --project-file FILE --plane-net NAME [--overmold-part MPN]... -o FILE\n"
     "       schgen layout-check FILE\n"
+    "       schgen layout-construct FILE\n"
     "  layout-export builds the current placed board and writes it as a layout problem.\n"
-    "  layout-check replays a layout problem and reports every hard-rule violation.\n";
+    "  layout-check replays a layout problem and reports every hard-rule violation.\n"
+    "  layout-construct takes every owned part off the board, seats it again by rule and reports the result.\n";
 
 struct ExportArguments {
     std::filesystem::path repository = std::filesystem::current_path();
@@ -101,7 +105,7 @@ int export_problem(int argc, char** argv) {
 std::optional<int> run_layout_command(int argc, char** argv) {
     if (argc < 2) return std::nullopt;
     const std::string command = argv[1];
-    if (command != "layout-export" && command != "layout-check") return std::nullopt;
+    if (command != "layout-export" && command != "layout-check" && command != "layout-construct") return std::nullopt;
     if (std::any_of(argv + 2, argv + argc, [](const char* value) {
             return std::string(value) == "--help" || std::string(value) == "-h";
         })) {
@@ -109,8 +113,16 @@ std::optional<int> run_layout_command(int argc, char** argv) {
         return 0;
     }
     if (command == "layout-export") return export_problem(argc, argv);
-    if (argc != 3) throw LayoutError("layout-check: exactly one problem file is required");
+    if (argc != 3) throw LayoutError(command + ": exactly one problem file is required");
     const auto document = layout::read_document(parse_json_file(argv[2]));
+    if (command == "layout-construct") {
+        layout::Kernel kernel(document.problem, document.placement);
+        const std::size_t before = kernel.violations().size();
+        const auto built = layout::construct_owned(kernel, static_cast<layout::Nm>(layout::constants::search_pitch.value),
+                                                   static_cast<layout::Nm>(layout::constants::construct_reach.value));
+        std::cout << layout::construct_summary(built) << "  violations " << before << " before, " << kernel.violations().size() << " after\n";
+        return built.unseated.empty() ? 0 : 1;
+    }
     return report(document.problem, document.placement);
 }
 
