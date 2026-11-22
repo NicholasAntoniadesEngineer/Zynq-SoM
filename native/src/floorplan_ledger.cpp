@@ -91,6 +91,7 @@ const std::vector<Declaration> declarations{
     {"label_courtyard_gap","ASSUME","floorplan.sizing","mm","clear-label search offset outside the footprint courtyard","policy","board_decision_policy.pack.label_courtyard_gap_mm","", {}},
     {"label_orbit_tau","ASSUME","floorplan.sizing","radian","established full-turn double used by the sixteen-angle label orbit","policy","board_decision_policy.pack.label_orbit_tau","", {}},
     {"page_origin","ASSUME","floorplan.sizing","mm","page offset of the board origin; the frame the placement grid snaps in","policy","quantization_policy.kPageOriginMm","", {}},
+    {"edge_seat_pull_weight","ASSUME","floorplan.sizing","1","seat weight holding a block within hard near_max reach of its edge block","policy","floorplan.EDGE_SEAT_PULL_WEIGHT","", {}},
     {"overmold_side_gap","CALC","floorplan.sizing","mm","shell overhang beside a single receptacle","","floorplan.OVERMOLD_SIDE_GAP","plug_width / 2 - copper_half_width", {"plug_width","copper_half_width"}},
     {"edge_band","CALC","floorplan.sizing","mm","connector band width used by the seed outline","","floorplan.EDGE_BAND","edge_depth_cap - edge_band_relief", {"edge_depth_cap","edge_band_relief"}},
     {"occ_punch_mask","CALC","floorplan.sizing","bitmask","occupancy bits of geometry that pierces both faces","","floorplan.OCC_PUNCH","occ_top | occ_bottom", {"occ_top","occ_bottom"}},
@@ -230,6 +231,7 @@ std::optional<double> floorplan_live_assumption(const std::string& name,const Fl
     if(name=="occ_top_mask")return occ_top;
     if(name=="occ_bottom_mask")return occ_bottom;
     if(name=="som_seat_band")return som_seat_band;
+    if(name=="edge_seat_pull_weight")return edge_seat_pull_weight;
     if(name=="som_occ_pad")return som_pad;
     if(name=="som_decoupling_inset")return dec_inset;
     if(name=="d13_min_subject_pins")return min_subject_pins;

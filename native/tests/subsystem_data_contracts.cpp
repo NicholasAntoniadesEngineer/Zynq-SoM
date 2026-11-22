@@ -40,7 +40,7 @@ const char* const widget = R"json({
   "title": "Widget sensor",
   "interface": ["+VDD", "GND", "SCL", "SDA"],
   "placement": {"region": "board", "silk_label": null, "far_guard_mm": null, "escape_basis": null, "escape_escalates": false, "reserves_edge": false},
-  "checks": {"dividers": [], "divider_sources": [], "iset_window_ma": null},
+  "checks": {"dividers": [], "divider_sources": [], "iset_window_ma": null, "iset_basis": null},
   "parts": [
     {"ref": "R1", "symbol": "Device:R", "value": "4k7", "footprint": "Resistor_SMD:R_0603_1608Metric", "fields": {"LCSC": "C23162"}},
     {"ref": "R2", "symbol": "Device:R", "value": "4k7", "footprint": "Resistor_SMD:R_0603_1608Metric", "fields": {"LCSC": "C23162"}}
@@ -65,7 +65,7 @@ const char* const widget = R"json({
 
 const std::string quiet_placement =
     R"("placement": {"region": "board", "silk_label": null, "far_guard_mm": null, "escape_basis": null, "escape_escalates": false, "reserves_edge": false})";
-const std::string quiet_checks = R"("checks": {"dividers": [], "divider_sources": [], "iset_window_ma": null})";
+const std::string quiet_checks = R"("checks": {"dividers": [], "divider_sources": [], "iset_window_ma": null, "iset_basis": null})";
 
 JsonNode settings(const std::string& text) { return parse_json_text(text); }
 
@@ -94,6 +94,17 @@ void refuses_bad_files() {
     const auto load = [](const std::string& text) { return author_subsystem_data(parse_json_text(text), SubsystemMeta{}, {}); };
     rejects([&] { load(replaced(widget, "\"hints\": []", "\"hints\": [], \"extra\": 1")); }, "extra");
     rejects([&] { load(replaced(widget, "schgen.subsystem/1", "schgen.subsystem/0")); }, "schema is not");
+    const std::string two_rows = "Widget sensor with a title of forty glyphs and a continuation row that still fits here";
+    require(title_block_rows(two_rows).size() == kTitleRowLimit, "the two-row title fixture does not fill two rows");
+    require(load(replaced(widget, "Widget sensor", two_rows)).title == two_rows, "a title that fits two rows was changed");
+    rejects([&] { load(replaced(widget, "Widget sensor", two_rows + " and then runs on into a third row of the block")); },
+            "sheet widget: title needs 3 title-block rows; the limit is 2");
+    const std::string name = "Widget sensor", detail = "pull-ups on both lines", stated = name + std::string(kTitleBreak) + detail;
+    require(title_block_rows(stated) == std::vector<std::string>{name, detail}, "a stated break does not split the title there");
+    require(load(replaced(widget, "Widget sensor", stated)).title == stated, "a title with a stated break was changed");
+    rejects([&] { load(replaced(widget, "Widget sensor", stated + std::string(kTitleBreak) + detail)); }, "title states more than one break");
+    rejects([&] { load(replaced(widget, "Widget sensor", two_rows + std::string(kTitleBreak) + detail)); }, "the name before the break is 86 glyphs");
+    rejects([&] { load(replaced(widget, "Widget sensor", name + std::string(kTitleBreak) + two_rows)); }, "the detail after the break is 86 glyphs");
     rejects([&] { load(replaced(widget, "\"role\": \"pull\", \"net\": \"SCL\"", "\"role\": \"pull\", \"net\": \"SCL\", \"pin\": \"R1.2\"")); },
             "exactly one of");
     rejects([&] { load(replaced(widget, "\"instance\": \"non_empty\"", "\"instance\": \"sometimes\"")); }, "unknown per-board mode");
@@ -110,7 +121,7 @@ void reads_facts() {
     const std::string filled_placement =
         R"("placement": {"region": "under_module", "silk_label": "ETH", "far_guard_mm": 14.5, "escape_basis": "stays in the region", "escape_escalates": true, "reserves_edge": true})";
     const std::string filled_checks =
-        R"("checks": {"dividers": [{"net": "SET", "source": "+VDD", "limits": [{"volts": 21.0, "hi": 1.2, "tag": "no trip"}, {"volts": 24.0, "lo": 1.1, "tag": "cutoff"}], "why": "set divider"}], "divider_sources": ["SENSE"], "iset_window_ma": [125, 150]})";
+        R"("checks": {"dividers": [{"net": "SET", "source": "+VDD", "limits": [{"volts": 21.0, "hi": 1.2, "tag": "no trip"}, {"volts": 24.0, "lo": 1.1, "tag": "cutoff"}], "why": "set divider"}], "divider_sources": ["SENSE"], "iset_window_ma": [125, 150], "iset_basis": "panel datasheet"})";
     const SubsystemFacts filled = subsystem_data_facts(parse_json_text(replaced(replaced(widget, quiet_placement, filled_placement), quiet_checks, filled_checks)), "widget");
     require(filled.placement.region == SheetRegion::under_module && filled.placement.silk_label == "ETH" && filled.placement.far_guard_mm == 14.5 &&
                 filled.placement.escape_basis == "stays in the region" && filled.placement.escape_escalates && filled.placement.reserves_edge,
@@ -121,8 +132,9 @@ void reads_facts() {
                 filled.checks.dividers.front().limits.back().lo == 1.1 && filled.checks.dividers.front().limits.back().tag == "cutoff",
             "divider checks are read");
     require(filled.checks.divider_sources.size() == 1 && filled.checks.divider_sources.front() == "SENSE" && filled.checks.iset_window_ma &&
-                filled.checks.iset_window_ma->low_ma == 125 && filled.checks.iset_window_ma->high_ma == 150,
-            "divider sources and the ISET window are read");
+                filled.checks.iset_window_ma->low_ma == 125 && filled.checks.iset_window_ma->high_ma == 150 && filled.checks.iset_basis == "panel datasheet",
+            "divider sources, the ISET window and its basis are read");
+    require(!quiet.checks.iset_basis, "a null basis states that there is none");
 }
 
 void refuses_bad_facts() {
@@ -144,10 +156,10 @@ void refuses_bad_facts() {
         const std::string cut = end == std::string::npos ? quiet_placement.substr(0, at - 2) + "}" : quiet_placement.substr(0, at) + quiet_placement.substr(end + 2);
         rejects([&] { load(with_placement(cut)); }, "field '" + key + "' is missing");
     }
-    for (const std::string key : {"dividers", "divider_sources", "iset_window_ma"}) {
+    for (const std::string key : {"dividers", "divider_sources", "iset_window_ma", "iset_basis"}) {
         const auto at = quiet_checks.find("\"" + key + "\"");
-        const auto end = quiet_checks.find("], ", at);
-        const std::string cut = key == "iset_window_ma" ? quiet_checks.substr(0, at - 2) + "}" : quiet_checks.substr(0, at) + quiet_checks.substr(end + 3);
+        const auto end = key == "iset_window_ma" ? quiet_checks.find("\"iset_basis\"") : quiet_checks.find("], ", at) + 3;
+        const std::string cut = key == "iset_basis" ? quiet_checks.substr(0, at - 2) + "}" : quiet_checks.substr(0, at) + quiet_checks.substr(end);
         rejects([&] { load(with_checks(cut)); }, "field '" + key + "' is missing");
     }
     rejects([&] { load(with_placement(replaced(quiet_placement, "\"board\"", "\"above\""))); }, "field 'region' is 'above', not board or under_module");
@@ -168,7 +180,7 @@ void refuses_bad_facts() {
     const std::string good_divider =
         R"({"net": "SET", "source": "+VDD", "limits": [{"volts": 21.0, "hi": 1.2, "tag": "no trip"}], "why": "set divider"})";
     const auto with_divider = [&](const std::string& divider) {
-        return with_checks("\"checks\": {\"dividers\": [" + divider + "], \"divider_sources\": [], \"iset_window_ma\": null}");
+        return with_checks("\"checks\": {\"dividers\": [" + divider + "], \"divider_sources\": [], \"iset_window_ma\": null, \"iset_basis\": null}");
     };
     load(with_divider(good_divider));
     rejects([&] { load(with_checks(replaced(quiet_checks, "\"dividers\": []", "\"dividers\": {}"))); }, "field 'dividers' is missing or has the wrong type");
@@ -191,6 +203,15 @@ void refuses_bad_facts() {
     rejects([&] { load(with_checks(replaced(quiet_checks, "\"divider_sources\": []", "\"divider_sources\": [\"\"]"))); }, "'divider_sources' holds a value that is not a name");
     rejects([&] { load(with_checks(replaced(quiet_checks, "\"divider_sources\": []", "\"divider_sources\": \"X\""))); },
             "field 'divider_sources' is missing or has the wrong type");
+    rejects([&] { load(with_checks(replaced(quiet_checks, "\"iset_window_ma\": null", "\"iset_window_ma\": [125, 150]"))); },
+            "field 'iset_basis' must be a name exactly when 'iset_window_ma' is stated");
+    rejects([&] { load(with_checks(replaced(quiet_checks, "\"iset_basis\": null", "\"iset_basis\": \"panel datasheet\""))); },
+            "field 'iset_basis' must be a name exactly when 'iset_window_ma' is stated");
+    rejects([&] { load(with_checks(replaced(quiet_checks, "\"iset_basis\": null", "\"iset_basis\": \"\""))); }, "field 'iset_basis' is neither null nor a name");
+    rejects([&] { load(with_checks(replaced(quiet_checks, "\"iset_basis\": null", "\"iset_basis\": 1"))); }, "field 'iset_basis' is neither null nor a name");
+    rejects([&] { load(with_placement(replaced(quiet_placement, "\"escape_escalates\": false", "\"escape_escalates\": true"))); },
+            "field 'escape_escalates' is true but 'escape_basis' is null");
+    rejects([&] { load(with_divider(good_divider + ", " + good_divider)); }, "divider SET is stated twice");
     for (const std::string window : {"[]", "[125]", "[125, 150, 175]", "[\"a\", 150]", "125", "[150, 125]", "[125, 125]", "[0, 150]", "[-1, 150]"})
         rejects([&] { load(with_checks(replaced(quiet_checks, "\"iset_window_ma\": null", "\"iset_window_ma\": " + window))); }, "field 'iset_window_ma' is ");
 }

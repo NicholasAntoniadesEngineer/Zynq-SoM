@@ -3,8 +3,23 @@
   "name": "pd_input",
   "title": "Power inlet: USB-C PD 20V/3A + TPS26631 eFuse",
   "interface": ["+VBUS_CONN", "+VBUS_OUT", "+VDD_LOGIC", "GND", "CHASSIS_GND", "CC1", "CC2", "USB_D_P", "USB_D_N", "FLT_N"],
-  "placement": {"region": "board", "silk_label": null, "far_guard_mm": null, "escape_basis": null, "escape_escalates": false, "reserves_edge": false},
-  "checks": {"dividers": [], "divider_sources": [], "iset_window_ma": null},
+  "placement": {"region": "board", "silk_label": "PWR", "far_guard_mm": null, "escape_basis": null, "escape_escalates": false, "reserves_edge": false},
+  "checks": {
+    "dividers": [
+      {
+        "net": "PD_OVP_SET",
+        "source": "+VBUS_CONN",
+        "limits": [
+          {"volts": 21.0, "hi": 1.176, "tag": "no false trip at 21 V (contract max)"},
+          {"volts": 24.4, "lo": 1.224, "tag": "guaranteed cutoff below the TVS VBR min"}
+        ],
+        "why": "TPS26631 OVP set divider (pd_input): must NOT trip inside the valid 20 V +5% contract window yet MUST cut off before the SMBJ22A starts clamping (V_OVPR 1.2 V +/-2%, SLVSE94G)"
+      }
+    ],
+    "divider_sources": [],
+    "iset_window_ma": null,
+    "iset_basis": null
+  },
   "parts": [
     {"ref": "J1", "part": "TYPE-C-31-M-12"},
     {"ref": "U1", "part": "TPS26631PWPR"},

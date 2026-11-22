@@ -61,11 +61,13 @@ Stackup parse_stackup(const JsonNode& node) {
     Stackup stackup;
     stackup.fabricator_name = require_string(node, "name", false, "stack-up");
     const std::string& where = stackup.fabricator_name;
-    reject_unknown_keys(node, {"name", "fabricator", "thickness_mm", "outer_copper_mm", "inner_copper_mm", "roles",
+    reject_unknown_keys(node, {"name", "fabricator", "thickness_mm", "outer_copper_mm", "inner_copper_mm", "outer_oz", "inner_oz", "roles",
                                "between", "pair_basis", "pairs"}, "stack-up " + where);
     stackup.fabricator = require_string(node, "fabricator", false, where);
     stackup.thickness_mm = positive(node, "thickness_mm", where);
     const double outer = positive(node, "outer_copper_mm", where), inner = positive(node, "inner_copper_mm", where);
+    stackup.outer_oz = positive(node, "outer_oz", where);
+    stackup.inner_oz = positive(node, "inner_oz", where);
     const std::string roles = require_string(node, "roles", false, where);
     if (roles.size() < 2) fail(where, "a board needs two copper layers");
     const auto& between = member(node, "between", JsonKind::Array, where).array_value;

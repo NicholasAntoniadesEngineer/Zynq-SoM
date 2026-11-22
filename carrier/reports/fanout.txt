@@ -1,12 +1,12 @@
 FAN-OUT CLEARANCE GATE (D13, report-first ratchet): PASS
-  multi-pin subjects: 112  starved: 0  baseline(ratchet): 0
+  multi-pin subjects: 99  starved: 0  baseline(ratchet): 0
   intelligent need = pin-count tier; clearance = min courtyard gap to nearest FOREIGN part
   cluster-aware: own-sheet 2-pin R/C/L excluded; DF40 plugs (som_j*, >=40-pin) excluded (no-inflate)
   OFFENDERS (starved, worst slack first):
     (none)
   (tightest PASSING subjects:)
-    ok      J29001    usb_jtag_connector  16pin clr=2.050 need=2.00 slack=+0.050
-    ok      J9001     debug_boot        14pin clr=2.050 need=2.00 slack=+0.050
-    ok      J9002     debug_boot        10pin clr=2.050 need=2.00 slack=+0.050
-    ok      SW7003    bringup_rails      4pin clr=1.550 need=1.50 slack=+0.050
-    ok      SW7004    bringup_rails      4pin clr=1.550 need=1.50 slack=+0.050
+    ok      U6004     bringup_modules    5pin clr=1.500 need=1.50 slack=+0.000
+    ok      U28002    usb_jtag          14pin clr=2.009 need=2.00 slack=+0.009
+    ok      U16001    microsd           25pin clr=2.015 need=2.00 slack=+0.015
+    ok      J12001    hdmi_rx           23pin clr=2.016 need=2.00 slack=+0.016
+    ok      U3002     board_services     8pin clr=1.518 need=1.50 slack=+0.018

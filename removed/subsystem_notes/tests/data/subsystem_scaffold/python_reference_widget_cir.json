@@ -1,0 +1,3 @@
+{
+  "widget_cir": "* widget.cir — SPICE subckt for the widget subsystem.\n*\n* PROJECT-AGNOSTIC: the subckt pins are the subsystem's ABSTRACT interface, NOT\n* any board net. Values mirror widget.py one-for-one (parse_si compatible).\n*\n* Port order: VDD GND   (GND last by convention; add the rest)\n\n.subckt widget VDD GND\n* <passives mirroring the netlist, e.g.:>\n* C1 VDD GND 100n\n.ends widget\n\n.end\n"
+}

@@ -1,33 +1,33 @@
-PLACEMENT-FLOW GATE: PASS (9 external contract(s); board_area=24150mm^2, flow_budget=121.6mm)
+PLACEMENT-FLOW GATE: PASS (9 external contract(s); board_area=14770mm^2, flow_budget=109.8mm)
   fails: flow=0/7 facing=0/2 far=0/5 near_max=0/4
   unresolved: 0
   violations: 0
   advisory preferences (not hardware qualification): 9
-    ADVISORY facing power->power_som: preference satisfied (angle=74.8deg; not hardware qualification) [Reviewed 2026-10-18: all-component centroid direction changes when unrelated test points move; it is a placement preference, not a hardware limit. SNVSBD5D Rev. D section 11.1 requires local loop/layout and power-path quality, not a 90-degree subsystem-centroid cutoff. See native/benchmarks/2026-10-18-facing-centroid-review.json; routing and parasitics remain unverified.]
-    ADVISORY facing power_som->@som: preference NOT satisfied (angle=104.6deg; not hardware qualification) [Reviewed 2026-10-18: the all-component centroid angle to the SoM body is a placement preference, not an electrical limit; moving an unrelated test point can reverse it while regulator, output capacitors and load remain fixed. SNVSBD5D Rev. D section 11.1 specifies local loops, feedback, wide/direct power paths and thermal copper, not a 90-degree subsystem-centroid cutoff. See native/benchmarks/2026-10-18-power-som-facing-review.json. Local placement checks remain mandatory; routing, parasitics and thermal performance remain unverified.]
-    ADVISORY flow camera->@som: 67.57mm / 121.6mm heuristic reference; preference satisfied; not a trace-length or hardware limit
-    ADVISORY flow hdmi_tx->@som: 71.74mm / 121.6mm heuristic reference; preference satisfied; not a trace-length or hardware limit
-    ADVISORY flow pd_input->usb_pd: 29.03mm / 121.6mm heuristic reference; preference satisfied; not a trace-length or hardware limit
-    ADVISORY flow power->power_som: 18.08mm / 121.6mm heuristic reference; preference satisfied; not a trace-length or hardware limit
-    ADVISORY flow power_mon->power_som: 69.29mm / 121.6mm heuristic reference; preference satisfied; not a trace-length or hardware limit
-    ADVISORY flow usb_pd->power: 86.11mm / 121.6mm heuristic reference; preference satisfied; not a trace-length or hardware limit
-    ADVISORY flow usb_pd->power: 86.11mm / 121.6mm heuristic reference; preference satisfied; not a trace-length or hardware limit
+    ADVISORY facing power->power_som: preference satisfied (angle=49.7deg; not hardware qualification) [Reviewed 2026-10-18: all-component centroid direction changes when unrelated test points move; it is a placement preference, not a hardware limit. SNVSBD5D Rev. D section 11.1 requires local loop/layout and power-path quality, not a 90-degree subsystem-centroid cutoff. See native/benchmarks/2026-10-18-facing-centroid-review.json; routing and parasitics remain unverified.]
+    ADVISORY facing power_som->@som: preference NOT satisfied (angle=92.0deg; not hardware qualification) [Reviewed 2026-10-18: the all-component centroid angle to the SoM body is a placement preference, not an electrical limit; moving an unrelated test point can reverse it while regulator, output capacitors and load remain fixed. SNVSBD5D Rev. D section 11.1 specifies local loops, feedback, wide/direct power paths and thermal copper, not a 90-degree subsystem-centroid cutoff. See native/benchmarks/2026-10-18-power-som-facing-review.json. Local placement checks remain mandatory; routing, parasitics and thermal performance remain unverified.]
+    ADVISORY flow camera->@som: 42.87mm / 109.8mm heuristic reference; preference satisfied; not a trace-length or hardware limit
+    ADVISORY flow hdmi_tx->@som: 46.54mm / 109.8mm heuristic reference; preference satisfied; not a trace-length or hardware limit
+    ADVISORY flow pd_input->usb_pd: 72.23mm / 109.8mm heuristic reference; preference satisfied; not a trace-length or hardware limit
+    ADVISORY flow power->power_som: 38.70mm / 109.8mm heuristic reference; preference satisfied; not a trace-length or hardware limit
+    ADVISORY flow power_mon->power_som: 15.07mm / 109.8mm heuristic reference; preference satisfied; not a trace-length or hardware limit
+    ADVISORY flow usb_pd->power: 73.87mm / 109.8mm heuristic reference; preference satisfied; not a trace-length or hardware limit
+    ADVISORY flow usb_pd->power: 73.87mm / 109.8mm heuristic reference; preference satisfied; not a trace-length or hardware limit
   detail: 18
-    facing power->power_som: dot=+69.34 angle=74.8deg (output@(98.422, 134.0703) zone@(95.8141, 148.4951) down@(79.4853, 140.7359))
-    facing power_som->@som: dot=-124.26 angle=104.6deg (output@(66.7901, 138.4601) zone@(79.4853, 140.7359) down@(95.5, 106.0))
-    far ethernet vs power: 88.72mm / >= 10mm
-    far motor_sense vs power: 113.50mm / >= 10mm
-    far motor_sense vs power_som: 120.52mm / >= 10mm
-    far power vs ethernet.line_side: 88.72mm / >= 10mm
-    far power_som vs ethernet.line_side: 75.83mm / >= 10mm
-    flow camera->@som: 67.57mm / 121.6mm budget
-    flow hdmi_tx->@som: 71.74mm / 121.6mm budget
-    flow pd_input->usb_pd: 29.03mm / 121.6mm budget
-    flow power->power_som: 18.08mm / 121.6mm budget
-    flow power_mon->power_som: 69.29mm / 121.6mm budget
-    flow usb_pd->power: 86.11mm / 121.6mm budget
-    flow usb_pd->power: 86.11mm / 121.6mm budget
-    near_max ethernet to rj45_connector: 1.58mm gap / <= 20mm
-    near_max hdmi_rx_term to som_j2: 6.51mm gap / <= 10mm
-    near_max motor_sense to motor_pwm: 1.80mm gap / <= 20mm
-    near_max uart_bridge to usb_uart_connector: 7.52mm gap / <= 40mm
+    facing power->power_som: dot=+599.90 angle=49.7deg (output@(137.2082, 63.38) zone@(141.1473, 87.0185) down@(107.9142, 67.1784))
+    facing power_som->@som: dot=-20.72 angle=92.0deg (output@(122.1599, 67.3351) zone@(107.9142, 67.1784) down@(106.0, 109.0))
+    far ethernet vs power: 72.28mm / >= 10mm
+    far motor_sense vs power: 71.78mm / >= 10mm
+    far motor_sense vs power_som: 77.99mm / >= 10mm
+    far power vs ethernet.line_side: 72.28mm / >= 10mm
+    far power_som vs ethernet.line_side: 42.59mm / >= 10mm
+    flow camera->@som: 42.87mm / 109.8mm budget
+    flow hdmi_tx->@som: 46.54mm / 109.8mm budget
+    flow pd_input->usb_pd: 72.23mm / 109.8mm budget
+    flow power->power_som: 38.70mm / 109.8mm budget
+    flow power_mon->power_som: 15.07mm / 109.8mm budget
+    flow usb_pd->power: 73.87mm / 109.8mm budget
+    flow usb_pd->power: 73.87mm / 109.8mm budget
+    near_max ethernet to rj45_connector: 3.10mm gap / <= 20mm
+    near_max hdmi_rx_term to som_j2: 4.19mm gap / <= 10mm
+    near_max motor_sense to motor_pwm: 0.00mm gap / <= 20mm
+    near_max uart_bridge to usb_uart_connector: 20.93mm gap / <= 40mm

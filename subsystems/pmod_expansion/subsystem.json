@@ -3,8 +3,8 @@
   "name": "pmod_expansion",
   "title": "Pmod expansion (2x6, bank 13, ESD, gated 3V3)",
   "interface": ["+VDD_PMOD", "+VSW_PMOD", "GND", "PMOD_IO1", "PMOD_IO2", "PMOD_IO3", "PMOD_IO4", "PMOD_IO5", "PMOD_IO6", "PMOD_IO7", "PMOD_IO8"],
-  "placement": {"region": "board", "silk_label": null, "far_guard_mm": null, "escape_basis": null, "escape_escalates": false, "reserves_edge": false},
-  "checks": {"dividers": [], "divider_sources": [], "iset_window_ma": null},
+  "placement": {"region": "board", "silk_label": "PMOD", "far_guard_mm": null, "escape_basis": null, "escape_escalates": false, "reserves_edge": false},
+  "checks": {"dividers": [], "divider_sources": [], "iset_window_ma": null, "iset_basis": null},
   "parts": [
     {"ref": "U1", "part": "SY6280AAC"},
     {

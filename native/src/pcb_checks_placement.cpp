@@ -13,7 +13,7 @@ PlacementMechResult check_placement_mech(const PcbCheckInput& input){
         return mechanical_direction_component(value);
     };
     const std::map<std::string,std::pair<int,int>> outward={{"N",{0,-1}},{"S",{0,1}},{"W",{-1,0}},{"E",{1,0}}};
-    for(std::size_t i=0;i<m.insts.size();++i){const auto& inst=m.insts[i];auto part=mpn(m.connectors,inst);if(part.empty())continue;++res.n_connectors;
+    for(std::size_t i=0;i<m.insts.size();++i){const auto& inst=m.insts[i];auto part=mpn(m.connectors,inst);if(part.empty()||!(m.connectors.at(part).edge_pinned||m.edge_sheets.count(inst.sheet))||mating_face_vector(m.connectors.at(part))==std::pair<int,int>{0,0})continue;++res.n_connectors;
         const auto b=input.courtyard_at(i);std::vector<std::pair<std::string,double>> distances={{"N",b.y0-m.origin_y},{"S",m.origin_y+m.board_h-b.y1},{"W",b.x0-m.origin_x},{"E",m.origin_x+m.board_w-b.x1}};
         auto edge=std::min_element(distances.begin(),distances.end(),[](const auto& a,const auto& b){return a.second<b.second;});
         const auto mating=mating_face_vector(m.connectors.at(part));auto vec=turn_point(mating.first,inst.mirror?-mating.second:mating.second,inst.rotation);std::pair<int,int> face{direction_component(vec.first),direction_component(vec.second)};

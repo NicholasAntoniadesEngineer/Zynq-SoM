@@ -1,0 +1,58 @@
+{
+  "schema": "schgen.som_mapping.v1",
+  "function_map": {
+    "STM32_GPIO1": "STM32_RAIL_EN_5V0",
+    "STM32_GPIO2": "STM32_RAIL_EN_3V3",
+    "STM32_GPIO3": "STM32_RAIL_EN_1V8",
+    "STM32_GPIO4": "SC_INT_N",
+    "STM32_DAC1": "STM32_I2C2_SDA",
+    "STM32_DAC2": "STM32_I2C2_SCL",
+    "ZYNQ_PS_MIO10": "ZYNQ_PS_UART0_RXD",
+    "ZYNQ_PS_MIO11": "ZYNQ_PS_UART0_TXD",
+    "IO_L18_P_13": "ZYNQ_PS_UART0_CTS_N",
+    "IO_L18_N_13": "ZYNQ_PS_UART0_RTS_N",
+    "IO_L6_N_VREF_13": "SD_CARD_DETECT",
+    "IO_L14_SRCC_P_33": "ESC_PWM_IN0",
+    "IO_L14_SRCC_N_33": "ESC_PWM_IN1",
+    "IO_L11_SRCC_P_33": "ESC_PWM_IN2",
+    "IO_L11_SRCC_N_33": "ESC_PWM_IN3",
+    "IO_L3_DQS_P_33": "ESC_PWM_IN4",
+    "IO_L3_DQS_N_33": "ESC_PWM_IN5",
+    "IO_L5_P_33": "ESC_PWM_IN6",
+    "IO_L5_N_33": "ESC_PWM_IN7",
+    "IO_L1P_13": "ESC_BUF_OE_N",
+    "IO_L1_N_13": "ESC_FAULT_N",
+    "IO_L17_P_33": "ESC_FB0",
+    "IO_L17_N_33": "ESC_FB1",
+    "IO_L18_P_33": "ESC_FB2",
+    "IO_L18_N_33": "ESC_FB3",
+    "IO_L10_P_33": "ESC_FB4",
+    "IO_L10_N_33": "ESC_FB5",
+    "IO_L12_MRCC_P_33": "ESC_FB6",
+    "IO_L12_MRCC_N_33": "ESC_FB7",
+    "IO_L16_N_33": "ESC_IDLE_SEL",
+    "IO_L6_P_33": "ESC_TLM_RX",
+    "IO_L15_P_33": "CAN_TX",
+    "IO_L15_N_33": "CAN_RX",
+    "IO_L20_P_33": "FAN_PWM",
+    "IO_L20_N_33": "FAN_TACH",
+    "IO_L1_P_35": "ESC_VBAT_SENSE",
+    "IO_L1_N_35": "ESC_IMON"
+  },
+  "pudc_straps": {
+    "IO_L3P_PUDC_34": "PUDC_34"
+  },
+  "vcco_rail_map": {
+    "+VCCO_13": "+3V3",
+    "+VCCO_33": "+3V3",
+    "+VCCO_34": "+3V3",
+    "+VCCO_35": "+3V3"
+  },
+  "rebound_som_rails": {
+    "VIN": "+5V_SOM"
+  },
+  "isolated_som_rails": {
+    "+3V3": "SoM MPM3834 3V3 output on J1.24-27 — the board LM61460 (power:U2) is the only +3V3 source",
+    "+1V8": "SoM MPM3834 1V8 output on J1.56/58/60 — the board AP2112K (power:U3) is the only +1V8 source"
+  }
+}

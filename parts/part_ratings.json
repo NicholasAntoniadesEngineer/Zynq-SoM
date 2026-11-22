@@ -88,7 +88,19 @@
     {"lcsc": "C129895", "kind": "ic", "temp_max": 85, "vin_max": 6.5, "source": "24AA025E48 EEPROM+MAC abs-max Vcc 6.5V"},
     {"lcsc": "C3019759", "kind": "ic", "temp_max": 85, "vin_max": 5.5, "source": "RV-3028-C7 RTC 1.1-5.5V"},
     {"lcsc": "C201665", "kind": "ic", "temp_max": 85, "vin_max": 5.5, "source": "TPD12S016 HDMI ESD/level-shift 4.5-5.5V"},
-    {"lcsc": "C14858", "kind": "mlcc", "v_max": 50, "tol": "±5%", "dielectric": "C0G", "temp_max": 125, "source": "Samsung CL10C101JB8NNNC 100pF 50V C0G 0603; product.samsungsem.com/cn/mlcc/CL10C101JB8NNN.do"}
+    {"lcsc": "C14858", "kind": "mlcc", "v_max": 50, "tol": "±5%", "dielectric": "C0G", "temp_max": 125, "source": "Samsung CL10C101JB8NNNC 100pF 50V C0G 0603; product.samsungsem.com/cn/mlcc/CL10C101JB8NNN.do"},
+    {"lcsc": "C15725", "kind": "mlcc", "v_max": 100, "tol": "±10%", "dielectric": "X7R", "temp_max": 125, "source": "LCSC listing CL10B104KC8NNNC 100nF 100V X7R 0603"},
+    {"lcsc": "C49451356", "kind": "mlcc", "v_max": 100, "tol": "±10%", "dielectric": "X7R", "temp_max": 125, "source": "LCSC listing TCC1210X7R475K101MT 4.7uF 100V X7R 1210"},
+    {"lcsc": "C282823", "kind": "mlcc", "v_max": 100, "tol": "±10%", "dielectric": "X7R", "temp_max": 125, "source": "LCSC listing TCC1206X7R105K101HT 1uF 100V X7R 1206"},
+    {"lcsc": "C90272", "kind": "elec", "v_max": 50, "tol": "±20%", "temp_max": 105, "source": "ROQANG RVT series sheet: 6.3-100 V range, -55 to 105 C, +/-20 %, 2000 h at 105 C; 470uF 50V"},
+    {"lcsc": "C710260", "kind": "res", "p_max": 3, "tol": "±1%", "temp_max": 170, "source": "TA-I TRLM-256Z001A (2019/01/22) section 4: RLM25 3 W, 0.5 mOhm, -55 to +170 C, +/-75 ppm/C, derating from 70 C"},
+    {"lcsc": "C720195", "kind": "res", "tol": "-", "temp_max": 125, "source": "Littelfuse 456 series (revised 11/22/19): 40 A, 72 V, cold resistance 1.05 mOhm, interrupting 600 A at 60 VDC, -55 to 125 C with derating"},
+    {"lcsc": "C22787", "kind": "res", "v_max": 75, "p_max": 0.1, "tol": "±1%", "temp_max": 155, "source": "UNI-ROYAL thick-film chip resistor sheet: 0603 working voltage 75 V, -55 to 155 C; 120R"},
+    {"lcsc": "C14486", "kind": "diode", "v_max": 24, "temp_max": 150, "source": "onsemi NUP2105L/D Rev 12: VRWM 24 V, VBR 26.2-32 V, VC 33 V typ / 40 V max at 5 A (8/20 us), 350 W, 30 pF max"},
+    {"lcsc": "C122552", "kind": "other", "v_max": 60, "i_max": 52, "temp_max": 175, "source": "Infineon IPT007N06N Rev 2.1: VDS 60 V, RDS(on) max 0.75 mOhm at VGS 10 V, ID 52 A at RthJA 40 K/W, VGS +/-20 V"},
+    {"lcsc": "C22428070", "kind": "ic", "temp_max": 125, "vin_max": 70, "source": "TI SNOSDF6 6.1: VS, C, CS+, CS- to GND -1 V to 70 V; A to GND -65 V to 70 V; recommended to 65 V"},
+    {"lcsc": "C2864837", "kind": "ic", "temp_max": 125, "vin_max": 6, "source": "TI SBOSA20A 6.1: VS 6 V; inputs and VBUS -0.3 V to 85 V"},
+    {"lcsc": "C124014", "kind": "ic", "temp_max": 125, "vin_max": 7, "source": "TI SLLSES9D 7.1: VIO -0.3 V to 7 V; CAN bus pins -70 V to 70 V (H variants); 5 V supply"}
   ]
 }
 

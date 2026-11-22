@@ -42,6 +42,8 @@ struct PcbCheckInstance {
     bool at_module = false;
     std::string module_connector;
     bool under_module = false;
+    std::optional<std::string> silk_label, escape_basis;
+    bool escape_escalates = false;
 };
 PartClass part_class_of(const PcbCheckInstance& instance);
 const PartHeight& part_height_of(const PcbCheckInstance& instance);
@@ -94,6 +96,7 @@ struct PcbCheckModel {
     std::optional<LandSpacingPolicy> land_spacing;
     IsolationFacts isolation;
     std::set<std::string> module_connectors;
+    std::set<std::string> edge_sheets;
 };
 struct PcbCheckGeometry {
     std::optional<Box4> courtyard, pad_bbox;
@@ -130,6 +133,7 @@ struct ConnectorModelResult {
 // Allows unresolved models to be reported without requiring placed geometry.
 ConnectorModelResult check_connector_models(const PcbCheckModel&);
 ConnectorModelResult check_connector_models(const PcbCheckModel&, const ConnectorFacts&);
+inline constexpr const char* staged_connector_family = "envelope+access";
 struct ConnectorSpacingRow {
     std::string ref_a, ref_b, family, axis;
     double gap = 0, need = 0;
@@ -141,6 +145,7 @@ struct ConnectorSpacingResult {
     std::vector<ConnectorSpacingRow> pairs;
     std::vector<std::string> violations;
     std::string summary() const;
+    bool ok_as_placed() const;
 };
 ConnectorSpacingResult check_connector_spacing(const PcbCheckInput&);
 struct PlacementMechRow {

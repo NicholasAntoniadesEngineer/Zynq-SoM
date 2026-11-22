@@ -1,0 +1,2 @@
+    require(carrier_required_files("widget",false)==std::vector<std::string>{"circuit.json","layout.json","README.md","widget.cir"},
+        "default local requirements retained Python");

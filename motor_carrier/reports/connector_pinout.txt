@@ -1,0 +1,140 @@
+connector_pins	order=sheet,ref,pin
+sheet	ref	board_ref	part	pin	pin_name	net	net_type	port	route_class	ohm	declared	protect
+board_control	J1	J1001	ZX-SH1.0-4PWT	1	1	GND	ground	-	-	-	-	-
+board_control	J1	J1001	ZX-SH1.0-4PWT	2	2	+5V_FAN	power	-	-	-	-	-
+board_control	J1	J1001	ZX-SH1.0-4PWT	3	3	FAN_TACH_CONN	signal	-	-	-	-	-
+board_control	J1	J1001	ZX-SH1.0-4PWT	4	4	FAN_PWM_OD	signal	-	-	-	-	-
+board_control	J1	J1001	ZX-SH1.0-4PWT	5	5	GND	ground	-	-	-	-	-
+board_control	J1	J1001	ZX-SH1.0-4PWT	6	6	GND	ground	-	-	-	-	-
+can_bus	J1	J3001	ZX-SH1.0-4PWT	1	1	-	-	-	-	-	nc	-
+can_bus	J1	J3001	ZX-SH1.0-4PWT	2	2	CAN_H	signal	-	-	-	-	D3001:NUP2105LT1G
+can_bus	J1	J3001	ZX-SH1.0-4PWT	3	3	CAN_L	signal	-	-	-	-	D3001:NUP2105LT1G
+can_bus	J1	J3001	ZX-SH1.0-4PWT	4	4	GND_MOTOR	ground	-	-	-	-	-
+can_bus	J1	J3001	ZX-SH1.0-4PWT	5	5	GND_MOTOR	ground	-	-	-	-	-
+can_bus	J1	J3001	ZX-SH1.0-4PWT	6	6	GND_MOTOR	ground	-	-	-	-	-
+can_bus	J2	J3002	ZX-SH1.0-4PWT	1	1	-	-	-	-	-	nc	-
+can_bus	J2	J3002	ZX-SH1.0-4PWT	2	2	CAN_H	signal	-	-	-	-	D3001:NUP2105LT1G
+can_bus	J2	J3002	ZX-SH1.0-4PWT	3	3	CAN_L	signal	-	-	-	-	D3001:NUP2105LT1G
+can_bus	J2	J3002	ZX-SH1.0-4PWT	4	4	GND_MOTOR	ground	-	-	-	-	-
+can_bus	J2	J3002	ZX-SH1.0-4PWT	5	5	GND_MOTOR	ground	-	-	-	-	-
+can_bus	J2	J3002	ZX-SH1.0-4PWT	6	6	GND_MOTOR	ground	-	-	-	-	-
+debug_boot	J1	J4001	878311420	1	1	GND	ground	-	-	-	-	-
+debug_boot	J1	J4001	878311420	2	2	+3V3	power	-	-	-	-	U9002:TPD6E001RSER
+debug_boot	J1	J4001	878311420	3	3	GND	ground	-	-	-	-	-
+debug_boot	J1	J4001	878311420	4	4	ZYNQ_TMS	port	single	Default	-	-	-
+debug_boot	J1	J4001	878311420	5	5	GND	ground	-	-	-	-	-
+debug_boot	J1	J4001	878311420	6	6	ZYNQ_TCK	port	single	Default	-	-	-
+debug_boot	J1	J4001	878311420	7	7	GND	ground	-	-	-	-	-
+debug_boot	J1	J4001	878311420	8	8	ZYNQ_TDO	port	single	Default	-	-	-
+debug_boot	J1	J4001	878311420	9	9	GND	ground	-	-	-	-	-
+debug_boot	J1	J4001	878311420	10	10	ZYNQ_TDI	port	single	Default	-	-	-
+debug_boot	J1	J4001	878311420	11	11	GND	ground	-	-	-	-	-
+debug_boot	J1	J4001	878311420	12	12	-	-	-	-	-	nc	-
+debug_boot	J1	J4001	878311420	13	13	GND	ground	-	-	-	-	-
+debug_boot	J1	J4001	878311420	14	14	-	-	-	-	-	nc	-
+debug_boot	J2	J4002	HX_JN1.27-2x5	1	1	+3V3_SC	power	-	-	-	-	U10002:USBLC6-2SC6
+debug_boot	J2	J4002	HX_JN1.27-2x5	2	2	STM32_GPIO6	port	single	Default	-	-	-
+debug_boot	J2	J4002	HX_JN1.27-2x5	3	3	GND	ground	-	-	-	-	-
+debug_boot	J2	J4002	HX_JN1.27-2x5	4	4	STM32_GPIO5	port	single	Default	-	-	-
+debug_boot	J2	J4002	HX_JN1.27-2x5	5	5	GND	ground	-	-	-	-	-
+debug_boot	J2	J4002	HX_JN1.27-2x5	6	6	-	-	-	-	-	nc	-
+debug_boot	J2	J4002	HX_JN1.27-2x5	7	7	-	-	-	-	-	nc	-
+debug_boot	J2	J4002	HX_JN1.27-2x5	8	8	-	-	-	-	-	nc	-
+debug_boot	J2	J4002	HX_JN1.27-2x5	9	9	GND	ground	-	-	-	-	-
+debug_boot	J2	J4002	HX_JN1.27-2x5	10	10	STM32_NRST	port	single	Default	-	-	-
+esc_io	J1	J5001	HX PZ2.54-3x8P ZZ	1	1	ESC_OUT0	signal	-	-	-	-	D5001:SRV05-4
+esc_io	J1	J5001	HX PZ2.54-3x8P ZZ	2	2	ESC_OUT1	signal	-	-	-	-	D5001:SRV05-4
+esc_io	J1	J5001	HX PZ2.54-3x8P ZZ	3	3	ESC_OUT2	signal	-	-	-	-	D5001:SRV05-4
+esc_io	J1	J5001	HX PZ2.54-3x8P ZZ	4	4	ESC_OUT3	signal	-	-	-	-	D5001:SRV05-4
+esc_io	J1	J5001	HX PZ2.54-3x8P ZZ	5	5	ESC_OUT4	signal	-	-	-	-	D5002:SRV05-4
+esc_io	J1	J5001	HX PZ2.54-3x8P ZZ	6	6	ESC_OUT5	signal	-	-	-	-	D5002:SRV05-4
+esc_io	J1	J5001	HX PZ2.54-3x8P ZZ	7	7	ESC_OUT6	signal	-	-	-	-	D5002:SRV05-4
+esc_io	J1	J5001	HX PZ2.54-3x8P ZZ	8	8	ESC_OUT7	signal	-	-	-	-	D5002:SRV05-4
+esc_io	J1	J5001	HX PZ2.54-3x8P ZZ	9	9	+5V_MOTOR_IO	power	-	-	-	-	-
+esc_io	J1	J5001	HX PZ2.54-3x8P ZZ	10	10	+5V_MOTOR_IO	power	-	-	-	-	-
+esc_io	J1	J5001	HX PZ2.54-3x8P ZZ	11	11	+5V_MOTOR_IO	power	-	-	-	-	-
+esc_io	J1	J5001	HX PZ2.54-3x8P ZZ	12	12	+5V_MOTOR_IO	power	-	-	-	-	-
+esc_io	J1	J5001	HX PZ2.54-3x8P ZZ	13	13	+5V_MOTOR_IO	power	-	-	-	-	-
+esc_io	J1	J5001	HX PZ2.54-3x8P ZZ	14	14	+5V_MOTOR_IO	power	-	-	-	-	-
+esc_io	J1	J5001	HX PZ2.54-3x8P ZZ	15	15	+5V_MOTOR_IO	power	-	-	-	-	-
+esc_io	J1	J5001	HX PZ2.54-3x8P ZZ	16	16	+5V_MOTOR_IO	power	-	-	-	-	-
+esc_io	J1	J5001	HX PZ2.54-3x8P ZZ	17	17	GND_MOTOR	ground	-	-	-	-	-
+esc_io	J1	J5001	HX PZ2.54-3x8P ZZ	18	18	GND_MOTOR	ground	-	-	-	-	-
+esc_io	J1	J5001	HX PZ2.54-3x8P ZZ	19	19	GND_MOTOR	ground	-	-	-	-	-
+esc_io	J1	J5001	HX PZ2.54-3x8P ZZ	20	20	GND_MOTOR	ground	-	-	-	-	-
+esc_io	J1	J5001	HX PZ2.54-3x8P ZZ	21	21	GND_MOTOR	ground	-	-	-	-	-
+esc_io	J1	J5001	HX PZ2.54-3x8P ZZ	22	22	GND_MOTOR	ground	-	-	-	-	-
+esc_io	J1	J5001	HX PZ2.54-3x8P ZZ	23	23	GND_MOTOR	ground	-	-	-	-	-
+esc_io	J1	J5001	HX PZ2.54-3x8P ZZ	24	24	GND_MOTOR	ground	-	-	-	-	-
+esc_io	J2	J5002	ZX-SH1.0-4PWT	1	1	GND_MOTOR	ground	-	-	-	-	-
+esc_io	J2	J5002	ZX-SH1.0-4PWT	2	2	TLM_CONN	signal	-	-	-	-	D5003:SRV05-4
+esc_io	J2	J5002	ZX-SH1.0-4PWT	3	3	-	-	-	-	-	nc	-
+esc_io	J2	J5002	ZX-SH1.0-4PWT	4	4	-	-	-	-	-	nc	-
+esc_io	J2	J5002	ZX-SH1.0-4PWT	5	5	GND_MOTOR	ground	-	-	-	-	-
+esc_io	J2	J5002	ZX-SH1.0-4PWT	6	6	GND_MOTOR	ground	-	-	-	-	-
+esc_power	J1	J6001	XT60PW-M	1	-	GND_MOTOR	ground	-	-	-	-	-
+esc_power	J1	J6001	XT60PW-M	2	+	+VESC_IN	power	-	-	-	-	-
+esc_power	J1	J6001	XT60PW-M	3	3	GND_MOTOR	ground	-	-	-	-	-
+esc_power	J1	J6001	XT60PW-M	4	4	GND_MOTOR	ground	-	-	-	-	-
+esc_power	J2	J6002	XT60PW-M	1	-	GND_MOTOR	ground	-	-	-	-	-
+esc_power	J2	J6002	XT60PW-M	2	+	+VESC	power	-	-	-	-	-
+esc_power	J2	J6002	XT60PW-M	3	3	GND_MOTOR	ground	-	-	-	-	-
+esc_power	J2	J6002	XT60PW-M	4	4	GND_MOTOR	ground	-	-	-	-	-
+microsd	J1	J9001	TF-01A	1	DAT2(RSV)	SD_CARD_D2	signal	-	-	-	-	U9002:TPD6E001RSER
+microsd	J1	J9001	TF-01A	2	CDDAT3(CS)	SD_CARD_D3	signal	-	-	-	-	U9002:TPD6E001RSER
+microsd	J1	J9001	TF-01A	3	CMD(DI)	SD_CARD_CMD	signal	-	-	-	-	U9002:TPD6E001RSER
+microsd	J1	J9001	TF-01A	4	VDD	+3V3	power	-	-	-	-	U9002:TPD6E001RSER
+microsd	J1	J9001	TF-01A	5	CLK(SCLK)	SD_CARD_CLK	signal	-	-	-	-	U9002:TPD6E001RSER
+microsd	J1	J9001	TF-01A	6	VSS	GND	ground	-	-	-	-	-
+microsd	J1	J9001	TF-01A	7	DAT0(D0)	SD_CARD_D0	signal	-	-	-	-	U9002:TPD6E001RSER
+microsd	J1	J9001	TF-01A	8	DAT1(RSV)	SD_CARD_D1	signal	-	-	-	-	U9002:TPD6E001RSER
+microsd	J1	J9001	TF-01A	9	CD	SD_CARD_DETECT	port	single	Default	-	-	-
+microsd	J1	J9001	TF-01A	10	GND	GND	ground	-	-	-	-	-
+microsd	J1	J9001	TF-01A	11	GND	GND	ground	-	-	-	-	-
+microsd	J1	J9001	TF-01A	12	GND	GND	ground	-	-	-	-	-
+microsd	J1	J9001	TF-01A	13	GND	GND	ground	-	-	-	-	-
+pd_input	J1	J10001	TYPE-C-31-M-12	1	EH	CHASSIS_GND	ground	-	-	-	-	-
+pd_input	J1	J10001	TYPE-C-31-M-12	2	EH	CHASSIS_GND	ground	-	-	-	-	-
+pd_input	J1	J10001	TYPE-C-31-M-12	3	EH	CHASSIS_GND	ground	-	-	-	-	-
+pd_input	J1	J10001	TYPE-C-31-M-12	4	EH	CHASSIS_GND	ground	-	-	-	-	-
+pd_input	J1	J10001	TYPE-C-31-M-12	A1B12	GND	GND	ground	-	-	-	-	-
+pd_input	J1	J10001	TYPE-C-31-M-12	A4B9	VBUS	+VBUS_IN	power	-	-	-	-	D10001:SMBJ22A
+pd_input	J1	J10001	TYPE-C-31-M-12	A5	CC1	STM32_USB_CC1	port	single	Default	-	-	-
+pd_input	J1	J10001	TYPE-C-31-M-12	A6	DP1	PD_USB_DP_CONN	signal	-	-	-	-	U10002:USBLC6-2SC6
+pd_input	J1	J10001	TYPE-C-31-M-12	A7	DN1	PD_USB_DN_CONN	signal	-	-	-	-	U10002:USBLC6-2SC6
+pd_input	J1	J10001	TYPE-C-31-M-12	A8	SBU1	-	-	-	-	-	nc	-
+pd_input	J1	J10001	TYPE-C-31-M-12	B1A12	GND	GND	ground	-	-	-	-	-
+pd_input	J1	J10001	TYPE-C-31-M-12	B4A9	VBUS	+VBUS_IN	power	-	-	-	-	D10001:SMBJ22A
+pd_input	J1	J10001	TYPE-C-31-M-12	B5	CC2	STM32_USB_CC2	port	single	Default	-	-	-
+pd_input	J1	J10001	TYPE-C-31-M-12	B6	DP2	PD_USB_DP_CONN	signal	-	-	-	-	U10002:USBLC6-2SC6
+pd_input	J1	J10001	TYPE-C-31-M-12	B7	DN2	PD_USB_DN_CONN	signal	-	-	-	-	U10002:USBLC6-2SC6
+pd_input	J1	J10001	TYPE-C-31-M-12	B8	SBU2	-	-	-	-	-	nc	-
+rj45_connector	J1	J14001	KH-5224-8P8C-D	1	1	ETH_LINE_MDI_0_P	port	diff_pair	DP100_DIFF	100	-	-
+rj45_connector	J1	J14001	KH-5224-8P8C-D	2	2	ETH_LINE_MDI_0_N	port	diff_pair	DP100_DIFF	100	-	-
+rj45_connector	J1	J14001	KH-5224-8P8C-D	3	3	ETH_LINE_MDI_1_P	port	diff_pair	DP100_DIFF	100	-	-
+rj45_connector	J1	J14001	KH-5224-8P8C-D	4	4	ETH_LINE_MDI_2_P	port	diff_pair	DP100_DIFF	100	-	-
+rj45_connector	J1	J14001	KH-5224-8P8C-D	5	5	ETH_LINE_MDI_2_N	port	diff_pair	DP100_DIFF	100	-	-
+rj45_connector	J1	J14001	KH-5224-8P8C-D	6	6	ETH_LINE_MDI_1_N	port	diff_pair	DP100_DIFF	100	-	-
+rj45_connector	J1	J14001	KH-5224-8P8C-D	7	7	ETH_LINE_MDI_3_P	port	diff_pair	DP100_DIFF	100	-	-
+rj45_connector	J1	J14001	KH-5224-8P8C-D	8	8	ETH_LINE_MDI_3_N	port	diff_pair	DP100_DIFF	100	-	-
+rj45_connector	J1	J14001	KH-5224-8P8C-D	9	LED-L+	RJ45_LED_L	signal	-	-	-	-	-
+rj45_connector	J1	J14001	KH-5224-8P8C-D	10	LED-L-	GND	ground	-	-	-	-	-
+rj45_connector	J1	J14001	KH-5224-8P8C-D	11	LED-R+	RJ45_LED_R	signal	-	-	-	-	-
+rj45_connector	J1	J14001	KH-5224-8P8C-D	12	LED-R-	GND	ground	-	-	-	-	-
+rj45_connector	J1	J14001	KH-5224-8P8C-D	13	SHELL	CHASSIS_GND	ground	-	-	-	-	-
+usb_uart_connector	J1	J20001	TYPE-C-31-M-12	1	EH	CHASSIS_GND	ground	-	-	-	-	-
+usb_uart_connector	J1	J20001	TYPE-C-31-M-12	2	EH	CHASSIS_GND	ground	-	-	-	-	-
+usb_uart_connector	J1	J20001	TYPE-C-31-M-12	3	EH	CHASSIS_GND	ground	-	-	-	-	-
+usb_uart_connector	J1	J20001	TYPE-C-31-M-12	4	EH	CHASSIS_GND	ground	-	-	-	-	-
+usb_uart_connector	J1	J20001	TYPE-C-31-M-12	A1B12	GND	GND	ground	-	-	-	-	-
+usb_uart_connector	J1	J20001	TYPE-C-31-M-12	A4B9	VBUS	USB_UART_VBUS	port	single	Default	-	-	U20001:USBLC6-2SC6
+usb_uart_connector	J1	J20001	TYPE-C-31-M-12	A5	CC1	USB_UART_R1_CC	signal	-	-	-	-	-
+usb_uart_connector	J1	J20001	TYPE-C-31-M-12	A6	DP1	USB_UART_DP_CONN	signal	-	-	-	-	U20001:USBLC6-2SC6
+usb_uart_connector	J1	J20001	TYPE-C-31-M-12	A7	DN1	USB_UART_DM_CONN	signal	-	-	-	-	U20001:USBLC6-2SC6
+usb_uart_connector	J1	J20001	TYPE-C-31-M-12	A8	SBU1	-	-	-	-	-	nc	-
+usb_uart_connector	J1	J20001	TYPE-C-31-M-12	B1A12	GND	GND	ground	-	-	-	-	-
+usb_uart_connector	J1	J20001	TYPE-C-31-M-12	B4A9	VBUS	USB_UART_VBUS	port	single	Default	-	-	U20001:USBLC6-2SC6
+usb_uart_connector	J1	J20001	TYPE-C-31-M-12	B5	CC2	USB_UART_R2_CC	signal	-	-	-	-	-
+usb_uart_connector	J1	J20001	TYPE-C-31-M-12	B6	DP2	USB_UART_DP_CONN	signal	-	-	-	-	U20001:USBLC6-2SC6
+usb_uart_connector	J1	J20001	TYPE-C-31-M-12	B7	DN2	USB_UART_DM_CONN	signal	-	-	-	-	U20001:USBLC6-2SC6
+usb_uart_connector	J1	J20001	TYPE-C-31-M-12	B8	SBU2	-	-	-	-	-	nc	-

@@ -721,6 +721,15 @@ void footprint_arc_extrema(const SexprList& arc,std::vector<double>& xs,std::vec
     }
 }
 
+void primitive_points(const SexprList& node, std::vector<std::pair<double, double>>& points) {
+    if (node.size() >= 3 && is_sym(node[0], "xy") && is_number(node[1]) && is_number(node[2])) {
+        points.emplace_back(std::get<double>(node[1].v), std::get<double>(node[2].v));
+        return;
+    }
+    for (const Sexpr& child : node)
+        if (std::holds_alternative<SexprList>(child.v)) primitive_points(std::get<SexprList>(child.v), points);
+}
+
 void footprint_bbox_walk(const SexprList& node, std::vector<double>* xs,
                          std::vector<double>* ys) {
     for (const Sexpr& child : node) {
@@ -809,6 +818,24 @@ void footprint_bbox_walk(const SexprList& node, std::vector<double>* xs,
             ys->push_back(py - half.second);
             xs->push_back(px + half.first);
             ys->push_back(py + half.second);
+            if (const SexprList* primitives = find_tagged_child(sub, "primitives")) {
+                std::vector<std::pair<double, double>> points;
+                primitive_points(*primitives, points);
+                double reach = 0.0;
+                for (const auto& [x, y] : points) {
+                    if (deg == 0.0) {
+                        xs->push_back(px + x);
+                        ys->push_back(py + y);
+                    }
+                    reach = std::max(reach, std::hypot(x, y));
+                }
+                if (deg != 0.0 && reach > 0.0) {
+                    xs->push_back(px - reach);
+                    ys->push_back(py - reach);
+                    xs->push_back(px + reach);
+                    ys->push_back(py + reach);
+                }
+            }
             continue;
         }
         footprint_bbox_walk(sub, xs, ys);

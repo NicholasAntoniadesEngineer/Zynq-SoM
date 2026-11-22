@@ -58,6 +58,7 @@ struct SqueezeOptions {
     Nm pitch = 0, part_reach = 0, unit_reach = 0, first_step = 0, last_step = 0;
     std::size_t rounds = 0;
     std::array<Side, edge_count> order{Side::east, Side::south, Side::west, Side::north};
+    std::size_t plan_skip = 0;
 };
 
 SqueezeOptions default_squeeze();
@@ -80,6 +81,7 @@ struct SqueezeReport {
 
 SqueezeReport squeeze(Kernel& kernel, const SqueezeOptions& options);
 bool widen(Kernel& kernel, const SqueezeOptions& options, Side side, Nm by);
+bool open_side(Kernel& kernel, const SqueezeOptions& options, Side side, Nm by);
 SqueezeReport squeeze_best(Kernel& kernel, const SqueezeOptions& options);
 
 }

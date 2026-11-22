@@ -1,0 +1,3 @@
+        std::vector<std::string> files{"circuit.json","layout.json"};
+        for(const auto& file:local_package_authored_files(name,adapter))files.push_back(file);
+        return files;

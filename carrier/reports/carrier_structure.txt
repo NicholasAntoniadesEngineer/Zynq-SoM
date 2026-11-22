@@ -2,7 +2,7 @@ schgen carrier-structure gate (NATIVE HARD)
 ============================================================
 
 contract: every project package has circuit.json matching its live native factory.
-  ADAPTER: native metadata plus the generic library's README.md and <name>.cir.
-  LOCAL: package-local README.md and <name>.cir. Python files are not required.
+  ADAPTER: native metadata plus the generic library's subsystem.json.
+  LOCAL: circuit.json and layout.json only. Python files are not required.
 
-CARRIER STRUCTURE: 37/37 subsystem(s) complete (17 native adapter(s) + 20 native local(s)) (PASS)
+CARRIER STRUCTURE: 37/37 subsystem(s) complete (34 native adapter(s) + 3 native local(s)) (PASS)

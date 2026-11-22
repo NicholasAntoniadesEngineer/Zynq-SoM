@@ -4,7 +4,21 @@
   "title": "Power: +VIN->+5V->+3V3 bucks + +1V8 LDO, PG LEDs",
   "interface": ["+VIN", "+VOUT_5V_REG", "+VOUT_5V", "+VOUT_3V3_REG", "+VOUT_3V3", "+VOUT_1V8_REG", "+VOUT_1V8", "GND", "EN_VOUT_5V", "EN_VOUT_3V3", "EN_VOUT_1V8"],
   "placement": {"region": "board", "silk_label": null, "far_guard_mm": null, "escape_basis": null, "escape_escalates": false, "reserves_edge": false},
-  "checks": {"dividers": [], "divider_sources": [], "iset_window_ma": null},
+  "checks": {
+    "dividers": [
+      {
+        "net": "PG_1V8_G",
+        "source": "+VOUT_1V8",
+        "limits": [
+          {"volts": 1.8, "lo": 1.45, "hi": 1.8, "tag": "FET on at nominal rail"}
+        ],
+        "why": "+1V8 PG sense: gate divider must exceed the AO3400A max Vgs(th)=1.45 V so the PG LED is guaranteed on"
+      }
+    ],
+    "divider_sources": [],
+    "iset_window_ma": null,
+    "iset_basis": null
+  },
   "parts": [
     {"ref": "U1", "part": "LM61460AANRJRR"},
     {

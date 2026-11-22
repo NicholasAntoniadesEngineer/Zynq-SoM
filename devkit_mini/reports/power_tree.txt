@@ -4,9 +4,8 @@ schgen power-tree budget gate
 sources:
   +VBUS_IN    20.0 V  limit 3.00 A  load 0.571 A  (19%)  — USB-C PD sink contract 20 V / 3 A at the receptacle (pd_input J1; +VIN sits behind the TPS26631 eFuse, round 5)
   +3V3_SC      3.3 V  limit 0.30 A  load 0.007 A  (2%)  — SoM TPS7A20 always-on SC LDO U13 (J1.37); 300 mA class — the SoM power_architecture sheet says '3V3 (300mA)'. Envelope shared with the SoM-side SC (STM32G431 ~50 mA); carrier tally only here
-  +5V_DBG      5.0 V  limit 0.50 A  load 0.000 A  (0%)  — debug USB-C VBUS (usb_jtag_connector J1) — host-supplied 5 V / 0.5 A USB2 default; feeds the usb_jtag AP2112K-3.3 debug-island LDO; isolated from carrier +5V
 
-regulators (5) — numbered as in carrier/docs/power_tree.svg:
+regulators (5) — numbered as in devkit_mini/docs/power_tree.svg:
   ( 1) pd_input:U1   TPS26631PWPR    +VBUS_IN -> +VIN           load 0.571 A / limit 3.529 A (16%)  in 0.571 A [efuse] ILIM = 18000/5100R = 3529 mA
   ( 2) power:U1   LM61460AANRJRR  +VIN_SYS -> +5V_REG        load 0.053 A / limit 6.000 A (1%)  in 0.015 A [buck] TI 6 A 3-36V synchronous buck (VIN1=8 ->L<-SW=10 ->rail)
   ( 3) power:U2   LM61460AANRJRR       +5V -> +3V3_REG       load 0.067 A / limit 6.000 A (1%)  in 0.049 A [buck] TI 6 A 3-36V synchronous buck (VIN1=8 ->L<-SW=10 ->rail)

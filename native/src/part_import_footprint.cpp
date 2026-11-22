@@ -191,7 +191,7 @@ PartFootprint part_convert_footprint(const JsonNode& result,const std::string& n
         if(kind=="PAD")extend(pads,pad_nodes(f,ctx));
         else if(kind=="TRACK") {
             need(4);const auto pts=words(f[3]);const auto ly=layer(number(f[1],3));
-            for(std::size_t i=0;i+3<pts.size();i+=2)graphics.push_back(fp_line(ctx.pt(pts[i],pts[i+1]),ctx.pt(pts[i+2],pts[i+3]),mm(f[0]),ly));
+            for(std::size_t i=0;i+3<pts.size();i+=2)if(pts[i]!=pts[i+2]||pts[i+1]!=pts[i+3])graphics.push_back(fp_line(ctx.pt(pts[i],pts[i+1]),ctx.pt(pts[i+2],pts[i+3]),mm(f[0]),ly));
         } else if(kind=="CIRCLE") {
             need(5);const auto q=ctx.pt(f[0],f[1]);graphics.push_back(list({sym("fp_circle"),xy("center",q),
                 xy("end",{rounded(q.first+mm(f[2])),q.second}),stroke(mm(f[3])),list({sym("fill"),sym("none")}),list({sym("layer"),str(layer(number(f[4],3)))})}));

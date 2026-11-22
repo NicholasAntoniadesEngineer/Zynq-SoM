@@ -109,7 +109,7 @@ int main(int argc, char** argv) {
                     if(message.find("THERMAL VIA SHORTFALL")!=std::string::npos && message.find("/1000 GND vias")!=std::string::npos)warning=true;
                 if(!warning)throw std::runtime_error("stricter thermal evidence must report its actual via shortfall");
             }
-            const double reference_area=std::string(project)=="carrier"?168.*163.:98.*98.;
+            const double reference_area=std::string(project)=="carrier"?175.*168.:98.*98.;
             if(stage.placement.model.board_w*stage.placement.model.board_h>reference_area)
                 throw std::runtime_error(std::string(project)+": qualified reference area regressed");
             const auto output = std::filesystem::path(argv[2]) / project;

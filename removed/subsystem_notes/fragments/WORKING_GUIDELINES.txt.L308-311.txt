@@ -1,0 +1,4 @@
+  subsystems/README.md ............ the reusable subsystem-library index
+  subsystems/<name>/README.md ..... a reusable subsystem's abstract interface
+  carrier/subsystems/README.md .... how to author/adapt a subsystem (the META
+                                    adapter -> reusable library contract)

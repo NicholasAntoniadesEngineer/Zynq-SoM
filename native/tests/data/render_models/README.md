@@ -147,7 +147,13 @@ Captured from untouched Python implementations before adapter integration:
 
 - `reference.json`: exact repository verdict/line/report, 288 WRL/STEP geometry
   cases, OBJ conversion bytes, 154 hardware asset SHA-256s and source SHA-256s.
-  SHA-256 `c233558629102d5885d7dd3ad845e2894ee9107794b3ab57fa08b8fac6968a2c`.
+  SHA-256 `88709d237dea26d12a682437fccf8bd301fcfbdb5f05e634f733d914daadbb03`.
+  Library-growth refresh (2026-11-21): the `repository` verdict, line and report
+  were re-recorded from `schgen model3d-check --project carrier` because `parts/`
+  gained the eight motor-carrier footprints: 62/62 -> 70/70 footprints resolve, the
+  same single XT60PW-M misfit, verdict unchanged. Geometry cases, OBJ bytes, asset
+  and source hashes are untouched. Previous SHA-256
+  `c233558629102d5885d7dd3ad845e2894ee9107794b3ab57fa08b8fac6968a2c`.
 - `render_reference.json`: original Python/KiCad eight-view captures for both
   real boards and original PyMuPDF schematic geometry.
   SHA-256 `e4e5155d9cfcdb89fb887dff763ccfbd3ecb60a22320294c6030ee08a6b49907`.

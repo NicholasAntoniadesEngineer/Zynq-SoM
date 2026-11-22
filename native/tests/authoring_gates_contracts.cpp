@@ -11,7 +11,7 @@
 #include <unistd.h>
 
 namespace {
-constexpr std::size_t library_packages=34;
+constexpr std::size_t library_packages=39;
 namespace fs=std::filesystem;
 using namespace schgen;
 std::size_t checks=0;
@@ -55,11 +55,11 @@ void default_mode_contracts(const fs::path& root) {
     SubsystemStructureResult failed{{bad}};
     require(!failed.ok()&&failed.exit_code()==1&&failed.exit_code(true)==1,
         "default failed library result must not use report-first exit status");
-    require(subsystem_required_files("widget")==std::vector<std::string>{"README.md","widget.cir"},
+    require(subsystem_required_files("widget")==std::vector<std::string>{"subsystem.json"},
         "default library requirements retained Python");
     require(carrier_required_files("widget",true)==std::vector<std::string>{"circuit.json","layout.json"},
         "default adapter requirements retained Python");
-    require(carrier_required_files("widget",false)==std::vector<std::string>{"circuit.json","layout.json","README.md","widget.cir"},
+    require(carrier_required_files("widget",false)==std::vector<std::string>{"circuit.json","layout.json"},
         "default local requirements retained Python");
 
     Scratch s;const auto empty=s.path/"empty",missing=s.path/"missing";
@@ -260,11 +260,11 @@ void native_packages(const fs::path& root) {
     require(!check_carrier_structure(s.path/"empty",library,{},mode).ok(),"empty native project accepted");
     auto missing=check_subsystem_structure(s.path/"absent",libraries,mode);
     require(missing.packages.size()==libraries.size()&&!missing.ok(),"missing registered asset folders disappeared");
-    // A directory named README.md is not a required file.
-    fs::remove(library/"camera/README.md");fs::create_directory(library/"camera/README.md");
+    // A directory named subsystem.json is not a required file.
+    fs::remove(library/"camera/subsystem.json");fs::create_directory(library/"camera/subsystem.json");
     require(!check_subsystem_structure(library,libraries,mode).ok(),"native required-file directory accepted");
-    fs::remove(library/"camera/README.md");write(library/"camera/README.md",read(root/"subsystems/camera/README.md"));
-    write(library/"ghost/README.md","unregistered");write(library/"ghost/ghost.cir","* fixture\n.end\n");
+    fs::remove(library/"camera/subsystem.json");write(library/"camera/subsystem.json",read(root/"subsystems/camera/subsystem.json"));
+    write(library/"ghost/subsystem.json","unregistered");
     require(!check_subsystem_structure(library,libraries,mode).ok(),"unregistered native library folder accepted");
     fs::remove_all(library/"ghost");
     auto duplicates=libraries;duplicates.push_back(libraries.front());
@@ -313,16 +313,16 @@ void native_packages(const fs::path& root) {
         require(report.adapter&&!report.ok()&&!report.missing.empty(),"missing library reclassified adapter as local");
         fs::rename(s.path/"held_power",library/"power");
         require(!check_carrier_package(f.name,base,library,nullptr,mode).ok(),"native package without registry accepted");
-        fs::remove(base/"som_j1/som_j1.cir");
+        fs::remove(base/"som_j1/circuit.json");
         require(!check_carrier_structure(base,library,factories,mode).ok(),"missing local circuit contract accepted");
-        write(base/"som_j1/som_j1.cir",read(root/project/"subsystems/som_j1/som_j1.cir"));
+        write(base/"som_j1/circuit.json",read(root/project/"subsystems/som_j1/circuit.json"));
         require(check_carrier_structure(base,library,factories,mode).ok(),"restored native package failed");
         write_authoring_gate_report(s.path/(std::string(project)+".txt"),result.summary());
         require(read(s.path/(std::string(project)+".txt"))==result.summary()+"\n","native summary publication bytes");
     }
     // Optional library JSON gets the same independent comparison, not a bypass.
     const auto widget=library/"widget";
-    write(widget/"README.md","fixture");write(widget/"widget.cir","* fixture\n.end\n");
+    write(widget/"subsystem.json","fixture");
     const std::string widget_json=R"({"schema":"schgen.circuit/1","name":"widget","title":"widget","parts":[],"nets":[{"name":"GND","net_class":"ground","pins":[]}],"nc":[],"port_types":{},"hints":{},"loads":{},"tp_waivers":{},"decap_waivers":{},"pull_waivers":{},"reset_waivers":{},"strap_waivers":{},"ep_waivers":{},"thermal_waivers":{},"part_rule_waivers":{}})";
     write(widget/"circuit.json",widget_json);
     write(widget/"layout.json",R"({"schema":"schgen.subsystem-layout/1","name":"widget","serves":[],"free":[]})");

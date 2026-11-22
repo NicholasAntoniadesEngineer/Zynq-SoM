@@ -1,0 +1,305 @@
+(footprint
+	"IPT007N06N"
+	(version 20260206)
+	(generator "schgen_part_gen")
+	(generator_version "1.0")
+	(layer "F.Cu")
+	(descr
+		"HSOF-8_IPT007N06N — IPT007N06N (HSOF-8_IPT007N06N) (EasyEDA/LCSC C122552, faithful conversion)"
+	)
+	(tags "MOSFETs")
+	(attr smd)
+	(property
+		"Reference"
+		"REF**"
+		(at 0 -5.93 0)
+		(layer "F.SilkS")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"Value"
+		"IPT007N06N"
+		(at 0 5.93 0)
+		(layer "F.Fab")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"Datasheet"
+		"https://www.lcsc.com/datasheet/C122552.pdf"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"Description"
+		"IPT007N06N (HSOF-8_IPT007N06N)"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property
+		"LCSC"
+		"C122552"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(fp_text
+		user
+		"${REFERENCE}"
+		(at 0 0 0)
+		(layer "F.Fab")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(fp_circle
+		(center -3.1475 4.3775)
+		(end -3.1175 4.3775)
+		(stroke
+			(width 0.06)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.SilkS")
+	)
+	(fp_circle
+		(center -2.4 4.94)
+		(end -2.1 4.94)
+		(stroke
+			(width 0.6)
+			(type solid)
+		)
+		(fill none)
+		(layer "Cmts.User")
+	)
+	(fp_line
+		(start -3.1474 3.7775)
+		(end 6.7526 3.7775)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 6.7526 3.7775)
+		(end 6.7526 -6.6025)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 6.7526 -6.6025)
+		(end -3.1474 -6.6025)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start -3.1474 -6.6025)
+		(end -3.1474 3.7775)
+		(stroke
+			(width 0.05)
+			(type solid)
+		)
+		(layer "F.CrtYd")
+	)
+	(fp_line
+		(start 6.6336 4.2925)
+		(end 7.2325 4.2925)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -3.4975 -8.2375)
+		(end -3.4975 4.2925)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -3.4975 4.2925)
+		(end -3.0286 4.2925)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start -3.4975 -8.2375)
+		(end 7.2325 -8.2375)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_line
+		(start 7.2325 -8.2375)
+		(end 7.2325 4.2925)
+		(stroke
+			(width 0.254)
+			(type solid)
+		)
+		(layer "F.SilkS")
+	)
+	(fp_circle
+		(center -3.3974 5.6625)
+		(end -3.1975 5.6625)
+		(stroke
+			(width 0.4)
+			(type solid)
+		)
+		(fill none)
+		(layer "F.SilkS")
+	)
+	(pad
+		"3"
+		smd
+		custom
+		(at 1.8116 -3.9276)
+		(size 0.1 0.1)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+		(options
+			(clearance outline)
+			(anchor rect)
+		)
+		(primitives
+			(gr_poly
+				(pts
+					(xy -5.0501 -2.6298)
+					(xy -5.05 -2.6298)
+					(xy -5.05 -3.9998)
+					(xy -5.0401 -3.9998)
+					(xy 5.0499 -3.9998)
+					(xy 5.0499 -2.5998)
+					(xy 4.1499 -2.5998)
+					(xy 4.1499 0.3002)
+					(xy 4.8499 0.3002)
+					(xy 4.8499 4.0002)
+					(xy -4.85 4.0002)
+					(xy -4.85 0.3002)
+					(xy -4.1501 0.3002)
+					(xy -4.1501 -2.5998)
+					(xy -5.05 -2.5998)
+					(xy -5.05 -2.6298)
+					(xy -5.0501 -2.6298)
+					(xy -5.05 -2.6298)
+				)
+				(width 0)
+				(fill yes)
+			)
+		)
+	)
+	(pad
+		"1"
+		smd
+		rect
+		(at -2.3974 3.9271)
+		(size 0.799998 2.799994)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+	)
+	(pad
+		"2"
+		smd
+		custom
+		(at 2.3976 3.9274)
+		(size 0.1 0.1)
+		(layers "F.Cu" "F.Paste" "F.Mask")
+		(options
+			(clearance outline)
+			(anchor rect)
+		)
+		(primitives
+			(gr_poly
+				(pts
+					(xy -4.0051 1.4151)
+					(xy -4.0051 -1.4049)
+					(xy 4.0049 -1.4049)
+					(xy 4.0049 1.4051)
+					(xy 3.9949 1.4051)
+					(xy 3.2049 1.4051)
+					(xy 3.2049 -0.5949)
+					(xy 2.8049 -0.5949)
+					(xy 2.8049 1.4051)
+					(xy 2.0049 1.4051)
+					(xy 2.0049 -0.5949)
+					(xy 1.6049 -0.5949)
+					(xy 1.6049 1.4051)
+					(xy 0.8049 1.4051)
+					(xy 0.8049 -0.5949)
+					(xy 0.4049 -0.5949)
+					(xy 0.4049 1.4051)
+					(xy -0.3951 1.4051)
+					(xy -0.3951 -0.5949)
+					(xy -0.7951 -0.5949)
+					(xy -0.7951 1.4051)
+					(xy -1.5951 1.4051)
+					(xy -1.5951 -0.5949)
+					(xy -1.9951 -0.5949)
+					(xy -1.9951 1.4051)
+					(xy -2.7951 1.4051)
+					(xy -2.7951 -0.5949)
+					(xy -3.1951 -0.5949)
+					(xy -3.1951 1.4051)
+				)
+				(width 0)
+				(fill yes)
+			)
+		)
+	)
+	(model
+		"${KIPRJMOD}/../parts/IPT007N06N/IPT007N06N.wrl"
+		(offset
+			(xyz 1.8026 1.4665 0)
+		)
+		(scale
+			(xyz 1 1 1)
+		)
+		(rotate
+			(xyz 0 0 0)
+		)
+	)
+)

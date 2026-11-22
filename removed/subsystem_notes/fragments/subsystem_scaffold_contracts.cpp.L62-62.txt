@@ -1,0 +1,1 @@
+    require(rendered.name == "widget" && rendered.files.size() == 7, "native package shape");

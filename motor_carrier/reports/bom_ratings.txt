@@ -1,0 +1,86 @@
+bom_ratings	order=value,footprint,lcsc
+line	value	footprint	lcsc	qty	kind	v_max_V	i_max_A	p_max_W	t_max_C	vin_max_V	tol	dielectric	checks	v_stress_V	v_ratio	v_limit	v_at	p_stress_W	p_ratio	p_limit	p_at	fail	waived	advisory	verdict	rating_source
+1	0.5mR	RLM25FEGMR50M:RLM25FEGMR50M	C710260	2	res	-	-	3.000	170.000	-	±1%	-	0	-	-	-	-	-	-	-	-	0	0	0	unevaluated	TA-I TRLM-256Z001A (2019/01/22) section 4: RLM25 3 W, 0.5 mOhm, -55 to +170 C, +/-75 ppm/C, derating from 70 C
+2	100R	Resistor_SMD:R_0603_1608Metric	C22775	2	res	75.000	-	0.100	155.000	-	±1%	-	0	-	-	-	-	-	-	-	-	0	0	0	unevaluated	JLC desc 0603WAF1000T5E 100R 100mW 75V
+3	100k	Resistor_SMD:R_0603_1608Metric	C25803	23	res	75.000	-	0.100	155.000	-	±1%	-	0	-	-	-	-	-	-	-	-	0	0	0	unevaluated	JLC desc 0603WAF1003T5E 100k 100mW 75V
+4	100n	Capacitor_SMD:C_0603_1608Metric	C14663	46	mlcc	50.000	-	-	125.000	-	±10%	X7R	40	20.000	2.500	>=2.000	pd_input:C1	-	-	-	-	0	0	0	pass	JLC desc CC0603KRX7R9BB104 100nF 50V X7R
+5	100n/100V	Capacitor_SMD:C_0603_1608Metric	C15725	7	mlcc	100.000	-	-	125.000	-	±10%	X7R	6	25.200	3.968	>=2.000	esc_power:C1	-	-	-	-	0	0	0	pass	LCSC listing CL10B104KC8NNNC 100nF 100V X7R 0603
+6	10R	Resistor_SMD:R_0603_1608Metric	C22859	4	res	75.000	-	0.100	155.000	-	±1%	-	0	-	-	-	-	-	-	-	-	0	0	0	unevaluated	JLC desc 0603WAF100JT5E 10R 100mW 75V (LM61460 BIAS series)
+7	10k	Resistor_SMD:R_0603_1608Metric	C25804	28	res	75.000	-	0.100	155.000	-	±1%	-	0	-	-	-	-	-	-	-	-	0	0	0	unevaluated	JLC desc 0603WAF1002T5E 10k 100mW 75V
+8	10mR	RLM12FTCMR010:RLM12FTCMR010	C188070	3	res	-	-	1.000	155.000	-	±1%	-	0	-	-	-	-	-	-	-	-	0	0	0	unevaluated	JLC desc RLM12FTCMR010 10mR 1W 1206 shunt
+9	10u	Capacitor_SMD:C_0805_2012Metric	C15850	7	mlcc	25.000	-	-	85.000	-	±10%	X5R	7	5.000	5.000	>=2.000	board_control:C2	-	-	-	-	0	0	0	pass	JLC desc CL21A106KAYNNNE 10uF 25V X5R
+10	10u	Capacitor_SMD:C_1206_3216Metric	C13585	4	mlcc	50.000	-	-	85.000	-	±10%	X5R	4	20.000	2.500	>=2.000	power:C2	-	-	-	-	0	0	0	pass	JLC desc CL31A106KBHNNNE 10uF 50V X5R
+11	10u	Capacitor_SMD:C_1210_3225Metric	C596319	1	mlcc	50.000	-	-	125.000	-	±10%	X7R	1	20.000	2.500	>=2.000	pd_input:C2	-	-	-	-	0	0	0	pass	JLC desc CC1210KKX7R9BB106 10uF 50V X7R
+12	10uH	SWPA8040S100MT:SWPA8040S100MT	C37429	4	ind	-	4.100	-	-	-	±20%	-	0	-	-	-	-	-	-	-	-	0	0	0	unevaluated	JLC desc SWPA8040S100MT 10uH Isat 4.1A
+13	120R	Resistor_SMD:R_0603_1608Metric	C22787	1	res	75.000	-	0.100	155.000	-	±1%	-	0	-	-	-	-	-	-	-	-	0	0	0	unevaluated	UNI-ROYAL thick-film chip resistor sheet: 0603 working voltage 75 V, -55 to 155 C; 120R
+14	13k	Resistor_SMD:R_0603_1608Metric	C22797	3	res	75.000	-	0.100	155.000	-	±1%	-	0	-	-	-	-	-	-	-	-	0	0	0	unevaluated	JLC desc 0603WAF1302T5E 13k 100mW 75V
+15	15k	Resistor_SMD:R_0603_1608Metric	C22809	1	res	75.000	-	0.100	155.000	-	±1%	-	0	-	-	-	-	-	-	-	-	0	0	0	unevaluated	JLC desc 0603WAF1502T5E 15k 100mW 75V
+16	1k	Resistor_SMD:R_0603_1608Metric	C21190	15	res	75.000	-	0.100	155.000	-	±1%	-	0	-	-	-	-	-	-	-	-	0	0	0	unevaluated	JLC desc 0603WAF1001T5E 1k 100mW 75V
+17	1n	Capacitor_SMD:C_1206_3225Metric	C9196	5	mlcc	2000.000	-	-	125.000	-	±10%	X7R	0	-	-	-	-	-	-	-	-	0	0	0	unevaluated	JLC desc 1206B102K202NT 1nF 2kV X7R (ethernet Bob-Smith)
+18	1u	Capacitor_SMD:C_0603_1608Metric	C15849	12	mlcc	50.000	-	-	85.000	-	±10%	X5R	2	3.300	15.152	>=2.000	power:C12	-	-	-	-	0	0	0	pass	JLC desc CL10A105KB8NNNC 1uF 50V X5R
+19	1u/100V	Capacitor_SMD:C_1206_3216Metric	C282823	1	mlcc	100.000	-	-	125.000	-	±10%	X7R	0	-	-	-	-	-	-	-	-	0	0	0	unevaluated	LCSC listing TCC1206X7R105K101HT 1uF 100V X7R 1206
+20	20mR	RLM12FTCMR020:RLM12FTCMR020	C393094	1	res	-	-	1.000	155.000	-	±1%	-	0	-	-	-	-	-	-	-	-	0	0	0	unevaluated	JLC desc RLM12FTCMR020 20mR 1W 1206 shunt
+21	22k	Resistor_SMD:R_0603_1608Metric	C31850	4	res	75.000	-	0.100	155.000	-	±1%	-	0	-	-	-	-	-	-	-	-	0	0	0	unevaluated	JLC desc 0603WAF2202T5E 22k 100mW 75V
+22	22k1	Resistor_SMD:R_0603_1608Metric	C25961	1	res	75.000	-	0.100	155.000	-	±1%	-	0	-	-	-	-	-	-	-	-	0	0	0	unevaluated	JLC desc 0603WAF2212T5E 22.1k 100mW 75V
+23	22p	Capacitor_SMD:C_0603_1608Metric	C1653	4	mlcc	50.000	-	-	125.000	-	±5%	C0G	4	8.000	6.250	>=1.500	vbat_supply:C12	-	-	-	-	0	0	0	pass	JLC desc CL10C220JB8NNNC 22pF 50V C0G (buck FB feedforward)
+24	22u	Capacitor_SMD:C_0805_2012Metric	C45783	18	mlcc	25.000	-	-	85.000	-	±20%	X5R	18	8.000	3.125	>=2.000	vbat_supply:C10	-	-	-	-	0	0	0	pass	JLC desc CL21A226MAQNNNE 22uF 25V X5R
+25	23.2k	Resistor_SMD:R_0603_1608Metric	C23346	1	-	-	-	-	-	-	-	-	0	-	-	-	-	-	-	-	-	0	0	0	unrated	-
+26	330R	Resistor_SMD:R_0603_1608Metric	C23138	4	res	75.000	-	0.100	155.000	-	±1%	-	0	-	-	-	-	-	-	-	-	0	0	0	unevaluated	JLC desc 0603WAF3300T5E 330R 100mW 75V
+27	40.2k	Resistor_SMD:R_0603_1608Metric	C12447	1	-	-	-	-	-	-	-	-	0	-	-	-	-	-	-	-	-	0	0	0	unrated	-
+28	40A	0456040.DR:0456040.DR	C720195	1	res	-	-	-	125.000	-	-	-	0	-	-	-	-	-	-	-	-	0	0	0	unevaluated	Littelfuse 456 series (revised 11/22/19): 40 A, 72 V, cold resistance 1.05 mOhm, interrupting 600 A at 60 VDC, -55 to 125 C with derating
+29	47.5k	Resistor_SMD:R_0603_1608Metric	C23061	2	res	75.000	-	0.100	155.000	-	±1%	-	0	-	-	-	-	-	-	-	-	0	0	0	unevaluated	JLC desc 0603WAF4752T5E 47.5k 100mW 75V
+30	470u	RVT1H471M1213:RVT1H471M1213	C90272	3	elec	50.000	-	-	105.000	-	±20%	-	3	25.200	1.984	>=1.500	esc_power:C3	-	-	-	-	0	0	0	pass	ROQANG RVT series sheet: 6.3-100 V range, -55 to 105 C, +/-20 %, 2000 h at 105 C; 470uF 50V
+31	47k5	Resistor_SMD:R_0603_1608Metric	C23061	1	res	75.000	-	0.100	155.000	-	±1%	-	0	-	-	-	-	-	-	-	-	0	0	0	unevaluated	JLC desc 0603WAF4752T5E 47.5k 100mW 75V
+32	47n	Capacitor_SMD:C_0603_1608Metric	C1622	2	mlcc	50.000	-	-	125.000	-	±10%	X7R	0	-	-	-	-	-	-	-	-	0	0	0	unevaluated	JLC desc CL10B473KB8NNNC 47nF 50V X7R
+33	49.9R	Resistor_SMD:R_0603_1608Metric	C114625	1	res	75.000	-	0.100	155.000	-	±1%	-	0	-	-	-	-	-	-	-	-	0	0	0	unevaluated	JLC desc RC0603FR-0749R9L 49.9R 100mW 75V
+34	4D03WGJ0330T5E	4D03WGJ0330T5E:4D03WGJ0330T5E	C25508	2	res	-	-	0.062	155.000	-	±5%	-	0	-	-	-	-	-	-	-	-	0	0	0	unevaluated	4D03WGJ0330T5E 4x33R 0603x4 isolated array, 1/16W/elem (motor_io ESC-output series-damping)
+35	4k7	Resistor_SMD:R_0603_1608Metric	C23162	6	res	75.000	-	0.100	155.000	-	±1%	-	0	-	-	-	-	-	-	-	-	0	0	0	unevaluated	JLC desc 0603WAF4701T5E 4.7k 100mW 75V
+36	4u7/100V	Capacitor_SMD:C_1210_3225Metric	C49451356	3	mlcc	100.000	-	-	125.000	-	±10%	X7R	3	25.200	3.968	>=2.000	vbat_supply:C13	-	-	-	-	0	0	0	pass	LCSC listing TCC1210X7R475K101MT 4.7uF 100V X7R 1210
+37	5.1k	Resistor_SMD:R_0603_1608Metric	C23186	6	res	75.000	-	0.100	155.000	-	±1%	-	0	-	-	-	-	-	-	-	-	0	0	0	unevaluated	JLC desc 0603WAF5101T5E 5.1k 100mW 75V
+38	5.49k	Resistor_SMD:R_0603_1608Metric	C188263	2	res	75.000	-	0.100	155.000	-	±1%	-	0	-	-	-	-	-	-	-	-	0	0	0	unevaluated	JLC desc RC0603FR-075K49L 5.49k 100mW 75V
+39	6.8k	Resistor_SMD:R_0603_1608Metric	C23212	1	res	75.000	-	0.100	155.000	-	±1%	-	0	-	-	-	-	-	-	-	-	0	0	0	unevaluated	JLC desc 0603WAF6801T5E 6.8k 100mW 75V
+40	75R	Resistor_SMD:R_0603_1608Metric	C4275	4	res	75.000	-	0.100	155.000	-	±1%	-	0	-	-	-	-	-	-	-	-	0	0	0	unevaluated	JLC desc 0603WAF750JT5E 75R 100mW 75V
+41	878311420	878311420:878311420	C240854	1	-	-	-	-	-	-	-	-	0	-	-	-	-	-	-	-	-	0	0	0	unrated	-
+42	A2541WV-2x3P	Connector_PinHeader_2.54mm:PinHeader_2x03_P2.54mm_Vertical	C225518	1	-	-	-	-	-	-	-	-	0	-	-	-	-	-	-	-	-	0	0	0	unrated	-
+43	AO3400A	AO3400A:AO3400A	C20917	1	other	30.000	5.700	1.400	150.000	-	-	-	0	-	-	-	-	-	-	-	-	0	0	0	unevaluated	AO3400A N-ch 30V Vds 5.7A SOT-23
+44	AO3400A	Package_TO_SOT_SMD:SOT-23	C20917	1	other	30.000	5.700	1.400	150.000	-	-	-	0	-	-	-	-	-	-	-	-	0	0	0	unevaluated	AO3400A N-ch 30V Vds 5.7A SOT-23
+45	AP2112K-1.8	Package_TO_SOT_SMD:SOT-23-5	C176944	1	ic	-	0.600	-	85.000	6.000	-	-	1	3.300	1.818	>=1.000	power:U3	-	-	-	-	0	0	0	pass	AP2112K-1.8 LDO abs-max 6V 600mA
+46	CP2102N-A02	CP2102N-A02-GQFN24R:CP2102N-A02-GQFN24R	C969151	1	ic	-	-	-	85.000	4.300	-	-	0	-	-	-	-	-	-	-	-	0	0	0	unevaluated	CP2102N abs-max VDD 4.3V
+47	DF40C-100DP-0.4V(51)	Mylibrary:HRS_DF40C-100DP-0.4V_51_	C531031	3	-	-	-	-	-	-	-	-	0	-	-	-	-	-	-	-	-	0	0	0	unrated	-
+48	DIP-4	DSHP04TSGER:DSHP04TSGER	C3293144	4	-	-	-	-	-	-	-	-	0	-	-	-	-	-	-	-	-	0	0	0	unrated	-
+49	HX PZ2.54-3x8P ZZ	HX_PZ2.54-3x8P_ZZ:HX_PZ2.54-3x8P_ZZ	C32713295	1	-	-	-	-	-	-	-	-	0	-	-	-	-	-	-	-	-	0	0	0	unrated	-
+50	HX5008NLT	HX5008NLT:HX5008NLT	C962544	1	-	-	-	-	-	-	-	-	0	-	-	-	-	-	-	-	-	0	0	0	unrated	-
+51	HX_JN1.27-2x5	HX_JN1.27-2x5_TP_H4.9:HX_JN1.27-2x5_TP_H4.9	C42372555	1	-	-	-	-	-	-	-	-	0	-	-	-	-	-	-	-	-	0	0	0	unrated	-
+52	INA237AIDGSR	INA237AIDGSR:INA237AIDGSR	C2864837	1	ic	-	-	-	125.000	6.000	-	-	0	-	-	-	-	-	-	-	-	0	0	0	unevaluated	TI SBOSA20A 6.1: VS 6 V; inputs and VBUS -0.3 V to 85 V
+53	INA3221AIRGVR	INA3221AIRGVR:INA3221AIRGVR	C181255	2	ic	-	-	-	125.000	6.000	-	-	0	-	-	-	-	-	-	-	-	0	0	0	unevaluated	INA3221 monitor abs-max 6V
+54	IPT007N06N	IPT007N06N:IPT007N06N	C122552	2	other	60.000	52.000	-	175.000	-	-	-	0	-	-	-	-	-	-	-	-	0	0	0	unevaluated	Infineon IPT007N06N Rev 2.1: VDS 60 V, RDS(on) max 0.75 mOhm at VGS 10 V, ID 52 A at RthJA 40 K/W, VGS +/-20 V
+55	KH-5224-8P8C-D	KH-5224-8P8C-D:KH-5224-8P8C-D	C2828085	1	-	-	-	-	-	-	-	-	0	-	-	-	-	-	-	-	-	0	0	0	unrated	-
+56	LM61460AANRJRR	LM61460AANRJRR:LM61460AANRJRR	C2864505	4	ic	-	6.000	-	150.000	42.000	-	-	4	25.200	1.667	>=1.000	vbat_supply:U2	-	-	-	-	0	0	0	pass	LM61460AANRJRR buck (TI SNVSBD5D) abs-max VIN 42V, 6A, Tj op-max 150C; VQFN-HR EP-equiv heat path
+57	LM74930QRGERQ1	LM74930QRGERQ1:LM74930QRGERQ1	C22428070	1	ic	-	-	-	125.000	70.000	-	-	0	-	-	-	-	-	-	-	-	0	0	0	unevaluated	TI SNOSDF6 6.1: VS, C, CS+, CS- to GND -1 V to 70 V; A to GND -65 V to 70 V; recommended to 65 V
+58	NUP2105LT1G	NUP2105LT1G:NUP2105LT1G	C14486	1	diode	24.000	-	-	150.000	-	-	-	0	-	-	-	-	-	-	-	-	0	0	0	unevaluated	onsemi NUP2105L/D Rev 12: VRWM 24 V, VBR 26.2-32 V, VC 33 V typ / 40 V max at 5 A (8/20 us), 350 W, 30 pF max
+59	RESET	TS-1187A-B-A-B:TS-1187A-B-A-B	C318884	1	-	-	-	-	-	-	-	-	0	-	-	-	-	-	-	-	-	0	0	0	unrated	-
+60	SMBJ22A	Diode_SMD:D_SMB	C10214	1	diode	22.000	-	-	150.000	-	-	-	0	-	-	-	-	-	-	-	-	0	0	0	unevaluated	JLC desc SMBJ22A 22V standoff TVS 600W
+61	SMBJ28A	SMBJ28A:SMBJ28A	C42440491	2	diode	28.000	-	-	150.000	-	-	-	0	-	-	-	-	-	-	-	-	0	0	0	unevaluated	SMBJ28A 28V standoff TVS 600W SMB (motor_io ESC-rail clamp; note its clamp >INA3221 26V CM, so the rail is bounded <=4S, not the TVS)
+62	SN74HCT245PWR	SN74HCT245PWR:SN74HCT245PWR	C6779	1	ic	-	-	-	125.000	7.000	-	-	0	-	-	-	-	-	-	-	-	0	0	0	unevaluated	SN74HCT245PWR octal bus buffer abs-max VCC 7V; HCT TTL thresholds accept 3.3V inputs at 5V VCC (motor_io PL->ESC level buffer)
+63	SN74LVC125ADR	SN74LVC125ADR:SN74LVC125ADR	C7661	2	-	-	-	-	-	-	-	-	0	-	-	-	-	-	-	-	-	0	0	0	unrated	-
+64	SN74LVC1G08	Package_TO_SOT_SMD:SOT-23-5	C7666	5	ic	-	-	-	125.000	6.500	-	-	0	-	-	-	-	-	-	-	-	0	0	0	unevaluated	SN74LVC1G08 abs-max Vcc 6.5V
+65	SRV05-4	Package_TO_SOT_SMD:SOT-23-6	C2836319	3	diode	5.000	-	-	125.000	-	-	-	0	-	-	-	-	-	-	-	-	0	0	0	unevaluated	MSKSEMI SRV05-4 5-line steering-diode + surge-TVS ESD array: VRWM 5V (rated for 5V lines), VBR ~6V, clamp ~12.5-17V, SOT-23-6 (motor_pwm 8-ch ESC-output 5V ESD)
+66	SS54	Diode_SMD:D_SMA	C22452	2	diode	40.000	5.000	-	125.000	-	-	-	0	-	-	-	-	-	-	-	-	0	0	0	unevaluated	JLC desc SS54 Schottky 40V 5A
+67	SY6280AAC	SY6280AAC:SY6280AAC	C55136	2	ic	-	-	-	125.000	6.000	-	-	2	5.000	1.200	>=1.000	board_control:U2	-	-	-	-	0	0	0	pass	SY6280AAC load switch abs-max 6V
+68	TCA9535PWR	TCA9535PWR:TCA9535PWR	C130204	1	ic	-	-	-	85.000	6.000	-	-	0	-	-	-	-	-	-	-	-	0	0	0	unevaluated	TCA9535 expander abs-max Vcc 6V
+69	TCAN1042HGVDR	TCAN1042HGVDR:TCAN1042HGVDR	C124014	1	ic	-	-	-	125.000	7.000	-	-	0	-	-	-	-	-	-	-	-	0	0	0	unevaluated	TI SLLSES9D 7.1: VIO -0.3 V to 7 V; CAN bus pins -70 V to 70 V (H variants); 5 V supply
+70	TF-01A	TF-01A:TF-01A	C91145	1	-	-	-	-	-	-	-	-	0	-	-	-	-	-	-	-	-	0	0	0	unrated	-
+71	TPD6E001RSER	TPD6E001RSER:TPD6E001RSER	C1973318	1	diode	5.500	-	-	85.000	-	-	-	0	-	-	-	-	-	-	-	-	0	0	0	unevaluated	TPD6E001 6-ch ESD: SLLS685D VCC/standoff 0.9-5.5V, IOx 0..VCC, 1.5pF, abs-max VCC 7V
+72	TPS26631PWPR	TPS26631PWPR:TPS26631PWPR	C2866319	2	ic	-	-	-	125.000	60.000	-	-	2	25.200	2.381	>=1.000	vbat_supply:U1	-	-	-	-	0	0	0	pass	TPS26631 eFuse recommended 4.5-60V
+73	TXS02612RTWR	TXS02612RTWR:TXS02612RTWR	C140276	1	ic	-	-	-	85.000	3.600	-	-	0	-	-	-	-	-	-	-	-	0	0	0	unevaluated	TXS02612 level-shifter 1.1-3.6V
+74	TYPE-C-31-M-12	TYPE-C-31-M-12:TYPE-C-31-M-12	C165948	2	-	-	-	-	-	-	-	-	0	-	-	-	-	-	-	-	-	0	0	0	unrated	-
+75	USBLC6-2SC6	USBLC6-2SC6:USBLC6-2SC6	C7519	2	diode	5.250	-	-	125.000	-	-	-	0	-	-	-	-	-	-	-	-	0	0	0	unevaluated	JLC USBLC6-2SC6 ESD standoff 5.25V
+76	USER	TS-1187A-B-A-B:TS-1187A-B-A-B	C318884	1	-	-	-	-	-	-	-	-	0	-	-	-	-	-	-	-	-	0	0	0	unrated	-
+77	XT60PW-M	XT60PW-M:XT60PW-M	C98732	2	-	-	-	-	-	-	-	-	0	-	-	-	-	-	-	-	-	0	0	0	unrated	-
+78	ZX-SH1.0-4PWT	ZX-SH1.0-4PWT:ZX-SH1.0-4PWT	C7430446	4	-	-	-	-	-	-	-	-	0	-	-	-	-	-	-	-	-	0	0	0	unrated	-
+79	blue	LED_SMD:LED_0603_1608Metric	C2288	1	diode	-	0.020	-	85.000	-	-	-	0	-	-	-	-	-	-	-	-	0	0	0	unevaluated	JLC desc KT-0603B blue LED 20mA
+80	green	LED_SMD:LED_0603_1608Metric	C12624	1	diode	-	0.020	-	85.000	-	-	-	0	-	-	-	-	-	-	-	-	0	0	0	unevaluated	JLC desc KT-0603G green LED 20mA
+81	red	LED_SMD:LED_0603_1608Metric	C2286	7	diode	-	0.020	-	85.000	-	-	-	0	-	-	-	-	-	-	-	-	0	0	0	unevaluated	JLC desc KT-0603R red LED 20mA
+totals	order=none
+lines	checks	fail	waived	advisory	unrated
+81	97	0	0	0	17

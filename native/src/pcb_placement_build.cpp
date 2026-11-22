@@ -312,7 +312,7 @@ static PcbPlacementResult build_pcb_model_once(const PcbPlacementInput &input, E
     auto result=place_pcb_model_accounted(input, zones, floorplan,
         PcbZoneAccountingOwnership::IncludedInFloorplan,&child);
     const auto experiment=input.floorplan.experiment;
-    if(input.floorplan.compact_search || !experiment || !experiment->multiscale_outline ||
+    if(input.floorplan.compact_search ||
        std::none_of(prepared.compose.index.hard.begin(),prepared.compose.index.hard.end(),
            [](const auto& t){return t.kind=="facing"&&t.enforced&&!t.require_positive_facing;}))
         return result;

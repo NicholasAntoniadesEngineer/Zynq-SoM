@@ -9,6 +9,7 @@ struct PreferredThermalField {
     std::size_t requested = 0;
     ViaSelection sites;
 };
+const char* thermal_ground_net();
 struct ThermalPadMove {
     std::string ref;
     double dx=0, dy=0;

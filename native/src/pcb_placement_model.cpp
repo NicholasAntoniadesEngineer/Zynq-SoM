@@ -184,6 +184,10 @@ void Placer::instantiate() {
     m.two_side = ctx.in.two_side;
     m.connectors = ctx.in.floorplan.project.connectors;
     m.isolation = ctx.in.floorplan.project.isolation;
+    for (const auto &[sheet, row] : floorplan_sheet_edges(ctx.in.floorplan)) {
+        (void)row;
+        m.edge_sheets.insert(sheet);
+    }
     for (const auto &entry : ctx.in.som_interface.connectors)
         m.module_connectors.insert(entry.first);
     m.net_numbers = net_numbers;
@@ -214,6 +218,9 @@ void Placer::instantiate() {
         const SheetRole &role = sheet_role(ctx.in.floorplan.roles, p.sheet);
         inst.module_connector = role.module_connector;
         inst.under_module = role.region == SheetRegion::under_module;
+        inst.silk_label = role.silk_label;
+        inst.escape_basis = role.escape_basis;
+        inst.escape_escalates = role.escape_escalates;
         if (p.fact) {
             inst.part_class = p.fact->part_class;
             inst.height = p.fact->height;

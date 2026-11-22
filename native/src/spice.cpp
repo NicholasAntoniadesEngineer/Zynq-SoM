@@ -10,21 +10,13 @@ using namespace verification;
 namespace {
 constexpr double stm32_vdd=3.3,stm32_vih=0.7*stm32_vdd;
 const char* const led_boost_kind="led_boost";
-struct Subcheck {double volts;std::optional<double> lo,hi;std::string tag;};
-struct NamedDivider {std::string net,source;std::vector<Subcheck> checks;std::string why;};
-const std::vector<NamedDivider>& named_dividers() {
-    static const std::vector<NamedDivider> data{
-        {"CP2102N_VBUS_SNS","USB_UART_VBUS",{{5.25,{},5.8,"abs-max at 5.25 V VBUS"},{4.75,3.0,{},"detect at 4.75 V VBUS"}},
-            "CP2102N self-powered VBUS sense (DS 22k1/47k5 reference): must read VBUS-present yet never exceed the pin abs-max 5.8 V"},
-        {"PG_1V8_G","+1V8",{{1.8,1.45,1.8,"FET on at nominal rail"}},
-            "+1V8 PG sense: gate divider must exceed the AO3400A max Vgs(th)=1.45 V so the PG LED is guaranteed on"},
-        {"HDMI_RX_5V_DET","HDMI_RX_5V",{{5.25,{},3.465,"bank abs-max at 5.25 V cable"},{4.75,2.0,{},"VIH at 4.75 V cable"}},
-            "cable-5V presence divider into an LVCMOS33 bank"},
-        {"PD_OVP_SET","+VBUS_IN",{{21.0,{},1.176,"no false trip at 21 V (contract max)"},{24.4,1.224,{},"guaranteed cutoff below the TVS VBR min"}},
-            "TPS26631 OVP set divider (pd_input): must NOT trip inside the valid 20 V +5% contract window yet MUST cut off before the SMBJ22A starts clamping (V_OVPR 1.2 V +/-2%, SLVSE94G)"}
-    };return data;
+const SubsystemDivider* stated_divider(const SubsystemChecks& checks,const std::string& net){for(const auto& divider:checks.dividers)if(divider.net==net)return &divider;return nullptr;}
+void require_stated_nets(const ProjectCircuit& sheet,const SubsystemChecks& stated) {
+    for(const auto& divider:stated.dividers)
+        if(std::none_of(sheet.circuit.nets.begin(),sheet.circuit.nets.end(),[&](const CircuitNetIr& net){return net.name==divider.net;}))
+            throw ModelCheckError("sheet "+sheet.name+": checks divider net "+divider.net+" is not a net of the sheet");
 }
-bool source_override(const std::string& name){return name=="USB_UART_VBUS"||name=="HDMI_RX_5V";}
+bool source_override(const SubsystemChecks& checks,const std::string& name){return std::find(checks.divider_sources.begin(),checks.divider_sources.end(),name)!=checks.divider_sources.end();}
 double volts(const std::string& name,const PowerPolicy& p){return rail_volts(name,p).value_or(0);}
 double divide(double a,double b){if(b==0)throw ModelCheckError("division by zero");return a/b;}
 struct Passive {std::string ref;double value;const CircuitNetIr* other;};
@@ -61,23 +53,26 @@ bool power(const CircuitNetIr& n){return n.net_class=="power";}
 bool signal(const CircuitNetIr& n){return n.net_class=="signal"||n.net_class=="port";}
 std::string resistor_description(const Passive& p){return p.ref+"="+g(p.value)+"R";}
 void auto_dividers(const std::string& sheet,const SpiceIndex& idx,SpiceResult& out,const PowerPolicy& policy,
-                   std::set<std::string>& extracted_named) {
+                   const SubsystemChecks& stated,std::set<std::string>& extracted_named) {
     for(const auto& net:idx.c.nets) {
-        if(!signal(net))continue;const auto& rs=idx.on(net.name);if(rs.size()!=2)continue;
-        const auto tops=select(rs,[](const auto& n){return power(n)||source_override(n.name);});const auto bots=select(rs,ground);
+        if(!signal(net))continue;const auto& rs=idx.on(net.name);
+        const auto tops=select(rs,[&](const auto& n){return power(n)||source_override(stated,n.name);});const auto bots=select(rs,ground);
         if(tops.size()!=1||bots.size()!=1)continue;
+        const auto* named=stated_divider(stated,net.name);
+        const auto legs=select(rs,[&](const auto& n){return signal(n)&&!source_override(stated,n.name)&&n.name!=net.name&&idx.on(n.name).size()==1;});
+        if(rs.size()!=2&&(!named||legs.size()+2!=rs.size()))continue;
         const auto& top=tops[0];const auto& bot=bots[0];const auto& src=*top.other;
         const double ratio=divide(bot.value,top.value+bot.value);
-        const auto named=std::find_if(named_dividers().begin(),named_dividers().end(),[&](const auto& n){return n.net==net.name;});
-        const auto prefix=src.name+" -["+resistor_description(top)+"]- "+net.name+" -["+resistor_description(bot)+"]- GND @ ";
-        if(named==named_dividers().end()) {
+        std::string unloaded;for(const auto& leg:legs)unloaded+=" ("+resistor_description(leg)+" to "+leg.other->name+", whose only resistor it is, carries no divider current)";
+        const auto prefix=src.name+" -["+resistor_description(top)+"]- "+net.name+" -["+resistor_description(bot)+"]- GND"+unloaded+" @ ";
+        if(!named) {
             const double v=volts(src.name,policy);if(v==0)continue;
             out.checks.push_back({"divider "+net.name,sheet,"divider",prefix+g(v)+" V (informational, no named threshold)",v*ratio,"V",{}, {},"analytic",{}});continue;
         }
         const bool source_ok=src.name==named->source;
         if(!source_ok)throw ModelCheckError("required divider "+net.name+": source "+src.name+", expected "+named->source);
         extracted_named.insert(net.name);
-        for(const auto& sub:named->checks) {
+        for(const auto& sub:named->limits) {
             auto v=sub.volts;auto tag=sub.tag;
             out.checks.push_back({"divider "+net.name+" ["+tag+"]",sheet,"divider",prefix+g(v)+" V: "+named->why,v*ratio,"V",sub.lo,sub.hi,"analytic",{}});
         }
@@ -104,7 +99,7 @@ void rc_networks(const std::string& sheet,const SpiceIndex& idx,SpiceResult& out
 const RegulatorFact* regulator_fact(const SpiceIndex& idx,const std::string& ref,const PowerPolicy& policy) {
     const auto found=idx.parts.find(ref);return found==idx.parts.end()?nullptr:part_fact(policy.regulators,catalogue_part_number(*found->second));
 }
-void led_boost_iset(const std::string& sheet,const SpiceIndex& idx,SpiceResult& out,const PowerPolicy& policy) {
+void led_boost_iset(const std::string& sheet,const SpiceIndex& idx,SpiceResult& out,const PowerPolicy& policy,const SubsystemChecks& stated) {
     for(const auto& [ref,p]:idx.parts) {
         const auto* fact=regulator_fact(idx,ref,policy);
         if(!fact||fact->kind!=led_boost_kind)continue;std::vector<std::string> pins{"?"};
@@ -113,7 +108,9 @@ void led_boost_iset(const std::string& sheet,const SpiceIndex& idx,SpiceResult& 
         if(!fb)throw ModelCheckError("SPICE unverified: "+sheet+":"+ref+" "+fact->label+" FB pin not netted");
         const auto rs=select(idx.on(fb->name),ground);
         if(rs.empty())throw ModelCheckError("SPICE unverified: "+sheet+":"+ref+" "+fact->label+" ISET resistor not found on "+fb->name);
-        const auto& r=rs[0];out.checks.push_back({fact->label+" ISET ("+r.ref+")",sheet,"iset","I_LED = "+g(*fact->iset_v)+" V / "+g(r.value)+"R; panel-class window 125-150 mA (lcd_backlight.md)",divide(*fact->iset_v,r.value)*1e3,"mA",125.0,150.0,"analytic",{}});
+        if(!stated.iset_window_ma||!stated.iset_basis)throw ModelCheckError("SPICE unverified: "+sheet+":"+ref+" "+fact->label+" has no checks.iset_window_ma in its subsystem file");
+        const auto& window=*stated.iset_window_ma;
+        const auto& r=rs[0];out.checks.push_back({fact->label+" ISET ("+r.ref+")",sheet,"iset","I_LED = "+g(*fact->iset_v)+" V / "+g(r.value)+"R; panel-class window "+g(window.low_ma)+"-"+g(window.high_ma)+" mA ("+*stated.iset_basis+")",divide(*fact->iset_v,r.value)*1e3,"mA",window.low_ma,window.high_ma,"analytic",{}});
     }
 }
 void buck_fb(const std::string& sheet,const SpiceIndex& idx,const std::vector<PowerReg>& regs,SpiceResult& out,const PowerPolicy& policy) {
@@ -221,20 +218,23 @@ std::vector<std::string> SpiceResult::errors() const {
     for(const auto& c:checks)if(!c.ok())out.push_back(c.sheet+":"+c.name+" = "+reported_value(c)+" "+c.unit+" outside ["+(c.lo?g(*c.lo):"")+" .. "+(c.hi?g(*c.hi):"")+"] "+c.unit+" — "+c.detail+(c.spice_value?"; ngspice="+g(*c.spice_value):""));return out;
 }
 bool SpiceResult::ok() const{return unverified.empty()&&!checks.empty()&&std::all_of(checks.begin(),checks.end(),[](const auto& c){return c.ok();});}
-SpiceResult extract_spice_checks(const std::vector<ProjectCircuit>& sheets,const PowerPolicy& policy) {
-    SpiceResult out;std::set<std::string> nets,extracted_named;
+SpiceResult extract_spice_checks(const std::vector<ProjectCircuit>& sheets,const PowerPolicy& policy,const SheetRoles& roles) {
+    SpiceResult out;std::map<std::string,std::set<std::string>> extracted_named;
     for(const auto& sheet:sheets) {
-        const SpiceIndex index(sheet.circuit);for(const auto& n:sheet.circuit.nets)nets.insert(n.name);
+        const SpiceIndex index(sheet.circuit);const SubsystemChecks& stated=sheet_role(roles,sheet.name).checks;
+        require_stated_nets(sheet,stated);
         // The shared pure detection stage does not run unrelated load/thermal
         // analysis or alter the original spice extraction's failure boundary.
-        auto_dividers(sheet.name,index,out,policy,extracted_named);rc_networks(sheet.name,index,out);led_boost_iset(sheet.name,index,out,policy);
+        auto_dividers(sheet.name,index,out,policy,stated,extracted_named[sheet.name]);rc_networks(sheet.name,index,out);led_boost_iset(sheet.name,index,out,policy,stated);
         const auto detected=detect_power_regulators({sheet},policy);
         for(const auto& error:detected.errors)out.unverified.push_back("SPICE unverified: regulator detection: "+error);
         buck_fb(sheet.name,index,detected.regs,out,policy);en_clamp(sheet.name,index,detected.regs,out,policy);boot0(sheet.name,index,out);
     }
-    for(const auto& named:named_dividers()) {
-        if(!extracted_named.count(named.net)&&nets.count(named.net))
-            throw ModelCheckError("required divider "+named.net+": topology could not be extracted");
+    for(const auto& sheet:sheets) {
+        std::set<std::string> nets;for(const auto& n:sheet.circuit.nets)nets.insert(n.name);
+        for(const auto& stated:sheet_role(roles,sheet.name).checks.dividers)
+            if(!extracted_named[sheet.name].count(stated.net)&&nets.count(stated.net))
+                throw ModelCheckError("required divider "+stated.net+": topology could not be extracted");
     }return out;
 }
 std::string spice_report(const SpiceResult& r,bool present) {

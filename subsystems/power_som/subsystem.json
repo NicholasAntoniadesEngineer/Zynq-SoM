@@ -3,8 +3,8 @@
   "name": "power_som",
   "title": "Power: +VIN -> +5V_SOM always-on buck",
   "interface": ["+VIN_SYS", "GND", "+5V_SOM"],
-  "placement": {"region": "board", "silk_label": null, "far_guard_mm": null, "escape_basis": null, "escape_escalates": false, "reserves_edge": false},
-  "checks": {"dividers": [], "divider_sources": [], "iset_window_ma": null},
+  "placement": {"region": "board", "silk_label": null, "far_guard_mm": 25, "escape_basis": "SoM rail-entry parts; outside all live windows this build (re-derived every build)", "escape_escalates": false, "reserves_edge": false},
+  "checks": {"dividers": [], "divider_sources": [], "iset_window_ma": null, "iset_basis": null},
   "parts": [
     {"ref": "U4", "part": "LM61460AANRJRR"},
     {

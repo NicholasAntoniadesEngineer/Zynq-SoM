@@ -201,7 +201,9 @@ void Engine::_shunt_cells(Handled& handled) {
         const double ax = gsnap(extent.x0 - symbol.body[0] + 16 * U);
         for (const auto& n : c.nets) if (signal(n))
             for (const auto& pr : n.pins) if (pr.ref == ref) { _bridge(n.name); break; }
+        const auto mark = _mark();
         TrunkMap no_trunks; _cell(ref, ax, ay, handled, no_trunks);
+        if (sp.compact) _pack_since(mark);
     }
 }
 
@@ -226,8 +228,9 @@ void Engine::_pull_rank_columns() {
             xs.push_back(x);
             if (is_ground) {
                 const Point knee{x, r3(bar_y - 2 * U)}, elbow{r3(x + 2 * U), knee.second};
-                pl.plan(sig, {knee, {x, bar_y}}); pl.plan(sig, {knee, elbow});
-                llabel(sig, elbow.first, elbow.second); _bridge(sig);
+                pl.plan(sig, {knee, {x, bar_y}});
+                if (rail(net(sig))) power(sig, knee.first, knee.second, _power_rot(sig, false));
+                else { pl.plan(sig, {knee, elbow}); llabel(sig, elbow.first, elbow.second); _bridge(sig); }
                 const auto far = _vertical_2pin(ref, x, bar_y, sig, true); require(far.second == name);
                 power(name, far.first.first, far.first.second, _power_rot(name, true));
                 x = r3(x + pitch); continue;
@@ -293,6 +296,119 @@ void Engine::_trunk_series_columns() {
     }
 }
 
+PlacementMark Engine::_mark() const {
+    PlacementMark mark{pl.parts.size(), pl.powers.size(), pl.hlabels.size(), pl.llabels.size(),
+                       pl.no_connects.size(), pl.boxes.size(), _open_stubs.size(), {}};
+    for (const auto& [name, paths] : pl.plans) mark.plans[name] = paths.size();
+    return mark;
+}
+std::optional<Point> Engine::_pack_anchor(const PlacementMark& mark) const {
+    std::set<std::string> moved;
+    for (std::size_t i = mark.parts; i < pl.parts.size(); ++i) moved.insert(pl.parts[i].ref);
+    Refs seated;
+    std::map<std::string, Point> centre;
+    for (std::size_t i = 0; i < mark.boxes; ++i) {
+        const auto& box = pl.boxes[i];
+        if (box.kind != "body" || moved.count(box.owner) || centre.count(box.owner)) continue;
+        if (std::none_of(c.parts.begin(), c.parts.end(), [&](const auto& p) { return p.ref == box.owner; })) continue;
+        seated.push_back(box.owner); centre[box.owner] = {(box.x0 + box.x1) / 2, (box.y0 + box.y1) / 2};
+    }
+    std::map<std::string, std::size_t> shared;
+    bool joined = false;
+    for (const auto& n : c.nets) {
+        if (n.net_class != "signal" && n.net_class != "port") continue;
+        if (std::none_of(n.pins.begin(), n.pins.end(), [&](const auto& p) { return moved.count(p.ref); })) continue;
+        joined = true;
+        std::set<std::string> others;
+        for (const auto& p : n.pins) if (centre.count(p.ref)) others.insert(p.ref);
+        for (const auto& ref : others) ++shared[ref];
+    }
+    if (!joined) return std::nullopt;
+    for (const auto& s : c.layout.serves)
+        if (moved.count(s.part) && centre.count(s.owner.ref)) return centre.at(s.owner.ref);
+    const std::string* best = nullptr;
+    for (const auto& ref : seated) if (shared.count(ref) && (!best || shared.at(ref) > shared.at(*best))) best = &ref;
+    if (!best) return std::nullopt;
+    return centre.at(*best);
+}
+void Engine::_pack_since(const PlacementMark& mark) {
+    const auto planned = [&](const std::string& name) { return get(mark.plans, name); };
+    std::vector<Box4> fixed, moved;
+    for (std::size_t i = 0; i < pl.boxes.size(); ++i) (i < mark.boxes ? fixed : moved).push_back(pl.boxes[i].bounds());
+    for (const auto& [name, paths] : pl.plans) for (std::size_t i = 0; i < paths.size(); ++i)
+        for (std::size_t j = 1; j < paths[i].size(); ++j) {
+            const auto& a = paths[i][j - 1]; const auto& b = paths[i][j];
+            (i < planned(name) ? fixed : moved).push_back({std::min(a.first, b.first), std::min(a.second, b.second),
+                                                          std::max(a.first, b.first), std::max(a.second, b.second)});
+        }
+    for (std::size_t i = 0; i < mark.no_connects; ++i)
+        fixed.push_back({pl.no_connects[i].x - NC_MARKER, pl.no_connects[i].y - NC_MARKER,
+                         pl.no_connects[i].x + NC_MARKER, pl.no_connects[i].y + NC_MARKER});
+    if (moved.empty() || fixed.empty()) return;
+    const auto bounds = [](const std::vector<Box4>& boxes) {
+        Box4 out = boxes.front();
+        for (const auto& b : boxes) out = {std::min(out.x0, b.x0), std::min(out.y0, b.y0), std::max(out.x1, b.x1), std::max(out.y1, b.y1)};
+        return out;
+    };
+    const auto page = bounds(fixed), cell = bounds(moved);
+    const double width = cell.x1 - cell.x0, height = cell.y1 - cell.y0;
+    const double right = std::max(page.x1, page.x0 + PACK_WIDTH_BUDGET) - width;
+    const auto clear = [&](double x, double y) {
+        const Box4 seat{x - PACK_GAP, y - PACK_GAP, x + width + PACK_GAP, y + height + PACK_GAP};
+        return std::none_of(fixed.begin(), fixed.end(), [&](const Box4& b) {
+            return b.x0 < seat.x1 && b.x1 > seat.x0 && b.y0 < seat.y1 && b.y1 > seat.y0;
+        });
+    };
+    Point seat{page.x0, gceil(page.y1 + PACK_GAP)};
+    const auto anchor = _pack_anchor(mark);
+    bool found = false; double nearest = 0.0;
+    for (double y = gfloor(page.y1 - height); !(found && !anchor) && y >= page.y0; y = r3(y - PACK_STEP))
+        for (double x = gceil(page.x0); x <= right; x = r3(x + PACK_STEP)) {
+            if (!clear(x, y)) continue;
+            const double reach = anchor ? std::fabs(x + width / 2 - anchor->first) + std::fabs(y + height / 2 - anchor->second) : 0.0;
+            if (found && reach >= nearest) continue;
+            seat = {x, y}; found = true; nearest = reach;
+            if (!anchor) break;
+        }
+    const double dx = gsnap(seat.first - cell.x0), dy = gsnap(seat.second - cell.y0);
+    const auto move = [&](double& x, double& y) { x = r3(x + dx); y = r3(y + dy); };
+    const auto text = [&](std::optional<SchematicTextPosition>& p) { if (p) move(p->x, p->y); };
+    for (std::size_t i = mark.parts; i < pl.parts.size(); ++i) { move(pl.parts[i].x, pl.parts[i].y); text(pl.parts[i].ref_pos); text(pl.parts[i].val_pos); }
+    for (std::size_t i = mark.powers; i < pl.powers.size(); ++i) { move(pl.powers[i].x, pl.powers[i].y); text(pl.powers[i].val_pos); }
+    for (std::size_t i = mark.hlabels; i < pl.hlabels.size(); ++i) move(pl.hlabels[i].x, pl.hlabels[i].y);
+    for (std::size_t i = mark.llabels; i < pl.llabels.size(); ++i) move(pl.llabels[i].x, pl.llabels[i].y);
+    for (std::size_t i = mark.no_connects; i < pl.no_connects.size(); ++i) move(pl.no_connects[i].x, pl.no_connects[i].y);
+    for (std::size_t i = mark.boxes; i < pl.boxes.size(); ++i) { move(pl.boxes[i].x0, pl.boxes[i].y0); move(pl.boxes[i].x1, pl.boxes[i].y1); }
+    for (std::size_t i = mark.stubs; i < _open_stubs.size(); ++i) move(_open_stubs[i].at.first, _open_stubs[i].at.second);
+    for (auto& [name, paths] : pl.plans) for (std::size_t i = planned(name); i < paths.size(); ++i)
+        for (auto& p : paths[i]) move(p.first, p.second);
+}
+bool Engine::_label_open_stubs() {
+    bool changed = false;
+    std::vector<OpenStub> open;
+    for (const auto& stub : _open_stubs) {
+        if (!pl.label_bridged.count(stub.net)) { open.push_back(stub); continue; }
+        llabel(stub.net, stub.at.first, stub.at.second, stub.rotation); changed = true;
+    }
+    _open_stubs = std::move(open);
+    return changed;
+}
+bool Engine::_label_clear(const Box4& box, const std::string& name) const {
+    const VisualBox probe{box.x0, box.y0, box.x1, box.y1, "label", "label:" + name};
+    return std::none_of(pl.boxes.begin(), pl.boxes.end(), [&](const VisualBox& other) {
+        return other.owner != probe.owner && probe.intersects(other, default_engine_config.visual_clearance_mm);
+    });
+}
+double Engine::_clear_label_x(const std::string& name, double x, double y, double lo, double hi) const {
+    if (!sp.refine || _label_clear(llabel_box(name, x, y), name)) return x;
+    const double length = llabel_box(name, 0.0, 0.0).x1;
+    for (int k = 1; k < SEAT_SEARCH_STEPS; ++k) for (const int side : {-1, 1}) {
+        const double candidate = r3(x + side * k * 2 * U);
+        if (candidate < lo + U || candidate + length > hi - U) continue;
+        if (_label_clear(llabel_box(name, candidate, y), name)) return candidate;
+    }
+    return x;
+}
 void Engine::_rung_islet_drop(const std::string& name, Point pt, int sign) {
     const double lx = r3(pt.first + sign * sp.port_run);
     pl.plan(name, {pt, {lx, pt.second}}); llabel(name, lx, pt.second, sign > 0 ? 0 : 180); _bridge(name);
@@ -339,7 +455,7 @@ void Engine::_pin_divider_columns() {
 
 Refs Engine::_chain_order() {
     Refs connectors, others;
-    for (const auto& ref : multi) if (!has(shunts, ref)) (ref.front() == 'J' ? connectors : others).push_back(ref);
+    for (const auto& ref : multi) if (!has(shunts, ref) && !_path_refs.count(ref)) (ref.front() == 'J' ? connectors : others).push_back(ref);
     // Circuit connectivity is immutable; avoid rescanning the board within
     // stable-sort comparators and connected-component propagation.
     std::map<std::string, std::set<std::string>> nets, signals;
@@ -494,10 +610,18 @@ std::string Engine::_pin_num_at(const std::string& ref, Point point, const std::
 double Engine::_side_reach(const std::string& ref, const std::string& side,
                            const TrunkMap* jobs, const std::set<std::string>& exclude) {
     const auto& trunk_jobs = jobs ? *jobs : trunks;
-    double out = 2 * U; std::size_t lanes = 0; std::vector<std::pair<double, double>> rows;
+    double out = 2 * U, columns = 0.0; std::size_t lanes = 0; std::vector<std::pair<double, double>> rows;
     for (const auto& tip : _side_tips(ref)) {
         if (tip.side != side) continue;
         const auto* n = net_of(ref, tip.number); if (!n || exclude.count(n->name)) continue;
+        if (!_path.nets.empty() && signal(*n)) {
+            Refs attached = get(hang, n->name);
+            for (const auto& item : get(pull, n->name)) attached.push_back(item.first);
+            for (const auto& r : attached) {
+                const auto& p = part(r);
+                columns += 2 * U + TEXT_GAP + std::max(text_wh(p.ref).first, text_wh(p.value).first);
+            }
+        }
         if (trunk_jobs.contains(n->name) || (n->net_class == "signal" && _rung_of(n->name, trunk_jobs))) { ++lanes; continue; }
         const auto ser = n->net_class == "signal" ? _series_of(n->name) : std::nullopt;
         if (ser) {
@@ -535,7 +659,7 @@ double Engine::_side_reach(const std::string& ref, const std::string& side,
         out = std::max(out, sp.port_run + two + 2 * U);
     }
     if (lanes) out += 3 * U + 2 * U * static_cast<double>(lanes);
-    return out;
+    return out + gceil(columns);
 }
 
 SchematicPlacement Engine::run() {
@@ -560,6 +684,7 @@ SchematicPlacement Engine::run() {
         }
         result = !stages.empty() && shared_ok ? _regulator_template(std::move(stages)) : _chain_template();
     }
+    if (_label_open_stubs()) result = pl;
     Refs missing; for (const auto& p : c.parts) if (!_done.count(p.ref)) missing.push_back(p.ref);
     std::sort(missing.begin(), missing.end());
     require(missing.empty(), "engine left parts unplaced: " + ref_list(missing) + " — no topology pattern matched them");
@@ -629,6 +754,10 @@ SchematicPlacement Engine::_chain_template() {
             }
             for (const auto& name : placed) jogged.push_back(names.at(name));
         }
+        if (sp.refine && !demoted.empty()) {
+            demoted.insert(demoted.end(), aligned.begin(), aligned.end()); demoted.insert(demoted.end(), jogged.begin(), jogged.end());
+            aligned.clear(); jogged.clear();
+        }
         for (const auto& p : demoted) { trunks.erase(p.net); _bridge(p.net); }
         auto kept = aligned; kept.insert(kept.end(), jogged.begin(), jogged.end());
         for (const auto& p : kept) {
@@ -645,9 +774,17 @@ SchematicPlacement Engine::_chain_template() {
     for (const auto& name : keys(trunks)) {
         const auto& n = net(name); if (n.net_class != "signal") continue;
         const auto mp = refs_on_net(n, multi); if (mp.size() < 2) continue;
-        Refs nonshunts; bool any_shunt = false;
-        for (const auto& r : mp) { if (has(shunts, r)) any_shunt = true; else nonshunts.push_back(r); }
+        Refs nonshunts; bool any_shunt = false, on_path = false;
+        for (const auto& r : mp) {
+            if (has(shunts, r)) any_shunt = true;
+            else if (_path_refs.count(r)) on_path = true;
+            else nonshunts.push_back(r);
+        }
         if (any_shunt && nonshunts.size() <= 2) { trunks.erase(name); _bridge(name); continue; }
+        if (on_path && nonshunts.size() == 1) {
+            for (const auto& chain : trunks.at(name)->chains) chain->kind = "pin";
+            trunks.erase(name); _bridge(name); continue;
+        }
         std::vector<std::string> sides;
         for (const auto& ref : nonshunts) for (const auto& tip : _side_tips(ref))
             if (_on_net(ref, tip.number, name)) sides.push_back(tip.side);
@@ -671,7 +808,16 @@ SchematicPlacement Engine::_chain_template() {
         }
     }
 
-    double comp_dy = 0.0, row_y0 = -1e9;
+    double comp_dy = 0.0, row_y0 = -1e9, row_x0 = 0.0;
+    if (!_path.nets.empty()) {
+        _power_path_row(handled);
+        const double bottom = _extent().y1;
+        double left_tip = lib.get(part(order.front()).lib_id).body[0];
+        for (const auto& tip : _side_tips(order.front())) if (tip.side == "left") left_tip = std::min(left_tip, tip.point.first);
+        row_x0 = gsnap(gceil(_extent().x0 + _side_reach(order.front(), "left", &trunk_jobs)) - left_tip);
+        const auto shape = body_box_page(lib.get(part(order.front()).lib_id), 0.0, 0.0, get(orient, order.front()), "body", order.front());
+        comp_dy = gceil(bottom + 14 * U - shape.y0) - ays.at(order.front()); row_y0 = gceil(bottom + 2 * U);
+    }
     const auto seat = [&](const std::string& ref, double ax, double ay) {
         anchors[ref] = {ax, ay}; _collect_trunk_pins(ref, ax, ay, trunk_jobs, rung_keys);
         _cell(ref, ax, ay, handled, trunk_jobs, true, order.size() > 1 && ref == order.back() ? 1 : -1);
@@ -687,7 +833,7 @@ SchematicPlacement Engine::_chain_template() {
             }
         }
         double ay = r3(ays.at(ref) + comp_dy);
-        if (i == 0 || new_row) { seat(ref, 0.0, ay); continue; }
+        if (i == 0 || new_row) { seat(ref, i == 0 ? row_x0 : 0.0, ay); continue; }
         const auto& a_ref = order[i - 1]; const auto a = anchors.at(a_ref);
         const auto pairs = binfo.at(ref);
         const double meas = _band_edge(row_y0, 1e9, 1, row_y0 < -1e8 ? _extent().x1 : 0.0);
@@ -713,6 +859,17 @@ SchematicPlacement Engine::_chain_template() {
             ax = std::max(ax, gsnap(a_right + gceil(std::max(2 * sp.port_run, label_reach + 8 * U)) - b_min));
         }
         const double row_left = row_y0 > -1e8 ? _band_edge(row_y0, 1e9, -1, 0.0) : _extent().x0;
+        if (sp.compact && pairs.empty()) {
+            double right_tip = lib.get(part(ref).lib_id).body[2];
+            for (const auto& tip : _side_tips(ref)) if (tip.side == "right") right_tip = std::max(right_tip, tip.point.first);
+            if (ax + right_tip + _side_reach(ref, "right", &trunk_jobs) - row_left > PACK_WIDTH_BUDGET) {
+                const double bottom = _extent().y1;
+                const auto shape = body_box_page(lib.get(part(ref).lib_id), 0.0, 0.0, get(orient, ref), "body", ref);
+                comp_dy = gceil(bottom + 14 * U - shape.y0) - ays.at(ref); row_y0 = gceil(bottom + 2 * U);
+                ay = r3(ays.at(ref) + comp_dy);
+                seat(ref, gsnap(gceil(_extent().x0 + _side_reach(ref, "left", &trunk_jobs)) - b_left), ay); continue;
+            }
+        }
         // SCHGEN_WRAP_INSTR only prints Python diagnostics; it never changes
         // geometry and is intentionally not a process-environment dependency.
         if (!pairs.empty() && ax - row_left > PAPER_W_BUDGET) {
@@ -793,7 +950,11 @@ SchematicPlacement Engine::_chain_template() {
             nodes.push_back(lx); pl.plan(name, {{lx, y}, *label_end}); label(name, label_end->first, label_end->second, 90);
         }
         horizontal(pl, name, nodes, y);
-        if (net(name).net_class == "signal") llabel(name, mid, label_y);
+        if (net(name).net_class == "signal") {
+            const bool first_leg = tips.jog && label_y == tips.a.second && *tips.jog - tips.a.first > tips.b.first - *tips.jog;
+            const double lo = first_leg ? tips.a.first : start_x, hi = first_leg ? *tips.jog : tips.b.first;
+            llabel(name, _clear_label_x(name, mid, label_y, lo, hi), label_y);
+        }
     }
     for (const auto& entry : trunk_jobs) _build_trunk(*entry.second);
     for (const auto& item : _deferred_texts) _part_texts(item.first, item.second);
@@ -802,11 +963,17 @@ SchematicPlacement Engine::_chain_template() {
     require(first != pl.parts.end(), "chain template: first component was not placed");
     const auto& symbol = lib.get(first->lib_id);
     const auto body = body_box_page(symbol, first->x, first->y, first->rotation, "body", order.front());
-    _decoupling_cluster(first->x, first->y, body); _shunt_cells(handled);
-    _rung_islet_columns(); _pin_divider_columns(); _pull_rank_columns();
-    _series_port_columns(); _trunk_series_columns();
-    if (std::any_of(float_chains.begin(), float_chains.end(), [](const auto& ch) { return ch->kind == "rail"; })) _leftover_chains_columns();
-    _port_strap_columns(); _flags_row(); return pl;
+    const auto packed = [&](const auto& stage) {
+        if (!sp.compact) { stage(); return; }
+        const auto mark = _mark(); stage(); _pack_since(mark);
+    };
+    const double first_x = first->x, first_y = first->y;
+    packed([&] { _decoupling_cluster(first_x, first_y, body); }); _shunt_cells(handled);
+    packed([&] { _rung_islet_columns(); }); packed([&] { _pin_divider_columns(); }); packed([&] { _pull_rank_columns(); });
+    packed([&] { _series_port_columns(); }); packed([&] { _trunk_series_columns(); });
+    if (std::any_of(float_chains.begin(), float_chains.end(), [](const auto& ch) { return ch->kind == "rail"; }))
+        packed([&] { _leftover_chains_columns(); });
+    packed([&] { _port_strap_columns(); }); packed([&] { _flags_row(); }); return pl;
 }
 
 }  // namespace schgen::schematic_place

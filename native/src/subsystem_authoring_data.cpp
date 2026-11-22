@@ -103,6 +103,7 @@ SubsystemPlacement placement_of(const JsonNode& document, const std::string& whe
     placement.escape_basis = nullable_text(node, "escape_basis", at);
     placement.escape_escalates = truth(node, "escape_escalates", at);
     placement.reserves_edge = truth(node, "reserves_edge", at);
+    if (placement.escape_escalates && !placement.escape_basis) fail(at, "field 'escape_escalates' is true but 'escape_basis' is null");
     return placement;
 }
 
@@ -145,11 +146,18 @@ std::optional<IsetWindow> iset_window_of(const JsonNode& node, const std::string
 SubsystemChecks checks_of(const JsonNode& document, const std::string& where) {
     const std::string at = where + " checks";
     const JsonNode& node = member(document, "checks", JsonKind::Object, where);
-    reject_unknown_keys(node, {"dividers", "divider_sources", "iset_window_ma"}, at);
+    reject_unknown_keys(node, {"dividers", "divider_sources", "iset_window_ma", "iset_basis"}, at);
     SubsystemChecks checks;
-    for (const JsonNode& row : rows(node, "dividers", at)) checks.dividers.push_back(divider_of(row, at));
+    std::set<std::string> nets;
+    for (const JsonNode& row : rows(node, "dividers", at)) {
+        checks.dividers.push_back(divider_of(row, at));
+        if (!nets.insert(checks.dividers.back().net).second) fail(at, "divider " + checks.dividers.back().net + " is stated twice");
+    }
     checks.divider_sources = texts(node, "divider_sources", at);
     checks.iset_window_ma = iset_window_of(node, at);
+    checks.iset_basis = nullable_text(node, "iset_basis", at);
+    if (checks.iset_window_ma.has_value() != checks.iset_basis.has_value())
+        fail(at, "field 'iset_basis' must be a name exactly when 'iset_window_ma' is stated");
     return checks;
 }
 
@@ -301,6 +309,7 @@ CircuitSheetIr author_subsystem_data(const JsonNode& document, const SubsystemMe
     if (text(document, "schema", where) != subsystem_data_schema)
         fail(where, std::string("schema is not ") + subsystem_data_schema);
     subsystem_data_facts(document, where);
+    require_title_fits(where, text(document, "title", where));
     CircuitAuthor circuit(text(document, "name", where), text(document, "title", where), context);
     apply_sections(circuit, document, meta, where, true);
     return meta.finish(circuit);

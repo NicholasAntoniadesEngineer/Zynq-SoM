@@ -113,7 +113,7 @@ void pure(const JsonNode& fixture,const fs::path& repo,const fs::path& scratch) 
     write(model,"not a model"); mutated=check_model3d(scratch/"parts",scratch); require(!mutated.ok&&mutated.invalid.size()==1,"unmeasurable geometry hard failure"); require(mutated.report().find("INVALID (1)")!=std::string::npos,"unmeasurable geometry reported");
     write(mod,base); mutated=check_model3d(scratch/"parts",scratch); require(!mutated.ok&&mutated.missing.size()==1,"missing clause hard failure");
     write(mod,"(footprint P (model \"relative.wrl\"))"); mutated=check_model3d(scratch/"parts",scratch); require(!mutated.ok&&mutated.broken.size()==1,"relative path hard failure");
-    std::cout<<"288 historical geometry inputs with corrected 45-degree oracle, OBJ bytes, 62 real footprints, 154 asset hashes and mutations pass\n";
+    std::cout<<"288 historical geometry inputs with corrected 45-degree oracle, OBJ bytes, 70 real footprints, 154 asset hashes and mutations pass\n";
 }
 void errors(const fs::path& scratch,const std::string& executable) {
     rejects([&]{render_pdf_to_png(scratch/"absent.pdf",scratch/"p.png");},"PDF not found"); write(scratch/"bad.pdf","not a PDF"); write(scratch/"p.png","preserve");
@@ -250,7 +250,7 @@ int main(int argc,char** argv) {
         if (argc<3) throw std::runtime_error("usage: contracts REPO SCRATCH [--live]");
         const fs::path repo=argv[1],scratch=argv[2]; fs::create_directories(scratch);
         const auto fixture=parse_json_file((repo/"native/tests/data/render_models/reference.json").string());
-        require(pcb_sha256(read(repo/"native/tests/data/render_models/reference.json"))=="c233558629102d5885d7dd3ad845e2894ee9107794b3ab57fa08b8fac6968a2c","immutable Python capture");
+        require(pcb_sha256(read(repo/"native/tests/data/render_models/reference.json"))=="88709d237dea26d12a682437fccf8bd301fcfbdb5f05e634f733d914daadbb03","immutable Python capture");
         planar_transform_contracts(); pure(fixture,repo,scratch); errors(scratch,fs::absolute(argv[0]).string()); pdf_cases(repo,scratch); if (argc>3&&std::string(argv[3])=="--live") live(fixture,repo,scratch);
         std::cout<<assertions<<" render/model contracts PASS\n"; return 0;
     } catch (const std::exception& e) { std::cerr<<"FAIL: "<<e.what()<<'\n'; return 1; }

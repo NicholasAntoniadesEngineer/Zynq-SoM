@@ -1,6 +1,7 @@
 #include "schgen/part_facts.hpp"
 
 #include "schgen/json.hpp"
+#include "schgen/board_definition.hpp"
 #include "schgen/model3d.hpp"
 #include "schgen/pcb_checks.hpp"
 
@@ -36,7 +37,7 @@ constexpr std::size_t axis_count = 3;
 const char* const facts_file_name = "part_facts.json";
 const char* const part_file_name = "part.json";
 const std::string_view face_signs = "+-";
-const std::string_view face_axes = "XY";
+const std::string_view face_axes = "XYZ";
 constexpr std::size_t face_length = 2;
 constexpr std::size_t pair_length = 2;
 const char* const led_boost_kind = "led_boost";
@@ -661,12 +662,13 @@ ConnectorFacts connectors_from(const JsonNode& section, const std::map<std::stri
         const std::string where = file + " connectors " + name;
         if (entry.kind != JsonKind::Object) refuse(where + " must be an object");
         reject_unknown_keys(entry, {"mating_face", "edge_pinned", "overmold", "pad_row_face_check", "description",
-                                    "numbered_label", "pair_label"}, where);
+                                    "numbered_label", "pair_label", "handling", "mating", "access"}, where);
         ConnectorFact fact;
         fact.mating_face = require_string(entry, "mating_face", false, where);
         if (fact.mating_face.size() != face_length || face_signs.find(fact.mating_face.front()) == std::string_view::npos ||
             face_axes.find(fact.mating_face.back()) == std::string_view::npos)
-            refuse(where + ": mating_face must be one of +X, -X, +Y, -Y");
+            refuse(where + ": mating_face must be one of +X, -X, +Y, -Y, +Z");
+        if (fact.mating_face == "-Z") refuse(where + ": mating_face -Z would mate through the board");
         fact.edge_pinned = flag_of(entry, "edge_pinned", where);
         fact.overmold = flag_of(entry, "overmold", where);
         fact.pad_row_face_check = flag_of(entry, "pad_row_face_check", where);
@@ -674,6 +676,41 @@ ConnectorFacts connectors_from(const JsonNode& section, const std::map<std::stri
         fact.numbered_label = text_of(entry, "numbered_label", where);
         fact.pair_label = text_of(entry, "pair_label", where);
         if (fact.edge_pinned && !fact.description) refuse(where + ": an edge-pinned connector needs a description");
+        if (fact.edge_pinned && fact.mating_face.back() == face_axes.back()) refuse(where + ": a connector mated from above (+Z) cannot be edge-pinned");
+        fact.handling = require_string(entry, "handling", false, where);
+        const auto& handling = connector_handling_classes();
+        if (std::find(handling.begin(), handling.end(), fact.handling) == handling.end())
+            refuse(where + ": handling must be one of grip_sides, latch, card, flat_cable, pins, none");
+        if (const JsonNode* mating = object_field(entry, "mating")) {
+            const std::string at = where + " mating";
+            if (mating->kind != JsonKind::Object) refuse(at + " must be an object");
+            reject_unknown_keys(*mating, {"plug_width_mm", "plug_depth_mm", "plug_height_mm", "cite"}, at);
+            ConnectorMating row;
+            const auto nullable = [&](const std::string& key) -> std::optional<double> {
+                const JsonNode* value = object_field(*mating, key);
+                if (!value) refuse(at + " needs " + key + " (a number, or null when not determined)");
+                if (value->kind == JsonKind::Null) return std::nullopt;
+                return number_of(*mating, key, at, true);
+            };
+            row.plug_width_mm = nullable("plug_width_mm");
+            row.plug_depth_mm = nullable("plug_depth_mm");
+            row.plug_height_mm = nullable("plug_height_mm");
+            const JsonNode* cite = object_field(*mating, "cite");
+            if (!cite) refuse(at + " needs cite (a string, or null when not determined)");
+            if (cite->kind != JsonKind::Null) row.cite = text_of(*mating, "cite", at);
+            if ((row.plug_width_mm || row.plug_depth_mm || row.plug_height_mm) && !row.cite)
+                refuse(at + ": a stated plug dimension needs a cite");
+            fact.mating = row;
+        }
+        const JsonNode* access = object_field(entry, "access");
+        if (!access) refuse(where + ": a connector must state access (side_mm, front_mm and cite; zero is stated, never implied)");
+        {
+            const std::string at = where + " access";
+            if (access->kind != JsonKind::Object) refuse(at + " must be an object");
+            reject_unknown_keys(*access, {"side_mm", "front_mm", "cite"}, at);
+            fact.access = ConnectorAccess{number_of(*access, "side_mm", at, false), number_of(*access, "front_mm", at, false),
+                                          text_required(*access, "cite", at)};
+        }
         const auto symbol = classes.find(name + ":" + name);
         if (symbol == classes.end() || symbol->second != PartClass::connector)
             refuse(where + " must name a symbol of class connector in classes");
@@ -702,6 +739,7 @@ const ConnectorFact& connector_fact_of(const ConnectorFacts& facts, const std::s
 
 std::pair<int, int> mating_face_vector(const ConnectorFact& fact) {
     const int sign = fact.mating_face.front() == face_signs.front() ? 1 : -1;
+    if (fact.mating_face.back() == face_axes.back()) return {0, 0};
     return fact.mating_face.back() == face_axes.front() ? std::pair<int, int>{sign, 0} : std::pair<int, int>{0, sign};
 }
 

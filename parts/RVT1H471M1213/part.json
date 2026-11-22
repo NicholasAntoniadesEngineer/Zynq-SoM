@@ -1,0 +1,31 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "RVT1H471M1213",
+  "safe_name": "RVT1H471M1213",
+  "lcsc": "C90272",
+  "description": "470uF 50V ±20%",
+  "manufacturer": "ROQANG(容强)",
+  "package": "CAP-SMD_BD12.5-L13.0-W13.0-RD",
+  "jlc_class": "Extended Part",
+  "prefix": "C",
+  "datasheet": "https://www.lcsc.com/datasheet/C90272.pdf",
+  "product_url": "https://lcsc.com/product-detail/Aluminum-Electrolytic-Capacitors-SMD_470uF-50V-20_C90272.html",
+  "lib_id": "RVT1H471M1213:RVT1H471M1213",
+  "footprint": "RVT1H471M1213:RVT1H471M1213",
+  "models_3d": [
+    "RVT1H471M1213.wrl",
+    "RVT1H471M1213.step"
+  ],
+  "pins": [
+    {
+      "num": "1",
+      "name": "1",
+      "etype": "passive"
+    },
+    {
+      "num": "2",
+      "name": "2",
+      "etype": "passive"
+    }
+  ]
+}

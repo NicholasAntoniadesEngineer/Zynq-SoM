@@ -4,7 +4,7 @@
   "title": "JTAG + SWD headers, boot-request DIP, reset",
   "interface": ["GND", "+3V3", "ZYNQ_TMS", "ZYNQ_TCK", "ZYNQ_TDO", "ZYNQ_TDI", "+3V3_SC", "STM32_GPIO6", "STM32_GPIO5", "STM32_NRST", "STM32_BOOT0", "STM32_GPIO7", "STM32_GPIO8"],
   "placement": {"region": "board", "silk_label": null, "far_guard_mm": null, "escape_basis": null, "escape_escalates": false, "reserves_edge": false},
-  "checks": {"dividers": [], "divider_sources": [], "iset_window_ma": null},
+  "checks": {"dividers": [], "divider_sources": [], "iset_window_ma": null, "iset_basis": null},
   "parts": [
     {"ref": "J1", "part": "878311420"},
     {"ref": "J2", "part": "HX_JN1.27-2x5_TP_H4.9", "value": "HX_JN1.27-2x5"},

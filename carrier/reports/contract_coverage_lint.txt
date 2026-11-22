@@ -1,5 +1,5 @@
 CONTRACT COVERAGE LINT — every wired-sheet part in >=1 contract structure or explicitly free
-CONTRACT COVERAGE LINT (advisory): 37 sheets, 562 parts — 276 structured / 0 free / 286 UNGATED
+CONTRACT COVERAGE LINT (advisory): 37 sheets, 563 parts — 276 structured / 0 free / 287 UNGATED
 
 board_aux            parts= 18  structured=  0  free= 0  UNGATED= 18  (no contract)
     UNGATED C1     -> C1001    10u                    nets: +3V3, GND
@@ -211,7 +211,8 @@ debug_boot           parts= 10  structured=  0  free= 0  UNGATED= 10  (no contra
     UNGATED R6     -> R9006    10k                    nets: +3V3_SC, BOOT_SPARE
     UNGATED SW1    -> SW9001   DIP-4                  nets: BOOT0_SET, BOOT_SPARE, GND, STM32_BOOT0, STM32_GPIO7, STM32_GPIO8
     UNGATED SW2    -> SW9002   RESET                  nets: GND, STM32_NRST
-ethernet             parts= 10  structured= 10  free= 0  UNGATED=  0
+ethernet             parts= 11  structured= 10  free= 0  UNGATED=  1
+    UNGATED C6     -> C10006   100n                   nets: ETH_TCT, GND
 fmc                  parts=  8  structured=  7  free= 0  UNGATED=  1
     UNGATED TP1    -> TP11001  +2V5_VADJ              nets: +2V5_VADJ
 hdmi_rx              parts= 10  structured= 10  free= 0  UNGATED=  0

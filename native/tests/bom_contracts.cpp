@@ -64,6 +64,12 @@ int main(int argc, char** argv) {
                     std::vector<std::string>{"R10", "R2", "R1"}, "standalone ref policy");
         require(schgen::generate_bom({}).csv == "Comment,Designator,Footprint,LCSC\r\n",
                 "empty BOM header");
+        const auto merged = schgen::group_bom_entries({{"A1", "DIP-4", "pkg", "C9"}, {"A2", "DSHP", "pkg", "C9"}, {"A3", "DSHP", "other", "C9"},
+                                                       {"A4", "x", "pkg", ""}, {"A5", "y", "pkg", ""}}, true);
+        require(merged.size() == 4 && merged[2].value == "x" && merged[3].value == "y", "uncoded entries stay one line per value");
+        require(merged[1].lcsc == "C9" && merged[1].footprint == "other" && merged[1].refs == std::vector<std::string>{"A3"}, "one code on two footprints stays two lines");
+        require(merged[0].value == "DIP-4" && merged[0].refs == std::vector<std::string>{"A1", "A2"}, "one code and footprint is one line, commented with the least value");
+        require(schgen::group_bom_entries({{"A1", "DIP-4", "pkg", "C9"}, {"A2", "DSHP", "pkg", "C9"}}).size() == 2, "the identity-faithful grouping keeps distinct values apart");
         a.parts = {part("R1", "line\nbreak", "tab\t", {{"BOM", "EXCLUDE"}})};
         require(schgen::generate_bom({a}).csv.find("\"line\nbreak\",a:R1,tab\t,\r\n") !=
                     std::string::npos, "newline CSV cell or exact BOM exclude policy");

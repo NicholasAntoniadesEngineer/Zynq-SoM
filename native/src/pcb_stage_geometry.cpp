@@ -106,6 +106,8 @@ double connector_rotation_impl(const ConnectorFacts &facts, const std::string &v
     };
     const ConnectorFact *fact = connector_fact(facts, value);
     const auto face = fact ? mating_face_vector(*fact) : unlisted_face;
+    if (face.first == 0 && face.second == 0)
+        return 0;
     for (double rot : {0., 90., 180., 270.}) {
         auto v = turn_point(face.first, face.second, rot);
         if (component(v.first) == d->first && component(v.second) == d->second)

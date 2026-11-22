@@ -254,6 +254,7 @@
     {"sheet": "ethernet", "target": "R4", "attribute": "value", "declaration": "subsystems.ETHERNET_BOB_SMITH_R", "type": "Device:R"},
     {"sheet": "ethernet", "target": "C4", "attribute": "value", "declaration": "subsystems.ETHERNET_BOB_SMITH_C", "type": "Device:C"},
     {"sheet": "ethernet", "target": "C5", "attribute": "value", "declaration": "subsystems.ETHERNET_BOB_SMITH_C", "type": "Device:C"},
+    {"sheet": "ethernet", "target": "C6", "attribute": "value", "declaration": "subsystems.ETHERNET_CENTRE_TAP_C", "type": "Device:C"},
     {"sheet": "hdmi_rx", "target": "R1", "attribute": "value", "declaration": "subsystems.HDMI_RX_HPD_ASSERT", "type": "Device:R"},
     {"sheet": "hdmi_rx", "target": "R2", "attribute": "value", "declaration": "subsystems.HDMI_RX_CEC_PULL", "type": "Device:R"},
     {"sheet": "hdmi_rx", "target": "R3", "attribute": "value", "declaration": "subsystems.HDMI_RX_DET_TOP", "type": "Device:R"},

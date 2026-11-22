@@ -44,6 +44,7 @@ struct SubsystemChecks {
     std::vector<SubsystemDivider> dividers;
     std::vector<std::string> divider_sources;
     std::optional<IsetWindow> iset_window_ma;
+    std::optional<std::string> iset_basis;
 };
 
 struct SubsystemFacts {

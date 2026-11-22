@@ -1,0 +1,15 @@
+* can_bus.cir - SPICE subckt of the can_bus sheet.
+*
+* CAN bus port: TCAN1042HGV transceiver (70 V bus fault), switched 120R termination, two daisy-chain connectors
+* The subckt declares the sheet's power and ground rails as its pins and models
+* each rail as a 1G tie to the last pin so no node floats in .op; the signal
+* ports carry no two-rail passive and are not pins.
+*
+* Port order: V5V V3V3 GND GND_BUS
+
+.subckt can_bus V5V V3V3 GND GND_BUS
+RV5V V5V GND_BUS 1G
+RV3V3 V3V3 GND_BUS 1G
+RGND GND GND_BUS 1G
+.ends can_bus
+.end

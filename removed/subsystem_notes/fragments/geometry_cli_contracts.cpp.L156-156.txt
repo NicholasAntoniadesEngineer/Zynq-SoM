@@ -1,0 +1,1 @@
+        if (entry.path().extension() != ".json" && entry.path().extension() != ".md" && entry.path().extension() != ".cir") continue;

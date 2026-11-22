@@ -19,6 +19,12 @@ inline constexpr std::size_t point_fields = 2, disc_fields = 3, box_fields = 4;
 
 std::string point_json(Point point) { return array({integer(point.x), integer(point.y)}); }
 
+std::string points_json(const std::vector<Point>& points) {
+    std::vector<std::string> out;
+    for (const Point& point : points) out.push_back(point_json(point));
+    return array(out);
+}
+
 std::string box_json(Box box) {
     return array({integer(box.x0), integer(box.y0), integer(box.x1), integer(box.y1)});
 }
@@ -45,7 +51,8 @@ std::string variant_json(const Variant& variant) {
                                {"centre", point_json(pad.centre)},
                                {"box", box_json(pad.box)},
                                {"through", boolean(pad.through)},
-                               {"radius", integer(pad.radius)}}));
+                               {"radius", integer(pad.radius)},
+                               {"drill", integer(pad.drill)}}));
     return object({{"gate_box", box_json(variant.gate_box)},
                    {"court_boxes", array(boxes)},
                    {"court_discs", array(discs)},
@@ -101,10 +108,11 @@ Variant variant_of(const JsonNode& node) {
     for (const auto& entry : field(node, "court_discs", JsonKind::Array).array_value)
         variant.court_discs.push_back(disc_of(entry));
     for (const auto& entry : field(node, "pads", JsonKind::Array).array_value) {
-        reject_unknown_keys(entry, {"name", "centre", "box", "through", "radius"}, "layout pad");
+        reject_unknown_keys(entry, {"name", "centre", "box", "through", "radius", "drill"}, "layout pad");
         PadShape pad{text(entry, "name"), point_of(field(entry, "centre", JsonKind::Array)),
                      box_of(field(entry, "box", JsonKind::Array)), flag(entry, "through"),
                      whole(field(entry, "radius", JsonKind::Number))};
+        if (object_field(entry, "drill")) pad.drill = whole(field(entry, "drill", JsonKind::Number));
         variant.pad_hull = variant.pad_hull ? united(*variant.pad_hull, pad.box) : pad.box;
         variant.pads.push_back(std::move(pad));
     }
@@ -328,6 +336,8 @@ std::string document_json(const Problem& problem, const Placement& placement) {
                                 {"tie", text_value(tie_name(problem.ownership.empty() ? Tie::none : problem.ownership[parts.size()].tie))},
                                 {"owner", integer(problem.ownership.empty() || !problem.ownership[parts.size()].owner
                                                       ? -1 : static_cast<long long>(*problem.ownership[parts.size()].owner))},
+                                {"via_sites", points_json(part.via_sites)},
+                                {"via_face", text_value(part.via_face == Face::top ? "top" : "bottom")},
                                 {"connector", boolean(part.connector)},
                                 {"overmold", boolean(part.overmold)},
                                 {"edge", part.edge ? object({{"mouth", point_json(part.edge->mouth)},
@@ -387,6 +397,10 @@ std::string document_json(const Problem& problem, const Placement& placement) {
                           {"edge_clearance", integer(problem.rules.edge_clearance)},
                           {"edge_setback", integer(problem.rules.edge_setback)},
                           {"plane_margin", integer(problem.rules.plane_margin)},
+                          {"via_pad", integer(problem.rules.via_pad)},
+                          {"via_ground", integer(problem.rules.via_ground)},
+                          {"via_hole", integer(problem.rules.via_hole)},
+                          {"via_net", integer(problem.rules.via_net)},
                           {"dispersion_limit", json_text::number(problem.rules.dispersion_limit)},
                           {"dispersion_floor", integer(static_cast<long long>(problem.rules.dispersion_floor))}})},
         {"nets", array(nets)},
@@ -421,6 +435,7 @@ Document read_document(const JsonNode& root) {
     reject_unknown_keys(rules, {"compare_guard", "group_guard", "module_clearance", "module_stack_height",
                                 "tall_module_clearance", "copper_clearance",
                                 "edge_clearance", "edge_setback", "plane_margin", "dispersion_limit",
+                                "via_pad", "via_ground", "via_hole", "via_net",
                                 "dispersion_floor"},
                         "layout rules");
     problem.rules.compare_guard = whole(field(rules, "compare_guard", JsonKind::Number));
@@ -429,6 +444,12 @@ Document read_document(const JsonNode& root) {
     problem.rules.edge_clearance = whole(field(rules, "edge_clearance", JsonKind::Number));
     problem.rules.edge_setback = whole(field(rules, "edge_setback", JsonKind::Number));
     problem.rules.plane_margin = whole(field(rules, "plane_margin", JsonKind::Number));
+    if (object_field(rules, "via_pad")) {
+        problem.rules.via_pad = whole(field(rules, "via_pad", JsonKind::Number));
+        problem.rules.via_ground = whole(field(rules, "via_ground", JsonKind::Number));
+        problem.rules.via_hole = whole(field(rules, "via_hole", JsonKind::Number));
+        problem.rules.via_net = static_cast<int>(whole(field(rules, "via_net", JsonKind::Number)));
+    }
     problem.rules.module_clearance = whole(field(rules, "module_clearance", JsonKind::Number));
     problem.rules.module_stack_height = whole(field(rules, "module_stack_height", JsonKind::Number));
     problem.rules.tall_module_clearance = whole(field(rules, "tall_module_clearance", JsonKind::Number));
@@ -450,7 +471,8 @@ Document read_document(const JsonNode& root) {
                                     "fanout_pins", "fanout_need", "fanout_subject", "escape_top",
                                     "escape_bottom", "never_crowds",
                                     "cluster_passive", "fixed", "top_only", "core_exempt", "cohesion_member", "module",
-                                    "field_source", "field_sensitive", "connector", "overmold", "edge", "corner", "tie", "owner"},
+                                    "field_source", "field_sensitive", "connector", "overmold", "edge", "corner", "tie", "owner", "via_sites",
+                                    "via_face"},
                             "layout part");
         Part part;
         part.reference = text(entry, "reference");
@@ -487,6 +509,10 @@ Document read_document(const JsonNode& root) {
         const Nm owner = whole(field(entry, "owner", JsonKind::Number));
         if (owner >= 0) ownership.owner = static_cast<std::size_t>(owner);
         problem.ownership.push_back(ownership);
+        if (object_field(entry, "via_sites")) {
+            for (const auto& site : field(entry, "via_sites", JsonKind::Array).array_value) part.via_sites.push_back(point_of(site));
+            part.via_face = text(entry, "via_face") == "top" ? Face::top : Face::bottom;
+        }
         part.connector = flag(entry, "connector");
         part.overmold = flag(entry, "overmold");
         const JsonNode* edge = object_field(entry, "edge");

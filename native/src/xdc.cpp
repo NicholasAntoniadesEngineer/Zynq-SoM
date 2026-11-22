@@ -322,7 +322,7 @@ XdcOutput generate_xdc(const XdcInput& in) {
         entry.net = net; entry.jpin = jp; entry.ball = ball; entry.pin_name = name;
         entry.bank = match[1].str();
         for (const auto& sheet : consumers.at(net))
-            if (sheet.rfind("som_j", 0) != 0) entry.consumers.push_back(sheet);
+            if (!in.module_sheets.count(sheet)) entry.consumers.push_back(sheet);
         if (types.count(net)) entry.type = types.at(net);
         result.entries.push_back(std::move(entry));
     }

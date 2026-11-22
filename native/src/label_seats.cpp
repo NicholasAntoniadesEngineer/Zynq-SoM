@@ -184,8 +184,11 @@ std::optional<Block> blocker(const Occupancy& face, const Box& outline, const Bo
 bool seat_one(const Occupancy& face, const Box& outline, const Subject& subject, std::size_t part, LabelSeat& seat,
               Tally& tally) {
     const Nm step = static_cast<Nm>(constants::label_step.value), reach = static_cast<Nm>(constants::label_reach.value);
+    const double floor = board_fabrication().profile.number(fabricator_key::silk_height);
+    std::vector<double> heights{std::max(constants::label_height.value, floor)};
+    if (floor < heights.front()) heights.push_back(floor);
     for (Nm ring = 0; ring <= reach; ring += step)
-        for (const double height : {constants::label_height.value, constants::label_floor.value})
+        for (const double height : heights)
             for (const bool upright : {false, true}) {
                 const Box extent = label_extent(seat.reference, height, upright);
                 const auto& sides = upright ? upright_sides : flat_sides;

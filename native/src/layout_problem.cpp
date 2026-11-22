@@ -279,7 +279,7 @@ Box hull_at(const Problem& problem, const Placement& placement, const std::vecto
 Box pour_box(const PourRule& rule, const Pose& owner, const Board& board) {
     const Box4 plane = ground_plane_box(to_mm(board.origin.x), to_mm(board.origin.y), to_mm(board.width),
                                         to_mm(board.height), rule.edge_back);
-    const Box4 extent = thermal_pour_extent({rule.local[0], rule.local[1], rule.local[2], rule.local[3]}, rule.mirror,
+    const Box4 extent = thermal_pour_extent({rule.local[0], rule.local[1], rule.local[2], rule.local[3]}, owner.face == Face::bottom,
                                             degrees_of(owner.turn), to_mm(owner.at.x), to_mm(owner.at.y), plane);
     return {nearest_nm(extent.x0), nearest_nm(extent.y0), nearest_nm(extent.x1), nearest_nm(extent.y1)};
 }

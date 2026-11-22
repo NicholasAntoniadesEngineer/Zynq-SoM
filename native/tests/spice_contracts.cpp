@@ -33,6 +33,31 @@ void same(const JsonNode& a,const JsonNode& b,const std::string& path) {
     }
 }
 std::optional<double> number(const JsonNode& n,const std::string& key){const auto& v=field(n,key);return v.kind==JsonKind::Null?std::nullopt:std::optional<double>(v.number_value);}
+std::vector<SubsystemDivider> reference_dividers(){
+    return {
+        {"CP2102N_VBUS_SNS","USB_UART_VBUS","CP2102N self-powered VBUS sense (DS 22k1/47k5 reference): must read VBUS-present yet never exceed the pin abs-max 5.8 V",
+            {{5.25,{},5.8,"abs-max at 5.25 V VBUS"},{4.75,3.0,{},"detect at 4.75 V VBUS"}}},
+        {"PG_1V8_G","+1V8","+1V8 PG sense: gate divider must exceed the AO3400A max Vgs(th)=1.45 V so the PG LED is guaranteed on",
+            {{1.8,1.45,1.8,"FET on at nominal rail"}}},
+        {"HDMI_RX_5V_DET","HDMI_RX_5V","cable-5V presence divider into an LVCMOS33 bank",
+            {{5.25,{},3.465,"bank abs-max at 5.25 V cable"},{4.75,2.0,{},"VIH at 4.75 V cable"}}},
+        {"PD_OVP_SET","+VBUS_IN","TPS26631 OVP set divider (pd_input): must NOT trip inside the valid 20 V +5% contract window yet MUST cut off before the SMBJ22A starts clamping (V_OVPR 1.2 V +/-2%, SLVSE94G)",
+            {{21.0,{},1.176,"no false trip at 21 V (contract max)"},{24.4,1.224,{},"guaranteed cutoff below the TVS VBR min"}}}};
+}
+SheetRoles reference_roles(const std::vector<ProjectCircuit>& sheets,bool with_window=true){
+    SheetRoles roles;
+    for(const auto& sheet:sheets){
+        SheetRole role;
+        const bool has_resistor=std::any_of(sheet.circuit.parts.begin(),sheet.circuit.parts.end(),[](const auto& part){return part.lib_id=="Device:R";});
+        for(const auto& divider:reference_dividers())
+            if(has_resistor&&std::any_of(sheet.circuit.nets.begin(),sheet.circuit.nets.end(),[&](const auto& n){return n.name==divider.net;}))role.checks.dividers.push_back(divider);
+        role.checks.divider_sources={"USB_UART_VBUS","HDMI_RX_5V"};
+        if(with_window){role.checks.iset_window_ma=IsetWindow{125.0,150.0};role.checks.iset_basis="lcd_backlight.md";}
+        roles.emplace(sheet.name,role);
+    }
+    return roles;
+}
+SpiceResult extract_stated(const std::vector<ProjectCircuit>& sheets,const PowerPolicy& policy){return extract_spice_checks(sheets,policy,reference_roles(sheets));}
 SpiceResult runnable(){SpiceResult out;out.checks.push_back({"divider TEST","sheet","divider","+3V3 -[R1=10000R]- TEST -[R2=10000R]- GND @ 3.3 V",1.65,"V",0.0,3.3,"analytic",{}});return out;}
 const std::string no_coverage="No supported analytic checks were extracted; electrical behavior is unverified.";
 std::string coverage_report(std::string historical){
@@ -46,7 +71,7 @@ std::string coverage_report(std::string historical){
     return historical;
 }
 void empty_coverage(){
-    auto empty=extract_spice_checks({},legacy);
+    auto empty=extract_stated({},legacy);
     require(empty.checks.empty()&&!empty.ok()&&empty.errors()==std::vector<std::string>{no_coverage},"empty extraction was accepted");
     empty.notes.push_back("informational note is not a check");
     require(!empty.ok(),"notes supplied nonexistent check coverage");
@@ -90,16 +115,16 @@ std::vector<ProjectCircuit> fixture_sheets(const std::filesystem::path& path){
 }
 void rejects_divider(const std::vector<ProjectCircuit>& sheets,const std::string& expected){
     bool rejected=false;
-    try{(void)extract_spice_checks(sheets,legacy);}catch(const ModelCheckError& error){
+    try{(void)extract_stated(sheets,legacy);}catch(const ModelCheckError& error){
         require(error.what()==expected,"extraction diagnostic mismatch: "+std::string(error.what()));rejected=true;
     }
     require(rejected,"extraction silently accepted unsupported topology/source/model");
 }
 void required_divider_coverage(const std::filesystem::path& dir){
     auto unrelated=fixture_sheets(dir/"015_INFORMATIONAL_10k_10k.json");
-    require(extract_spice_checks(unrelated,legacy).ok(),"unrelated coverage fixture must pass alone");
+    require(extract_stated(unrelated,legacy).ok(),"unrelated coverage fixture must pass alone");
     for(auto& net:unrelated[0].circuit.nets)if(net.name=="INFORMATIONAL")net.name="HDMI_RX_5V_DET_suffix";
-    require(extract_spice_checks(unrelated,legacy).ok(),"prefix-lookalike generic divider must remain independently valid");
+    require(extract_stated(unrelated,legacy).ok(),"prefix-lookalike generic divider must remain independently valid");
     auto broken=fixture_sheets(dir/"022_named_not_extracted.json");
     auto combined=broken;combined.insert(combined.end(),unrelated.begin(),unrelated.end());
     rejects_divider(combined,"required divider HDMI_RX_5V_DET: topology could not be extracted");
@@ -136,7 +161,7 @@ void incomplete_model_coverage(const std::filesystem::path& dir){
     sheets.insert(sheets.end(),unrelated.begin(),unrelated.end());
     for(int order=0;order<2;++order){
         bool rejected=false;
-        try{(void)extract_spice_checks(sheets,policy);}catch(const ModelCheckError& error){
+        try{(void)extract_stated(sheets,policy);}catch(const ModelCheckError& error){
             require(std::string(error.what())=="SPICE unverified: sheet_buck:U1 (UNMODELLED_BUCK) has no FB_VREF entry — FB divider unchecked","unknown-reference diagnostic");rejected=true;
         }
         require(rejected,"positive checks hid an unknown regulator reference model");
@@ -149,7 +174,7 @@ void divider_threshold_precision(const std::filesystem::path& dir){
         const double limit=upper?3.465:2.,source=upper?5.25:4.75,target=limit+delta;
         auto sheets=fixture_sheets(dir/"003_HDMI_RX_5V_DET_10k_10k.json");
         for(auto& part:sheets[0].circuit.parts)part.value=decimal((part.ref=="R1"?source-target:target)*10000);
-        const auto result=extract_spice_checks(sheets,legacy);
+        const auto result=extract_stated(sheets,legacy);
         const auto check=std::find_if(result.checks.begin(),result.checks.end(),[&](const auto& c){
             return upper?(c.hi&&*c.hi==limit):(c.lo&&*c.lo==limit);
         });
@@ -176,7 +201,7 @@ void direct_enable_topology(const std::filesystem::path& dir){
         if(net.name=="+VIN_SYS")net.pins.push_back({"U4","7"});
     }
     candidate.circuit.nets.erase(std::remove_if(candidate.circuit.nets.begin(),candidate.circuit.nets.end(),[](const auto& net){return net.pins.empty();}),candidate.circuit.nets.end());
-    const auto valid=extract_spice_checks({candidate},legacy);
+    const auto valid=extract_stated({candidate},legacy);
     require(valid.ok()&&valid.unverified.empty(),"documented direct VIN enable topology was not recognized");
     require(std::count_if(valid.checks.begin(),valid.checks.end(),[](const auto& c){return c.kind=="enable_topology"&&c.value==1&&c.unit=="match"&&c.engine=="netlist topology"&&c.detail.find("connectivity only")!=std::string::npos;})==1,"missing scoped topology evidence");
     const auto unrelated=fixture_sheets(dir/"015_INFORMATIONAL_10k_10k.json");
@@ -188,7 +213,7 @@ void direct_enable_topology(const std::filesystem::path& dir){
         if(mutation>=3)for(auto& net:broken.circuit.nets)if(net.net_class=="ground")net.pins.push_back({"U4",pin});
         for(bool reverse:{false,true}){
             auto combined=unrelated;combined.push_back(broken);if(reverse)std::reverse(combined.begin(),combined.end());
-            const auto result=extract_spice_checks(combined,legacy);
+            const auto result=extract_stated(combined,legacy);
             require(!result.ok()&&!result.unverified.empty(),"positive checks hid missing/miswired/duplicate enable or VIN pin, mutation "+std::to_string(mutation));
             require(std::none_of(result.checks.begin(),result.checks.end(),[](const auto& c){return c.kind=="enable_topology";}),"invalid connectivity retained topology PASS");
         }
@@ -196,9 +221,9 @@ void direct_enable_topology(const std::filesystem::path& dir){
     auto missing_resistor=*found;
     missing_resistor.circuit.parts.erase(std::remove_if(missing_resistor.circuit.parts.begin(),missing_resistor.circuit.parts.end(),[](const auto& p){return p.ref=="R12";}),missing_resistor.circuit.parts.end());
     auto combined=unrelated;combined.push_back(missing_resistor);
-    require(!extract_spice_checks(combined,legacy).ok(),"deleting the series resistor concealed the unsupported always-on enable network");
+    require(!extract_stated(combined,legacy).ok(),"deleting the series resistor concealed the unsupported always-on enable network");
     auto reordered=candidate;std::reverse(reordered.circuit.nets.begin(),reordered.circuit.nets.end());
-    require(extract_spice_checks({reordered},legacy).ok(),"valid topology depends on net ordering");
+    require(extract_stated({reordered},legacy).ok(),"valid topology depends on net ordering");
     for(int mutation=0;mutation<3;++mutation){
         auto broken=candidate;
         if(mutation==0)for(auto& part:broken.circuit.parts)if(part.ref=="U4"){part.value="LM61460_UNREVIEWED_PACKAGE";part.lib_id=part.value+":"+part.value;}
@@ -207,7 +232,7 @@ void direct_enable_topology(const std::filesystem::path& dir){
             for(auto& net:broken.circuit.nets)net.pins.erase(std::remove_if(net.pins.begin(),net.pins.end(),[](const auto& p){return p.ref=="U4"&&p.pin=="7";}),net.pins.end());
             broken.circuit.nets.push_back({"+VIN_SYS","power",{{"U4","7"}}});
         }
-        auto witness=unrelated;witness.push_back(broken);const auto result=extract_spice_checks(witness,legacy);
+        auto witness=unrelated;witness.push_back(broken);const auto result=extract_stated(witness,legacy);
         require(!result.ok()&&!result.unverified.empty(),"unreviewed package, non-power source or same-name distinct net supplied topology proof");
     }
 }
@@ -258,7 +283,7 @@ void remaining_threshold_precision(const std::filesystem::path& dir){
         auto sheets=fixture_sheets(dir/test.file);std::ostringstream value;value<<std::setprecision(17)<<resistance;
         bool changed=false;for(auto& part:sheets[0].circuit.parts)if(part.ref==test.ref){part.value=value.str();changed=true;}
         require(changed,"threshold fixture resistor missing");
-        const auto result=extract_spice_checks(sheets,legacy);
+        const auto result=extract_stated(sheets,legacy);
         const auto found=std::find_if(result.checks.begin(),result.checks.end(),[&](const auto& c){return c.name.rfind(test.prefix,0)==0;});
         require(found!=result.checks.end(),"threshold extraction missing "+std::string(test.prefix));
         const bool inside=test.upper?delta<=0:delta>=0;
@@ -293,6 +318,55 @@ void numeric_safety() {
     require(!zero.ok(), "reversed limits hidden by comparison tolerance");
 }
 }
+void stated_checks_come_from_data(const std::filesystem::path& dir){
+    const auto sheets=fixture_sheets(dir/"003_HDMI_RX_5V_DET_10k_10k.json");
+    auto roles=reference_roles(sheets);
+    auto& stated=roles.begin()->second.checks;
+    require(stated.dividers.size()==1,"fixture states its divider");
+    stated.dividers.front().why="data-stated reason";stated.dividers.front().limits.front().tag="data-stated tag";
+    const auto result=extract_spice_checks(sheets,legacy,roles);
+    require(std::any_of(result.checks.begin(),result.checks.end(),[](const auto& c){return c.name=="divider HDMI_RX_5V_DET [data-stated tag]"&&c.detail.find(": data-stated reason")!=std::string::npos;}),"limits, tag and reason are read from the data row");
+    auto silent=reference_roles(sheets);silent.begin()->second.checks.dividers.clear();
+    const auto informational=extract_spice_checks(sheets,legacy,silent);
+    require(std::any_of(informational.checks.begin(),informational.checks.end(),[](const auto& c){return c.detail.find("informational, no named threshold")!=std::string::npos;}),"a divider that no data row names is informational");
+    auto wrong_source=reference_roles(sheets);wrong_source.begin()->second.checks.dividers.front().source="+3V3";
+    bool thrown=false;
+    try{(void)extract_spice_checks(sheets,legacy,wrong_source);}catch(const ModelCheckError& error){thrown=std::string(error.what())=="required divider HDMI_RX_5V_DET: source HDMI_RX_5V, expected +3V3";}
+    require(thrown,"the source stated in the data row is enforced");
+    auto absent=reference_roles(sheets);absent.begin()->second.checks.dividers.push_back({"NO_SUCH_NET","+3V3","why",{{1.0,0.5,{},"tag"}}});
+    thrown=false;
+    try{(void)extract_spice_checks(sheets,legacy,absent);}catch(const ModelCheckError& error){thrown=std::string(error.what())=="sheet "+sheets.front().name+": checks divider net NO_SUCH_NET is not a net of the sheet";}
+    require(thrown,"a data row naming a net the sheet lacks is refused");
+    auto broken=sheets;
+    for(auto& net:broken.front().circuit.nets)if(net.name=="HDMI_RX_5V_DET")net.pins.erase(std::remove_if(net.pins.begin(),net.pins.end(),[](const auto& p){return p.ref=="R2";}),net.pins.end());
+    thrown=false;
+    try{(void)extract_spice_checks(broken,legacy,reference_roles(broken));}catch(const ModelCheckError& error){thrown=std::string(error.what())=="required divider HDMI_RX_5V_DET: topology could not be extracted";}
+    require(thrown,"a data-stated divider whose net exists but whose topology is gone still throws");
+    const auto board=fixture_sheets(dir/"001_carrier.json");
+    thrown=false;
+    try{(void)extract_spice_checks(board,legacy,reference_roles(board,false));}catch(const ModelCheckError& error){thrown=std::string(error.what()).find("has no checks.iset_window_ma in its subsystem file")!=std::string::npos;}
+    require(thrown,"an LED boost regulator on a sheet that states no ISET window is refused");
+}
+void series_leg_dividers(const std::filesystem::path& dir){
+    const auto base=fixture_sheets(dir/"003_HDMI_RX_5V_DET_10k_10k.json");
+    auto legged=base;auto& circuit=legged.front().circuit;
+    auto leg=circuit.parts.front();leg.ref="RLEG";circuit.parts.push_back(leg);
+    for(auto& net:circuit.nets)if(net.name=="HDMI_RX_5V_DET")net.pins.push_back({"RLEG","1"});
+    circuit.nets.push_back({"LEG_PIN","port",{{"RLEG","2"}}});
+    const auto plain=extract_stated(base,legacy),stated=extract_stated(legged,legacy);
+    const auto named=[](const SpiceResult& r,const std::string& name){return std::find_if(r.checks.begin(),r.checks.end(),[&](const auto& c){return c.name==name;});};
+    const std::string check="divider HDMI_RX_5V_DET [bank abs-max at 5.25 V cable]";
+    const auto with_leg=named(stated,check),without_leg=named(plain,check);
+    require(with_leg!=stated.checks.end()&&without_leg!=plain.checks.end(),"a stated divider with an unloaded series leg is extracted");
+    require(with_leg->value==without_leg->value&&with_leg->ok(),"the unloaded series leg does not change the divider ratio");
+    require(with_leg->detail.find("RLEG=10000R to LEG_PIN, whose only resistor it is, carries no divider current")!=std::string::npos,"the report names the series leg it treated as unloaded");
+    auto silent=reference_roles(legged);silent.begin()->second.checks.dividers.clear();
+    const auto unstated=extract_spice_checks(legged,legacy,silent);
+    require(std::none_of(unstated.checks.begin(),unstated.checks.end(),[](const auto& c){return c.name.rfind("divider HDMI_RX_5V_DET",0)==0;}),"a net with three resistors that no data row names is not read as a divider");
+    auto loaded=legged;auto load=loaded.front().circuit.parts.front();load.ref="RLOAD";loaded.front().circuit.parts.push_back(load);
+    for(auto& net:loaded.front().circuit.nets){if(net.name=="LEG_PIN")net.pins.push_back({"RLOAD","1"});if(net.name=="GND")net.pins.push_back({"RLOAD","2"});}
+    rejects_divider(loaded,"required divider HDMI_RX_5V_DET: topology could not be extracted");
+}
 int main(int argc,char** argv) {
     if(argc==3&&std::string(argv[1])=="-b") {
         const auto* mode=std::getenv("SCHGEN_SELFTEST_PROCESS_MODE");const std::string test=mode?mode:"";
@@ -316,7 +390,7 @@ int main(int argc,char** argv) {
     }
     try {
         require(argc==2,"usage: spice_contracts <fixture-directory>");const std::filesystem::path dir(argv[1]);legacy=legacy_power_policy((dir/"../../../..").lexically_normal());
-        numeric_safety();empty_coverage();required_divider_coverage(dir);incomplete_model_coverage(dir);divider_threshold_precision(dir);remaining_threshold_precision(dir);direct_enable_topology(dir);
+        numeric_safety();empty_coverage();required_divider_coverage(dir);stated_checks_come_from_data(dir);incomplete_model_coverage(dir);divider_threshold_precision(dir);remaining_threshold_precision(dir);direct_enable_topology(dir);series_leg_dividers(dir);
         const auto manifest=parse_json_file((dir/"manifest.json").string());std::size_t passed=0,live=0;
         const auto ngspice=ngspice_available();std::size_t corrected_empty=0,corrected_required=0,corrected_models=0,corrected_device=0;
         for(const auto& file:field(manifest,"cases").array_value) {
@@ -334,7 +408,7 @@ int main(int argc,char** argv) {
                 ++corrected_required;++passed;continue;
             }
             const auto* error=object_field(row,"error");std::optional<SpiceResult> result;
-            try{result=extract_spice_checks(sheets,legacy);}
+            try{result=extract_stated(sheets,legacy);}
             catch(const ModelCheckError& e){require(error!=nullptr,file.string_value+": unexpected error "+e.what());require(field(*error,"message").string_value==e.what(),file.string_value+": diagnostic differs "+e.what());}
             require(bool(result)==!bool(error),file.string_value+": expected error presence differs");
             if(result){

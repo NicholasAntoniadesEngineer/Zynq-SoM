@@ -80,7 +80,7 @@ void publish_final_reports(Context& c) {
 namespace schgen {
 namespace {
 const char* status_name(BoardGateStatus s){switch(s){case BoardGateStatus::passed:return "PASS";case BoardGateStatus::failed:return "FAIL";case BoardGateStatus::skipped:return "SKIP";case BoardGateStatus::unavailable:return "UNAVAILABLE";}throw ProjectError("invalid board gate status");}
-const std::vector<std::string> required={"inputs","board_definition","authoring_purity","subsystem_structure","carrier_structure","sheet_gates","cc","symbol_law","link","board_schematic","constraints","diagram","bom_footprints","power_tree","rail_ampacity","testpoints","design_rules","part_rules","bom_values","footprint_pads","spice","pcb","pcb_drc","pcb_geometry","testpoint_map","decoupling_report","assembly","thermal","copper_debt","fab_profile","xdc","gallery","power_sequence","floorplan","quantize_census","fallbacks","stage_movement","pipeline_doc","model3d","si","i2c_bus_map","module_pin_map","connector_pinout","bom_ratings","manifest","ledger","placement_requirements"};
+const std::vector<std::string> required={"inputs","board_definition","authoring_purity","subsystem_structure","carrier_structure","sheet_gates","cc","symbol_law","link","board_schematic","constraints","diagram","bom_footprints","order_files","assembly_parts","power_tree","rail_ampacity","testpoints","design_rules","part_rules","bom_values","footprint_pads","spice","pcb","pcb_drc","pcb_geometry","testpoint_map","decoupling_report","assembly","thermal","copper_debt","fab_profile","xdc","gallery","power_sequence","floorplan","quantize_census","fallbacks","stage_movement","pipeline_doc","model3d","si","i2c_bus_map","module_pin_map","connector_pinout","bom_ratings","manifest","ledger","placement_requirements"};
 }
 bool board_pipeline_gate_mandatory(const std::string& name){
     static const std::set<std::string> advisory={"pin_completeness","contract_coverage","contract_coverage_lint","floorplan_composition","return_path","cpl","render3d","golden","sheet_render","root_erc","ratsnest_images"};
@@ -154,7 +154,7 @@ BoardPipelineResult run_board_pipeline(const ProjectPaths& p,const BoardPipeline
     c.timing=&timing;
     c.attempt("inputs",[&]{c.authored=author_board_pipeline_inputs(p,o.authoring_purity_configuration,[&](const AuthoringPurityResult& purity){
             c.report("authoring_purity.txt",purity.report());c.gate("authoring_purity",purity.ok(),purity.report());
-        },c.timing);c.measure("input_publication",[&]{publish_board_pipeline_inputs(*c.authored,p,c.out);});c.circuits=c.authored->circuits;c.roles=load_sheet_roles(p,c.circuits);c.power_policy=load_board_power_policy(p,c.circuits,*c.roles);
+        },c.timing);c.measure("input_publication",[&]{publish_board_pipeline_inputs(*c.authored,c.out);});c.circuits=c.authored->circuits;c.roles=load_sheet_roles(p,c.circuits);c.power_policy=load_board_power_policy(p,c.circuits,*c.roles);
         std::vector<std::string> names;for(const auto& sc:c.circuits){c.sheets.push_back(sc.circuit);names.push_back(sc.name);}
         c.index=extend_sheet_index(load_sheet_index(p),names).index;c.result.sheets=c.sheets.size();c.loaded=true;c.gate("inputs",true,"live C++ factories authored once; canonical snapshots published; actual IR retained");
         const auto intent=check_layout_intent(c.sheets);c.report("layout_intent.txt",intent.summary());c.gate("layout_intent",intent.ok,intent.summary());});

@@ -3,8 +3,8 @@
   "name": "rj45_connector",
   "title": "RJ45 8P8C jack (plain, ext. magnetics)",
   "interface": ["+VLED", "GND", "CHASSIS_GND", "RJ45_MDI0_P", "RJ45_MDI0_N", "RJ45_MDI1_P", "RJ45_MDI1_N", "RJ45_MDI2_P", "RJ45_MDI2_N", "RJ45_MDI3_P", "RJ45_MDI3_N"],
-  "placement": {"region": "board", "silk_label": null, "far_guard_mm": null, "escape_basis": null, "escape_escalates": false, "reserves_edge": false},
-  "checks": {"dividers": [], "divider_sources": [], "iset_window_ma": null},
+  "placement": {"region": "board", "silk_label": "ETH", "far_guard_mm": null, "escape_basis": null, "escape_escalates": false, "reserves_edge": false},
+  "checks": {"dividers": [], "divider_sources": [], "iset_window_ma": null, "iset_basis": null},
   "parts": [
     {"ref": "J1", "part": "KH-5224-8P8C-D"},
     {

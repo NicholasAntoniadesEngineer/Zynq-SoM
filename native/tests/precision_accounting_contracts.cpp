@@ -10,6 +10,7 @@
 #include "floorplan_precision_fixture.hpp"
 #include "schgen/native_audit_state.hpp"
 #include "schgen/experiment_observers.hpp"
+#include <algorithm>
 #include <array>
 #include <atomic>
 #include <iomanip>
@@ -66,8 +67,17 @@ void live(const std::filesystem::path& root,const std::string& board,bool single
     QuantizationCounts expected_plan,expected_placement;
     for(const auto& [op,n]:measured)
         (op==names[0]||op==names[1]?expected_plan:expected_placement)[op]=n;
-    require(select(result.floorplan.plan.accounting.quantization_engagements,true)==expected_plan,name+" exact observed floorplan ownership");
-    require(select(result.placement_accounting.quantization_engagements,true)==expected_placement,name+" exact observed placement ownership");
+    const auto& events=result.floorplan.plan.accounting.fallback_events;
+    if(std::find(events.begin(),events.end(),"facing_replan_retry")==events.end()){
+        require(select(result.floorplan.plan.accounting.quantization_engagements,true)==expected_plan,name+" exact observed floorplan ownership");
+        require(select(result.placement_accounting.quantization_engagements,true)==expected_placement,name+" exact observed placement ownership");
+    }else{
+        const auto plan=select(result.floorplan.plan.accounting.quantization_engagements,true);
+        const auto placement=select(result.placement_accounting.quantization_engagements,true);
+        for(const auto& [op,n]:expected_plan)require(plan.count(op)&&plan.at(op)==n,name+" replanned floorplan owns every estimator entry");
+        for(const auto& [op,n]:expected_placement)
+            require((plan.count(op)?plan.at(op):0)+(placement.count(op)?placement.at(op):0)==n,name+" replanned placement entries are owned once");
+    }
     const auto validate=[&](const QuantizationCounts& counts){require(select(counts,true)==measured,"independent receipt mismatch");};
     for(bool missing:{true,false}) {
         auto bad=total.quantization_engagements;

@@ -70,6 +70,7 @@ const char* breach_name(Breach breach) {
     case Breach::locked: return "locked";
     case Breach::corner: return "corner";
     case Breach::under_inductor: return "under_inductor";
+    case Breach::via_field: return "via_field";
     }
     return "unknown";
 }
@@ -80,6 +81,7 @@ Kernel::Kernel(const Problem& problem, Placement placement)
     for (const auto& part : problem_.parts)
         if (part.fanout_subject) reach_ = std::max(reach_, part.fanout_need);
     fields_.resize(placement_.size());
+    freed_.resize(placement_.size());
     for (std::size_t reserve = 0; reserve < problem_.reserves.size(); ++reserve) {
         reserve_boxes_.push_back(problem_.reserves[reserve].box);
         for (const std::size_t member : problem_.reserves[reserve].members) fields_.at(member).push_back(reserve);
@@ -88,6 +90,7 @@ Kernel::Kernel(const Problem& problem, Placement placement)
         if (problem_.parts[part].cohesion_member) groups_[problem_.parts[part].group].push_back(part);
         members_[problem_.parts[part].group].push_back(part);
         if (problem_.parts[part].connector) connectors_.push_back(part);
+        if (!problem_.parts[part].via_sites.empty()) via_owners_.push_back(part);
     }
     const Constraints& rules = problem_.constraints;
     pad_rules_.resize(placement_.size());
@@ -145,6 +148,8 @@ void Kernel::rebuild() {
 void Kernel::restore(const Snapshot& snapshot) {
     board_ = snapshot.board;
     reserve_boxes_ = snapshot.reserves;
+    fields_ = snapshot.fields;
+    freed_ = snapshot.freed;
     std::vector<Move> changed;
     for (std::size_t part = 0; part < placement_.size(); ++part)
         if (placement_[part] != snapshot.placement[part]) changed.push_back({part, snapshot.placement[part]});
@@ -172,6 +177,16 @@ void Kernel::refresh_nets(const std::vector<Move>& moves) {
     }
 }
 
+bool Kernel::release(std::size_t part) {
+    for (const std::size_t reserve : fields_[part]) {
+        const std::optional<PourRule>& pour = problem_.reserves[reserve].pour;
+        if (pour && pour->owner == part) return false;
+    }
+    freed_[part].insert(freed_[part].end(), fields_[part].begin(), fields_[part].end());
+    fields_[part].clear();
+    return true;
+}
+
 bool Kernel::owns(std::size_t reserve, std::size_t part) const {
     const auto& fields = fields_[part];
     return std::find(fields.begin(), fields.end(), reserve) != fields.end();
@@ -190,17 +205,26 @@ bool Kernel::reserves_follow(const std::vector<Move>& moves, const std::vector<c
     for (std::size_t reserve = 0; reserve < problem_.reserves.size(); ++reserve) {
         const auto& members = problem_.reserves[reserve].members;
         const auto count = static_cast<std::size_t>(std::count_if(members.begin(), members.end(),
-            [&](std::size_t member) { return moved[member] != 0; }));
+            [&](std::size_t member) { return moved[member] != 0 && owns(reserve, member); }));
+        const auto held = static_cast<std::size_t>(std::count_if(members.begin(), members.end(),
+            [&](std::size_t member) { return owns(reserve, member); }));
         if (count == 0) continue;
-        if (count != members.size()) return false;
+        if (count != held) return false;
         const std::optional<PourRule>& pour = problem_.reserves[reserve].pour;
         std::optional<Turn> swing;
         std::optional<Pose> owner;
         Point from{}, to{};
+        bool flips = false;
         for (const auto& move : moves) {
             if (!owns(reserve, move.part)) continue;
             const Pose& before = placement_[move.part];
-            if (move.pose.face != before.face) return false;
+            if (move.pose.face != before.face) {
+                if (!pour) return false;
+                if (pour->owner == move.part) owner = move.pose;
+                flips = true;
+                continue;
+            }
+            if (flips) return false;
             const Turn turn = static_cast<Turn>(
                 (static_cast<int>(move.pose.turn) + turn_count - static_cast<int>(before.turn)) % turn_count);
             if (pour && pour->owner == move.part) owner = move.pose;
@@ -214,7 +238,7 @@ bool Kernel::reserves_follow(const std::vector<Move>& moves, const std::vector<c
             if (turn != *swing || shifted(to, turned(arm, *swing)) != move.pose.at) return false;
         }
         if (pour) {
-            if (!owner) return false;
+            if (!owner || (flips && swing)) return false;
             boxes[reserve] = pour_box(*pour, *owner, board_);
         } else {
             if (*swing != Turn::none) return false;
@@ -345,7 +369,8 @@ Kernel::Shape Kernel::shape_of(std::size_t part, const Pose& pose) const {
     for (std::size_t pad = 0; pad < variant.pads.size(); ++pad) {
         const Box box = placed(variant.pads[pad].box, pose.at, pose.turn);
         shape.lands.push_back({box, nets[pad], variant.pads[pad].through,
-                               {placed(variant.pads[pad].centre, pose.at, pose.turn), variant.pads[pad].radius}});
+                               {placed(variant.pads[pad].centre, pose.at, pose.turn), variant.pads[pad].radius},
+                               variant.pads[pad].drill});
         if (variant.pads[pad].through) shape.holes.push_back(box);
     }
     for (const auto& box : variant.name_boxes) shape.named.push_back(placed(box, pose.at, pose.turn));
@@ -456,6 +481,42 @@ bool Kernel::copper_clear(const Shape& shape, Face face) const {
     return true;
 }
 
+Nm Kernel::rules_reach() const {
+    return std::max({problem_.rules.via_pad, problem_.rules.via_ground, problem_.rules.via_hole});
+}
+
+std::vector<Point> Kernel::via_sites_at(std::size_t owner, const Pose& pose) const {
+    const Part& item = problem_.parts[owner];
+    std::vector<Point> out;
+    out.reserve(item.via_sites.size());
+    const bool flipped = pose.face != item.via_face;
+    const bool across_x = flipped && *mirrors_across_x(problem_.footprints[item.footprint]);
+    for (const Point& site : item.via_sites) {
+        const Point local = !flipped ? site : across_x ? Point{-site.x, site.y} : Point{site.x, -site.y};
+        out.push_back(placed(local, pose.at, pose.turn));
+    }
+    return out;
+}
+
+bool Kernel::via_blocked(std::size_t owner, const Pose& pose, const Shape& guest) const {
+    const Rules& rules = problem_.rules;
+    const std::vector<Point> sites = via_sites_at(owner, pose);
+    Box field{pose.at.x, pose.at.y, pose.at.x, pose.at.y};
+    for (const Point& at : sites) field = united(field, Box{at.x, at.y, at.x, at.y});
+    if (gap_at_least(field, guest.bound, rules_reach())) return false;
+    for (const Point& at : sites) {
+        const Box point{at.x, at.y, at.x, at.y};
+        for (const Land& land : guest.lands) {
+            const Nm need = land.net != no_net && land.net == rules.via_net ? rules.via_ground : rules.via_pad;
+            if (!gap_at_least(point, land.box, need)) return true;
+            if (land.drill > 0 && !gap_at_least(point, Box{land.disc.centre.x, land.disc.centre.y, land.disc.centre.x, land.disc.centre.y},
+                                                rules.via_hole + (land.drill + 1) / 2))
+                return true;
+        }
+    }
+    return false;
+}
+
 Nm Kernel::land_clearance(int net) const {
     return net == no_net ? problem_.rules.copper_clearance : problem_.nets[static_cast<std::size_t>(net)].clearance;
 }
@@ -489,7 +550,8 @@ std::optional<Breach> Kernel::self_breach(std::size_t part, const Shape& shape, 
         const Reserve& field = problem_.reserves[reserve];
         const bool faced = pose.face == Face::top ? field.top : field.bottom;
         const bool guest = std::find(field.guests.begin(), field.guests.end(), part) != field.guests.end();
-        if ((!faced && shape.holes.empty()) || owns(reserve, part) || (guest && shape.holes.empty())) continue;
+        const bool freed = std::find(freed_[part].begin(), freed_[part].end(), reserve) != freed_[part].end();
+        if ((!faced && shape.holes.empty()) || owns(reserve, part) || freed || (guest && shape.holes.empty())) continue;
         if (overlaps(shape.bound, reserve_boxes_[reserve])) return Breach::reserved;
     }
     if (!item.fixed && problem_.rules.plane_margin > 0) {
@@ -676,8 +738,8 @@ bool Kernel::edge_met(const Part& item, const Shape& shape, const Pose& pose) co
            seat[nearest] == item.edge->seat;
 }
 
-bool Kernel::connectors_met(std::size_t part, const Shape& shape, std::size_t other, const Shape& other_shape,
-                            Nm guard) const {
+bool Kernel::connectors_met(std::size_t part, const Shape& shape, const Pose& pose, std::size_t other,
+                            const Shape& other_shape, Nm guard) const {
     if (!shape.pads || !other_shape.pads) return true;
     const ConnectorRules& rules = problem_.constraints.connectors;
     const Box& a = *shape.pads;
@@ -685,6 +747,59 @@ bool Kernel::connectors_met(std::size_t part, const Shape& shape, std::size_t ot
     const Nm cross_x = std::min(a.x1, b.x1) - std::max(a.x0, b.x0);
     const Nm cross_y = std::min(a.y1, b.y1) - std::max(a.y0, b.y0);
     if (cross_x > rules.overlap_slack && cross_y > rules.overlap_slack) return false;
+    const Part& first = problem_.parts[part];
+    const Part& second = problem_.parts[other];
+    if (first.access || second.access || first.plug_width || second.plug_width) {
+        const auto direction = [](const Part& item, const Pose& at) -> std::optional<Point> {
+            if (!item.mouth) return std::nullopt;
+            return turned(*item.mouth, at.turn);
+        };
+        const auto envelope = [](const Part& item, const Box& gate, const std::optional<Point>& mouth) {
+            Box box = gate;
+            if (!item.plug_width) return box;
+            const bool across_x = !mouth || mouth->y != 0;
+            const bool across_y = !mouth || mouth->x != 0;
+            if (across_x && *item.plug_width > box.width()) {
+                const Nm grow = (*item.plug_width - box.width() + 1) / 2;
+                box.x0 -= grow;
+                box.x1 += grow;
+            }
+            if (across_y && *item.plug_width > box.height()) {
+                const Nm grow = (*item.plug_width - box.height() + 1) / 2;
+                box.y0 -= grow;
+                box.y1 += grow;
+            }
+            return box;
+        };
+        const auto room = [&](const Part& item, Box box, const std::optional<Point>& mouth) {
+            if (!item.access) return box;
+            const Nm side = *item.access + guard, front = item.access_front.value_or(0) + guard;
+            if (!mouth || mouth->y != 0) {
+                box.x0 -= side;
+                box.x1 += side;
+            }
+            if (!mouth || mouth->x != 0) {
+                box.y0 -= side;
+                box.y1 += side;
+            }
+            if (mouth) {
+                if (mouth->x > 0) box.x1 += front;
+                if (mouth->x < 0) box.x0 -= front;
+                if (mouth->y > 0) box.y1 += front;
+                if (mouth->y < 0) box.y0 -= front;
+            }
+            return box;
+        };
+        const auto first_mouth = direction(first, pose), second_mouth = direction(second, placement_[other]);
+        const Box first_box = envelope(first, shape.gate, first_mouth);
+        const Box second_box = envelope(second, other_shape.gate, second_mouth);
+        const auto collides = [](const Box& a, const Box& b) {
+            return std::min(a.x1, b.x1) > std::max(a.x0, b.x0) && std::min(a.y1, b.y1) > std::max(a.y0, b.y0);
+        };
+        if (collides(first_box, second_box) || collides(room(first, first_box, first_mouth), second_box) ||
+            collides(room(second, second_box, second_mouth), first_box))
+            return false;
+    }
     const bool first_boot = problem_.parts[part].overmold, second_boot = problem_.parts[other].overmold;
     if (!first_boot && !second_boot) return true;
     const Nm width = std::min(a.width(), b.width()), height = std::min(a.height(), b.height());
@@ -721,10 +836,32 @@ bool Kernel::rule_breaches(std::size_t part, const Shape& shape, const Pose& pos
         group_dispersed(item.group, part, &shape) && sink(Violation{Breach::dispersion, part, part}))
         return true;
     if (item.edge && !edge_met(item, shape, pose) && sink(Violation{Breach::edge_mount, part, part})) return true;
+    if (pose.face != item.via_face && !item.via_sites.empty() && !mirrors_across_x(problem_.footprints[item.footprint]) &&
+        sink(Violation{Breach::locked, part, part}))
+        return true;
+    if (!item.via_sites.empty() && (pose.face == item.via_face || mirrors_across_x(problem_.footprints[item.footprint]))) {
+        const std::vector<Point> sites = via_sites_at(part, pose);
+        Box field{pose.at.x, pose.at.y, pose.at.x, pose.at.y};
+        for (const Point& at : sites) field = united(field, Box{at.x, at.y, at.x, at.y});
+        for (const auto& obstacle : problem_.obstacles)
+            if (obstacle.disc && !gap_at_least(field, obstacle.box, problem_.rules.via_pad))
+                for (const Point& at : sites) {
+                    if (!gap_at_least(Box{at.x, at.y, at.x, at.y}, *obstacle.disc, problem_.rules.via_pad) &&
+                        sink(Violation{Breach::via_field, part, part}))
+                        return true;
+                }
+        for (const std::size_t peer : neighbours(grown(field, rules_reach()), part))
+            if (via_blocked(part, pose, shapes_[peer]) && sink(Violation{Breach::via_field, part, peer})) return true;
+    }
+    if (!owned)
+        for (const std::size_t owner : via_owners_)
+            if (owner != part && via_blocked(owner, placement_[owner], shape) &&
+                sink(Violation{Breach::via_field, part, owner}))
+                return true;
     if (item.connector)
         for (const std::size_t peer : connectors_) {
             if (peer == part || (owned && peer < part)) continue;
-            if (!connectors_met(part, shape, peer, shapes_[peer], guard) &&
+            if (!connectors_met(part, shape, pose, peer, shapes_[peer], guard) &&
                 sink(Violation{Breach::connector_gap, part, peer}))
                 return true;
         }

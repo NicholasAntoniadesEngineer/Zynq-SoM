@@ -13,14 +13,71 @@
 #include "schgen/label_seats.hpp"
 #include "schgen/decoupling_report.hpp"
 #include "schgen/testpoint_map.hpp"
+#include "schgen/order_files.hpp"
+#include "schgen/assembly_parts.hpp"
 #include "schgen/stackup.hpp"
+#include "schgen/run_config.hpp"
+#include <chrono>
 #include <cmath>
 #include <climits>
 #include <cstdlib>
+#include <future>
+#include <sstream>
 #include <unistd.h>
 
 namespace schgen::board_pipeline_detail {
 namespace {
+struct SearchConstant {const char* name;std::uint64_t value;const char* basis;};
+inline constexpr SearchConstant splitmix_gamma{"splitmix_gamma",0x9e3779b97f4a7c15ULL,"SplitMix64 increment (Steele, Lea, Flood 2014, the golden-ratio odd constant)"};
+inline constexpr SearchConstant splitmix_first{"splitmix_first",0xbf58476d1ce4e5b9ULL,"SplitMix64 first finaliser multiplier (Stafford variant 13)"};
+inline constexpr SearchConstant splitmix_second{"splitmix_second",0x94d049bb133111ebULL,"SplitMix64 second finaliser multiplier (Stafford variant 13)"};
+inline constexpr SearchConstant splitmix_shift_a{"splitmix_shift_a",30,"SplitMix64 first xor-shift (Stafford variant 13)"};
+inline constexpr SearchConstant splitmix_shift_b{"splitmix_shift_b",27,"SplitMix64 second xor-shift (Stafford variant 13)"};
+inline constexpr SearchConstant splitmix_shift_c{"splitmix_shift_c",31,"SplitMix64 final xor-shift (Stafford variant 13)"};
+inline constexpr SearchConstant axis_edges{"axis_edges",1,"search axis A1, the edge assignment of derived edge sheets"};
+inline constexpr SearchConstant axis_plans{"axis_plans",7,"search axis A7, the arrangement finalists a seed skips"};
+inline constexpr SearchConstant axis_orders{"axis_orders",8,"search axis A8, the base edge order the squeeze rotates and reverses"};
+inline constexpr SearchConstant plan_skips{"plan_skips",4,"most arrangement finalists a seed skips: one per board side"};
+inline constexpr std::array search_registry{splitmix_gamma,splitmix_first,splitmix_second,splitmix_shift_a,splitmix_shift_b,splitmix_shift_c,axis_edges,axis_plans,axis_orders,plan_skips};
+inline constexpr double seconds_per_minute=60;
+inline constexpr double median_half=0.5;
+std::uint64_t splitmix(std::uint64_t x){
+    x+=splitmix_gamma.value;
+    x=(x^(x>>splitmix_shift_a.value))*splitmix_first.value;
+    x=(x^(x>>splitmix_shift_b.value))*splitmix_second.value;
+    return x^(x>>splitmix_shift_c.value);
+}
+std::uint64_t draw(std::uint64_t seed,std::uint64_t axis,std::uint64_t index){return splitmix(splitmix(splitmix(seed)^axis)^index);}
+std::map<std::string,std::size_t> edge_choice_of(const FloorplanInput& in,std::uint64_t seed){
+    std::map<std::string,std::size_t> out;
+    if(!seed)return out;
+    std::uint64_t index=0;
+    for(const auto& [sheet,row]:floorplan_sheet_edges(in)){
+        if(row.stated||row.candidates.size()<2)continue;
+        const auto pick=static_cast<std::size_t>(draw(seed,axis_edges.value,index++)%row.candidates.size());
+        if(pick)out[sheet]=pick;
+    }
+    return out;
+}
+std::pair<layout::SearchChoice,std::size_t> tuning_of(std::uint64_t seed){
+    layout::SearchChoice choice;
+    if(!seed)return {choice,0};
+    std::size_t permutations=1;
+    for(std::size_t k=2;k<=choice.order.size();++k)permutations*=k;
+    const auto pick=static_cast<std::size_t>(draw(seed,axis_orders.value,0)%permutations);
+    auto base=choice.order;
+    for(std::size_t k=0;k<pick;++k)std::next_permutation(base.begin(),base.end());
+    choice.order=base;
+    choice.plan_skip=static_cast<std::size_t>(draw(seed,axis_plans.value,0)%plan_skips.value);
+    return {choice,pick};
+}
+struct SearchAttempt {
+    std::uint64_t seed=0;std::size_t order=0;std::map<std::string,std::size_t> choice;layout::SearchChoice tuning;std::size_t permutation=0;std::optional<std::size_t> same_as,placed_by;
+    std::string reached="-",first_finding,detail;bool correct=false,promoted=false;
+    std::optional<PcbPlacementResult> placement;std::optional<layout::StageResult> layout;ExecutionFailureReceipt receipt;
+    double screen_area=0,area=0,long_side=0,airwire=0;std::size_t rear=0;
+};
+std::string first_line(const std::string& text){const auto end=text.find('\n');return end==std::string::npos?text:text.substr(0,end);}
 // Import only observations produced by this invocation, even if rendering or
 // checking throws. This helper never evaluates a registered operation itself.
 template<class F> auto precision_receipt(Context& c,const std::string& id,F&& run) {
@@ -124,25 +181,135 @@ void pcb_stages(Context& c){
             c.report("native_policy.txt",policy.report());
             c.gate("native_policy",policy.providers_complete(),policy.report());
         }
-        ExecutionFailureReceipt model_failure;
-        try {
-            stage.placement=c.measure("pcb_build_model_with_internal_checks",[&]{return build_pcb_model(stage.inputs,&model_failure);});
-        } catch (...) {
-            // Import only the real failed invocation prefix, once. Successful
-            // results retain the ordinary aggregate receipt below.
-            if(model_failure.captured)c.inbox.merge_once("pcb/placement",model_failure.accounting);
-            throw;
+        const auto run_file=c.paths.run_config?*c.paths.run_config:c.paths.repository_root/run_config_file;
+        const SearchConfig search=load_run_config(run_file).search;
+        const auto started=std::chrono::steady_clock::now();
+        const auto out_of_time=[&]{return search.max_minutes&&std::chrono::duration<double>(std::chrono::steady_clock::now()-started).count()>*search.max_minutes*seconds_per_minute;};
+        std::vector<SearchAttempt> attempts;
+        const std::size_t seeds=c.options.layout?search.seeds.size():1;
+        for(std::size_t k=0;k<seeds;++k){
+            SearchAttempt a;a.seed=search.seeds[k];a.order=k;a.choice=edge_choice_of(stage.inputs.floorplan,a.seed);
+            std::tie(a.tuning,a.permutation)=tuning_of(a.seed);
+            if(!c.options.layout||!stage.inputs.floorplan.project.arrange)a.tuning.plan_skip=0;
+            for(std::size_t j=0;j<k;++j)if(attempts[j].choice==a.choice&&!attempts[j].placed_by){a.placed_by=j;break;}
+            for(std::size_t j=0;j<k;++j)if(attempts[j].choice==a.choice&&attempts[j].tuning.order==a.tuning.order&&
+                                           attempts[j].tuning.plan_skip==a.tuning.plan_skip&&!attempts[j].same_as){a.same_as=j;break;}
+            attempts.push_back(std::move(a));
         }
+        const auto batch=[&](const std::vector<std::size_t>& work,auto&& job){
+            for(std::size_t at=0;at<work.size();at+=search.threads){
+                std::vector<std::future<void>> running;
+                for(std::size_t k=at;k<work.size()&&k<at+search.threads;++k)running.push_back(std::async(std::launch::async,[&,k]{job(attempts[work[k]]);}));
+                for(auto& f:running)f.get();
+            }
+        };
+        std::vector<std::size_t> unique,placers;
+        for(std::size_t k=0;k<attempts.size();++k){if(!attempts[k].same_as)unique.push_back(k);if(!attempts[k].placed_by)placers.push_back(k);}
+        c.measure("pcb_build_model_with_internal_checks",[&]{
+            batch(placers,[&](SearchAttempt& a){
+                auto input=stage.inputs;input.floorplan.edge_choice=a.choice;
+                try{a.placement=build_pcb_model(input,&a.receipt);a.reached="S2";a.screen_area=a.placement->model.board_w*a.placement->model.board_h;}
+                catch(const std::exception& error){a.reached="S1";a.first_finding=first_line(error.what());a.detail=error.what();}
+            });
+            for(auto& a:attempts)if(a.placed_by&&!a.same_as){const auto& b=attempts[*a.placed_by];
+                a.placement=b.placement;a.reached=b.reached;a.screen_area=b.screen_area;a.first_finding=b.first_finding;a.detail=b.detail;}
+            return true;});
+        std::vector<std::size_t> screened;
+        for(const std::size_t k:unique)if(attempts[k].placement)screened.push_back(k);
+        std::stable_sort(screened.begin(),screened.end(),[&](std::size_t a,std::size_t b){return attempts[a].screen_area<attempts[b].screen_area;});
+        std::optional<std::size_t> chosen;
+        const auto better=[&](const SearchAttempt& a,const SearchAttempt& b){
+            for(const auto& key:search.objective){
+                const double x=key=="area"?a.area:key=="long_side"?a.long_side:key=="airwire"?a.airwire:static_cast<double>(a.rear);
+                const double y=key=="area"?b.area:key=="long_side"?b.long_side:key=="airwire"?b.airwire:static_cast<double>(b.rear);
+                if(x!=y)return x<y;
+            }
+            return a.order<b.order;
+        };
+        bool incomplete=false;
+        if(!c.options.layout){
+            if(!screened.empty())chosen=screened.front();
+        } else {
+            const auto layout_options=[&]{return layout::AdapterOptions{c.options.layout->plane_net,
+                layout::project_edge_clearance(pcb_project_board_settings(pcb_emit_policy(stage.inputs.floorplan.project))),
+                c.options.layout->overmold_parts,stage.inputs.floorplan.place_clear,layout::authored_intent(stage.inputs)};};
+            const auto lay=[&](SearchAttempt& a){
+                a.promoted=true;
+                try{
+                    a.layout=layout::squeeze_stage(stage.inputs,a.placement->model,pcb_emit_policy(stage.inputs.floorplan.project),layout_options(),a.tuning);
+                    const auto& m=a.layout->model;a.reached="S3";a.area=m.board_w*m.board_h;a.long_side=std::max(m.board_w,m.board_h);
+                    a.airwire=layout::to_mm(a.layout->squeeze.routed_after);a.rear=a.layout->rear_after;
+                    a.correct=!search.max_outline_mm||(std::max(m.board_w,m.board_h)<=std::max(search.max_outline_mm->first,search.max_outline_mm->second)&&
+                                                     std::min(m.board_w,m.board_h)<=std::min(search.max_outline_mm->first,search.max_outline_mm->second));
+                    if(!a.correct)a.first_finding="outline above search.max_outline_mm";
+                }catch(const std::exception& error){a.reached="S3";a.first_finding=first_line(error.what());a.detail=error.what();}
+            };
+            c.measure("pcb_layout_squeeze",[&]{
+                const std::size_t first=search.mode=="release"?std::min(search.promote,screened.size()):std::min(search.threads,screened.size());
+                std::size_t done=0;
+                for(std::size_t take=first;done<screened.size();take=std::min(screened.size(),done+search.threads)){
+                    if(out_of_time()){incomplete=true;break;}
+                    batch(std::vector<std::size_t>(screened.begin()+static_cast<std::ptrdiff_t>(done),screened.begin()+static_cast<std::ptrdiff_t>(take)),lay);
+                    done=take;
+                    for(std::size_t k=0;k<done;++k){const auto& a=attempts[screened[k]];
+                        if(a.correct&&(!chosen||better(a,attempts[*chosen])))chosen=screened[k];}
+                    if(chosen)break;
+                }
+                return true;});
+        }
+        for(auto& a:attempts)if(a.same_as){const auto& b=attempts[*a.same_as];a.reached=b.reached;a.first_finding=b.first_finding;a.correct=b.correct;a.area=b.area;a.airwire=b.airwire;a.promoted=b.promoted;}
+        {
+            std::ostringstream text;
+            std::size_t ran=0,passed=0;std::vector<double> areas;
+            for(const auto& a:attempts)if(a.promoted){++ran;if(a.correct){++passed;areas.push_back(a.area);}}
+            std::sort(areas.begin(),areas.end());
+            text<<"SEARCH "<<c.paths.project_root.filename().string()<<": "<<(incomplete?"INCOMPLETE":chosen?"PASS":"FAIL")<<"; mode "<<search.mode<<"; seeds";
+            for(const auto& a:attempts)text<<" "<<a.seed;
+            text<<"; screened "<<unique.size()<<" distinct ("<<screened.size()<<" passed S1-S2); laid out "<<ran<<"; correct "<<passed<<"; threads "<<search.threads<<"\n";
+            text<<"axes searched: A1 edge assignment of derived edge sheets, A7 arrangement finalists skipped, A8 base squeeze edge order; seed 0 takes every first candidate; a seed whose edge assignment repeats an earlier one reuses that placement\n";
+            for(const auto& constant:search_registry)text<<"  constant "<<constant.name<<" = "<<constant.value<<": "<<constant.basis<<"\n";
+            text<<"seed | reuses | edge choices | plan skip | order | reached | outline mm | correct | airwire mm | first finding\n";
+            for(const auto& a:attempts){
+                text<<a.seed<<" | "<<(a.same_as?std::to_string(attempts[*a.same_as].seed):"-")<<" | ";
+                if(a.choice.empty())text<<"first";else{bool lead=true;for(const auto& [sheet,pick]:a.choice){text<<(lead?"":",")<<sheet<<"#"<<pick;lead=false;}}
+                text<<" | "<<a.tuning.plan_skip<<" | "<<a.permutation<<" | "<<a.reached<<" | ";
+                const auto* src=a.same_as?&attempts[*a.same_as]:&a;
+                if(src->layout)text<<src->layout->model.board_w<<" x "<<src->layout->model.board_h;else text<<"-";
+                text<<" | "<<(a.correct?"yes":"no")<<" | "<<(src->layout?std::to_string(a.airwire):"-")<<" | "<<(a.first_finding.empty()?"-":a.first_finding)<<"\n";
+            }
+            for(const auto& a:attempts)if(!a.same_as&&!a.detail.empty())text<<"DETAIL seed "<<a.seed<<":\n"<<a.detail<<"\n";
+            if(chosen)text<<"CHOSEN seed "<<attempts[*chosen].seed<<" by "<<(search.mode=="quick"?"objective among the first batch laid out":"objective")<<"\n";
+            if(!areas.empty()&&ran){
+                const double rate=static_cast<double>(passed)/static_cast<double>(ran);
+                const double median=areas[static_cast<std::size_t>(median_half*static_cast<double>(areas.size()-1))];
+                const double spread=(median-areas.front())/areas.front();
+                text<<"SWEEP: pass rate "<<passed<<"/"<<ran<<"; area best "<<areas.front()<<" median "<<median<<" worst "<<areas.back()<<" mm2; spread "<<spread
+                    <<"; "<<(rate>=search.reliability.pass_rate&&spread<=search.reliability.area_spread?"HANDLED":"FRAGILE")<<" against pass rate "
+                    <<search.reliability.pass_rate<<" and spread "<<search.reliability.area_spread<<" ("<<search.reliability.basis<<")\n";
+            }
+            c.report("search.txt",text.str());
+        }
+        if(incomplete)throw ProjectError("search: INCOMPLETE; search.max_minutes passed before the procedure ended; nothing is published");
+        if(!chosen){
+            const auto& seed0=attempts.front();
+            if(!seed0.placement&&seed0.receipt.captured)c.inbox.merge_once("pcb/placement",seed0.receipt.accounting);
+            std::string why="search: no correct attempt in the stated budget";
+            const SearchAttempt* closest=&seed0;
+            for(const auto& a:attempts)if(!a.same_as){
+                why+="\n  seed "+std::to_string(a.seed)+" ("+a.reached+"): "+(a.first_finding.empty()?"not laid out":a.first_finding);
+                if(a.reached>closest->reached)closest=&a;
+            }
+            throw ProjectError(why+"\nCLOSEST seed "+std::to_string(closest->seed)+":\n"+closest->detail);
+        }
+        auto& best=attempts[*chosen];
+        stage.placement=std::move(*best.placement);
         // One receipt owns all actual plan/zone/placement work, not the legacy
         // fallback prefix. Import before emission so failures retain work done.
         c.inbox.merge_once("pcb/placement",pcb_placement_accounting(stage.placement));
         if(c.options.layout){
-            auto squeezed=c.measure("pcb_layout_squeeze",[&]{
-                return layout::squeeze_stage(stage.inputs,stage.placement.model,pcb_emit_policy(stage.inputs.floorplan.project),
-                    {c.options.layout->plane_net,
-                     layout::project_edge_clearance(pcb_project_board_settings(pcb_emit_policy(stage.inputs.floorplan.project))),
-                     c.options.layout->overmold_parts,stage.inputs.floorplan.place_clear,layout::authored_intent(stage.inputs)});});
+            auto& squeezed=*best.layout;
             c.report("layout_squeeze.txt",squeezed.report);
+            c.report("convergence.txt",squeezed.convergence);
             stage.placement.model=std::move(squeezed.model);
             stage.reached=rules::Stage::layout;
         }
@@ -218,11 +385,13 @@ void pcb_stages(Context& c){
         if(c.pcb)sources.emission=pcb_emit_policy(c.pcb->inputs.floorplan.project);
         std::optional<ThermalCopper> copper;if(c.pcb_published)copper=scan_thermal_copper(pcb_path);
         const auto r=analyze_copper_debt(copper?&*copper:nullptr,sources);c.report("copper_debt.txt",copper_debt_report(r));c.gate("copper_debt",true,copper_debt_report(r));});
-    c.attempt("cpl",[&]{if(!c.pcb_published)throw ProjectError("PCB unavailable");const auto destination=c.manufacturing/board_file_name(c.paths.file_stem,BoardFileKind::Placements);
-        const auto temporary=c.manufacturing/board_file_name(c.paths.file_stem,BoardFileKind::PlacementsScratch);
-        if(fs::exists(temporary))throw ProjectError("CPL temporary destination already exists");
-        const auto r=run_process({c.options.extraction.kicad_cli,"pcb","export","pos","--format","csv","--units","mm","--side","both","--output",temporary.string(),pcb_path.string()},std::chrono::seconds{120});
-        if(r.exit_code!=0)throw ProjectError("CPL export failed: "+r.stderr_text);const auto bytes=read(temporary);publish_text(destination,bytes);fs::remove(temporary);c.gate("cpl",true,destination.string());});
+    c.attempt("order_files",[&]{if(!c.pcb||!c.pcb_published)throw ProjectError("PCB unavailable");
+        const auto& selection=board_fabrication();const auto facts=load_assembly_facts_in(c.paths.parts_dir);
+        const auto files=build_order_files(c.sheets,c.index,c.pcb->placement.model,selection.profile,facts);
+        publish_text(c.manufacturing/board_file_name(c.paths.file_stem,BoardFileKind::OrderBom),files.bom);publish_text(c.manufacturing/board_file_name(c.paths.file_stem,BoardFileKind::Placements),files.cpl);
+        const auto verdict=check_order_files(files.bom,files.cpl,files.unplaced,selection.profile);c.report("order_files.txt",verdict.report());c.gate("order_files",verdict.ok(),verdict.summary());
+        const auto parts=check_assembly_parts(c.sheets,files,facts,default_part_facts(),selection.config.build_count);
+        c.report("assembly_parts.txt",parts.report());c.gate("assembly_parts",parts.ok(),parts.summary());});
     c.attempt("fab_profile",[&]{if(!c.pcb_published)throw ProjectError("PCB unavailable");const auto r=run_manufacturing_fab(c.reports,pcb_path,c.manufacturing/board_file_name(c.paths.file_stem,BoardFileKind::DesignRules),c.out/board_file_name(c.paths.file_stem,BoardFileKind::Project));c.gate("fab_profile",r.ok,r.report());});
     c.attempt("stage_movement",[&]{if(!c.pcb)throw ProjectError("tracker did not run");const auto& moves=c.pcb->placement.model.stage_moves;
         for(const auto* name:{"l4_pull","edge_seat","breathe","refit_facing","reorder","corridor_eviction","instantiate","escape_copper"})if(!moves.count(name))throw ProjectError(std::string("tracker missing stage ")+name);

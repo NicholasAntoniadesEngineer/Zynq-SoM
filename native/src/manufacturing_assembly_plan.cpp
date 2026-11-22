@@ -15,7 +15,7 @@ std::vector<std::string> polarity(const PcbModel& m,const Indices& ids) {
 }
 std::string description(const PcbCheckInstance& i,const PcbEmitPolicy& p) {
     for(const auto& [k,v]:p.header_descriptions)if(k==i.ref)return v;
-    return lookup(p.connector_descriptions,i.sheet);
+    return i.silk_label.value_or(std::string());
 }
 std::vector<std::string> connector_notes(const PcbModel& m,Indices ids,const PcbEmitPolicy& p) {
     sort_indices(ids,m);std::vector<std::string> out,som;std::map<std::string,Indices> pairs;
@@ -24,6 +24,7 @@ std::vector<std::string> connector_notes(const PcbModel& m,Indices ids,const Pcb
         if(fact&&fact->pair_label)pairs[*fact->pair_label].push_back(n);
         if(!fact)continue;
         const auto face=mating_face_vector(*fact);
+        if(face==std::pair<int,int>{0,0}){auto desc=description(i,p);out.push_back(i.ref+" "+i.value+(desc.empty()?"":" ("+desc+")")+": mates from above");continue;}
         const auto v=turn_point(face.first,face.second,i.rotation);
         const auto x=rounded(v.first),y=rounded(v.second);
         std::string edge;if(x==0&&y==-1)edge="N";else if(x==0&&y==1)edge="S";else if(x==1&&y==0)edge="E";else if(x==-1&&y==0)edge="W";else throw ProjectError(i.ref+": non-cardinal connector mating face");

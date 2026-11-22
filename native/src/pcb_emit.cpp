@@ -9,19 +9,6 @@ using namespace pcb_emission;
 const PcbEmitPolicy &default_pcb_emit_policy() {
     static const PcbEmitPolicy policy = [] {
         PcbEmitPolicy p;
-        p.connector_descriptions = {{"pd_input", "PWR"},
-                                    {"usbc_otg", "USB OTG"},
-                                    {"usb_jtag_connector", "JTAG"},
-                                    {"usb_uart_connector", "UART"},
-                                    {"microsd", "microSD"},
-                                    {"hdmi_tx", "HDMI TX"},
-                                    {"hdmi_rx", "HDMI RX"},
-                                    {"rj45_connector", "ETH"},
-                                    {"board_qwiic", "QWIIC"},
-                                    {"camera", "CAM"},
-                                    {"lcd", "LCD"},
-                                    {"pmod", "PMOD"},
-                                    {"pmod_expansion", "PMOD"}};
         for (const auto &[_, need] : default_thermal_policy().pour_needs)
             p.thermal_credit_needs.push_back(need);
         return p;
@@ -49,8 +36,15 @@ Box4 thermal_pour_extent(const Box4& pour, bool mirror, double rotation, double 
     }
     return extent;
 }
+DrcFloors drc_floors_of(const FabricationSelection &selection) {
+    const auto &profile = selection.profile;
+    return {profile.number(fabricator_key::hole_pad), profile.number(fabricator_key::silk_height),
+            profile.number(fabricator_key::silk_line), selection.outer_value(fabricator_key::mask_bridge),
+            profile.number(fabricator_key::silk_pad)};
+}
 PcbEmitPolicy pcb_emit_policy(const ProjectConfig &c) {
     auto p = default_pcb_emit_policy();
+    p.drc_floors = drc_floors_of(board_fabrication());
     p.interface_reference_labels_only = true;
     p.labels = c.labels;
     p.board_stem = c.file_stem;

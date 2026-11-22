@@ -1,6 +1,5 @@
 #include "schgen/board_check.hpp"
 
-#include "schgen/authoring_gates.hpp"
 #include "schgen/board_definition.hpp"
 #include "schgen/board_power.hpp"
 #include "schgen/component_basis.hpp"
@@ -157,13 +156,14 @@ BoardDefinitionCheck check_board_definition(const fs::path& repository, const fs
     const bool config_exists = rows.file(run_config, run_config_label, true);
     const auto config_document = parsed(run_config, config_exists);
     bool configured = false;
-    for (const std::string section : {"stackup", "overmold_parts"}) {
+    for (const std::string section : {"stackup", "overmold_parts", "fabrication"}) {
         const std::string item = section + "." + (name.empty() ? std::string("<project.json name>") : name);
         const JsonNode* table = config_document ? object_field(*config_document, section) : nullptr;
         if (name.empty() || !config_document) { rows.add(run_config_label, item, true, RequirementStatus::blocked); continue; }
         if (!table || table->kind != JsonKind::Object || !object_field(*table, name)) { rows.add(run_config_label, item, true, RequirementStatus::missing); continue; }
         const bool judged = rows.judge(run_config_label, item, true, [&] {
             if (section == "stackup") apply_run_config(run_config, name);
+            else if (section == "fabrication") (void)load_run_config(run_config).fabrication_of(name);
             else (void)load_run_config(run_config).overmold_parts_of(name);
         });
         if (section == "stackup") configured = judged;
@@ -213,8 +213,6 @@ BoardDefinitionCheck check_board_definition(const fs::path& repository, const fs
                 circuits.push_back({sheet.name, board_root / "subsystems" / sheet.name / "circuit.json",
                                     author_project_subsystem(board->name, sheet.name, input)});
             }) && authored;
-            for (const std::string& asset : local_package_authored_files(sheet.name, !sheet.from_module()))
-                rows.file(board_root / "subsystems" / sheet.name / asset, "subsystems/" + sheet.name + "/" + asset, true);
         }
     } else rows.add(board_file, "sheets.*", true, RequirementStatus::blocked);
 
@@ -262,6 +260,30 @@ BoardDefinitionCheck check_board_definition(const fs::path& repository, const fs
         (void)board_power_policy(board->power, board->module_definition, mapping->rebound_som_rails, module_sheets, circuits, *facts);
     });
 
+    if (board && !board->layout.stated)
+        rows.add(board_file, "intent.layout", false, RequirementStatus::absent,
+                 "the board states no layout object: function statements are not judged");
+    if (board && board->layout.stated && facts_ready && roles) {
+        std::set<std::pair<std::string, std::string>> stated, known;
+        for (const BoardFunction& function : board->layout.functions) stated.insert({function.sheet, function.reference});
+        for (const ProjectCircuit& circuit : circuits) {
+            const std::string module_part = sheet_role(*roles, circuit.name).module_connector;
+            for (const CircuitPartIr& part : circuit.circuit.parts) {
+                known.insert({circuit.name, part.ref});
+                if (part.ref == module_part) continue;
+                const PartClass kind = symbol_class(*facts, part.lib_id, part.ref + " (" + circuit.name + ")");
+                if (kind != PartClass::connector && kind != PartClass::header && kind != PartClass::battery_holder) continue;
+                const std::string subject = circuit.name + "." + part.ref;
+                rows.add(board_file, "intent.function." + subject, true,
+                         stated.count({circuit.name, part.ref}) ? RequirementStatus::present : RequirementStatus::missing,
+                         stated.count({circuit.name, part.ref}) ? "" : "state what " + subject + " is for in layout.functions");
+            }
+        }
+        for (const BoardFunction& function : board->layout.functions)
+            if (!known.count({function.sheet, function.reference}))
+                rows.add(board_file, "intent.function." + function.sheet + "." + function.reference, true, RequirementStatus::invalid,
+                         "layout.functions names a part the sheet does not hold");
+    }
     result.rows = std::move(rows.list);
     return result;
 }

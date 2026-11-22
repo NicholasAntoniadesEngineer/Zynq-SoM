@@ -190,6 +190,7 @@ struct FloorplanLegalizeInput {
     // explicit hard terms in index are still evaluated independently.
     std::map<std::pair<std::string, std::string>, int> channel_demand;
     std::map<std::string, Box4> module_rects;
+    std::vector<std::pair<std::string, double>> far_guard;
     double clear = board_decision_policy::floorplan::clear;
     bool compact = false;
     FloorplanPoint origin{25.0, 25.0};
@@ -307,7 +308,15 @@ struct FloorplanInput {
     // Null by default: no observation snapshots or experiment parameter changes.
     std::shared_ptr<const FloorplanExperiment> experiment;
     OwnedShapeQualityTable owned_shape_quality; // compact zone snapshot, stable sheet/index keys
+    std::map<std::string, std::size_t> edge_choice;
 };
+
+struct FloorplanSheetEdge {
+    std::string edge;
+    bool stated = false;
+    std::vector<std::string> candidates;
+};
+std::map<std::string, FloorplanSheetEdge> floorplan_sheet_edges(const FloorplanInput& in);
 
 FloorplanSpec floorplan_spec_from_json(
     const JsonNode& raw, const std::string& source,

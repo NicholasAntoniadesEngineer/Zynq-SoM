@@ -265,6 +265,19 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
     const auto rejected=[&](const std::string& stage,const std::string& subject,bool phase_compact,
                             const std::vector<std::string>& diagnostics=std::vector<std::string>{}) {
         if(!subject.empty())rejected_subjects.insert(subject);
+        std::string reason=stage+(subject.empty()?"":" "+subject);
+        for(const auto& line:diagnostics)if(line.rfind("REJECT",0)==0){
+            std::string kept;
+            for(std::size_t at=0;at<line.size();){
+                const auto margin=line.find(" margin ",at);
+                if(margin==std::string::npos){kept+=line.substr(at);break;}
+                kept+=line.substr(at,margin-at);
+                const auto next=line.find(';',margin);
+                at=next==std::string::npos?line.size():next;
+            }
+            reason+=": "+kept;break;
+        }
+        ++rejection_reasons[reason];
         if(in.experiment&&in.experiment->stage_rejected)
             in.experiment->stage_rejected({bw,bh,stage,subject,phase_compact,plan.punch_free,compact_order,diagnostics});
     };
@@ -289,6 +302,12 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
         row.reach=b.fanout_reach; row.inset=b.fanout_inset;
         for (const auto& [j,n]:b.j_aff) row.j_aff.emplace_back(j,n);
         row.overmold=overmold(in.project.connectors,b); row.current_edge=b.edge; row.assigned_edge=edge_of.at(b.name);
+        for (const auto& c:b.conns) if (const auto* fact=connector_fact(in.project.connectors,c.value)) {
+            const double across=fact->mating_face.back()=='X' ? c.h : c.w;
+            if (fact->mating && fact->mating->plug_width_mm && *fact->mating->plug_width_mm>across)
+                row.overhang=std::max(row.overhang,(*fact->mating->plug_width_mm-across)/2);
+            if (fact->access) row.access=std::max(row.access,fact->access->side_mm);
+        }
         edge_rows.push_back(std::move(row));
     }
     std::vector<PackEdgeJack> jacks;
@@ -888,7 +907,7 @@ bool Engine::attempt_pack_impl(bool compact,bool* order_independent_failure,
             [](const auto& t){return t.prefer_short_flow;})) {
         FloorplanLegalizeInput li;
         li.board_w=bw; li.board_h=bh; li.index=in.compose.index; li.metrics=in.compose.metrics;
-        li.channel_demand=channel_demand; li.clear=clear; li.origin=in.origin;
+        li.channel_demand=channel_demand; li.clear=clear; li.origin=in.origin; li.far_guard=sheet_far_guards(in.roles);
         for (const auto& b:plan.interior_blocks) if (b.shape_idx) {
             const auto m=in.compose.shape_metrics.find({b.name,b.shape_idx});
             if (m==in.compose.shape_metrics.end()) throw std::logic_error("floorplan: "+b.name+" chose shape "+std::to_string(b.shape_idx)+" but no per-shape zone metrics were registered — the legalizer would judge shape-0 geometry (silent breakage)");

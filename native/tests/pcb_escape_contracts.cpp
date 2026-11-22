@@ -1,3 +1,4 @@
+#include "schgen/run_config.hpp"
 #include "connector_facts_fixture.hpp"
 #include "schgen/occupancy.hpp"
 #include "schgen/pcb_escape.hpp"
@@ -133,7 +134,12 @@ Fixture load(const fs::path &root, const std::string &name) {
         for (const auto &[pad, p] : field(r, "pad_nets").object_value)
             i.pad_nets[pad] = {static_cast<int>(p.array_value.at(0).number_value),
                                p.array_value.at(1).string_value};
-        i.module_connector = explicit_sheet_roles(std::vector<std::string>{i.sheet}).at(i.sheet).module_connector;
+        const SheetRoles roles = explicit_sheet_roles(std::vector<std::string>{i.sheet});
+        const SheetRole &role = roles.at(i.sheet);
+        i.module_connector = role.module_connector;
+        i.silk_label = role.silk_label;
+        i.escape_basis = role.escape_basis;
+        i.escape_escalates = role.escape_escalates;
         if (i.sheet == "som_j1")
             f.j1 = f.model.insts.size();
         if (i.sheet == "som_j2")
@@ -398,6 +404,7 @@ int main(int argc, char **argv) {
         if (argc != 2)
             throw std::runtime_error("repo root required");
         for (const auto &name : {"carrier", "devkit_mini"}) {
+            schgen::apply_run_config(std::filesystem::path(argv[1]) / schgen::run_config_file, name);
             baseline(argv[1], name);
             real_mutations(argv[1], name);
         }

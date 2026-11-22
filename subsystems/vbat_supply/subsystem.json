@@ -1,0 +1,721 @@
+{
+  "schema": "schgen.subsystem/1",
+  "name": "vbat_supply",
+  "title": "Battery logic feed: TPS26631 eFuse | LM61460 8 V pre-regulator, supply selector",
+  "interface": [
+    "+VBAT",
+    "+VBAT_D",
+    "FLT_N",
+    "+VDD_LOGIC",
+    "+VBAT_SW",
+    "GND",
+    "+VPRE",
+    "+VIN_USB",
+    "+VIN"
+  ],
+  "placement": {
+    "region": "board",
+    "silk_label": null,
+    "far_guard_mm": null,
+    "escape_basis": null,
+    "escape_escalates": false,
+    "reserves_edge": false
+  },
+  "checks": {
+    "dividers": [],
+    "divider_sources": [],
+    "iset_window_ma": null,
+    "iset_basis": null
+  },
+  "parts": [
+    {
+      "ref": "U1",
+      "part": "TPS26631PWPR"
+    },
+    {
+      "ref": "D2",
+      "symbol": "Device:D_Schottky",
+      "value": "SS54",
+      "footprint": "Diode_SMD:D_SMA",
+      "fields": {
+        "LCSC": "C22452"
+      }
+    },
+    {
+      "ref": "C13",
+      "symbol": "Device:C",
+      "value": "4u7/100V",
+      "footprint": "Capacitor_SMD:C_1210_3225Metric",
+      "fields": {
+        "LCSC": "C49451356"
+      }
+    },
+    {
+      "ref": "C14",
+      "part": "RVT1H471M1213",
+      "value": "470u"
+    },
+    {
+      "ref": "R1",
+      "symbol": "Device:R",
+      "value": "100k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C25803"
+      }
+    },
+    {
+      "ref": "R2",
+      "symbol": "Device:R",
+      "value": "10k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C25804"
+      }
+    },
+    {
+      "ref": "R3",
+      "symbol": "Device:R",
+      "value": "5.1k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C23186"
+      }
+    },
+    {
+      "ref": "R4",
+      "symbol": "Device:R",
+      "value": "5.49k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C188263"
+      }
+    },
+    {
+      "ref": "C1",
+      "symbol": "Device:C",
+      "value": "47n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C1622"
+      }
+    },
+    {
+      "ref": "R5",
+      "symbol": "Device:R",
+      "value": "100k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C25803"
+      }
+    },
+    {
+      "ref": "C2",
+      "symbol": "Device:C",
+      "value": "100n/100V",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C15725"
+      }
+    },
+    {
+      "ref": "C3",
+      "symbol": "Device:C",
+      "value": "4u7/100V",
+      "footprint": "Capacitor_SMD:C_1210_3225Metric",
+      "fields": {
+        "LCSC": "C49451356"
+      }
+    },
+    {
+      "ref": "C4",
+      "symbol": "Device:C",
+      "value": "4u7/100V",
+      "footprint": "Capacitor_SMD:C_1210_3225Metric",
+      "fields": {
+        "LCSC": "C49451356"
+      }
+    },
+    {
+      "ref": "C5",
+      "symbol": "Device:C",
+      "value": "100n/100V",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C15725"
+      }
+    },
+    {
+      "ref": "C6",
+      "symbol": "Device:C",
+      "value": "100n/100V",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C15725"
+      }
+    },
+    {
+      "ref": "U2",
+      "part": "LM61460AANRJRR"
+    },
+    {
+      "ref": "C7",
+      "symbol": "Device:C",
+      "value": "1u",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C15849"
+      }
+    },
+    {
+      "ref": "R6",
+      "symbol": "Device:R",
+      "value": "10R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C22859"
+      }
+    },
+    {
+      "ref": "C8",
+      "symbol": "Device:C",
+      "value": "1u",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C15849"
+      }
+    },
+    {
+      "ref": "R7",
+      "symbol": "Device:R",
+      "value": "22k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C31850"
+      }
+    },
+    {
+      "ref": "C9",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      }
+    },
+    {
+      "ref": "L1",
+      "symbol": "Device:L",
+      "value": "10uH",
+      "footprint": "SWPA8040S100MT:SWPA8040S100MT",
+      "fields": {
+        "LCSC": "C37429"
+      }
+    },
+    {
+      "ref": "C10",
+      "symbol": "Device:C",
+      "value": "22u",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "fields": {
+        "LCSC": "C45783"
+      }
+    },
+    {
+      "ref": "C11",
+      "symbol": "Device:C",
+      "value": "22u",
+      "footprint": "Capacitor_SMD:C_0805_2012Metric",
+      "fields": {
+        "LCSC": "C45783"
+      }
+    },
+    {
+      "ref": "R8",
+      "symbol": "Device:R",
+      "value": "47.5k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C23061"
+      }
+    },
+    {
+      "ref": "R9",
+      "symbol": "Device:R",
+      "value": "6.8k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C23212"
+      }
+    },
+    {
+      "ref": "C12",
+      "symbol": "Device:C",
+      "value": "22p",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C1653"
+      }
+    },
+    {
+      "ref": "R10",
+      "symbol": "Device:R",
+      "value": "1k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C21190"
+      }
+    },
+    {
+      "ref": "D1",
+      "symbol": "Device:LED",
+      "value": "red",
+      "footprint": "LED_SMD:LED_0603_1608Metric",
+      "fields": {
+        "LCSC": "C2286"
+      }
+    },
+    {
+      "ref": "R11",
+      "symbol": "Device:R",
+      "value": "1k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C21190"
+      }
+    },
+    {
+      "ref": "J1",
+      "symbol": "Connector_Generic:Conn_02x03_Odd_Even",
+      "value": "A2541WV-2x3P",
+      "footprint": "Connector_PinHeader_2.54mm:PinHeader_2x03_P2.54mm_Vertical",
+      "fields": {
+        "LCSC": "C225518"
+      }
+    },
+    {
+      "ref": "TP1",
+      "symbol": "Connector:TestPoint",
+      "value": "+VBAT_SW",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      }
+    },
+    {
+      "ref": "TP2",
+      "symbol": "Connector:TestPoint",
+      "value": "+VPRE",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      }
+    },
+    {
+      "ref": "TP3",
+      "symbol": "Connector:TestPoint",
+      "value": "+VIN",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      }
+    },
+    {
+      "ref": "TP4",
+      "symbol": "Connector:TestPoint",
+      "value": "+VBAT_D",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      }
+    }
+  ],
+  "nets": [
+    {
+      "name": "+VBAT",
+      "pins": [
+        "D2.2"
+      ]
+    },
+    {
+      "name": "+VBAT_D",
+      "pins": [
+        "D2.1",
+        "U1.1",
+        "U1.2",
+        "U1.3",
+        "U1.6",
+        "R1.1",
+        "C2.1",
+        "TP4.1"
+      ]
+    },
+    {
+      "name": "UVLO_SET",
+      "pins": [
+        "U1.7",
+        "R1.2",
+        "R2.1"
+      ]
+    },
+    {
+      "name": "OVP_SET",
+      "pins": [
+        "U1.8",
+        "R2.2",
+        "R3.1"
+      ]
+    },
+    {
+      "name": "ILIM_SET",
+      "pins": [
+        "U1.11",
+        "R4.1"
+      ]
+    },
+    {
+      "name": "DVDT_SET",
+      "pins": [
+        "U1.10",
+        "C1.1"
+      ]
+    },
+    {
+      "name": "FLT_N",
+      "class": "port",
+      "pins": [
+        "U1.15",
+        "R5.2"
+      ]
+    },
+    {
+      "name": "+VDD_LOGIC",
+      "pins": [
+        "R5.1"
+      ]
+    },
+    {
+      "name": "+VBAT_SW",
+      "pins": [
+        "U1.18",
+        "U1.19",
+        "U1.20",
+        "C3.1",
+        "C4.1",
+        "C5.1",
+        "C6.1",
+        "C13.1",
+        "C14.1",
+        "U2.7",
+        "U2.8",
+        "U2.12",
+        "TP1.1"
+      ]
+    },
+    {
+      "name": "GND",
+      "pins": [
+        "U1.9",
+        "U1.21",
+        "U1.12",
+        "U1.16",
+        "R3.2",
+        "R4.2",
+        "C1.2",
+        "C2.2",
+        "C3.2",
+        "C4.2",
+        "C5.2",
+        "C6.2",
+        "C13.2",
+        "C14.2",
+        "U2.9",
+        "U2.11",
+        "U2.3",
+        "C7.2",
+        "C8.2",
+        "R7.2",
+        "C10.2",
+        "C11.2",
+        "R9.2",
+        "R11.2"
+      ]
+    },
+    {
+      "name": "U2_VCC",
+      "pins": [
+        "U2.2",
+        "C7.1"
+      ]
+    },
+    {
+      "name": "+VPRE",
+      "pins": [
+        "R6.1",
+        "L1.2",
+        "C10.1",
+        "C11.1",
+        "R8.1",
+        "C12.1",
+        "D1.2",
+        "J1.5",
+        "J1.6",
+        "TP2.1"
+      ]
+    },
+    {
+      "name": "BIAS_PRE",
+      "pins": [
+        "U2.1",
+        "R6.2",
+        "C8.1"
+      ]
+    },
+    {
+      "name": "RT_PRE",
+      "pins": [
+        "U2.6",
+        "R7.1"
+      ]
+    },
+    {
+      "name": "BOOT_PRE",
+      "pins": [
+        "U2.14",
+        "U2.13",
+        "C9.1"
+      ]
+    },
+    {
+      "name": "SW_PRE",
+      "pins": [
+        "U2.10",
+        "C9.2",
+        "L1.1"
+      ]
+    },
+    {
+      "name": "FB_PRE",
+      "pins": [
+        "U2.4",
+        "R8.2",
+        "R9.1",
+        "R10.2"
+      ]
+    },
+    {
+      "name": "CFF_PRE",
+      "pins": [
+        "C12.2",
+        "R10.1"
+      ]
+    },
+    {
+      "name": "PG_PRE",
+      "pins": [
+        "D1.1",
+        "R11.1"
+      ]
+    },
+    {
+      "name": "+VIN_USB",
+      "pins": [
+        "J1.1",
+        "J1.2"
+      ]
+    },
+    {
+      "name": "+VIN",
+      "pins": [
+        "J1.3",
+        "J1.4",
+        "TP3.1"
+      ]
+    }
+  ],
+  "unconnected": [
+    "U1.13",
+    "U1.14",
+    "U1.17",
+    "U1.4",
+    "U1.5",
+    "U2.5"
+  ],
+  "ports": [
+    {
+      "net": "FLT_N",
+      "kind": "single",
+      "expect": {
+        "instance": "non_empty"
+      }
+    }
+  ],
+  "hints": [],
+  "draws": [
+    {
+      "rail": "+VPRE",
+      "amps": 0.007,
+      "note": "present LED 6.1 mA + FB divider 0.15 mA (the load behind the selector is not visible to the power tree)"
+    }
+  ],
+  "waivers": [],
+  "purpose": [
+    {
+      "part": "D2",
+      "role": "series",
+      "pin": "U1.2"
+    },
+    {
+      "part": "C13",
+      "role": "reservoir",
+      "pin": "U2.8"
+    },
+    {
+      "part": "C14",
+      "role": "reservoir",
+      "pin": "U1.19"
+    },
+    {
+      "part": "C2",
+      "role": "bypass",
+      "pin": "U1.2"
+    },
+    {
+      "part": "C3",
+      "role": "reservoir",
+      "pin": "U2.8"
+    },
+    {
+      "part": "C4",
+      "role": "reservoir",
+      "pin": "U2.12"
+    },
+    {
+      "part": "C5",
+      "role": "bypass",
+      "pin": "U2.8"
+    },
+    {
+      "part": "C6",
+      "role": "bypass",
+      "pin": "U2.12"
+    },
+    {
+      "part": "C1",
+      "role": "set",
+      "pin": "U1.10"
+    },
+    {
+      "part": "R1",
+      "role": "sense",
+      "pin": "U1.7"
+    },
+    {
+      "part": "R2",
+      "role": "sense",
+      "pin": "U1.7"
+    },
+    {
+      "part": "R3",
+      "role": "sense",
+      "pin": "U1.8"
+    },
+    {
+      "part": "R4",
+      "role": "set",
+      "pin": "U1.11"
+    },
+    {
+      "part": "R5",
+      "role": "pull",
+      "pin": "U1.15"
+    },
+    {
+      "part": "C7",
+      "role": "bypass",
+      "pin": "U2.2"
+    },
+    {
+      "part": "C8",
+      "role": "bypass",
+      "pin": "U2.1"
+    },
+    {
+      "part": "R6",
+      "role": "filter",
+      "pin": "U2.1"
+    },
+    {
+      "part": "R7",
+      "role": "feedback",
+      "pin": "U2.6"
+    },
+    {
+      "part": "C9",
+      "role": "switching",
+      "pin": "U2.14"
+    },
+    {
+      "part": "L1",
+      "role": "switching",
+      "pin": "U2.10"
+    },
+    {
+      "part": "C10",
+      "role": "reservoir",
+      "pin": "L1.2"
+    },
+    {
+      "part": "C11",
+      "role": "reservoir",
+      "pin": "L1.2"
+    },
+    {
+      "part": "R8",
+      "role": "feedback",
+      "pin": "U2.4"
+    },
+    {
+      "part": "R9",
+      "role": "feedback",
+      "pin": "U2.4"
+    },
+    {
+      "part": "R10",
+      "role": "feedback",
+      "pin": "U2.4"
+    },
+    {
+      "part": "C12",
+      "role": "feedback",
+      "pin": "R10.1"
+    },
+    {
+      "part": "R11",
+      "role": "indicate",
+      "pin": "D1.1"
+    }
+  ],
+  "free": [
+    {
+      "part": "TP1",
+      "reason": "probe point; it follows its net"
+    },
+    {
+      "part": "TP2",
+      "reason": "probe point; it follows its net"
+    },
+    {
+      "part": "TP3",
+      "reason": "probe point; it follows its net"
+    },
+    {
+      "part": "TP4",
+      "reason": "probe point; it follows its net"
+    },
+    {
+      "part": "D1",
+      "reason": "pre-regulator present LED across the +VPRE rail; no pin drives it"
+    }
+  ]
+}

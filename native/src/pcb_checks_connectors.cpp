@@ -57,7 +57,37 @@ ConnectorSpacingResult check_connector_spacing(const PcbCheckInput& input){
     for(const auto& [ra,a]:members)for(const auto& [rb,b]:conns){auto ref_b=rb;if(std::any_of(members.begin(),members.end(),[&](const auto& m){return m.first==ref_b;}))continue;if(auto hit=same_edge_gap(a,b,0.5)){
         const auto& [axis,gap]=*hit;bool ok=gap>=3;res.pairs.push_back({ra,rb,family_of.at(ra)+"|1",axis,gap,3,ok});if(!ok)res.violations.push_back(ra+" <-> "+rb+" ("+family_of.at(ra)+" one-sided): gap "+f(gap,2)+"mm along "+axis+" < required 3mm — the "+family_of.at(ra)+" plug's own boot overhangs its copper into the neighbour");
     }}
+    struct Held {std::string ref;Box4 envelope,room;const ConnectorFact* fact;};
+    std::vector<Held> held;
+    for(std::size_t i=0;i<model.insts.size();++i){const auto part=mpn(model.connectors,model.insts[i]);if(part.empty())continue;const auto& fact=model.connectors.at(part);
+        if(!fact.access&&!(fact.mating&&fact.mating->plug_width_mm))continue;
+        const auto face=mating_face_vector(fact);const bool above=face==std::pair<int,int>{0,0};
+        const auto v=turn_point(face.first,model.insts[i].mirror?-face.second:face.second,model.insts[i].rotation);
+        const double mx=above?0:std::round(v.first),my=above?0:std::round(v.second);
+        const bool across_x=above||my!=0,across_y=above||mx!=0;
+        Box4 box=input.courtyard_at(i);
+        if(fact.mating&&fact.mating->plug_width_mm){const double plug=*fact.mating->plug_width_mm;
+            if(across_x&&plug>box.x1-box.x0){const double grow=(plug-(box.x1-box.x0))/2;box.x0-=grow;box.x1+=grow;}
+            if(across_y&&plug>box.y1-box.y0){const double grow=(plug-(box.y1-box.y0))/2;box.y0-=grow;box.y1+=grow;}}
+        Box4 room=box;
+        if(fact.access){const double side=fact.access->side_mm,front=fact.access->front_mm;
+            if(across_x){room.x0-=side;room.x1+=side;}if(across_y){room.y0-=side;room.y1+=side;}
+            if(mx>0)room.x1+=front;if(mx<0)room.x0-=front;if(my>0)room.y1+=front;if(my<0)room.y0-=front;}
+        held.push_back({model.insts[i].ref,box,room,&fact});}
+    const auto overlap=[](const Box4& a,const Box4& b){return std::min(a.x1,b.x1)-std::max(a.x0,b.x0)>0&&std::min(a.y1,b.y1)-std::max(a.y0,b.y0)>0;};
+    for(std::size_t i=0;i<held.size();++i)for(std::size_t j=i+1;j<held.size();++j){
+        const auto& a=held[i];const auto& b=held[j];
+        const double gx=std::max(a.envelope.x0,b.envelope.x0)-std::min(a.envelope.x1,b.envelope.x1),gy=std::max(a.envelope.y0,b.envelope.y0)-std::min(a.envelope.y1,b.envelope.y1),gap=std::max(gx,gy);
+        const bool collide=overlap(a.envelope,b.envelope),a_room=overlap(a.room,b.envelope),b_room=overlap(b.room,a.envelope);
+        const double need=std::max(a.fact->access?a.fact->access->side_mm:0.0,b.fact->access?b.fact->access->side_mm:0.0);
+        const bool ok=!collide&&!a_room&&!b_room;
+        res.pairs.push_back({a.ref,b.ref,staged_connector_family,gx>=gy?"x":"y",gap,need,ok});
+        if(!ok)res.violations.push_back(a.ref+" <-> "+b.ref+": "+(collide?std::string("plug envelopes must not collide"):"plug envelope "+f(gap,2)+"mm away lies in the access room of "+(a_room?a.ref+" ("+a.fact->access->basis+")":b.ref+" ("+b.fact->access->basis+")")));
+    }
     std::stable_sort(res.pairs.begin(),res.pairs.end(),[](const auto& a,const auto& b){return a.gap<b.gap;});res.ok=res.violations.empty();return res;
+}
+bool ConnectorSpacingResult::ok_as_placed()const{
+    return std::all_of(pairs.begin(),pairs.end(),[](const ConnectorSpacingRow& row){return row.ok||row.family==staged_connector_family;});
 }
 std::string ConnectorSpacingResult::summary()const{
     std::vector<std::string> l={"CONNECTOR OVERMOLD SPACING GATE: "+verdict(ok)+" (board "+g(board_w)+" x "+g(board_h)+" mm)","  same-edge overmold connector pairs: "+std::to_string(pairs.size())+" ("+std::to_string(violations.size())+" too tight)"};

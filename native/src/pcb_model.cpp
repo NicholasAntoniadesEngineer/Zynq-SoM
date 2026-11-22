@@ -20,6 +20,9 @@ PcbModel pcb_model_from_json(const JsonNode &root, const PcbFootprintPool &pool,
         const SheetRole &role = sheet_role(roles, i.sheet);
         i.module_connector = role.module_connector;
         i.under_module = role.region == SheetRegion::under_module;
+        i.silk_label = role.silk_label;
+        i.escape_basis = role.escape_basis;
+        i.escape_escalates = role.escape_escalates;
         if (!i.module_connector.empty())
             m.module_connectors.insert(i.module_connector);
         i.x = jnum(required(raw, "x"));

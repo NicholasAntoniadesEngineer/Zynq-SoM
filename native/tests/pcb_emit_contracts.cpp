@@ -126,6 +126,7 @@ PcbFootprintPool footprints(const JsonNode &n) {
 }
 PcbEmitPolicy policy(const JsonNode &n) {
     auto p = default_pcb_emit_policy();
+    p.drc_floors = DrcFloors{0.25, 0.8, 0.08, 0.0, 0.0};
     p.board_stem = "Zynq_Carrier";
     p.connectors = repository_connector_facts();
     p.isolation = repository_part_facts().isolation;
@@ -508,6 +509,7 @@ void boundaries(const fs::path &fixtures, const fs::path &output) {
     auto model = pcb_model_from_json(field(raw, "model"), pool, explicit_sheet_roles(field(raw, "model")));
     rejects([&] { pcb_model_from_json(field(raw, "model"), {}, explicit_sheet_roles(field(raw, "model"))); }, "unresolved footprint snapshot");
     auto stemmed = default_pcb_emit_policy();
+    stemmed.drc_floors = DrcFloors{0.25, 0.8, 0.08, 0.0, 0.0};
     stemmed.board_stem = "Zynq_Carrier";
     auto bad = model;
     bad.board_w = 0;

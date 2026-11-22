@@ -332,7 +332,7 @@ void CircuitAuthor::bind(const AuthoringStrings& mapping) {
     for(auto& p:circuit_.parts)if(p.lib_id=="Connector:TestPoint"||p.lib_id=="Mechanical:MountingHole_Pad")rename(p.value);
 }
 void CircuitAuthor::hint(const std::string& name,const std::string& style) {
-    if(style!="trunk")throw CircuitAuthoringError("hint("+repr(name)+"): unknown style "+repr(style)+" (known: ['trunk'])");
+    if(style!="trunk"&&style!="path")throw CircuitAuthoringError("hint("+repr(name)+"): unknown style "+repr(style)+" (known: ['trunk', 'path'])");
     if(!find_net(name))throw CircuitAuthoringError("hint("+repr(name)+"): not a declared net");
     auto i=by_net(circuit_.hints,name);if(i!=circuit_.hints.end())i->style=style;else circuit_.hints.push_back({name,style});
 }

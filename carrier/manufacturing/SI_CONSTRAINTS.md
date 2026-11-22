@@ -7,7 +7,7 @@ Source of targets: `carrier/research/si_spec.json` (researched, standard-cited);
 
 ## Stackup
 
-JLCPCB JLC04161H-7628, 4-layer 1.6 mm (Sig / GND / PWR / Sig). Diff-pair trace geometry (width/gap) per class lives in the `.kicad_pro` net_settings + `.kicad_dru`: 90R = 0.2611/0.2032 mm, 100R = 0.2052/0.2032 mm (JLCPCB impedance calculator, this stackup).
+JLCPCB JLC06161H-3313, 6-layer 1.6 mm (Sig / GND / Sig / PWR / GND / Sig). Diff-pair trace geometry (width/gap) per class lives in the `.kicad_pro` net_settings + `.kicad_dru`: 90R = 0.1455/0.2032 mm, 100R = 0.1148/0.2032 mm (field solve on JLCPCB's published calculation parameters, checked against its calculator on JLC04161H-7628).
 
 ## Differential pairs
 

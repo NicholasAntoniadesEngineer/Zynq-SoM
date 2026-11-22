@@ -8,9 +8,9 @@ namespace {
 
 using namespace schgen;
 
-constexpr std::size_t expected_rows = 88;
+constexpr std::size_t expected_rows = 100;
 const char* const expected_first = "C14663";
-const char* const expected_last = "C14858";
+const char* const expected_last = "C124014";
 const char* const inline_name = "inline.json";
 
 std::size_t checks = 0;

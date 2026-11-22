@@ -67,7 +67,7 @@ BoardAuthoredProject author_board_pipeline_inputs(const ProjectPaths&,
     ExecutionTimings* timing);
 // Writes canonical snapshots and required native package assets under output.
 // An isolated output never rewrites the source project's stored circuit.json.
-void publish_board_pipeline_inputs(BoardAuthoredProject&,const ProjectPaths&,
+void publish_board_pipeline_inputs(BoardAuthoredProject&,
     const std::filesystem::path& output);
 
 struct BoardPipelineOptions {

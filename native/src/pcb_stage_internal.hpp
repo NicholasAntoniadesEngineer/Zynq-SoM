@@ -83,6 +83,7 @@ class Engine {
     const NamedBoxes &pads(const PcbCheckFootprintPtr &, double = 0);
     NamedBoxes pads(const Part &);
     Box4 body(const Part &) const;
+    double connector_room(const Part &, const Part &) const;
     std::vector<Box4> bodies(const Parts &) const;
     Part part(const std::string &, double = 0, double = 0, double = 0) const;
     bool overlap(const Parts &) const;

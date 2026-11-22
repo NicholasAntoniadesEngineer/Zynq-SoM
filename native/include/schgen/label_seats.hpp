@@ -16,9 +16,7 @@ public:
 
 namespace constants {
 inline constexpr NamedConstant label_height{"label_height", 1.0, "mm", "policy",
-    "preferred character height, the project's default silk text size"};
-inline constexpr NamedConstant label_floor{"label_floor", 0.8, "mm", "policy",
-    "smallest character height tried, the project's minimum silk text height"};
+    "preferred character height, the project's default silk text size; the fabricator's minimum text height raises it when larger"};
 inline constexpr NamedConstant label_margin{"label_margin", 0.15, "mm", "policy",
     "clear band kept around a label, the band the silk overlap gate measures"};
 inline constexpr NamedConstant label_guard{"label_guard", 1e3, "nm", "policy",
@@ -35,7 +33,7 @@ inline constexpr NamedConstant title_rise{"title_rise", 1.2, "mm", "policy",
     "distance of the module title's baseline above the module's top edge"};
 inline constexpr NamedConstant title_height{"title_height", 1.4, "mm", "policy",
     "character height of the module title"};
-inline constexpr std::array label_registry{label_height, label_floor, label_margin, label_guard, label_inset,
+inline constexpr std::array label_registry{label_height, label_margin, label_guard, label_inset,
                                            label_step, label_reach, title_indent, title_rise, title_height};
 }
 

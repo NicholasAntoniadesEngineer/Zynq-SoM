@@ -3,8 +3,8 @@
   "name": "pmod",
   "title": "2x Pmod host ports (bank 13, 200R series, gated 3V3)",
   "interface": ["+VCC_PMOD", "GND", "PMOD0_SIG1", "PMOD0_SIG2", "PMOD0_SIG3", "PMOD0_SIG4", "PMOD0_SIG5", "PMOD0_SIG6", "PMOD0_SIG7", "PMOD0_SIG8", "PMOD1_SIG1", "PMOD1_SIG2", "PMOD1_SIG3", "PMOD1_SIG4", "PMOD1_SIG5", "PMOD1_SIG6", "PMOD1_SIG7", "PMOD1_SIG8"],
-  "placement": {"region": "board", "silk_label": null, "far_guard_mm": null, "escape_basis": null, "escape_escalates": false, "reserves_edge": false},
-  "checks": {"dividers": [], "divider_sources": [], "iset_window_ma": null},
+  "placement": {"region": "board", "silk_label": "PMOD", "far_guard_mm": null, "escape_basis": null, "escape_escalates": false, "reserves_edge": false},
+  "checks": {"dividers": [], "divider_sources": [], "iset_window_ma": null, "iset_basis": null},
   "parts": [
     {"ref": "J1", "part": "DS1024-2x6R2"},
     {"ref": "U1", "part": "TPD4E1U06DBVR", "value": "TPD4E1U06"},

@@ -50,6 +50,22 @@ inline void drop_clamp_capacitor(schgen::CircuitSheetIr& live, const std::string
     drop_pin(live, "GND", ref, "2");
     live.parts.erase(std::find_if(live.parts.begin(), live.parts.end(), [&](const auto& p) { return p.ref == ref; }));
 }
+inline void drop_centre_tap_capacitor(schgen::CircuitSheetIr& live, const std::string& ref) {
+    require_capacitor(unique_part(live, ref), "100n", "C_0603_1608Metric", "C14663");
+    require(live.nc.empty(), "reviewed centre taps already unconnected");
+    const std::vector<schgen::CircuitPinRefIr> taps{{"T1", "1"}, {"T1", "10"}, {"T1", "4"}, {"T1", "7"}};
+    const auto drop_net = [&](const std::string& name, const std::vector<std::string>& pins) {
+        const auto net = std::find_if(live.nets.begin(), live.nets.end(), [&](const auto& n) { return n.name == name; });
+        require(net != live.nets.end() && net->pins.size() == pins.size(), "reviewed net " + name);
+        for (std::size_t i = 0; i < pins.size(); ++i)
+            require(net->pins[i].ref + "." + net->pins[i].pin == pins[i], "reviewed pin " + pins[i] + " on " + name);
+        live.nets.erase(net);
+    };
+    drop_net("ETH_TCT", {"T1.1", "T1.4", "T1.7", "T1.10", ref + ".1"});
+    drop_net("GND", {ref + ".2"});
+    live.parts.erase(std::find_if(live.parts.begin(), live.parts.end(), [&](const auto& p) { return p.ref == ref; }));
+    live.nc = taps;
+}
 inline void restore_reset_button(schgen::CircuitSheetIr& live) {
     require(std::none_of(live.parts.begin(), live.parts.end(), [](const auto& p) { return p.ref == "SW5" || p.ref == "C4"; }),
             "reviewed reset button already absent");
@@ -106,6 +122,7 @@ inline schgen::CircuitSheetIr project_reviewed_circuit(schgen::CircuitSheetIr li
     if (project_name == "carrier" && live.name == "lcd") drop_clamp_capacitor(live, "C6", "+3V3");
     if (live.name == "pd_input") drop_clamp_capacitor(live, "C4", "+3V3_SC");
     if (project_name == "carrier" && live.name == "bringup_rails") restore_reset_button(live);
+    if (project_name == "carrier" && live.name == "ethernet") drop_centre_tap_capacitor(live, "C6");
     return live;
 }
 inline schgen::CircuitSheetIr project(schgen::CircuitSheetIr live,

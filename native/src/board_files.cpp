@@ -13,7 +13,7 @@ const char* suffix_of(BoardFileKind kind) {
         case BoardFileKind::DesignRules: return "_pcb.kicad_dru";
         case BoardFileKind::ProjectRules: return ".kicad_dru";
         case BoardFileKind::Placements: return "_cpl.csv";
-        case BoardFileKind::PlacementsScratch: return "_cpl.pipeline.csv";
+        case BoardFileKind::OrderBom: return "_bom.csv";
         case BoardFileKind::PinConstraints: return "_pins.xdc";
     }
     throw std::logic_error("unknown board file kind");

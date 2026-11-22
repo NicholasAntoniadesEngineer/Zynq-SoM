@@ -46,6 +46,8 @@ void write(const std::filesystem::path& file, const std::string& text) {
 const std::string base = "{\"schema\":\"schgen.run/1\",\"boards\":[\"carrier\",\"devkit_mini\"],\"output\":\"out\",\"squeeze\":true,"
                          "\"arrange\":false,\"renders\":false,\"labels\":false,\"timing\":false,\"plane_net\":\"GND\","
                          "\"audit_projections\":2,\"stackup\":{\"carrier\":\"JLC06161H-3313\",\"devkit_mini\":\"JLC06161H-3313\"},"
+                         "\"fabrication\":{\"carrier\":{\"fabricator\":\"jlcpcb\",\"copper\":{\"outer_oz\":1,\"inner_oz\":0.5},\"finish\":\"ENIG\",\"assembly_service\":\"standard\",\"build_count\":5},\"devkit_mini\":{\"fabricator\":\"jlcpcb\",\"copper\":{\"outer_oz\":1,\"inner_oz\":0.5},\"finish\":\"ENIG\",\"assembly_service\":\"standard\",\"build_count\":5}},"
+                         "\"search\":{\"mode\":\"quick\",\"seeds\":[0,1,2,3,4,5,6,7],\"promote\":3,\"threads\":4,\"objective\":[\"area\",\"airwire\"],\"max_minutes\":null,\"max_outline_mm\":null,\"reliability\":{\"pass_rate\":0.8,\"area_spread\":0.05,\"basis\":\"integrator's decision 2026-11-21; revisit after the first sweeps on three boards\"}},"
                          "\"overmold_parts\":{\"carrier\":[],\"devkit_mini\":[]}}";
 const std::string studied = "\"overmold_parts\":{\"carrier\":[],\"devkit_mini\":[]},\"study\":{\"stackups\":[\"JLC04161H-3313\",\"JLC08161H-3313\"]}}";
 const std::string squeeze = "OWNER HOLDS: 3 small parts held\n"

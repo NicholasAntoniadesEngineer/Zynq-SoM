@@ -301,7 +301,7 @@ void replay(const std::filesystem::path& root, const std::string& project, std::
     const AdapterOptions options{fixture::plane_net,
         project_edge_clearance(parse_json_text(file_text(paths.project_root / "Zynq_Carrier.kicad_pro"))),
         {fixture::overmold_part}, 0, authored_intent(stage.inputs)};
-    const ModelBinding binding = bind_model(model, policy, &gates, options);
+    ModelBinding binding = bind_model(model, policy, &gates, options);
     const Constraints& rules = binding.problem.constraints;
     std::map<std::string, std::size_t> ties;
     std::size_t small_parts = 0, owned_parts = 0;
@@ -325,6 +325,12 @@ void replay(const std::filesystem::path& root, const std::string& project, std::
     geometry_matches_the_gates(model, binding);
     require(judge_model(stage.inputs, model).ok_as_placed(), project + " baseline passes the gates the starting placement must meet");
     integrity_gate_catches(project, model, options.intent);
+    Kernel start(binding.problem, binding.placement);
+    StageResult repaired;
+    repair_start(start, default_squeeze(), repaired, [](bool) {});
+    const PcbModel started = model_with(model, binding, start.placement(), start.board());
+    binding = bind_model(started, policy, &gates, options);
+    const std::string placed = render_pcb(started, policy).pcb;
     const Kernel kernel(binding.problem, binding.placement);
     const auto found = kernel.violations();
     for (std::size_t index = 0; index < found.size() && index < fixture::report_limit; ++index)
@@ -333,8 +339,8 @@ void replay(const std::filesystem::path& root, const std::string& project, std::
                   << binding.problem.parts[found[index].other].reference << "\n";
     require(found.empty(), project + " baseline is legal in the kernel (" + std::to_string(found.size()) + " violations)");
     require(kernel.outline_holds(), project + " baseline outline holds the module and fixed copper");
-    airwire_matches_measure(paths, original, kernel, policy.power_class);
-    margins_match_the_flow_gate(model, gates, kernel);
+    airwire_matches_measure(paths, placed, kernel, policy.power_class);
+    margins_match_the_flow_gate(started, gates, kernel);
     const std::string exported = document_json(binding.problem, binding.placement);
     const Document restored = read_document(parse_json_text(exported));
     require(document_json(restored.problem, restored.placement) == exported, project + " export round trip");
@@ -342,7 +348,7 @@ void replay(const std::filesystem::path& root, const std::string& project, std::
     require(reloaded.violations().empty() && reloaded.routed_length() == kernel.routed_length(),
             project + " reloaded problem behaves identically");
     if (states)
-        differential_walk(project, stage.inputs, model, binding, policy, states, drc_samples, scratch,
+        differential_walk(project, stage.inputs, started, binding, policy, states, drc_samples, scratch,
                           paths.project_root / "Zynq_Carrier.kicad_pro");
     if (squeezes) {
         AdapterOptions strict = options;

@@ -1,0 +1,36 @@
+{
+  "schema": "schgen.part/1",
+  "mpn": "NUP2105LT1G",
+  "safe_name": "NUP2105LT1G",
+  "lcsc": "C14486",
+  "description": "NUP2105LT1G",
+  "manufacturer": "onsemi(安森美)",
+  "package": "SOT-23-3_L2.9-W1.3-P1.90-LS2.4-BL-2",
+  "jlc_class": "Extended Part",
+  "prefix": "D",
+  "datasheet": "https://www.lcsc.com/datasheet/C14486.pdf",
+  "product_url": "https://lcsc.com/product-detail/TVS_ON_NUP2105LT1G_NUP2105LT1G_C14486.html",
+  "lib_id": "NUP2105LT1G:NUP2105LT1G",
+  "footprint": "NUP2105LT1G:NUP2105LT1G",
+  "models_3d": [
+    "NUP2105LT1G.wrl",
+    "NUP2105LT1G.step"
+  ],
+  "pins": [
+    {
+      "num": "1",
+      "name": "1",
+      "etype": "passive"
+    },
+    {
+      "num": "2",
+      "name": "2",
+      "etype": "passive"
+    },
+    {
+      "num": "3",
+      "name": "3",
+      "etype": "passive"
+    }
+  ]
+}

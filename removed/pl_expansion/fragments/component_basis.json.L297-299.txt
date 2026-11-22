@@ -1,0 +1,3 @@
+    {"name": "subsystems.PL_EXPANSION_ISET", "value": "13k", "unit": "ohm", "basis": "SY6280 ILIM = 6800 / 13k = 523 mA on the header supply pins, so a shorted lead cannot pull the bank rail down. LCSC C22797.", "class": "datasheet", "numeric": false},
+    {"name": "subsystems.PL_EXPANSION_IN_BYPASS", "value": "100n", "unit": "F", "basis": "SY6280 input bypass. LCSC C14663.", "class": "datasheet", "numeric": false},
+    {"name": "subsystems.PL_EXPANSION_OUT", "value": "10u", "unit": "F", "basis": "SY6280 output capacitor at the header supply pins. LCSC C15850.", "class": "datasheet", "numeric": false}

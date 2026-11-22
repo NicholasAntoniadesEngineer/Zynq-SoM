@@ -1,0 +1,248 @@
+STEP   netlist
+  CALC   sheet_census                   = 17            sheets     <- n_sheets=21 n_som_j=3 n_decoupling=1  ::  n_sheets - n_som_j - n_decoupling
+STEP   link
+  CALC   board_net_census               = 412           nets       <- n_sheet_nets=369 n_som_contract_nets=213 n_cross_sheet=107  ::  len(union(sheet nets, som contract nets))
+STEP   floorplan.sizing
+  ASSUME edge_margin                    = 10            mm         [policy] native/src/floorplan_internal.hpp::schgen::floorplan_detail::edge_margin — edge-run keep-in from each board corner
+  ASSUME mh_corner_keepout              = 10            mm         [policy] native/src/floorplan_internal.hpp::schgen::floorplan_detail::mh_corner — M3 corner mounting-hole exclusion square
+  ASSUME edge_depth_cap                 = 15            mm         [policy] native/src/floorplan_internal.hpp::schgen::floorplan_detail::edge_depth_cap — deepest inboard reach allowed to an edge block
+  ASSUME edge_band_relief               = 4             mm         [policy] native/src/floorplan_internal.hpp::schgen::floorplan_detail::edge_band_relief — seed-outline relief subtracted from edge_depth_cap
+  ASSUME edge_inset                     = 1.5           mm         [policy] native/src/floorplan_internal.hpp::schgen::floorplan_detail::edge_inset — connector face inset from the board outline
+  ASSUME cable_neighbor_gap             = 20            mm         [physical] native/src/floorplan_internal.hpp::schgen::floorplan_detail::cable_gap — clear span between two overmolded cable plugs, charged ONCE per pair
+  ASSUME overmold_plug_width            = 22            mm         [physical] native/src/floorplan_internal.hpp::schgen::floorplan_detail::overmold_plug_width — widest HDMI overmold shell a mated cable presents
+  ASSUME overmold_copper_half_width     = 8             mm         [physical] native/src/floorplan_internal.hpp::schgen::floorplan_detail::overmold_copper_half_width — half the receptacle copper footprint the shell overhangs
+  ASSUME block_clearance                = 0.3           mm         [policy] native/include/schgen/board_decision_policy.hpp::schgen::board_decision_policy::floorplan::clear — minimum gap between two packed subsystem zones
+  ASSUME perimeter_keepout              = 3             mm         [policy] native/src/floorplan_internal.hpp::schgen::floorplan_detail::perimeter — seed-outline perimeter band added on every side
+  ASSUME som_halo                       = 7             mm         [policy] native/src/floorplan_internal.hpp::schgen::floorplan_detail::som_halo — keepout ring around the SoM body in the floorplan frame
+  ASSUME pack_efficiency                = 0.6           ratio      [fitted] native/src/floorplan_internal.hpp::schgen::floorplan_detail::fill — seed-outline area fill; the real pack re-proves it
+  ASSUME occ_top_mask                   = 1             bitmask    [policy] native/src/floorplan_internal.hpp::schgen::floorplan_detail::occ_top — occupancy bit for the top copper face
+  ASSUME occ_bottom_mask                = 2             bitmask    [policy] native/src/floorplan_internal.hpp::schgen::floorplan_detail::occ_bottom — occupancy bit for the bottom copper face
+  ASSUME occ_step                       = 1             mm         [policy] native/src/floorplan_internal.hpp::schgen::floorplan_detail::occ_step — candidate-pose lattice step of the occupancy search
+  ASSUME frontier_half                  = 0.05          mm         [policy] native/src/floorplan_internal.hpp::schgen::floorplan_detail::frontier_half — half-width of the place_near frontier bucket
+  ASSUME som_seat_band                  = 6             mm         [policy] native/src/floorplan_internal.hpp::schgen::floorplan_detail::som_seat_band — band reserved around each DF40 receptacle
+  ASSUME som_occ_pad                    = 1.5           mm         [policy] native/src/floorplan_internal.hpp::schgen::floorplan_detail::som_pad — pad grown around the SoM body rectangle when occupied
+  ASSUME anchor_zone_weight             = 0.25          weight     [policy] native/src/floorplan_internal.hpp::schgen::floorplan_detail::anchor_zone_weight — zone-centroid term of the interior seat anchor
+  ASSUME anchor_som_weight              = 7             weight     [policy] native/src/floorplan_internal.hpp::schgen::floorplan_detail::anchor_som_weight — SoM-pull term of the interior seat anchor
+  ASSUME anchor_affinity_power          = 1.6           exponent   [policy] native/src/floorplan_internal.hpp::schgen::floorplan_detail::anchor_affinity_power — exponent applied to net affinity in the seat anchor
+  ASSUME reseat_evict_budget            = 3             evictions  [policy] native/src/floorplan_internal.hpp::schgen::floorplan_detail::reseat_evict_budget — successful eviction episodes one pack attempt may spend
+  ASSUME affinity_floor                 = 0.05          affinity   [policy] native/src/floorplan_internal.hpp::schgen::floorplan_detail::affinity_floor — floor on every edge block's weight; it orders the zero-affinity ones
+  ASSUME cross_k                        = 3             mm/mm/subsystem [fitted] native/include/schgen/floorplan.hpp::schgen::FloorplanInput::cross_budget_k — LAW-5 airwire coefficient, fitted from two boards; NOT a physical law
+  ASSUME dispersion_max                 = 9             x          [policy] native/include/schgen/ratsnest_gate.hpp::schgen::ratsnest_dispersion_max — worst cluster bbox/ideal ratio the LAW-5 gate accepts
+  ASSUME dispersion_small_n             = 3             parts      [policy] native/include/schgen/ratsnest_gate.hpp::schgen::ratsnest_small_n — cluster size below which dispersion is not judged
+  ASSUME place_grid                     = 1.27          mm         [standard] native/include/schgen/quantize.hpp::schgen::quantization_policy::kGridMm — KiCad placement grid the emitted SoM-J and MH poses snap to
+  ASSUME half_grid                      = 0.5           mm         [policy] native/include/schgen/quantize.hpp::schgen::quantization_policy::kHalfMm — coarse 0.5 mm quantum of the legalizer and the SoM pose
+  ASSUME quant_credit                   = 0.05          mm         [policy] native/include/schgen/quantize.hpp::schgen::quantization_policy::kCreditMm — credit that keeps a proven reach from rounding away
+  ASSUME snap_erosion                   = 0.75          mm         [policy] native/include/schgen/quantize.hpp::schgen::quantization_policy::kSnapErosionMm — declared margin on template bounds >= 5 mm
+  ASSUME seat_slide                     = 1.2           mm         [policy] native/src/pcb_stage_internal.hpp::schgen::pcb_stage::slide — edge-seat courtyard-to-pad-flush slide allowance
+  ASSUME outline_snap                   = 5             mm         [policy] native/include/schgen/quantize.hpp::schgen::quantization_policy::kOutlineSnapMm — coarse outline grid every candidate board rounds up to
+  ASSUME refine_span                    = 40            mm         [policy] native/src/floorplan_internal.hpp::schgen::floorplan_detail::refine_span — window below the aspect-best that the fine scan sweeps
+  ASSUME fine_snap                      = 1             mm         [policy] native/include/schgen/quantize.hpp::schgen::quantization_policy::kFineSnapMm — fine outline grid; packing feasibility is jagged at 1 mm
+  ASSUME via_ordinary_cost              = 2.2           mm         [policy] native/include/schgen/quantize.hpp::schgen::quantization_policy::kViaOrdinaryMm — compiled ordinary-net estimator cost; actual ordinary_via_mm override takes precedence
+  ASSUME via_impedance_cost             = 7.6           mm         [policy] native/include/schgen/quantize.hpp::schgen::quantization_policy::kViaImpedanceMm — compiled impedance-net estimator cost; no physical operand reconstruction
+  ASSUME zone_pad                       = 0.3           mm         [policy] native/src/pcb_stage_internal.hpp::schgen::pcb_stage::zone_pad — pad kept between a zone box and the parts packed inside it
+  ASSUME place_clear_baseline           = 0.5           mm         [policy] native/include/schgen/board_decision_policy.hpp::schgen::board_decision_policy::placement::clear — shipped part-to-part clearance floor inside a zone
+  ASSUME place_clear                    = 0.5           mm         [policy] native/include/schgen/floorplan.hpp::schgen::FloorplanInput::place_clear — part-to-part clearance in force (SCHGEN_PLACE_CLEAR)
+  ASSUME zone_pack_fill                 = 0.62          ratio      [fitted] native/include/schgen/board_decision_policy.hpp::schgen::board_decision_policy::zone_pack_fill — shelf-pack target fill that sets each zone aspect
+  ASSUME edge_zone_aspect               = 2.2           w/h        [policy] native/include/schgen/board_decision_policy.hpp::schgen::board_decision_policy::edge_zone_aspect — target width/height of a connector-bearing zone
+  ASSUME interior_zone_aspect           = 2             w/h        [policy] native/include/schgen/board_decision_policy.hpp::schgen::board_decision_policy::interior_zone_aspect — target width/height of an interior zone
+  ASSUME interior_band_target           = 32            mm         [policy] native/include/schgen/board_decision_policy.hpp::schgen::board_decision_policy::interior_band_target — band height an interior zone aims to fit
+  ASSUME som_decoupling_inset           = 6             mm         [policy] native/src/floorplan_internal.hpp::schgen::floorplan_detail::dec_inset — inset of the bottom-side decoupling grid inside the SoM shadow
+  ASSUME d13_min_subject_pins           = 3             pins       [policy] native/src/floorplan_internal.hpp::schgen::floorplan_detail::min_subject_pins — pin count below which a part gets no D13 reach
+  ASSUME d13_df40_min_pins              = 40            pins       [physical] native/include/schgen/board_decision_policy.hpp::schgen::board_decision_policy::df40_min_pins — pin count that identifies a DF40 receptacle
+  ASSUME breathe_epsilon                = 0.0001        mm         [policy] native/include/schgen/board_decision_policy.hpp::schgen::board_decision_policy::breathe_epsilon_mm — comparison tolerance in existing breathe clearance, progress and dispersion checks
+  ASSUME breathe_search_step            = 0.25          mm         [policy] native/include/schgen/board_decision_policy.hpp::schgen::board_decision_policy::breathe_step_mm — increment and retreat step in existing breathe displacement search
+  ASSUME mounting_hole_inset            = 5             mm         [policy] native/src/floorplan_internal.hpp::schgen::floorplan_detail::mh_inset — mounting-hole center inset used by the cross-net geometry estimator
+  ASSUME edge_pad_clearance             = 0.4           mm         [policy] native/src/floorplan_internal.hpp::schgen::floorplan_detail::edge_pad_clear — connector pad clearance from the outline used by the cross-net geometry estimator
+  ASSUME compose_guard                  = 4             mm         [policy] native/include/schgen/board_decision_policy.hpp::schgen::board_decision_policy::compose::guard_mm — margin subtracted from near bounds during composition
+  ASSUME compose_repair_max             = 16            iterations [policy] native/include/schgen/board_decision_policy.hpp::schgen::board_decision_policy::compose::repair_max — maximum iterations of composition constraint repair
+  ASSUME compose_median_passes          = 8             passes     [policy] native/include/schgen/board_decision_policy.hpp::schgen::board_decision_policy::compose::median_passes — weighted median passes for composition refinement
+  ASSUME compose_channel_min_nets       = 6             nets       [policy] native/include/schgen/board_decision_policy.hpp::schgen::board_decision_policy::compose::channel_min_nets — minimum channel demand that receives a separation constraint
+  ASSUME compose_channel_floor          = 2             mm         [policy] native/include/schgen/board_decision_policy.hpp::schgen::board_decision_policy::compose::channel_floor — minimum reserved channel separation
+  ASSUME compose_channel_per_net        = 0.2           mm/net     [policy] native/include/schgen/board_decision_policy.hpp::schgen::board_decision_policy::compose::channel_per_net — additional channel separation per demanded net
+  ASSUME compose_hop_weight             = 1             weight     [policy] native/include/schgen/board_decision_policy.hpp::schgen::board_decision_policy::compose::hop_weight — flow-hop attraction weight in composition refinement
+  ASSUME compose_seed_weight            = 0.05          weight     [policy] native/include/schgen/board_decision_policy.hpp::schgen::board_decision_policy::compose::seed_weight — seed-position retention weight in composition refinement
+  ASSUME floorplan_svg_origin_x         = 46            px         [policy] native/include/schgen/board_decision_policy.hpp::schgen::board_decision_policy::svg::ox — horizontal drawing origin of the floorplan SVG
+  ASSUME floorplan_svg_origin_y         = 64            px         [policy] native/include/schgen/board_decision_policy.hpp::schgen::board_decision_policy::svg::oy — vertical drawing origin of the floorplan SVG
+  ASSUME floorplan_svg_scale            = 6             px/mm      [policy] native/include/schgen/board_decision_policy.hpp::schgen::board_decision_policy::svg::scale — floorplan SVG drawing scale
+  ASSUME escape_construct_radius        = 1.8           mm         [policy] native/include/schgen/board_decision_policy.hpp::schgen::board_decision_policy::escape::radius — escape corridor construction reach
+  ASSUME escape_lattice                 = 0.05          mm         [policy] native/include/schgen/board_decision_policy.hpp::schgen::board_decision_policy::escape::lattice — escape via search lattice spacing
+  ASSUME escape_lane_handle             = 1             mm         [policy] native/include/schgen/board_decision_policy.hpp::schgen::board_decision_policy::escape::lane_handle — escape lane extent beyond the connector contact row
+  ASSUME escape_hole_clearance          = 0.5           mm         [policy] native/include/schgen/board_decision_policy.hpp::schgen::board_decision_policy::escape::hole_hole — minimum hole-to-hole separation in escape search
+  ASSUME small_part_routing_factor      = 3.5           ratio      [policy] native/include/schgen/board_decision_policy.hpp::schgen::board_decision_policy::floorplan::small_part_routing_factor — area multiplier for small-part routing reserve; also reported by the plan
+  ASSUME point_segment_tolerance        = 0             mm         [policy] native/include/schgen/board_decision_policy.hpp::schgen::board_decision_policy::pack::point_segment_tolerance_mm — axis recognition and endpoint tolerance in point-on-segment tests
+  ASSUME visual_axis_tolerance          = 0             mm         [policy] native/include/schgen/board_decision_policy.hpp::schgen::board_decision_policy::pack::visual_axis_tolerance_mm — axis recognition and strict interior tolerance in visual crossing tests
+  ASSUME collinear_overlap_tolerance    = 0             mm         [policy] native/include/schgen/board_decision_policy.hpp::schgen::board_decision_policy::pack::collinear_overlap_tolerance_mm — axis recognition and minimum strict collinear overlap
+  ASSUME segment_cross_tolerance        = 0             mm^2       [policy] native/include/schgen/board_decision_policy.hpp::schgen::board_decision_policy::pack::segment_cross_tolerance_mm2 — signed cross-product threshold for strict segment intersection
+  ASSUME label_courtyard_gap            = 0.9           mm         [policy] native/include/schgen/board_decision_policy.hpp::schgen::board_decision_policy::pack::label_courtyard_gap_mm — clear-label search offset outside the footprint courtyard
+  ASSUME label_orbit_tau                = 6.2832        radian     [policy] native/include/schgen/board_decision_policy.hpp::schgen::board_decision_policy::pack::label_orbit_tau — established full-turn double used by the sixteen-angle label orbit
+  ASSUME page_origin                    = 25            mm         [policy] native/include/schgen/quantize.hpp::schgen::quantization_policy::kPageOriginMm — page offset of the board origin; the frame the placement grid snaps in
+  ASSUME edge_seat_pull_weight          = 60            1          [policy] native/src/floorplan_internal.hpp::schgen::floorplan_detail::edge_seat_pull_weight — seat weight holding a block within hard near_max reach of its edge block
+  CALC   overmold_side_gap              = 3             mm         <- plug_width=22 copper_half_width=8  ::  plug_width / 2 - copper_half_width
+  CALC   edge_band                      = 11            mm         <- edge_depth_cap=15 edge_band_relief=4  ::  edge_depth_cap - edge_band_relief
+  CALC   occ_punch_mask                 = 3             bitmask    <- occ_top=1 occ_bottom=2  ::  occ_top | occ_bottom
+  CALC   est_via_ordinary               = 2.2           mm         <- via_cost=2.2  ::  resolved ordinary estimator cost (caller override when supplied)
+  CALC   est_via_impedance              = 7.6           mm         <- via_cost=7.6  ::  compiled impedance estimator cost
+  CALC   subsystem_count                = 17            subsystems <- n_sheets=21 n_som_j=3 n_mechanical_only=1  ::  n_sheets - n_som_j - n_mechanical_only
+  CALC   seed_outline                   = 120x110       mm         <- som_w=50 som_h=42 som_halo=7 edge_band=11 component_area=4549.4 pack_efficiency=0.6 perimeter_keepout=3 seed_w=120 seed_h=110  ::  max(som+2*halo+2*band, sqrt(area/fill + keepout_area) * aspect) + 2 * perimeter_keepout, snapped up to outline_snap
+  CALC   d13_tier_population            = 68            parts      <- n_subjects=68 tier_le2_0p20=0 tier_le8_1p50=34 tier_ge9_2p00=34  ::  intelligent_need(pins): pins<=2 -> 0.20, pins<=8 -> 1.50, else 2.00
+  CALC   decoupling_grid                = 18            caps       <- n_caps=18 som_w=50 som_h=42 inset=6 grid_w=38 grid_h=30 cols=5 rows=4  ::  grid = som - 2*inset; cols = max(1, min(n, round(sqrt(n*gw/gh)))); rows = ceil(n / cols)
+  CALC   est_via_class_split            = 20            nets       <- n_cross_nets=107 n_impedance=20 n_ordinary=87 impedance_classes=DP100_DIFF,DP90_USB  ::  n_impedance = count(net whose class carries a DiffGeometry)
+  STEP   sizing.pass  punch=conservative
+    CALC   outline_candidates             = 1735          candidates <- generated=1735 reject_aspect=465 reject_min_area=0 reject_not_smaller=38 reject_pack=1214 reject_law5_budget=0 accepted=18  ::  generated = reject_aspect + reject_min_area + reject_not_smaller + reject_pack + reject_law5_budget + accepted
+    CALC   law5_airwire_budget            = 7497          mm         <- cross_k=3 board_w=147 board_h=147 n_subsystems=17  ::  cross_k * (board_w * board_h) ** 0.5 * n_subsystems
+    CALC   pass_winner                    = 147x147       mm         <- board_w=147 board_h=147 area=21609 est_cross=6624.9 budget=7497 headroom=872.1  ::  headroom = budget - est_cross
+  STEP   sizing.pass  punch=free
+    CALC   outline_candidates             = 1735          candidates <- generated=1735 reject_aspect=465 reject_min_area=0 reject_not_smaller=38 reject_pack=1214 reject_law5_budget=0 accepted=18  ::  generated = reject_aspect + reject_min_area + reject_not_smaller + reject_pack + reject_law5_budget + accepted
+    CALC   law5_airwire_budget            = 7497          mm         <- cross_k=3 board_w=147 board_h=147 n_subsystems=17  ::  cross_k * (board_w * board_h) ** 0.5 * n_subsystems
+    CALC   pass_winner                    = 147x147       mm         <- board_w=147 board_h=147 area=21609 est_cross=6624.9 budget=7497 headroom=872.1  ::  headroom = budget - est_cross
+  CALC   plan_choice                    = conservative  plan       <- conservative_area=21609 conservative_est=6624.9 free_area=21609 free_est=6624.9  ::  keep free iff free_area < conservative_area or (equal area and free_est < conservative_est)
+  CALC   side_fixed[board_control]      = top           side       <- offered=top shape_idx=0  ::  one face survived place_near, so no estimator judgement was made
+  CALC   side_fixed[bringup_en]         = top           side       <- offered=top shape_idx=1  ::  one face survived place_near, so no estimator judgement was made
+  CALC   side_fixed[can_bus]            = top           side       <- offered=top shape_idx=1  ::  one face survived place_near, so no estimator judgement was made
+  CALC   side_fixed[debug_boot]         = top           side       <- offered=top shape_idx=1  ::  one face survived place_near, so no estimator judgement was made
+  CALC   side_fixed[esc_io]             = top           side       <- offered=top shape_idx=2  ::  one face survived place_near, so no estimator judgement was made
+  CALC   side_fixed[ethernet]           = top           side       <- offered=top shape_idx=0  ::  one face survived place_near, so no estimator judgement was made
+  CALC   side_fixed[power]              = top           side       <- offered=top shape_idx=0  ::  one face survived place_near, so no estimator judgement was made
+  CALC   side_fixed[power_mon]          = top           side       <- offered=top shape_idx=2  ::  one face survived place_near, so no estimator judgement was made
+  CALC   side_fixed[power_som]          = top           side       <- offered=top shape_idx=1  ::  one face survived place_near, so no estimator judgement was made
+  CALC   side_fixed[rj45_connector]     = top           side       <- offered=top shape_idx=0  ::  one face survived place_near, so no estimator judgement was made
+  CALC   side_fixed[uart_bridge]        = top           side       <- offered=top shape_idx=1  ::  one face survived place_near, so no estimator judgement was made
+  CALC   side_fixed[vbat_supply]        = top           side       <- offered=top shape_idx=0  ::  one face survived place_near, so no estimator judgement was made
+  CALC   side_census                    = 12            blocks     <- n_blocks=12 n_two_face=0 n_chose_bottom=0 n_single_face=12  ::  n_blocks = n_two_face + n_single_face
+  CALC   sizing_winner                  = 147x147       mm         <- board_w=147 board_h=147 area=21609 est_cross=6624.9 budget=7497 headroom=872.1 plan=conservative  ::  headroom = budget - est_cross
+STEP   gates
+  CALC   law5_airwire_measured          = 5485.5        mm         <- cross_mm=5485.5 budget_mm=4901.7 headroom_mm=-583.8 n_cross=236 n_subsystems=16 board_w=117.5 board_h=88.75  ::  budget_mm = cross_k * (board_w * board_h) ** 0.5 * n_subsystems
+  CALC   fanout_d13_gate                = 53            subjects   <- n_subjects=53 n_starved=0 baseline=0  ::  starved = clearance < intelligent_need(pins) - touch_eps
+STEP   census
+  CALC   quantize_engagement[breathe_anchor_grid] = 108           calls      <- klass=re-validated value=round(round(v / 1.27) * 1.27, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[breathe_commit_precision] = 86            calls      <- klass=re-validated value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[breathe_delta_precision] = 108           calls      <- klass=re-validated value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[breathe_forward_steps] = 815           calls      <- klass=pre-proof value=int(distance / step) + 1  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[breathe_free_index] = 6756          calls      <- klass=pre-proof value=int(quotient)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[breathe_grid_extent] = 8             calls      <- klass=pre-proof value=int(extent / cell) + 2  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[breathe_retreat_steps] = 9             calls      <- klass=pre-proof value=int(distance / step)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[breathe_stamp_index] = 6704          calls      <- klass=pre-proof value=int(quotient)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[escape_copper_precision4dp] = 76            calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[escape_corridor_precision4dp] = 1032          calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[escape_coverage_precision4dp] = 30            calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[escape_ground_precision4dp] = 168           calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[escape_port_precision4dp] = 586           calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[escape_region_precision4dp] = 4             calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[escape_scan_precision3dp] = 29            calls      <- klass=pre-proof value=round(value, 3)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[escape_width_precision4dp] = 293           calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[est_via_cost] = 109           calls      <- klass=pre-proof value={impedance: 2 legs * 2 layers * (0.6 + 2 * 0.25) + 2 legs *   ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[estimate_pad_precision] = 84272         calls      <- klass=pre-proof value=round(value, 3)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[estimate_position_precision] = 63158         calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[fixed_part_grid] = 440           calls      <- klass=proof-preserving value=round(round(v / 1.27) * 1.27, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[floorplan_candidate_area_precision1dp] = 126           calls      <- klass=pre-proof value=round(value, 1)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[floorplan_ledger_dimension_precision4dp] = 2             calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[floorplan_ledger_display_precision4dp] = 183           calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[floorplan_ledger_value_precision1dp] = 14            calls      <- klass=pre-proof value=round(value, 1)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[floorplan_seed_aspect_precision4dp] = 1             calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[floorplan_svg_coordinate_precision1dp] = 210           calls      <- klass=pre-proof value=round(origin + value * scale, 1)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[floorplan_svg_extent_trunc] = 2             calls      <- klass=pre-proof value=int(value)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[floorplan_svg_grid_trunc] = 30            calls      <- klass=pre-proof value=int(value)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[gceil]     = 5170          calls      <- klass=pre-proof value=gceil(value, unit)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[gfloor]    = 455           calls      <- klass=pre-proof value=gfloor(value, unit)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[gsnap]     = 841           calls      <- klass=pre-proof value=gsnap(value, unit)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[legalize_bbox_precision4dp] = 1440          calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[legalize_bound_precision4dp] = 11956         calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[legalize_centroid_precision4dp] = 720           calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[legalize_margin_precision4dp] = 360           calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[legalize_pose_quantum] = 120           calls      <- klass=re-validated value=round(round(v / 0.5) * 0.5, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[legalize_position_precision4dp] = 27540         calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[legalize_trial_pose_precision4dp] = 1380          calls      <- klass=re-validated value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[mechanical_direction_component] = 10            calls      <- klass=pre-proof value=int(round(value, 0))  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[occupancy_axis_count] = 6140          calls      <- klass=pre-proof value=int(extent / step) + 1  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[occupancy_cell_index] = 23509984      calls      <- klass=pre-proof value=int(floor(coordinate / bucket))  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[occupancy_component_precision4dp] = 28868         calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[occupancy_frontier_key1dp] = 7140064       calls      <- klass=pre-proof value=round(distance, 1)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[occupancy_reach_precision4dp] = 42            calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[occupancy_shape_key4dp] = 1710          calls      <- klass=pre-proof value=round(distance, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[outline_fine_grid] = 164           calls      <- klass=pre-proof value=round(base - k * 1.0, 1) over a 40.0 mm window  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[outline_grow_step] = 108           calls      <- klass=pre-proof value=k * 5.0  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[outline_snap_up] = 216           calls      <- klass=pre-proof value=ceil(v / 5.0) * 5.0  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[pack_band_sort_precision4dp] = 202           calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[pack_block_area_precision1dp] = 10930         calls      <- klass=pre-proof value=round(value, 1)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[pack_box_coordinate_precision] = 180           calls      <- klass=pre-proof value=round(value, digits)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[pack_bulk_pose_precision4dp] = 8             calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[pack_centroid_coordinate_precision] = 4             calls      <- klass=pre-proof value=round(value, digits)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[pack_contact_column_precision4dp] = 900           calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[pack_corridor_bound_precision4dp] = 12            calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[pack_cout_pose_precision4dp] = 7             calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[pack_edge_component_precision4dp] = 2352          calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[pack_edge_pose_precision4dp] = 12350         calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[pack_fanout_reach_precision4dp] = 1328          calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[pack_hf_cap_pose_precision4dp] = 4             calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[pack_isolation_bound_precision3dp] = 32            calls      <- klass=pre-proof value=round(value, 3)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[pack_ladder_coordinate_precision4dp] = 85            calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[pack_named_center_precision] = 156           calls      <- klass=pre-proof value=round(value, digits)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[pack_pair_gap_precision4dp] = 2470          calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[pack_plane_bound_precision3dp] = 4             calls      <- klass=pre-proof value=round(value, 3)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[pack_redundancy_candidate_precision6dp] = 1             calls      <- klass=pre-proof value=round(value, 6)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[pack_row_extent_precision4dp] = 20            calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[pack_shelf_extent_precision4dp] = 184           calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[pack_shelf_pose_precision4dp] = 1762          calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[pack_som_band_component_precision4dp] = 252           calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[pack_som_cell_precision4dp] = 792           calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[pack_som_component_pose_precision4dp] = 756           calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[pack_som_diameter_precision4dp] = 21            calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[pack_som_grid_precision0dp] = 69            calls      <- klass=pre-proof value=round(value, 0)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[pack_som_grid_trunc] = 69            calls      <- klass=pre-proof value=int(value)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[pack_xy_coordinate_precision] = 22            calls      <- klass=pre-proof value=round(value, digits)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[pack_zone_component_precision4dp] = 1568          calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[pcb_project_class_precision4dp] = 24            calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[pcb_project_integer_trunc] = 49            calls      <- klass=pre-proof value=trunc(value)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[placeholder_zone_half_mm] = 2             calls      <- klass=pre-proof value=round(round(v * 2) / 2, 1)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[placement_behind_pose_precision4dp] = 92            calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[placement_connector_pose_precision4dp] = 4             calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[placement_edge_seat_precision4dp] = 10            calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[placement_emission_pose_precision4dp] = 6372          calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[placement_evict_trial_precision4dp] = 248           calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[placement_fiducial_precision4dp] = 10            calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[placement_foreign_pad_precision3dp] = 712           calls      <- klass=pre-proof value=round(value, 3)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[placement_l4_distance_trunc] = 3             calls      <- klass=pre-proof value=int(value)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[placement_l4_pose_precision4dp] = 124           calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[placement_member_box_precision4dp] = 276           calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[placement_member_pose_precision4dp] = 136           calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[placement_pack_extent_precision4dp] = 82            calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[placement_shape_key_precision4dp] = 72            calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[placement_turn_dimension_precision4dp] = 36            calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[placement_turn_offset_precision4dp] = 636           calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[placement_variant_dimension_precision4dp] = 8             calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[quant_credit] = 636           calls      <- klass=proof-preserving value=v + 0.05  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[ratsnest_area_precision1dp] = 16            calls      <- klass=pre-proof value=round(value, 1)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[ratsnest_budget_precision1dp] = 1             calls      <- klass=pre-proof value=round(value, 1)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[ratsnest_dispersion_precision2dp] = 16            calls      <- klass=pre-proof value=round(value, 2)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[ratsnest_pad_precision3dp] = 3138          calls      <- klass=pre-proof value=round(value, 3)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[refit_pose_precision] = 102           calls      <- klass=re-validated value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[run_overflow_tol] = 2470          calls      <- klass=proof-preserving value=0.1  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[seat_coordinate_precision6dp] = 296           calls      <- klass=pre-proof value=round(value, 6)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[seat_coverage_precision4dp] = 7             calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[seat_lower_index] = 7             calls      <- klass=pre-proof value=long(ceil(value))  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[seat_slide] = 7             calls      <- klass=pre-proof value=1.2  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[seat_upper_index] = 7             calls      <- klass=pre-proof value=long(floor(value))  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[seat_vertical_extent] = 7             calls      <- klass=pre-proof value=int(value)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[silk_cell_floor] = 7436          calls      <- klass=pre-proof value=int(floor(value / cell))  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[snap_erosion_bound] = 68            calls      <- klass=proof-preserving value=bound - 0.75 if bound >= 5.0 else bound  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[som_pose_half_mm] = 4930          calls      <- klass=pre-proof value=round(round(v * 2) / 2, 1)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[stage_candidate_radius_trunc] = 32            calls      <- klass=pre-proof value=int(value)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[stage_connector_alignment_delta_precision4dp] = 3             calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[stage_connector_clearance_delta_precision4dp] = 1             calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[stage_connector_clearance_line_precision4dp] = 3             calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[stage_direction_component] = 32            calls      <- klass=pre-proof value=std::round(value)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[stage_hot_extent_precision4dp] = 2             calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[stage_hot_leftover_pose_precision4dp] = 26            calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[stage_layout_width_precision4dp] = 2             calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[stage_ldo_pose_precision4dp] = 24            calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[stage_power_mirror_pose_precision4dp] = 68            calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[stage_proximity_extent_precision4dp] = 18            calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[stage_proximity_face_shift_precision4dp] = 19            calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[stage_proximity_leftover_pose_precision4dp] = 16            calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[stage_root_pose_precision4dp] = 5             calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[stage_seat_radius_trunc] = 27            calls      <- klass=pre-proof value=int(value)  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[stage_shift_precision4dp] = 488           calls      <- klass=pre-proof value=round(value, 4)  ::  count of calls that ran this registered transform
+  CALC   fallback_engagement[cand_cap_truncated] = 18            firings    <- stage=zone_pack ceiling=observational  ::  count of times this registered degraded path bound
+  CALC   fallback_engagement[corridor_evict_moved] = 12            firings    <- stage=corridor_eviction ceiling=observational  ::  count of times this registered degraded path bound
+  CALC   fallback_engagement[punch_free_plan_rejected] = 1             firings    <- stage=plan_lattice ceiling=observational  ::  count of times this registered degraded path bound
+  CALC   register_silence               = 77            registrations <- quantize_registered=156 quantize_engaged=128 fallback_registered=52 fallback_fired=3  ::  registered - engaged = declared machinery this build never used

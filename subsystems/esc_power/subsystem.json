@@ -1,0 +1,1007 @@
+{
+  "schema": "schgen.subsystem/1",
+  "name": "esc_power",
+  "title": "ESC power path: XT60 inlet to outlet | fuse, reverse/inrush/overcurrent protection, INA237",
+  "interface": [
+    "+VBAT_RAW",
+    "+VBAT_F",
+    "+VBAT_MID",
+    "+VBAT_P",
+    "+VBAT_OUT",
+    "GND_PWR",
+    "GND",
+    "+VDD_MON",
+    "IMON",
+    "PWR_EN",
+    "PWR_FLT_N",
+    "VBAT_SENSE",
+    "I2C_SDA",
+    "I2C_SCL",
+    "ALERT_N"
+  ],
+  "placement": {
+    "region": "board",
+    "silk_label": null,
+    "far_guard_mm": null,
+    "escape_basis": null,
+    "escape_escalates": false,
+    "reserves_edge": false
+  },
+  "checks": {
+    "dividers": [
+      {
+        "net": "VSENSE_DIV",
+        "source": "+VBAT_OUT",
+        "limits": [
+          {"volts": 25.2, "hi": 3.5, "tag": "6S pack maximum inside the bank-35 pin's recommended maximum"}
+        ],
+        "why": "battery-voltage sense divider R12 100k / R13 10k into a bank-35 pin through R14 (design 1b, Analogue outputs: 2.29 V at 25.2 V): 25.2 V x 10k / 110k = 2.291 V against VIN max = VCCO + 0.20 V = 3.5 V at VCCO 3.3 V (AMD DS187 v1.21 Table 2); R14 carries only the pin leakage, at most 15 uA (DS187 Table 3, IL), which moves the pin by at most 15 uA x (10k + 9.09k divider source) = 0.29 V, 2.58 V worst case"
+      }
+    ],
+    "divider_sources": [],
+    "iset_window_ma": null,
+    "iset_basis": null
+  },
+  "parts": [
+    {
+      "ref": "J1",
+      "part": "XT60PW-M"
+    },
+    {
+      "ref": "J2",
+      "part": "XT60PW-M"
+    },
+    {
+      "ref": "F1",
+      "part": "0456040.DR",
+      "value": "40A"
+    },
+    {
+      "ref": "D1",
+      "part": "SMBJ28A"
+    },
+    {
+      "ref": "D2",
+      "part": "SMBJ28A"
+    },
+    {
+      "ref": "C1",
+      "symbol": "Device:C",
+      "value": "100n/100V",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C15725"
+      }
+    },
+    {
+      "ref": "Q1",
+      "part": "IPT007N06N"
+    },
+    {
+      "ref": "Q2",
+      "part": "IPT007N06N"
+    },
+    {
+      "ref": "U2",
+      "part": "LM74930QRGERQ1"
+    },
+    {
+      "ref": "D3",
+      "symbol": "Device:D_Schottky",
+      "value": "SS54",
+      "footprint": "Diode_SMD:D_SMA",
+      "fields": {
+        "LCSC": "C22452"
+      }
+    },
+    {
+      "ref": "C6",
+      "symbol": "Device:C",
+      "value": "100n/100V",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C15725"
+      }
+    },
+    {
+      "ref": "C7",
+      "symbol": "Device:C",
+      "value": "1u",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C15849"
+      }
+    },
+    {
+      "ref": "R4",
+      "symbol": "Device:R",
+      "value": "100R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C22775"
+      }
+    },
+    {
+      "ref": "C8",
+      "symbol": "Device:C",
+      "value": "1u/100V",
+      "footprint": "Capacitor_SMD:C_1206_3216Metric",
+      "fields": {
+        "LCSC": "C282823"
+      }
+    },
+    {
+      "ref": "R5",
+      "symbol": "Device:R",
+      "value": "49.9R",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C114625"
+      }
+    },
+    {
+      "ref": "R6",
+      "symbol": "Device:R",
+      "value": "4k7",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C23162"
+      }
+    },
+    {
+      "ref": "R7",
+      "symbol": "Device:R",
+      "value": "15k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C22809"
+      }
+    },
+    {
+      "ref": "C9",
+      "symbol": "Device:C",
+      "value": "1u",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C15849"
+      }
+    },
+    {
+      "ref": "R8",
+      "symbol": "Device:R",
+      "value": "4k7",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C23162"
+      }
+    },
+    {
+      "ref": "R9",
+      "symbol": "Device:R",
+      "value": "10k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C25804"
+      }
+    },
+    {
+      "ref": "R10",
+      "symbol": "Device:R",
+      "value": "10k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C25804"
+      }
+    },
+    {
+      "ref": "R11",
+      "symbol": "Device:R",
+      "value": "100k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C25803"
+      }
+    },
+    {
+      "ref": "R12",
+      "symbol": "Device:R",
+      "value": "100k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C25803"
+      }
+    },
+    {
+      "ref": "R13",
+      "symbol": "Device:R",
+      "value": "10k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C25804"
+      }
+    },
+    {
+      "ref": "C10",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      }
+    },
+    {
+      "ref": "R14",
+      "symbol": "Device:R",
+      "value": "10k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C25804"
+      }
+    },
+    {
+      "ref": "RS1",
+      "part": "RLM25FEGMR50M",
+      "value": "0.5mR"
+    },
+    {
+      "ref": "U1",
+      "part": "INA237AIDGSR"
+    },
+    {
+      "ref": "C2",
+      "symbol": "Device:C",
+      "value": "100n",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C14663"
+      }
+    },
+    {
+      "ref": "R1",
+      "symbol": "Device:R",
+      "value": "10k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C25804"
+      }
+    },
+    {
+      "ref": "C3",
+      "part": "RVT1H471M1213",
+      "value": "470u"
+    },
+    {
+      "ref": "C4",
+      "part": "RVT1H471M1213",
+      "value": "470u"
+    },
+    {
+      "ref": "C5",
+      "symbol": "Device:C",
+      "value": "100n/100V",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C15725"
+      }
+    },
+    {
+      "ref": "RT1",
+      "part": "RLM25FEGMR50M",
+      "value": "0.5mR"
+    },
+    {
+      "ref": "D4",
+      "symbol": "Device:LED",
+      "value": "red",
+      "footprint": "LED_SMD:LED_0603_1608Metric",
+      "fields": {
+        "LCSC": "C2286"
+      }
+    },
+    {
+      "ref": "R2",
+      "symbol": "Device:R",
+      "value": "5.1k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C23186"
+      }
+    },
+    {
+      "ref": "R3",
+      "symbol": "Device:R",
+      "value": "5.1k",
+      "footprint": "Resistor_SMD:R_0603_1608Metric",
+      "fields": {
+        "LCSC": "C23186"
+      }
+    },
+    {
+      "ref": "C11",
+      "symbol": "Device:C",
+      "value": "100n/100V",
+      "footprint": "Capacitor_SMD:C_0603_1608Metric",
+      "fields": {
+        "LCSC": "C15725"
+      }
+    },
+    {
+      "ref": "TP1",
+      "symbol": "Connector:TestPoint",
+      "value": "+VBAT_RAW",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      }
+    },
+    {
+      "ref": "TP2",
+      "symbol": "Connector:TestPoint",
+      "value": "+VBAT_OUT",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      }
+    },
+    {
+      "ref": "TP3",
+      "symbol": "Connector:TestPoint",
+      "value": "GND_PWR",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      }
+    },
+    {
+      "ref": "TP4",
+      "symbol": "Connector:TestPoint",
+      "value": "GND",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      }
+    },
+    {
+      "ref": "TP5",
+      "symbol": "Connector:TestPoint",
+      "value": "+VBAT_F",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      }
+    },
+    {
+      "ref": "TP6",
+      "symbol": "Connector:TestPoint",
+      "value": "+VBAT_MID",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      }
+    },
+    {
+      "ref": "TP7",
+      "symbol": "Connector:TestPoint",
+      "value": "+VBAT_P",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      }
+    },
+    {
+      "ref": "TP8",
+      "symbol": "Connector:TestPoint",
+      "value": "PWR_EN",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      }
+    },
+    {
+      "ref": "TP9",
+      "symbol": "Connector:TestPoint",
+      "value": "PROT_IMON",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      }
+    },
+    {
+      "ref": "TP10",
+      "symbol": "Connector:TestPoint",
+      "value": "VSENSE_DIV",
+      "footprint": "TestPoint:TestPoint_Pad_D1.5mm",
+      "fields": {
+        "BOM": "exclude"
+      }
+    }
+  ],
+  "nets": [
+    {
+      "name": "+VBAT_RAW",
+      "pins": [
+        "J1.2",
+        "F1.1",
+        "TP1.1"
+      ]
+    },
+    {
+      "name": "+VBAT_F",
+      "pins": [
+        "F1.2",
+        "D1.1",
+        "C1.1",
+        "Q1.3",
+        "D3.2",
+        "TP5.1"
+      ]
+    },
+    {
+      "name": "TVS_MID",
+      "pins": [
+        "D1.2",
+        "D2.2"
+      ]
+    },
+    {
+      "name": "+VBAT_MID",
+      "pins": [
+        "Q1.2",
+        "Q2.2",
+        "U2.2",
+        "U2.15",
+        "TP6.1"
+      ]
+    },
+    {
+      "name": "+VBAT_P",
+      "pins": [
+        "Q2.3",
+        "U2.24",
+        "R5.1",
+        "R6.1",
+        "RS1.1",
+        "U1.10",
+        "C6.1",
+        "TP7.1"
+      ]
+    },
+    {
+      "name": "+VBAT_OUT",
+      "pins": [
+        "RS1.2",
+        "U2.19",
+        "J2.2",
+        "U1.9",
+        "U1.8",
+        "C3.1",
+        "C4.1",
+        "C5.1",
+        "D4.2",
+        "R12.1",
+        "TP2.1"
+      ]
+    },
+    {
+      "name": "GND_PWR",
+      "pins": [
+        "J1.1",
+        "J1.3",
+        "J1.4",
+        "J2.1",
+        "J2.3",
+        "J2.4",
+        "D2.1",
+        "C1.2",
+        "C3.2",
+        "C4.2",
+        "C5.2",
+        "C6.2",
+        "R3.2",
+        "RT1.1",
+        "U2.13",
+        "U2.5",
+        "U2.16",
+        "C8.2",
+        "R7.2",
+        "C9.2",
+        "R8.2",
+        "R11.2",
+        "C11.2",
+        "TP3.1"
+      ]
+    },
+    {
+      "name": "GND",
+      "pins": [
+        "RT1.2",
+        "U1.7",
+        "U1.2",
+        "C2.2",
+        "R13.2",
+        "C10.2",
+        "TP4.1"
+      ]
+    },
+    {
+      "name": "+VDD_MON",
+      "pins": [
+        "U1.6",
+        "U1.1",
+        "C2.1",
+        "R1.1",
+        "R10.1"
+      ]
+    },
+    {
+      "name": "PROT_VS",
+      "pins": [
+        "D3.1",
+        "U2.22",
+        "U2.4",
+        "U2.7",
+        "C11.1",
+        "C7.2"
+      ]
+    },
+    {
+      "name": "PROT_CAP",
+      "pins": [
+        "U2.23",
+        "C7.1"
+      ]
+    },
+    {
+      "name": "PROT_HGATE",
+      "pins": [
+        "U2.14",
+        "Q1.1",
+        "R4.1"
+      ]
+    },
+    {
+      "name": "PROT_DVDT",
+      "pins": [
+        "R4.2",
+        "C8.1"
+      ]
+    },
+    {
+      "name": "PROT_DGATE",
+      "pins": [
+        "U2.1",
+        "Q2.1"
+      ]
+    },
+    {
+      "name": "PROT_CSP",
+      "pins": [
+        "U2.20",
+        "R5.2"
+      ]
+    },
+    {
+      "name": "PROT_ISCP",
+      "pins": [
+        "U2.18",
+        "R6.2"
+      ]
+    },
+    {
+      "name": "PROT_ILIM",
+      "pins": [
+        "U2.11",
+        "R7.1"
+      ]
+    },
+    {
+      "name": "PROT_TMR",
+      "pins": [
+        "U2.9",
+        "C9.1"
+      ]
+    },
+    {
+      "name": "PROT_IMON",
+      "pins": [
+        "U2.10",
+        "R8.1",
+        "R9.1",
+        "TP9.1"
+      ]
+    },
+    {
+      "name": "IMON",
+      "class": "port",
+      "pins": [
+        "R9.2"
+      ]
+    },
+    {
+      "name": "PWR_EN",
+      "class": "port",
+      "pins": [
+        "U2.6",
+        "R11.1",
+        "TP8.1"
+      ]
+    },
+    {
+      "name": "PWR_FLT_N",
+      "class": "port",
+      "pins": [
+        "U2.12",
+        "R10.2"
+      ]
+    },
+    {
+      "name": "VSENSE_DIV",
+      "pins": [
+        "R12.2",
+        "R13.1",
+        "C10.1",
+        "R14.1",
+        "TP10.1"
+      ]
+    },
+    {
+      "name": "VBAT_SENSE",
+      "class": "port",
+      "pins": [
+        "R14.2"
+      ]
+    },
+    {
+      "name": "I2C_SDA",
+      "class": "port",
+      "pins": [
+        "U1.4"
+      ]
+    },
+    {
+      "name": "I2C_SCL",
+      "class": "port",
+      "pins": [
+        "U1.5"
+      ]
+    },
+    {
+      "name": "ALERT_N",
+      "class": "port",
+      "pins": [
+        "U1.3",
+        "R1.2"
+      ]
+    },
+    {
+      "name": "LIVE_K",
+      "pins": [
+        "D4.1",
+        "R2.1"
+      ]
+    },
+    {
+      "name": "LIVE_MID",
+      "pins": [
+        "R2.2",
+        "R3.1"
+      ]
+    }
+  ],
+  "unconnected": [
+    "U2.3",
+    "U2.8",
+    "U2.17",
+    "U2.21",
+    "U2.25"
+  ],
+  "ports": [
+    {
+      "net": "IMON",
+      "kind": "single",
+      "expect": {
+        "instance": "non_empty"
+      }
+    },
+    {
+      "net": "PWR_EN",
+      "kind": "single",
+      "expect": {
+        "instance": "non_empty"
+      }
+    },
+    {
+      "net": "PWR_FLT_N",
+      "kind": "single",
+      "expect": {
+        "instance": "non_empty"
+      }
+    },
+    {
+      "net": "VBAT_SENSE",
+      "kind": "single",
+      "expect": {
+        "instance": "non_empty"
+      }
+    },
+    {
+      "net": "I2C_SDA",
+      "kind": "i2c",
+      "role": "sda",
+      "bus": {
+        "instance": "i2c",
+        "default": "MGMT_I2C"
+      },
+      "speed_hz": 400000,
+      "expect": {
+        "instance": "as_given",
+        "default": "controller"
+      }
+    },
+    {
+      "net": "I2C_SCL",
+      "kind": "i2c",
+      "role": "scl",
+      "bus": {
+        "instance": "i2c",
+        "default": "MGMT_I2C"
+      },
+      "speed_hz": 400000,
+      "expect": {
+        "instance": "as_given",
+        "default": "controller"
+      }
+    },
+    {
+      "net": "ALERT_N",
+      "kind": "single",
+      "expect": {
+        "instance": "non_empty"
+      }
+    }
+  ],
+  "hints": [
+    {
+      "net": "+VBAT_RAW",
+      "style": "path"
+    },
+    {
+      "net": "+VBAT_F",
+      "style": "path"
+    },
+    {
+      "net": "+VBAT_MID",
+      "style": "path"
+    },
+    {
+      "net": "+VBAT_P",
+      "style": "path"
+    },
+    {
+      "net": "+VBAT_OUT",
+      "style": "path"
+    }
+  ],
+  "draws": [
+    {
+      "rail": "+VDD_MON",
+      "amps": 0.002,
+      "note": "INA237 0.64 mA + ALERT and FLT pull-ups"
+    },
+    {
+      "rail": "+VBAT_OUT",
+      "amps": 0.003,
+      "note": "rail-live LED / bleeder chain + voltage divider"
+    }
+  ],
+  "waivers": [
+    {
+      "kind": "strap_waivers",
+      "key": "U2.7",
+      "reason": "MODE tied to VS on purpose: TI SNOSDF6 pin table, MODE 'when not used, MODE pin can be pulled to EN or VS'; PROT_VS is driven from +VBAT_F through D3, which the rule does not see through"
+    },
+    {
+      "kind": "ep_waivers",
+      "key": "U2.25",
+      "reason": "thermal pad RTN left floating as the maker requires: TI SNOSDF6 pin table 'Leave exposed pad floating. Do Not connect to GND plane.' and layout guidelines 'Leave the exposed pad (RTN) of the IC floating'"
+    }
+  ],
+  "purpose": [
+    {
+      "part": "C1",
+      "role": "bypass",
+      "pin": "Q1.3"
+    },
+    {
+      "part": "C5",
+      "role": "bypass",
+      "pin": "J2.2"
+    },
+    {
+      "part": "C6",
+      "role": "bypass",
+      "pin": "U2.24"
+    },
+    {
+      "part": "C3",
+      "role": "reservoir",
+      "pin": "J2.2"
+    },
+    {
+      "part": "C4",
+      "role": "reservoir",
+      "pin": "J2.2"
+    },
+    {
+      "part": "D1",
+      "role": "protect",
+      "pin": "F1.2"
+    },
+    {
+      "part": "D2",
+      "role": "protect",
+      "pin": "D1.2"
+    },
+    {
+      "part": "D3",
+      "role": "series",
+      "pin": "U2.22"
+    },
+    {
+      "part": "C11",
+      "role": "bypass",
+      "pin": "U2.22"
+    },
+    {
+      "part": "C7",
+      "role": "bypass",
+      "pin": "U2.23"
+    },
+    {
+      "part": "R4",
+      "role": "series",
+      "pin": "U2.14"
+    },
+    {
+      "part": "C8",
+      "role": "set",
+      "pin": "R4.2"
+    },
+    {
+      "part": "R5",
+      "role": "sense",
+      "pin": "U2.20"
+    },
+    {
+      "part": "R6",
+      "role": "set",
+      "pin": "U2.18"
+    },
+    {
+      "part": "R7",
+      "role": "set",
+      "pin": "U2.11"
+    },
+    {
+      "part": "C9",
+      "role": "set",
+      "pin": "U2.9"
+    },
+    {
+      "part": "R8",
+      "role": "set",
+      "pin": "U2.10"
+    },
+    {
+      "part": "R9",
+      "role": "series",
+      "pin": "U2.10"
+    },
+    {
+      "part": "R10",
+      "role": "pull",
+      "pin": "U2.12"
+    },
+    {
+      "part": "R11",
+      "role": "pull",
+      "pin": "U2.6"
+    },
+    {
+      "part": "R12",
+      "role": "sense",
+      "pin": "J2.2"
+    },
+    {
+      "part": "R13",
+      "role": "sense",
+      "pin": "R12.2"
+    },
+    {
+      "part": "C10",
+      "role": "filter",
+      "pin": "R12.2"
+    },
+    {
+      "part": "R14",
+      "role": "series",
+      "pin": "R12.2"
+    },
+    {
+      "part": "RS1",
+      "role": "sense",
+      "pin": "U1.10"
+    },
+    {
+      "part": "RT1",
+      "role": "sense",
+      "pin": "J1.1"
+    },
+    {
+      "part": "C2",
+      "role": "bypass",
+      "pin": "U1.6"
+    },
+    {
+      "part": "R1",
+      "role": "pull",
+      "pin": "U1.3"
+    },
+    {
+      "part": "R2",
+      "role": "indicate",
+      "pin": "D4.1"
+    },
+    {
+      "part": "R3",
+      "role": "indicate",
+      "pin": "R2.2"
+    }
+  ],
+  "free": [
+    {
+      "part": "TP1",
+      "reason": "probe point; it follows its net"
+    },
+    {
+      "part": "TP2",
+      "reason": "probe point; it follows its net"
+    },
+    {
+      "part": "TP3",
+      "reason": "probe point; it follows its net"
+    },
+    {
+      "part": "TP4",
+      "reason": "probe point; it follows its net"
+    },
+    {
+      "part": "TP5",
+      "reason": "probe point; it follows its net"
+    },
+    {
+      "part": "TP6",
+      "reason": "probe point; it follows its net"
+    },
+    {
+      "part": "TP7",
+      "reason": "probe point; it follows its net"
+    },
+    {
+      "part": "TP8",
+      "reason": "probe point; it follows its net"
+    },
+    {
+      "part": "TP9",
+      "reason": "probe point; it follows its net"
+    },
+    {
+      "part": "TP10",
+      "reason": "probe point; it follows its net"
+    },
+    {
+      "part": "D4",
+      "reason": "rail-live LED across the ESC rail; no pin drives it"
+    }
+  ]
+}

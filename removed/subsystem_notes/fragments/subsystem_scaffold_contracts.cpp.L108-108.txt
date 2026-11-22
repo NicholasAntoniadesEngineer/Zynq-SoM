@@ -1,0 +1,1 @@
+    require(children(result.package).size() == 7, "partial package publication");

@@ -408,7 +408,7 @@ void repository_sections_load(const std::filesystem::path& repository) {
                 part_fact_of(facts.footprint_aliases, "Capacitor_SMD:C_1206_3225Metric", "footprint_aliases").footprint ==
                     "Capacitor_SMD:C_1206_3216Metric",
             "the repository footprint alias row");
-    require(facts.i2c_devices.size() == 6 && part_fact_of(facts.i2c_devices, "INA3221AIRGVR", "i2c_devices").base == 64 &&
+    require(facts.i2c_devices.size() == 7 && part_fact_of(facts.i2c_devices, "INA3221AIRGVR", "i2c_devices").base == 64 &&
                 part_fact_of(facts.i2c_devices, "INA3221AIRGVR", "i2c_devices").straps.front().selects.size() == 4 &&
                 part_fact_of(facts.i2c_devices, "FUSB302BMPX", "i2c_devices").data.number == "7",
             "the repository I2C device rows");

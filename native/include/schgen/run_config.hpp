@@ -1,7 +1,9 @@
 #pragma once
 
+#include "schgen/fabricator.hpp"
 #include "schgen/json.hpp"
 
+#include <cstdint>
 #include <filesystem>
 #include <map>
 #include <optional>
@@ -11,7 +13,23 @@
 
 namespace schgen {
 
+struct SearchReliability {
+    double pass_rate = 0, area_spread = 0;
+    std::string basis;
+};
+
+struct SearchConfig {
+    std::string mode;
+    std::vector<std::uint64_t> seeds;
+    std::size_t promote = 0, threads = 0;
+    std::vector<std::string> objective;
+    std::optional<double> max_minutes;
+    std::optional<std::pair<double, double>> max_outline_mm;
+    SearchReliability reliability;
+};
+
 struct RunConfig {
+    SearchConfig search;
     std::vector<std::string> boards;
     std::filesystem::path output;
     bool squeeze = false, arrange = false, renders = false, labels = false, timing = false;
@@ -19,9 +37,11 @@ struct RunConfig {
     int audit_projections = 0;
     std::map<std::string, std::string> stackup;
     std::map<std::string, std::vector<std::string>> overmold_parts;
+    std::map<std::string, FabricationConfig> fabrication;
     std::vector<std::string> study_stackups;
     const std::string& stackup_of(const std::string& board) const;
     const std::vector<std::string>& overmold_parts_of(const std::string& board) const;
+    const FabricationConfig& fabrication_of(const std::string& board) const;
     std::vector<std::string> board_arguments(const std::string& board, const std::filesystem::path& file) const;
 };
 

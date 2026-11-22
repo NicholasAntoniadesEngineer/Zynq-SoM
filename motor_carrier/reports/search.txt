@@ -1,0 +1,26 @@
+SEARCH motor_carrier: PASS; mode quick; seeds 0 1 2 3 4 5 6 7; screened 8 distinct (7 passed S1-S2); laid out 4; correct 4; threads 4
+axes searched: A1 edge assignment of derived edge sheets, A7 arrangement finalists skipped, A8 base squeeze edge order; seed 0 takes every first candidate; a seed whose edge assignment repeats an earlier one reuses that placement
+  constant splitmix_gamma = 11400714819323198485: SplitMix64 increment (Steele, Lea, Flood 2014, the golden-ratio odd constant)
+  constant splitmix_first = 13787848793156543929: SplitMix64 first finaliser multiplier (Stafford variant 13)
+  constant splitmix_second = 10723151780598845931: SplitMix64 second finaliser multiplier (Stafford variant 13)
+  constant splitmix_shift_a = 30: SplitMix64 first xor-shift (Stafford variant 13)
+  constant splitmix_shift_b = 27: SplitMix64 second xor-shift (Stafford variant 13)
+  constant splitmix_shift_c = 31: SplitMix64 final xor-shift (Stafford variant 13)
+  constant axis_edges = 1: search axis A1, the edge assignment of derived edge sheets
+  constant axis_plans = 7: search axis A7, the arrangement finalists a seed skips
+  constant axis_orders = 8: search axis A8, the base edge order the squeeze rotates and reverses
+  constant plan_skips = 4: most arrangement finalists a seed skips: one per board side
+seed | reuses | edge choices | plan skip | order | reached | outline mm | correct | airwire mm | first finding
+0 | - | first | 0 | 0 | S3 | 109.75 x 105.25 | yes | 10996.249300 | -
+1 | - | esc_power#1,pd_input#1,usb_uart_connector#2 | 1 | 23 | S3 | 113 x 98 | yes | 10948.525800 | -
+2 | - | esc_power#3,usb_uart_connector#2 | 0 | 0 | S2 | - | no | - | -
+3 | - | microsd#1,usb_uart_connector#1 | 1 | 0 | S3 | 107.75 x 98 | yes | 10015.101400 | -
+4 | - | esc_power#3,microsd#1,pd_input#3,usb_uart_connector#3 | 1 | 17 | S1 | - | no | - | In1 plane VOID ethernet_isolation_void_J14001 (165.95, 65.95, 185.45, 83.85) intersects the escape region (110.0, 78.5, 166.0, 126.5) — the return plane under the DF40 field would be perforated (a placement wave moved the ethernet media parts under the SoM?); fail loud
+5 | - | microsd#3,usb_uart_connector#2 | 1 | 4 | S2 | - | no | - | -
+6 | - | esc_power#2,microsd#1,usb_uart_connector#3 | 2 | 22 | S2 | - | no | - | -
+7 | - | microsd#2,pd_input#3 | 3 | 22 | S3 | 117.5 x 88.75 | yes | 11109.477000 | -
+DETAIL seed 4:
+In1 plane VOID ethernet_isolation_void_J14001 (165.95, 65.95, 185.45, 83.85) intersects the escape region (110.0, 78.5, 166.0, 126.5) — the return plane under the DF40 field would be perforated (a placement wave moved the ethernet media parts under the SoM?); fail loud
+CHOSEN seed 7 by objective among the first batch laid out
+SWEEP: pass rate 4/4; area best 10428.1 median 10559.5 worst 11551.2 mm2; spread 0.0125981; HANDLED against pass rate 0.8 and spread 0.05 (integrator's decision 2026-11-21; revisit after the first sweeps on three boards)
+

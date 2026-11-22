@@ -32,7 +32,7 @@ int main(){try{
             std::set<std::string> expected;
             for(auto m=std::sregex_iterator(text.begin(),text.end(),reference);m!=std::sregex_iterator();++m)
                 expected.insert(m->str());
-            if(schgen::floorplan_detail::deferred_connector_names(text)!=expected)
+            if(schgen::floorplan_detail::deferred_connector_names(text,{"rj45_connector","usb_uart_connector"})!=expected)
                 throw std::runtime_error("literal connector recognition differs from independent regex oracle at case "+std::to_string(checks));
             ++checks;
         };
@@ -47,5 +47,9 @@ int main(){try{
                 check(std::string(1,static_cast<char>(left))+token+static_cast<char>(right));
             }
     }
+    if(schgen::floorplan_detail::deferred_connector_names("rj45_connector usb_uart_connector",{"usb_uart_connector"})!=std::set<std::string>{"usb_uart_connector"}||
+       !schgen::floorplan_detail::deferred_connector_names("rj45_connector usb_uart_connector",{}).empty())
+        throw std::runtime_error("the reserving sheets are not the stated set");
+    ++checks;
     std::cout<<checks<<" deferred connector recognition contracts PASS\n";
 }catch(const std::exception& error){std::cerr<<error.what()<<'\n';return 1;}}

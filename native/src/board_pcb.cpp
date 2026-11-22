@@ -26,7 +26,7 @@ void validate_board_input_connectivity(const std::vector<ProjectCircuit>& circui
         if(!sheets.insert(sheet.name).second||!bands.count(sheet.name))
             fail("duplicate or unindexed sheet "+sheet.name);
         for(const auto& net:sheet.circuit.nets) {
-            const bool shared=net.net_class=="power"||net.net_class=="ground"||net.net_class=="port";
+            const bool shared=board_shared_net(net);
             const Net key{shared?"":sheet.name,net.name};
             for(const auto& pin:net.pins) {
                 const Pin renamed{board_renamed_ref(pin.ref,bands.at(sheet.name),sheet.name),pin.pin};

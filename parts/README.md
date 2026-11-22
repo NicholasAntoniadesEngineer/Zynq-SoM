@@ -72,10 +72,18 @@ hand-kept file in this folder. It holds what the generator cannot know:
   a part authored with a stock KiCad symbol keeps no link to a part folder.
 - `connectors` — one entry per `connector` symbol, keyed by part name (the
   symbol `TF-01A:TF-01A` is entry `TF-01A`): `mating_face` (`+X`, `-X`, `+Y`
-  or `-Y`, the direction the mouth faces at rotation 0), `edge_pinned` (the
+  or `-Y`, the direction the mouth faces at rotation 0, or `+Z` for a part
+  mated from above, which is never edge-pinned), `edge_pinned` (the
   floorplan pins the part to a board edge), `overmold` (a cable plug overmold
   spacing rule applies), `pad_row_face_check` (the mating face is cross-checked
-  against the pad rows), and the optional strings `description` (required when
+  against the pad rows), `handling` (how a person mates it: `grip_sides`,
+  `latch`, `card`, `flat_cable`, `pins` or `none`; the board's access
+  statements are keyed by it), the optional `mating` block (`plug_width_mm`,
+  `plug_depth_mm`, `plug_height_mm`, each a number or `null` when the drawing
+  does not give it, and `cite`, required when a number is given), the optional
+  `access` block (`side_mm`, `front_mm`, `cite`: a document's figure for this
+  part, which wins over the board's statement for its handling class), and the
+  optional strings `description` (required when
   edge-pinned; the floorplan edge table), `numbered_label` (silk label stem,
   numbered across the board) and `pair_label` (name of a two-part IN/OUT pair
   in the assembly notes).

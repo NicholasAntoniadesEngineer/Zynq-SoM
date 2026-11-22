@@ -55,10 +55,22 @@ struct PartFact {
     PartHeight height;
 };
 
+struct ConnectorMating {
+    std::optional<double> plug_width_mm, plug_depth_mm, plug_height_mm;
+    std::optional<std::string> cite;
+};
+
+struct ConnectorAccess {
+    double side_mm = 0, front_mm = 0;
+    std::string basis;
+};
+
 struct ConnectorFact {
-    std::string mating_face;
+    std::string mating_face, handling;
     bool edge_pinned = false, overmold = false, pad_row_face_check = false;
     std::optional<std::string> description, numbered_label, pair_label;
+    std::optional<ConnectorMating> mating;
+    std::optional<ConnectorAccess> access;
 };
 
 using ConnectorFacts = std::map<std::string, ConnectorFact>;
