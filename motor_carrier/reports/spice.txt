@@ -1,0 +1,36 @@
+schgen spice / analytic spot-check gate
+================================================================
+
+engine: analytic (gate) + ngspice .op cross-check on 6 divider(s), 1% agreement enforced
+
+checks (13):
+  [PASS] debug_boot: BOOT0 strap VIH = 3.09375 V (limits 2.31 .. 3.3 V; analytic)
+         DIP closed: 3.3 V through R3=100R vs the SoM 1k5 pull-down (contract) -> must exceed STM32 VIH = 0.7*VDD = 2.31 V
+  [PASS] esc_power: divider VSENSE_DIV [6S pack maximum inside the bank-35 pin's recommended maximum] = 2.29091 V (limits  .. 3.5 V; analytic+ngspice)  ngspice=2.29091
+         +VESC -[R12=100000R]- VSENSE_DIV -[R13=10000R]- GND (R14=10000R to ESC_VBAT_SENSE, whose only resistor it is, carries no divider current) @ 25.2 V: battery-voltage sense divider R12 100k / R13 10k into a bank-35 pin through R14 (design 1b, Analogue outputs: 2.29 V at 25.2 V): 25.2 V x 10k / 110k = 2.291 V against VIN max = VCCO + 0.20 V = 3.5 V at VCCO 3.3 V (AMD DS187 v1.21 Table 2); R14 carries only the pin leakage, at most 15 uA (DS187 Table 3, IL), which moves the pin by at most 15 uA x (10k + 9.09k divider source) = 0.29 V, 2.58 V worst case
+  [PASS] pd_input: divider PD_OVP_SET [no false trip at 21 V (contract max)] = 1.0929 V (limits  .. 1.176 V; analytic+ngspice)  ngspice=1.0929
+         +VBUS_IN -[R3=100000R]- PD_OVP_SET -[R4=5490R]- GND @ 21 V: TPS26631 OVP set divider (pd_input): must NOT trip inside the valid 20 V +5% contract window yet MUST cut off before the SMBJ22A starts clamping (V_OVPR 1.2 V +/-2%, SLVSE94G)
+  [PASS] pd_input: divider PD_OVP_SET [guaranteed cutoff below the TVS VBR min] = 1.26985 V (limits 1.224 ..  V; analytic+ngspice)  ngspice=1.26984
+         +VBUS_IN -[R3=100000R]- PD_OVP_SET -[R4=5490R]- GND @ 24.4 V: TPS26631 OVP set divider (pd_input): must NOT trip inside the valid 20 V +5% contract window yet MUST cut off before the SMBJ22A starts clamping (V_OVPR 1.2 V +/-2%, SLVSE94G)
+  [PASS] power: divider PG_1V8_G [FET on at nominal rail] = 1.78218 V (limits 1.45 .. 1.8 V; analytic+ngspice)  ngspice=1.78218
+         +1V8 -[R7=1000R]- PG_1V8_G -[R8=100000R]- GND @ 1.8 V: +1V8 PG sense: gate divider must exceed the AO3400A max Vgs(th)=1.45 V so the PG LED is guaranteed on
+  [PASS] power: LM61460AANRJRR FB (+5V_REG) = 5.02 V (limits 4.85 .. 5.15 V; analytic)
+         Vout = 1.0 * (1 + R1/R2 = 40200/10000) vs nominal 5 V +/-3%
+  [PASS] power: LM61460AANRJRR FB (+3V3_REG) = 3.32 V (limits 3.201 .. 3.399 V; analytic)
+         Vout = 1.0 * (1 + R4/R5 = 23200/10000) vs nominal 3.3 V +/-3%
+  [PASS] power_som: LM61460AANRJRR FB (+5V_SOM) = 4.65385 V (limits 4.5105 .. 4.7895 V; analytic)
+         Vout = 1.0 * (1 + R14/R15 = 47500/13000) vs nominal 4.65 V +/-3%
+  [PASS] power_som: LM61460 direct VIN enable (U4) = 1 match (limits 1 .. 1 match; netlist topology)
+         SNVSBD5D 8.3.1 self-start topology: EN/SYNC pin 7 and VIN pins 8/12 share one power net; connectivity only, not input-envelope or transient qualification
+  [PASS] uart_bridge: divider CP2102N_VBUS_SNS [abs-max at 5.25 V VBUS] = 3.58297 V (limits  .. 5.8 V; analytic+ngspice)  ngspice=3.58297
+         USB_UART_VBUS -[R2=22100R]- CP2102N_VBUS_SNS -[R3=47500R]- GND @ 5.25 V: CP2102N self-powered VBUS sense (DS 22k1/47k5 reference): must read VBUS-present yet never exceed the pin abs-max 5.8 V
+  [PASS] uart_bridge: divider CP2102N_VBUS_SNS [detect at 4.75 V VBUS] = 3.24174 V (limits 3 ..  V; analytic+ngspice)  ngspice=3.24174
+         USB_UART_VBUS -[R2=22100R]- CP2102N_VBUS_SNS -[R3=47500R]- GND @ 4.75 V: CP2102N self-powered VBUS sense (DS 22k1/47k5 reference): must read VBUS-present yet never exceed the pin abs-max 5.8 V
+  [PASS] vbat_supply: LM61460AANRJRR FB (+VPRE) = 7.98529 V (limits 7.76 .. 8.24 V; analytic)
+         Vout = 1.0 * (1 + R8/R9 = 47500/6800) vs nominal 8 V +/-3%
+  [PASS] vbat_supply: LM61460 direct VIN enable (U2) = 1 match (limits 1 .. 1 match; netlist topology)
+         SNVSBD5D 8.3.1 self-start topology: EN/SYNC pin 7 and VIN pins 8/12 share one power net; connectivity only, not input-envelope or transient qualification
+
+errors: none
+
+SPICE GATE: PASS (13 checks)

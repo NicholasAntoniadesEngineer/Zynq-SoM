@@ -1,0 +1,34 @@
+buses	order=space,bus
+space	bus	sda	scl
+AUX_I2C+STM32_I2C2	AUX_I2C	AUX_I2C_SDA	AUX_I2C_SCL
+AUX_I2C+STM32_I2C2	STM32_I2C2	STM32_I2C2_SDA	STM32_I2C2_SCL
+CAM_I2C	CAM_I2C	CAM_SDA	CAM_SCL
+HDMI_TX_DDC	HDMI_TX_DDC	ZYNQ_HDMI_TX_SDA	ZYNQ_HDMI_TX_SCL
+LCD_CTP	LCD_CTP	LCD_CTP_SDA	LCD_CTP_SCL
+hdmi_rx/HDMI_RX_SDA	hdmi_rx/HDMI_RX_SDA	hdmi_rx/HDMI_RX_SDA	hdmi_rx/HDMI_RX_SCL
+devices	order=space,address,sheet,ref
+space	bus	address	sheet	ref	part
+AUX_I2C+STM32_I2C2	STM32_I2C2	0x20	bringup_rails	U1	TCA9535PWR
+AUX_I2C+STM32_I2C2	STM32_I2C2	0x22	usb_pd	U1	FUSB302BMPX
+AUX_I2C+STM32_I2C2	STM32_I2C2	0x40	power_mon	U1	INA3221AIRGVR
+AUX_I2C+STM32_I2C2	STM32_I2C2	0x41	power_mon	U2	INA3221AIRGVR
+AUX_I2C+STM32_I2C2	STM32_I2C2	0x42	motor_sense	U2	INA3221AIRGVR
+AUX_I2C+STM32_I2C2	AUX_I2C	0x51	board_services	U1	24AA025E48T-I_OT
+AUX_I2C+STM32_I2C2	AUX_I2C	0x52	board_services	U2	RV-3028-C7-32.768kHz-1ppm-TA-QC
+hdmi_rx/HDMI_RX_SDA	hdmi_rx/HDMI_RX_SDA	0x50	hdmi_rx	U1	M24C02-WMN6TP
+bridges	order=sheet,ref,from
+sheet	ref	part	from	to	shared
+board_aux	U2	PCA9306DCUR	STM32_I2C2_SCL	AUX_I2C_SCL	yes
+board_aux	U2	PCA9306DCUR	STM32_I2C2_SDA	AUX_I2C_SDA	yes
+hdmi_tx	U1	TPD12S016PWR	ZYNQ_HDMI_TX_SCL	hdmi_tx/HDMI_TX_CON_SCL	yes
+hdmi_tx	U1	TPD12S016PWR	ZYNQ_HDMI_TX_SDA	hdmi_tx/HDMI_TX_CON_SDA	yes
+pullups	order=bus,line,sheet,ref
+bus	line	sheet	ref	value	rail
+AUX_I2C	scl	board_aux	R5	4k7	+3V3_AUX
+AUX_I2C	sda	board_aux	R6	4k7	+3V3_AUX
+CAM_I2C	scl	camera	R4	4k7	+3V3_CAM
+CAM_I2C	sda	camera	R5	4k7	+3V3_CAM
+LCD_CTP	scl	lcd	R3	4k7	+3V3_LCD
+LCD_CTP	sda	lcd	R2	4k7	+3V3_LCD
+STM32_I2C2	scl	bringup_rails	R4	4k7	+3V3_SC
+STM32_I2C2	sda	bringup_rails	R5	4k7	+3V3_SC

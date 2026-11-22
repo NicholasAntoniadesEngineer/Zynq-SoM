@@ -1,0 +1,14 @@
+ASSEMBLY PARTS
+  101 BOM lines, 100 codes, facts rows read from 2026-11-21T16:44:10Z
+  FAIL: C162205 16p (C28005,C28006) is in the library but not buyable (2026-11-21T16:45:55Z)
+  FAIL: BOM line Header_2x20_2.54mm (J11001) has no JLCPCB part code
+  FAIL: C42440491 SMBJ28A (D37001) is not in the JLCPCB assembly library
+  FAIL: one value spelled 2 ways: 47.5k,47k5
+  FAIL: the finished board needs a cell for the battery holder, which is not a placed BOM part (needed by board_services:BT1)
+  ADVISORY: out of stock today: 4 lines
+  ADVISORY:   C162205 16p: need 10 (2 per board x 5 boards), JLCPCB stock 0
+  ADVISORY:   C3019759 RV-3028-C7-32.768kHz-1ppm-TA-QC: need 5 (1 per board x 5 boards), JLCPCB stock 0
+  ADVISORY:   C7666 SN74LVC1G08: need 70 (14 per board x 5 boards), JLCPCB stock 2
+  ADVISORY:   C2866319 TPS26631PWPR: need 5 (1 per board x 5 boards), JLCPCB stock 0
+ASSEMBLY PARTS: FAIL
+

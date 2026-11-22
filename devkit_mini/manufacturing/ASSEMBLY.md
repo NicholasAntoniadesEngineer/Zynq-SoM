@@ -1,13 +1,13 @@
 # Assembly order — devkit_mini
 
-Board 98 x 98 mm. 155 placed parts (100 top / 55 bottom); 5 fiducials are bare-copper marks, excluded from every phase and step.
+Board 71.75 x 83 mm. 156 placed parts (99 top / 57 bottom); 5 fiducials are bare-copper marks, excluded from every phase and step.
 Section A is the staged hand-assembly + bring-up order; section B is the PCBA process order. Every part appears in exactly one phase and exactly one step.
 
 ## A. Incremental bring-up order
 
 | phase | section | parts | checkpoint |
 |---|---|---|---|
-| 1 | power entry (pd_input) | 13 | verify +VBUS_IN at TP3001; verify +VIN at TP3002 |
+| 1 | power entry (pd_input) | 14 | verify +VBUS_IN at TP3001; verify +VIN at TP3002 |
 | 2 | power_mon | 13 | — |
 | 3 | power | 54 | verify +5V at TP4001; verify +3V3 at TP4002; verify +1V8 at TP4003 |
 | 4 | power_som | 20 | verify +5V_SOM at TP6001 |
@@ -22,13 +22,14 @@ Section A is the staged hand-assembly + bring-up order; section B is the PCBA pr
 
 ![phase 1](../renders/assembly/phase_01_power_entry.png)
 
-13 parts (13 top / 0 bottom)
+14 parts (13 top / 1 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
 | C3001 | 100n | C_0603_1608Metric | pd_input |
 | C3002 | 10u | C_1210_3225Metric | pd_input |
 | C3003 | 47n | C_0603_1608Metric | pd_input |
+| C3004 | 100n | C_0603_1608Metric | pd_input |
 | D3001 | SMBJ22A | D_SMB | pd_input |
 | J3001 | TYPE-C-31-M-12 | TYPE-C-31-M-12 | pd_input |
 | R3003 | 100k | R_0603_1608Metric | pd_input |
@@ -69,7 +70,7 @@ CHECKPOINT: verify +VIN at TP3002
 
 ![phase 3](../renders/assembly/phase_03_power.png)
 
-54 parts (49 top / 5 bottom)
+54 parts (43 top / 11 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
@@ -136,7 +137,7 @@ CHECKPOINT: verify +1V8 at TP4003
 
 ![phase 4](../renders/assembly/phase_04_power_som.png)
 
-20 parts (4 top / 16 bottom)
+20 parts (17 top / 3 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
@@ -189,9 +190,9 @@ CHECKPOINT: verify +5V_SOM at TP6001
 | C7016 | 100n | C_0603_1608Metric | som_decoupling |
 | C7017 | 100n | C_0603_1608Metric | som_decoupling |
 | C7018 | 100n | C_0603_1608Metric | som_decoupling |
-| J8001 | DF40C-100DP-0.4V(51) | DF40C-100DP-0.4V_51 | som_j1 |
-| J9002 | DF40C-100DP-0.4V(51) | DF40C-100DP-0.4V_51 | som_j2 |
-| J10003 | DF40C-100DP-0.4V(51) | DF40C-100DP-0.4V_51 | som_j3 |
+| J8001 | DF40C-100DP-0.4V(51) | HRS_DF40C-100DP-0.4V_51_ | som_j1 |
+| J9002 | DF40C-100DP-0.4V(51) | HRS_DF40C-100DP-0.4V_51_ | som_j2 |
+| J10003 | DF40C-100DP-0.4V(51) | HRS_DF40C-100DP-0.4V_51_ | som_j3 |
 
 ### Phase 6 — SoM module mate
 
@@ -229,7 +230,7 @@ CHECKPOINT: boot/debug via debug_boot: J1001 (JTAG), J1002 (SWD), SW1001 (BOOT: 
 
 ![phase 8](../renders/assembly/phase_08_uart_bridge.png)
 
-10 parts (10 top / 0 bottom)
+10 parts (2 top / 8 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
@@ -277,23 +278,17 @@ CHECKPOINT: boot/debug via debug_boot: J1001 (JTAG), J1002 (SWD), SW1001 (BOOT: 
 
 ![step 1](../renders/assembly/step_1_bottom_smd.png)
 
-55 parts (0 top / 55 bottom)
+57 parts (0 top / 57 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
+| C3004 | 100n | C_0603_1608Metric | pd_input |
+| C4012 | 1u | C_0603_1608Metric | power |
+| C4013 | 1u | C_0603_1608Metric | power |
 | C5001 | 100n | C_0603_1608Metric | power_mon |
 | C5002 | 100n | C_0603_1608Metric | power_mon |
 | C5003 | 10u | C_0805_2012Metric | power_mon |
-| C6014 | 100n | C_0603_1608Metric | power_som |
-| C6015 | 10u | C_1206_3216Metric | power_som |
-| C6016 | 10u | C_1206_3216Metric | power_som |
-| C6017 | 100n | C_0603_1608Metric | power_som |
-| C6018 | 22u | C_0805_2012Metric | power_som |
-| C6019 | 22u | C_0805_2012Metric | power_som |
 | C6021 | 22p | C_0603_1608Metric | power_som |
-| C6022 | 1u | C_0603_1608Metric | power_som |
-| C6023 | 1u | C_0603_1608Metric | power_som |
-| C6025 | 100n | C_0603_1608Metric | power_som |
 | C7001 | 22u | C_0805_2012Metric | som_decoupling |
 | C7002 | 22u | C_0805_2012Metric | som_decoupling |
 | C7003 | 100n | C_0603_1608Metric | som_decoupling |
@@ -312,6 +307,11 @@ CHECKPOINT: boot/debug via debug_boot: J1001 (JTAG), J1002 (SWD), SW1001 (BOOT: 
 | C7016 | 100n | C_0603_1608Metric | som_decoupling |
 | C7017 | 100n | C_0603_1608Metric | som_decoupling |
 | C7018 | 100n | C_0603_1608Metric | som_decoupling |
+| C11001 | 100n | C_0603_1608Metric | uart_bridge |
+| C11002 | 10u | C_0805_2012Metric | uart_bridge |
+| C11003 | 100n | C_0603_1608Metric | uart_bridge |
+| C11004 | 100n | C_0603_1608Metric | uart_bridge |
+| Q4001 | AO3400A | SOT-23 | power |
 | R1001 | 4k7 | R_0603_1608Metric | debug_boot |
 | R1002 | 4k7 | R_0603_1608Metric | debug_boot |
 | R1003 | 100R | R_0603_1608Metric | debug_boot |
@@ -325,23 +325,28 @@ CHECKPOINT: boot/debug via debug_boot: J1001 (JTAG), J1002 (SWD), SW1001 (BOOT: 
 | R4007 | 1k | R_0603_1608Metric | power |
 | R4008 | 100k | R_0603_1608Metric | power |
 | R4009 | 330R | R_0603_1608Metric | power |
+| R4011 | 10R | R_0603_1608Metric | power |
+| R4013 | 10R | R_0603_1608Metric | power |
 | R5001 | 10k | R_0603_1608Metric | power_mon |
-| R6014 | 47.5k | R_0603_1608Metric | power_som |
-| R6015 | 13k | R_0603_1608Metric | power_som |
 | R6016 | 1k | R_0603_1608Metric | power_som |
 | R6017 | 10R | R_0603_1608Metric | power_som |
-| R6018 | 22k | R_0603_1608Metric | power_som |
-| R6019 | 1k | R_0603_1608Metric | power_som |
+| R11001 | 1k | R_0603_1608Metric | uart_bridge |
+| R11002 | 22k1 | R_0603_1608Metric | uart_bridge |
+| R11003 | 47k5 | R_0603_1608Metric | uart_bridge |
 | RS5001 | 10mR | RLM12FTCMR010 | power_mon |
 | RS5002 | 10mR | RLM12FTCMR010 | power_mon |
 | RS5003 | 10mR | RLM12FTCMR010 | power_mon |
 | RS5004 | 20mR | RLM12FTCMR020 | power_mon |
+| U4003 | AP2112K-1.8 | SOT-23-5 | power |
+| U11001 | CP2102N-A02 | CP2102N-A02-GQFN24R | uart_bridge |
+
+NOTES: pin-1 orientation (Q4001, U4003, U11001): dot per silkscreen
 
 ### Step 2 — Top-side SMD (paste + reflow)
 
 ![step 2](../renders/assembly/step_2_top_smd.png)
 
-89 parts (89 top / 0 bottom)
+88 parts (88 top / 0 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
@@ -359,8 +364,6 @@ CHECKPOINT: boot/debug via debug_boot: J1001 (JTAG), J1002 (SWD), SW1001 (BOOT: 
 | C4009 | 100n | C_0603_1608Metric | power |
 | C4010 | 22u | C_0805_2012Metric | power |
 | C4011 | 22u | C_0805_2012Metric | power |
-| C4012 | 1u | C_0603_1608Metric | power |
-| C4013 | 1u | C_0603_1608Metric | power |
 | C4023 | 22p | C_0603_1608Metric | power |
 | C4024 | 1u | C_0603_1608Metric | power |
 | C4025 | 100n | C_0603_1608Metric | power |
@@ -371,10 +374,15 @@ CHECKPOINT: boot/debug via debug_boot: J1001 (JTAG), J1002 (SWD), SW1001 (BOOT: 
 | C4030 | 22u | C_0805_2012Metric | power |
 | C4031 | 1u | C_0603_1608Metric | power |
 | C4032 | 1u | C_0603_1608Metric | power |
-| C11001 | 100n | C_0603_1608Metric | uart_bridge |
-| C11002 | 10u | C_0805_2012Metric | uart_bridge |
-| C11003 | 100n | C_0603_1608Metric | uart_bridge |
-| C11004 | 100n | C_0603_1608Metric | uart_bridge |
+| C6014 | 100n | C_0603_1608Metric | power_som |
+| C6015 | 10u | C_1206_3216Metric | power_som |
+| C6016 | 10u | C_1206_3216Metric | power_som |
+| C6017 | 100n | C_0603_1608Metric | power_som |
+| C6018 | 22u | C_0805_2012Metric | power_som |
+| C6019 | 22u | C_0805_2012Metric | power_som |
+| C6022 | 1u | C_0603_1608Metric | power_som |
+| C6023 | 1u | C_0603_1608Metric | power_som |
+| C6025 | 100n | C_0603_1608Metric | power_som |
 | C12001 | 10u | C_0805_2012Metric | usb_uart_connector |
 | D3001 | SMBJ22A | D_SMB | pd_input |
 | D4001 | red | LED_0603_1608Metric | power |
@@ -384,7 +392,6 @@ CHECKPOINT: boot/debug via debug_boot: J1001 (JTAG), J1002 (SWD), SW1001 (BOOT: 
 | L4001 | 10uH | SWPA8040S100MT | power |
 | L4002 | 10uH | SWPA8040S100MT | power |
 | L6003 | 10uH | SWPA8040S100MT | power_som |
-| Q4001 | AO3400A | SOT-23 | power |
 | R3003 | 100k | R_0603_1608Metric | pd_input |
 | R3004 | 5.49k | R_0603_1608Metric | pd_input |
 | R3005 | 5.1k | R_0603_1608Metric | pd_input |
@@ -394,14 +401,13 @@ CHECKPOINT: boot/debug via debug_boot: J1001 (JTAG), J1002 (SWD), SW1001 (BOOT: 
 | R4004 | 23.2k | R_0603_1608Metric | power |
 | R4005 | 10k | R_0603_1608Metric | power |
 | R4010 | 22k | R_0603_1608Metric | power |
-| R4011 | 10R | R_0603_1608Metric | power |
 | R4012 | 1k | R_0603_1608Metric | power |
-| R4013 | 10R | R_0603_1608Metric | power |
 | R4014 | 22k | R_0603_1608Metric | power |
 | R4015 | 1k | R_0603_1608Metric | power |
-| R11001 | 1k | R_0603_1608Metric | uart_bridge |
-| R11002 | 22k1 | R_0603_1608Metric | uart_bridge |
-| R11003 | 47k5 | R_0603_1608Metric | uart_bridge |
+| R6014 | 47.5k | R_0603_1608Metric | power_som |
+| R6015 | 13k | R_0603_1608Metric | power_som |
+| R6018 | 22k | R_0603_1608Metric | power_som |
+| R6019 | 1k | R_0603_1608Metric | power_som |
 | R12001 | 5.1k | R_0603_1608Metric | usb_uart_connector |
 | R12002 | 5.1k | R_0603_1608Metric | usb_uart_connector |
 | SW1001 | DIP-4 | DSHP04TSGER | debug_boot |
@@ -428,15 +434,13 @@ CHECKPOINT: boot/debug via debug_boot: J1001 (JTAG), J1002 (SWD), SW1001 (BOOT: 
 | U3002 | USBLC6-2SC6 | USBLC6-2SC6 | pd_input |
 | U4001 | LM61460AANRJRR | LM61460AANRJRR | power |
 | U4002 | LM61460AANRJRR | LM61460AANRJRR | power |
-| U4003 | AP2112K-1.8 | SOT-23-5 | power |
 | U5001 | INA3221AIRGVR | INA3221AIRGVR | power_mon |
 | U5002 | INA3221AIRGVR | INA3221AIRGVR | power_mon |
 | U6004 | LM61460AANRJRR | LM61460AANRJRR | power_som |
-| U11001 | CP2102N-A02 | CP2102N-A02-GQFN24R | uart_bridge |
 | U12001 | USBLC6-2SC6 | USBLC6-2SC6 | usb_uart_connector |
 
 NOTES: diode polarity (D3001, D4001, D4002, D4003, D6004): cathode per silkscreen
-NOTES: pin-1 orientation (11 parts, U/Q refs): dot per silkscreen
+NOTES: pin-1 orientation (U3001, U3002, U4001, U4002, U5001, U5002, U6004, U12001): dot per silkscreen
 
 ### Step 3 — Through-hole (short-to-tall)
 
@@ -459,9 +463,9 @@ No parts in this step on this board.
 | J1001 | 878311420 | 878311420 | debug_boot | THT |
 | J1002 | HX_JN1.27-2x5 | HX_JN1.27-2x5_TP_H4.9 | debug_boot | SMD |
 | J3001 | TYPE-C-31-M-12 | TYPE-C-31-M-12 | pd_input | SMD |
-| J8001 | DF40C-100DP-0.4V(51) | DF40C-100DP-0.4V_51 | som_j1 | SMD |
-| J9002 | DF40C-100DP-0.4V(51) | DF40C-100DP-0.4V_51 | som_j2 | SMD |
-| J10003 | DF40C-100DP-0.4V(51) | DF40C-100DP-0.4V_51 | som_j3 | SMD |
+| J8001 | DF40C-100DP-0.4V(51) | HRS_DF40C-100DP-0.4V_51_ | som_j1 | SMD |
+| J9002 | DF40C-100DP-0.4V(51) | HRS_DF40C-100DP-0.4V_51_ | som_j2 | SMD |
+| J10003 | DF40C-100DP-0.4V(51) | HRS_DF40C-100DP-0.4V_51_ | som_j3 | SMD |
 | J12001 | TYPE-C-31-M-12 | TYPE-C-31-M-12 | usb_uart_connector | SMD |
 
 NOTES: J3001 TYPE-C-31-M-12 (PWR): mating face toward the N board edge

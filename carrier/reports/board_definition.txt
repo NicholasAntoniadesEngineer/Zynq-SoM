@@ -1,0 +1,111 @@
+BOARD DEFINITION carrier: 106 rows; 100 present, 0 missing, 0 invalid, 6 absent (optional), 0 blocked
+status | file | item | message
+present | board.json | file | 
+present | board.json | schema | 
+present | board.json | name | 
+present | board.json | files | 
+present | board.json | files.stem | 
+present | board.json | root_readme | 
+present | board.json | owned_groups | 
+present | board.json | module | 
+present | board.json | module.folder | 
+present | board.json | module.pairs | 
+present | board.json | module.loads | 
+present | board.json | power | 
+present | board.json | power.sources | 
+present | board.json | power.rails | 
+present | board.json | power.inlet | 
+present | board.json | sheets | 
+absent | board.json | layout | 
+absent | board.json | layout.functions | 
+present | module folder/module.json | file | 
+present | module folder/module.json | loads | 
+present | board.json | loads | 
+present | project.json | file | 
+present | project.json | name | 
+present | project.json | placement | 
+present | project.json | placement.wired_sheets | 
+present | project.json | placement.pilot_prox_sheets | 
+present | project.json | placement.module_offset | 
+present | project.json | placement.module_face_anchors | 
+present | project.json | placement.reg_band_prefixes | 
+present | project.json | placement_requirements | 
+present | project.json | placement_requirements.applicable | 
+absent | project.json | placement_requirements.statement | 
+present | project.json | fpga | 
+present | project.json | fpga.bank_rails | 
+present | project.json | silk_labels | 
+present | project.json | silk_labels.headers | 
+present | project.json | silk_labels.switches | 
+present | project.json | escape | 
+present | project.json | escape.genuine_pairs | 
+present | run config | file | 
+present | run config | stackup.carrier | 
+present | run config | overmold_parts.carrier | 
+present | run config | fabrication.carrier | 
+present | project.json | loads | 
+present | som_mapping.json | file | 
+present | som_mapping.json | schema | 
+present | som_mapping.json | function_map | 
+present | som_mapping.json | pudc_straps | 
+present | som_mapping.json | vcco_rail_map | 
+present | som_mapping.json | rebound_som_rails | 
+present | som_mapping.json | isolated_som_rails | 
+absent | som_mapping.json | rail_aliases | 
+present | som_mapping.json | loads | 
+present | escape_triage.json | file | 
+present | escape_triage.json | loads | 
+present | module folder/som_interface.json | loads | 
+present | board.json | sheets.board_aux | 
+present | board.json | sheets.board_qwiic | 
+present | board.json | sheets.board_services | 
+present | board.json | sheets.bringup_en | 
+present | board.json | sheets.bringup_en_modules | 
+present | board.json | sheets.bringup_modules | 
+present | board.json | sheets.bringup_rails | 
+present | board.json | sheets.camera | 
+present | board.json | sheets.debug_boot | 
+present | board.json | sheets.ethernet | 
+present | board.json | sheets.fmc | 
+present | board.json | sheets.hdmi_rx | 
+present | board.json | sheets.hdmi_rx_term | 
+present | board.json | sheets.hdmi_tx | 
+present | board.json | sheets.lcd | 
+present | board.json | sheets.mechanical | 
+present | board.json | sheets.microsd | 
+present | board.json | sheets.motor_pwm | 
+present | board.json | sheets.motor_sense | 
+present | board.json | sheets.pd_input | 
+present | board.json | sheets.pmod | 
+present | board.json | sheets.pmod_expansion | 
+present | board.json | sheets.power | 
+present | board.json | sheets.power_mon | 
+present | board.json | sheets.power_som | 
+present | board.json | sheets.rj45_connector | 
+present | board.json | sheets.som_decoupling | 
+present | board.json | sheets.som_j1 | 
+present | board.json | sheets.som_j2 | 
+present | board.json | sheets.som_j3 | 
+present | board.json | sheets.uart_bridge | 
+present | board.json | sheets.usb_jtag | 
+present | board.json | sheets.usb_jtag_connector | 
+present | board.json | sheets.usb_pd | 
+present | board.json | sheets.usb_uart_connector | 
+present | board.json | sheets.usbc_otg | 
+present | board.json | sheets.user_io | 
+present | research/si_spec.json | file | 
+present | research/si_spec.json | loads | 
+absent | floorplan.json | file | 
+present | sheet_index.json | file | 
+present | sheet_index.json | loads | 
+present | component_basis.json | file | 
+present | component_basis.json | coverage | 
+present | parts/part_facts.json | loads | 
+present | parts/part_facts.json | classes | 
+present | parts/part_facts.json | i2c_devices | 
+present | board.json | sheet roles | 
+present | board.json | power | 
+absent | board.json | intent.layout | the board states no layout object: function statements are not judged
+not judged here: part ratings (gates part_rules, bom_ratings) and footprint lands (gate footprint_pads) need the power tree and the footprint libraries
+BOARD DEFINITION: PASS
+

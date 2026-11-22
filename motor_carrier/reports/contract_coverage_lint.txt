@@ -1,0 +1,297 @@
+CONTRACT COVERAGE LINT — every wired-sheet part in >=1 contract structure or explicitly free
+CONTRACT COVERAGE LINT (advisory): 21 sheets, 358 parts — 85 structured / 0 free / 273 UNGATED
+
+board_control        parts= 33  structured=  0  free= 0  UNGATED= 33  (no contract)
+    UNGATED C1     -> C1001    100n                   nets: +3V3_SC, GND
+    UNGATED C2     -> C1002    10u                    nets: +5V, GND
+    UNGATED C3     -> C1003    10u                    nets: +5V_FAN, GND
+    UNGATED D1     -> D1001    green                  nets: LED1_A, LED1_K
+    UNGATED D2     -> D1002    red                    nets: LED2_A, LED2_K
+    UNGATED J1     -> J1001    ZX-SH1.0-4PWT          nets: +5V_FAN, FAN_PWM_OD, FAN_TACH_CONN, GND
+    UNGATED Q1     -> Q1001    AO3400A                nets: FAN_PWM, FAN_PWM_OD, GND
+    UNGATED R1     -> R1001    4k7                    nets: +3V3_SC, STM32_I2C2_SCL
+    UNGATED R2     -> R1002    4k7                    nets: +3V3_SC, STM32_I2C2_SDA
+    UNGATED R3     -> R1003    10k                    nets: +3V3_SC, SC_INT_N
+    UNGATED R4     -> R1004    100k                   nets: DIP_USER, GND
+    UNGATED R5     -> R1005    1k                     nets: +3V3_SC, LED1_A
+    UNGATED R6     -> R1006    1k                     nets: +3V3_SC, LED2_A
+    UNGATED R7     -> R1007    10k                    nets: +3V3_SC, BTN_N
+    UNGATED R8     -> R1008    1k                     nets: +3V3, PUDC_34
+    UNGATED R9     -> R1009    100k                   nets: ESC_PWR_REQ, GND
+    UNGATED R10    -> R1010    13k                    nets: FAN_ISET, GND
+    UNGATED R11    -> R1011    100k                   nets: FAN_PWM, GND
+    UNGATED R12    -> R1012    10k                    nets: +3V3, FAN_TACH
+    UNGATED R13    -> R1013    1k                     nets: FAN_TACH, FAN_TACH_CONN
+    UNGATED SW1    -> SW1001   DIP-4                  nets: +3V3_SC, BU_DIP_1V8, BU_DIP_3V3, BU_DIP_5V0, DIP_USER
+    UNGATED SW2    -> SW1002   USER                   nets: BTN_N, GND
+    UNGATED TP1    -> TP1001   XP16                   nets: XP16
+    UNGATED TP2    -> TP1002   XP17                   nets: XP17
+    UNGATED TP5    -> TP1005   STM32_I2C2_SCL         nets: STM32_I2C2_SCL
+    UNGATED TP6    -> TP1006   STM32_I2C2_SDA         nets: STM32_I2C2_SDA
+    UNGATED TP7    -> TP1007   +3V3_SC                nets: +3V3_SC
+    UNGATED TP8    -> TP1008   SC_INT_N               nets: SC_INT_N
+    UNGATED TP9    -> TP1009   PUDC_34                nets: PUDC_34
+    UNGATED TP10   -> TP1010   +5V_FAN                nets: +5V_FAN
+    UNGATED TP11   -> TP1011   ESC_PWR_REQ            nets: ESC_PWR_REQ
+    UNGATED U1     -> U1001    TCA9535PWR             nets: +3V3_SC, BTN_N, BU_DIP_1V8, BU_DIP_3V3, BU_DIP_5V0, DIP_USER (+15 more)
+    UNGATED U2     -> U1002    SY6280AAC              nets: +5V, +5V_FAN, FAN_ISET, GND
+bringup_en           parts= 15  structured=  0  free= 0  UNGATED= 15  (no contract)
+    UNGATED C1     -> C2001    100n                   nets: +3V3_SC, GND
+    UNGATED C2     -> C2002    100n                   nets: +3V3_SC, GND
+    UNGATED C3     -> C2003    100n                   nets: +3V3_SC, GND
+    UNGATED R1     -> R2001    100k                   nets: BU_DIP_5V0, GND
+    UNGATED R2     -> R2002    100k                   nets: +3V3_SC, STM32_RAIL_EN_5V0
+    UNGATED R3     -> R2003    100k                   nets: BU_DIP_3V3, GND
+    UNGATED R4     -> R2004    100k                   nets: +3V3_SC, STM32_RAIL_EN_3V3
+    UNGATED R5     -> R2005    100k                   nets: BU_DIP_1V8, GND
+    UNGATED R6     -> R2006    100k                   nets: +3V3_SC, STM32_RAIL_EN_1V8
+    UNGATED TP1    -> TP2001   EN_5V0                 nets: EN_5V0
+    UNGATED TP2    -> TP2002   EN_3V3                 nets: EN_3V3
+    UNGATED TP3    -> TP2003   EN_1V8                 nets: EN_1V8
+    UNGATED U1     -> U2001    SN74LVC1G08            nets: +3V3_SC, BU_DIP_5V0, EN_5V0, GND, STM32_RAIL_EN_5V0
+    UNGATED U2     -> U2002    SN74LVC1G08            nets: +3V3_SC, BU_DIP_3V3, EN_3V3, GND, STM32_RAIL_EN_3V3
+    UNGATED U3     -> U2003    SN74LVC1G08            nets: +3V3_SC, BU_DIP_1V8, EN_1V8, GND, STM32_RAIL_EN_1V8
+can_bus              parts= 11  structured=  0  free= 0  UNGATED= 11  (no contract)
+    UNGATED C1     -> C3001    100n                   nets: +5V, GND
+    UNGATED C2     -> C3002    100n                   nets: +3V3, GND
+    UNGATED D1     -> D3001    NUP2105LT1G            nets: CAN_H, CAN_L, GND_MOTOR
+    UNGATED J1     -> J3001    ZX-SH1.0-4PWT          nets: CAN_H, CAN_L, GND_MOTOR
+    UNGATED J2     -> J3002    ZX-SH1.0-4PWT          nets: CAN_H, CAN_L, GND_MOTOR
+    UNGATED R1     -> R3001    10k                    nets: +3V3, CAN_TX
+    UNGATED R2     -> R3002    120R                   nets: CAN_H, CAN_TERM
+    UNGATED SW1    -> SW3001   DIP-4                  nets: CAN_L, CAN_TERM
+    UNGATED TP1    -> TP3001   CAN_H                  nets: CAN_H
+    UNGATED TP2    -> TP3002   CAN_L                  nets: CAN_L
+    UNGATED U1     -> U3001    TCAN1042HGVDR          nets: +3V3, +5V, CAN_H, CAN_L, CAN_RX, CAN_TX (+1 more)
+debug_boot           parts= 11  structured=  0  free= 0  UNGATED= 11  (no contract)
+    UNGATED J1     -> J4001    878311420              nets: +3V3, GND, ZYNQ_TCK, ZYNQ_TDI, ZYNQ_TDO, ZYNQ_TMS
+    UNGATED J2     -> J4002    HX_JN1.27-2x5          nets: +3V3_SC, GND, STM32_GPIO5, STM32_GPIO6, STM32_NRST
+    UNGATED R1     -> R4001    4k7                    nets: +3V3, ZYNQ_TMS
+    UNGATED R2     -> R4002    4k7                    nets: +3V3, ZYNQ_TDI
+    UNGATED R3     -> R4003    100R                   nets: +3V3_SC, BOOT0_SET
+    UNGATED R4     -> R4004    10k                    nets: +3V3_SC, STM32_GPIO7
+    UNGATED R5     -> R4005    10k                    nets: +3V3_SC, STM32_GPIO8
+    UNGATED R6     -> R4006    10k                    nets: +3V3_SC, BOOT_SPARE
+    UNGATED SW1    -> SW4001   DIP-4                  nets: BOOT0_SET, BOOT_SPARE, GND, STM32_BOOT0, STM32_GPIO7, STM32_GPIO8
+    UNGATED SW2    -> SW4002   RESET                  nets: GND, STM32_NRST
+    UNGATED TP1    -> TP4001   VBUS_OUT_EN            nets: VBUS_OUT_EN
+esc_io               parts= 41  structured=  0  free= 0  UNGATED= 41  (no contract)
+    UNGATED C1     -> C5001    100n                   nets: +5V, GND
+    UNGATED C2     -> C5002    10u                    nets: +5V, GND
+    UNGATED C3     -> C5003    10u                    nets: +5V_MOTOR_IO, GND
+    UNGATED C4     -> C5004    100n                   nets: +3V3, GND
+    UNGATED C5     -> C5005    100n                   nets: +3V3, GND
+    UNGATED C6     -> C5006    100n                   nets: +3V3, GND
+    UNGATED C7     -> C5007    100n                   nets: +3V3, GND
+    UNGATED D1     -> D5001    SRV05-4                nets: +5V, ESC_OUT0, ESC_OUT1, ESC_OUT2, ESC_OUT3, GND_MOTOR
+    UNGATED D2     -> D5002    SRV05-4                nets: +5V, ESC_OUT4, ESC_OUT5, ESC_OUT6, ESC_OUT7, GND_MOTOR
+    UNGATED D3     -> D5003    SRV05-4                nets: +5V, GND_MOTOR, TLM_CONN
+    UNGATED D4     -> D5004    blue                   nets: LIVE_A, OE_BUF_N
+    UNGATED J1     -> J5001    HX PZ2.54-3x8P ZZ      nets: +5V_MOTOR_IO, ESC_OUT0, ESC_OUT1, ESC_OUT2, ESC_OUT3, ESC_OUT4 (+4 more)
+    UNGATED J2     -> J5002    ZX-SH1.0-4PWT          nets: GND_MOTOR, TLM_CONN
+    UNGATED R1     -> R5001    10k                    nets: +5V, OE_BUF_N
+    UNGATED R2     -> R5002    13k                    nets: GND, SERVO_ISET
+    UNGATED R3     -> R5003    100k                   nets: GND, SERVO_SW_EN
+    UNGATED R4     -> R5004    10k                    nets: ESC_BIAS, ESC_OUT0
+    UNGATED R5     -> R5005    10k                    nets: ESC_BIAS, ESC_OUT1
+    UNGATED R6     -> R5006    10k                    nets: ESC_BIAS, ESC_OUT2
+    UNGATED R7     -> R5007    10k                    nets: ESC_BIAS, ESC_OUT3
+    UNGATED R8     -> R5008    10k                    nets: ESC_BIAS, ESC_OUT4
+    UNGATED R9     -> R5009    10k                    nets: ESC_BIAS, ESC_OUT5
+    UNGATED R10    -> R5010    10k                    nets: ESC_BIAS, ESC_OUT6
+    UNGATED R11    -> R5011    10k                    nets: ESC_BIAS, ESC_OUT7
+    UNGATED R12    -> R5012    100k                   nets: ESC_IDLE_SEL, GND
+    UNGATED R13    -> R5013    1k                     nets: TLM_CONN, TLM_NODE
+    UNGATED R14    -> R5014    10k                    nets: +3V3, TLM_NODE
+    UNGATED R15    -> R5015    10k                    nets: ESC_BUF_OE_SENSE_N, OE_BUF_N
+    UNGATED R16    -> R5016    1k                     nets: +5V, LIVE_A
+    UNGATED RN1    -> RN5001   4D03WGJ0330T5E         nets: ESC_OUT0, ESC_OUT1, ESC_OUT2, ESC_OUT3, ESC_SIG0, ESC_SIG1 (+2 more)
+    UNGATED RN2    -> RN5002   4D03WGJ0330T5E         nets: ESC_OUT4, ESC_OUT5, ESC_OUT6, ESC_OUT7, ESC_SIG4, ESC_SIG5 (+2 more)
+    UNGATED SW1    -> SW5001   DIP-4                  nets: +5V, ESC_BUF_OE_N, ESC_PWR_EN, ESC_PWR_REQ, OE_BUF_N, SERVO_SW_EN
+    UNGATED TP1    -> TP5001   +5V_MOTOR_IO           nets: +5V_MOTOR_IO
+    UNGATED TP2    -> TP5002   ESC_BIAS               nets: ESC_BIAS
+    UNGATED TP3    -> TP5003   OE_BUF_N               nets: OE_BUF_N
+    UNGATED U1     -> U5001    SN74HCT245PWR          nets: +5V, ESC_PWM_IN0, ESC_PWM_IN1, ESC_PWM_IN2, ESC_PWM_IN3, ESC_PWM_IN4 (+13 more)
+    UNGATED U3     -> U5003    SY6280AAC              nets: +5V, +5V_MOTOR_IO, GND, SERVO_ISET, SERVO_SW_EN
+    UNGATED U4     -> U5004    SN74LVC125ADR          nets: +3V3, ESC_FB0, ESC_FB1, ESC_FB2, ESC_FB3, ESC_SIG0 (+4 more)
+    UNGATED U5     -> U5005    SN74LVC125ADR          nets: +3V3, ESC_FB4, ESC_FB5, ESC_FB6, ESC_FB7, ESC_SIG4 (+4 more)
+    UNGATED U6     -> U5006    SN74LVC1G08            nets: +3V3, ESC_BIAS, ESC_IDLE_SEL, GND
+    UNGATED U7     -> U5007    SN74LVC1G08            nets: +3V3, ESC_TLM_RX, GND, TLM_NODE
+esc_power            parts= 48  structured=  0  free= 0  UNGATED= 48  (no contract)
+    UNGATED C1     -> C6001    100n/100V              nets: +VESC_F, GND_MOTOR
+    UNGATED C2     -> C6002    100n                   nets: +3V3_SC, GND
+    UNGATED C3     -> C6003    470u                   nets: +VESC, GND_MOTOR
+    UNGATED C4     -> C6004    470u                   nets: +VESC, GND_MOTOR
+    UNGATED C5     -> C6005    100n/100V              nets: +VESC, GND_MOTOR
+    UNGATED C6     -> C6006    100n/100V              nets: +VESC_P, GND_MOTOR
+    UNGATED C7     -> C6007    1u                     nets: PROT_CAP, PROT_VS
+    UNGATED C8     -> C6008    1u/100V                nets: GND_MOTOR, PROT_DVDT
+    UNGATED C9     -> C6009    1u                     nets: GND_MOTOR, PROT_TMR
+    UNGATED C10    -> C6010    100n                   nets: GND, VSENSE_DIV
+    UNGATED C11    -> C6011    100n/100V              nets: GND_MOTOR, PROT_VS
+    UNGATED D1     -> D6001    SMBJ28A                nets: +VESC_F, TVS_MID
+    UNGATED D2     -> D6002    SMBJ28A                nets: GND_MOTOR, TVS_MID
+    UNGATED D3     -> D6003    SS54                   nets: +VESC_F, PROT_VS
+    UNGATED D4     -> D6004    red                    nets: +VESC, LIVE_K
+    UNGATED F1     -> F6001    40A                    nets: +VESC_F, +VESC_IN
+    UNGATED J1     -> J6001    XT60PW-M               nets: +VESC_IN, GND_MOTOR
+    UNGATED J2     -> J6002    XT60PW-M               nets: +VESC, GND_MOTOR
+    UNGATED Q1     -> Q6001    IPT007N06N             nets: +VESC_F, +VESC_MID, PROT_HGATE
+    UNGATED Q2     -> Q6002    IPT007N06N             nets: +VESC_MID, +VESC_P, PROT_DGATE
+    UNGATED R1     -> R6001    10k                    nets: +3V3_SC, ESC_FAULT_N
+    UNGATED R2     -> R6002    5.1k                   nets: LIVE_K, LIVE_MID
+    UNGATED R3     -> R6003    5.1k                   nets: GND_MOTOR, LIVE_MID
+    UNGATED R4     -> R6004    100R                   nets: PROT_DVDT, PROT_HGATE
+    UNGATED R5     -> R6005    49.9R                  nets: +VESC_P, PROT_CSP
+    UNGATED R6     -> R6006    4k7                    nets: +VESC_P, PROT_ISCP
+    UNGATED R7     -> R6007    15k                    nets: GND_MOTOR, PROT_ILIM
+    UNGATED R8     -> R6008    4k7                    nets: GND_MOTOR, PROT_IMON
+    UNGATED R9     -> R6009    10k                    nets: ESC_IMON, PROT_IMON
+    UNGATED R10    -> R6010    10k                    nets: +3V3_SC, ESC_PWR_FLT_N
+    UNGATED R11    -> R6011    100k                   nets: ESC_PWR_EN, GND_MOTOR
+    UNGATED R12    -> R6012    100k                   nets: +VESC, VSENSE_DIV
+    UNGATED R13    -> R6013    10k                    nets: GND, VSENSE_DIV
+    UNGATED R14    -> R6014    10k                    nets: ESC_VBAT_SENSE, VSENSE_DIV
+    UNGATED RS1    -> RS6001   0.5mR                  nets: +VESC, +VESC_P
+    UNGATED RT1    -> RT6001   0.5mR                  nets: GND, GND_MOTOR
+    UNGATED TP1    -> TP6001   +VESC_IN               nets: +VESC_IN
+    UNGATED TP2    -> TP6002   +VESC                  nets: +VESC
+    UNGATED TP3    -> TP6003   GND_MOTOR              nets: GND_MOTOR
+    UNGATED TP4    -> TP6004   GND                    nets: GND
+    UNGATED TP5    -> TP6005   +VESC_F                nets: +VESC_F
+    UNGATED TP6    -> TP6006   +VESC_MID              nets: +VESC_MID
+    UNGATED TP7    -> TP6007   +VESC_P                nets: +VESC_P
+    UNGATED TP8    -> TP6008   ESC_PWR_EN             nets: ESC_PWR_EN
+    UNGATED TP9    -> TP6009   PROT_IMON              nets: PROT_IMON
+    UNGATED TP10   -> TP6010   VSENSE_DIV             nets: VSENSE_DIV
+    UNGATED U1     -> U6001    INA237AIDGSR           nets: +3V3_SC, +VESC, +VESC_P, ESC_FAULT_N, GND, STM32_I2C2_SCL (+1 more)
+    UNGATED U2     -> U6002    LM74930QRGERQ1         nets: +VESC, +VESC_MID, +VESC_P, ESC_PWR_EN, ESC_PWR_FLT_N, GND_MOTOR (+9 more)
+ethernet             parts= 11  structured= 10  free= 0  UNGATED=  1
+    UNGATED C6     -> C7006    100n                   nets: ETH_TCT, GND
+mechanical           parts=  4  structured=  0  free= 0  UNGATED=  4  (no contract)
+    UNGATED H1     -> H8001    MountingHole_M3        nets: CHASSIS_GND
+    UNGATED H2     -> H8002    MountingHole_M3        nets: CHASSIS_GND
+    UNGATED H3     -> H8003    MountingHole_M3        nets: CHASSIS_GND
+    UNGATED H4     -> H8004    MountingHole_M3        nets: CHASSIS_GND
+microsd              parts= 15  structured= 13  free= 0  UNGATED=  2
+    UNGATED TP1    -> TP9001   SDIO_CMD               nets: SDIO_CMD
+    UNGATED TP2    -> TP9002   SDIO_CLK               nets: SDIO_CLK
+pd_input             parts= 14  structured= 11  free= 0  UNGATED=  3
+    UNGATED C4     -> C10004   100n                   nets: +3V3_SC, GND
+    UNGATED TP1    -> TP10001  +VBUS_IN               nets: +VBUS_IN
+    UNGATED TP2    -> TP10002  +VIN_PD                nets: +VIN_PD
+power                parts= 51  structured= 38  free= 0  UNGATED= 13
+    UNGATED D1     -> D11001   red                    nets: +5V_REG, PG_5V0
+    UNGATED D2     -> D11002   red                    nets: +3V3_REG, PG_3V3
+    UNGATED D3     -> D11003   red                    nets: +3V3, PG_1V8_K
+    UNGATED Q1     -> Q11001   AO3400A                nets: GND, PG_1V8_D, PG_1V8_G
+    UNGATED R3     -> R11003   1k                     nets: GND, PG_5V0
+    UNGATED R6     -> R11006   330R                   nets: GND, PG_3V3
+    UNGATED R7     -> R11007   1k                     nets: +1V8, PG_1V8_G
+    UNGATED R8     -> R11008   100k                   nets: GND, PG_1V8_G
+    UNGATED R9     -> R11009   330R                   nets: PG_1V8_D, PG_1V8_K
+    UNGATED TP1    -> TP11001  +5V                    nets: +5V
+    UNGATED TP2    -> TP11002  +3V3                   nets: +3V3
+    UNGATED TP3    -> TP11003  +1V8                   nets: +1V8
+    UNGATED TP4    -> TP11004  GND                    nets: GND
+power_mon            parts= 10  structured=  0  free= 0  UNGATED= 10  (no contract)
+    UNGATED C1     -> C12001   100n                   nets: +3V3_SC, GND
+    UNGATED C2     -> C12002   100n                   nets: +3V3_SC, GND
+    UNGATED C3     -> C12003   10u                    nets: +3V3_SC, GND
+    UNGATED R1     -> R12001   10k                    nets: +3V3_SC, PMON_ALERT_N
+    UNGATED RS1    -> RS12001  10mR                   nets: +VIN, +VIN_SYS
+    UNGATED RS2    -> RS12002  10mR                   nets: +5V, +5V_REG
+    UNGATED RS3    -> RS12003  10mR                   nets: +3V3, +3V3_REG
+    UNGATED RS4    -> RS12004  20mR                   nets: +1V8, +1V8_REG
+    UNGATED U1     -> U12001   INA3221AIRGVR          nets: +3V3, +3V3_REG, +3V3_SC, +5V, +5V_REG, +VIN (+5 more)
+    UNGATED U2     -> U12002   INA3221AIRGVR          nets: +1V8, +1V8_REG, +3V3_SC, GND, PMON_ALERT_N, STM32_I2C2_SCL (+1 more)
+power_som            parts= 20  structured=  0  free= 0  UNGATED= 20  (no contract)
+    UNGATED C14    -> C13014   100n                   nets: +VIN_SYS, GND
+    UNGATED C15    -> C13015   10u                    nets: +VIN_SYS, GND
+    UNGATED C16    -> C13016   10u                    nets: +VIN_SYS, GND
+    UNGATED C17    -> C13017   100n                   nets: BOOT_5V_SOM, SW_5V_SOM
+    UNGATED C18    -> C13018   22u                    nets: +5V_SOM, GND
+    UNGATED C19    -> C13019   22u                    nets: +5V_SOM, GND
+    UNGATED C21    -> C13021   22p                    nets: +5V_SOM, CFF_5V_SOM
+    UNGATED C22    -> C13022   1u                     nets: GND, U4_VCC
+    UNGATED C23    -> C13023   1u                     nets: BIAS_5V_SOM, GND
+    UNGATED C25    -> C13025   100n                   nets: +VIN_SYS, GND
+    UNGATED D4     -> D13004   red                    nets: +5V_SOM, PG_5V_SOM
+    UNGATED L3     -> L13003   10uH                   nets: +5V_SOM, SW_5V_SOM
+    UNGATED R14    -> R13014   47.5k                  nets: +5V_SOM, FB_5V_SOM
+    UNGATED R15    -> R13015   13k                    nets: FB_5V_SOM, GND
+    UNGATED R16    -> R13016   1k                     nets: GND, PG_5V_SOM
+    UNGATED R17    -> R13017   10R                    nets: +5V_SOM, BIAS_5V_SOM
+    UNGATED R18    -> R13018   22k                    nets: GND, RT_5V_SOM
+    UNGATED R19    -> R13019   1k                     nets: CFF_5V_SOM, FB_5V_SOM
+    UNGATED TP1    -> TP13001  +5V_SOM                nets: +5V_SOM
+    UNGATED U4     -> U13004   LM61460AANRJRR         nets: +VIN_SYS, BIAS_5V_SOM, BOOT_5V_SOM, FB_5V_SOM, GND, RT_5V_SOM (+2 more)
+rj45_connector       parts=  3  structured=  0  free= 0  UNGATED=  3  (no contract)
+    UNGATED J1     -> J14001   KH-5224-8P8C-D         nets: CHASSIS_GND, ETH_LINE_MDI_0_N, ETH_LINE_MDI_0_P, ETH_LINE_MDI_1_N, ETH_LINE_MDI_1_P, ETH_LINE_MDI_2_N (+6 more)
+    UNGATED R1     -> R14001   330R                   nets: +3V3, RJ45_LED_L
+    UNGATED R2     -> R14002   330R                   nets: +3V3, RJ45_LED_R
+som_decoupling       parts= 18  structured=  0  free= 0  UNGATED= 18  (no contract)
+    UNGATED C1     -> C15001   22u                    nets: +5V_SOM, GND
+    UNGATED C2     -> C15002   22u                    nets: +5V_SOM, GND
+    UNGATED C3     -> C15003   100n                   nets: +5V_SOM, GND
+    UNGATED C4     -> C15004   100n                   nets: +5V_SOM, GND
+    UNGATED C5     -> C15005   100n                   nets: +5V_SOM, GND
+    UNGATED C6     -> C15006   100n                   nets: +5V_SOM, GND
+    UNGATED C7     -> C15007   22u                    nets: +3V3, GND
+    UNGATED C8     -> C15008   22u                    nets: +3V3, GND
+    UNGATED C9     -> C15009   100n                   nets: +3V3, GND
+    UNGATED C10    -> C15010   100n                   nets: +3V3, GND
+    UNGATED C11    -> C15011   100n                   nets: +3V3, GND
+    UNGATED C12    -> C15012   100n                   nets: +3V3, GND
+    UNGATED C13    -> C15013   22u                    nets: +3V3_SC, GND
+    UNGATED C14    -> C15014   22u                    nets: +3V3_SC, GND
+    UNGATED C15    -> C15015   100n                   nets: +3V3_SC, GND
+    UNGATED C16    -> C15016   100n                   nets: +3V3_SC, GND
+    UNGATED C17    -> C15017   100n                   nets: +3V3_SC, GND
+    UNGATED C18    -> C15018   100n                   nets: +3V3_SC, GND
+som_j1               parts=  1  structured=  0  free= 0  UNGATED=  1  (no contract)
+    UNGATED J1     -> J16001   DF40C-100DP-0.4V(51)   nets: +3V3_SC, +5V_SOM, ESC_IMON, ESC_VBAT_SENSE, ETH_LED1, ETH_LED2 (+55 more)
+som_j2               parts=  1  structured=  0  free= 0  UNGATED=  1  (no contract)
+    UNGATED J2     -> J17002   DF40C-100DP-0.4V(51)   nets: +3V3, CAN_RX, CAN_TX, ESC_BUF_OE_N, ESC_FAULT_N, ESC_FB0 (+68 more)
+som_j3               parts=  1  structured=  0  free= 0  UNGATED=  1  (no contract)
+    UNGATED J3     -> J18003   DF40C-100DP-0.4V(51)   nets: +3V3, ESC_PWM_IN4, ESC_PWM_IN5, ESC_PWM_IN6, ESC_PWM_IN7, GND (+70 more)
+uart_bridge          parts= 10  structured=  8  free= 0  UNGATED=  2
+    UNGATED TP1    -> TP19001  ZYNQ_PS_UART0_TXD      nets: ZYNQ_PS_UART0_TXD
+    UNGATED TP2    -> TP19002  ZYNQ_PS_UART0_RXD      nets: ZYNQ_PS_UART0_RXD
+usb_uart_connector   parts=  5  structured=  5  free= 0  UNGATED=  0
+vbat_supply          parts= 35  structured=  0  free= 0  UNGATED= 35  (no contract)
+    UNGATED C1     -> C21001   47n                    nets: DVDT_SET, GND
+    UNGATED C2     -> C21002   100n/100V              nets: +VBAT_D, GND
+    UNGATED C3     -> C21003   4u7/100V               nets: +VBAT_SW, GND
+    UNGATED C4     -> C21004   4u7/100V               nets: +VBAT_SW, GND
+    UNGATED C5     -> C21005   100n/100V              nets: +VBAT_SW, GND
+    UNGATED C6     -> C21006   100n/100V              nets: +VBAT_SW, GND
+    UNGATED C7     -> C21007   1u                     nets: GND, U2_VCC
+    UNGATED C8     -> C21008   1u                     nets: BIAS_PRE, GND
+    UNGATED C9     -> C21009   100n                   nets: BOOT_PRE, SW_PRE
+    UNGATED C10    -> C21010   22u                    nets: +VPRE, GND
+    UNGATED C11    -> C21011   22u                    nets: +VPRE, GND
+    UNGATED C12    -> C21012   22p                    nets: +VPRE, CFF_PRE
+    UNGATED C13    -> C21013   4u7/100V               nets: +VBAT_SW, GND
+    UNGATED C14    -> C21014   470u                   nets: +VBAT_SW, GND
+    UNGATED D1     -> D21001   red                    nets: +VPRE, PG_PRE
+    UNGATED D2     -> D21002   SS54                   nets: +VBAT_D, +VESC_F
+    UNGATED J1     -> J21001   A2541WV-2x3P           nets: +VIN, +VIN_PD, +VPRE
+    UNGATED L1     -> L21001   10uH                   nets: +VPRE, SW_PRE
+    UNGATED R1     -> R21001   100k                   nets: +VBAT_D, UVLO_SET
+    UNGATED R2     -> R21002   10k                    nets: OVP_SET, UVLO_SET
+    UNGATED R3     -> R21003   5.1k                   nets: GND, OVP_SET
+    UNGATED R4     -> R21004   5.49k                  nets: GND, ILIM_SET
+    UNGATED R5     -> R21005   100k                   nets: +3V3_SC, VBAT_FLT_N
+    UNGATED R6     -> R21006   10R                    nets: +VPRE, BIAS_PRE
+    UNGATED R7     -> R21007   22k                    nets: GND, RT_PRE
+    UNGATED R8     -> R21008   47.5k                  nets: +VPRE, FB_PRE
+    UNGATED R9     -> R21009   6.8k                   nets: FB_PRE, GND
+    UNGATED R10    -> R21010   1k                     nets: CFF_PRE, FB_PRE
+    UNGATED R11    -> R21011   1k                     nets: GND, PG_PRE
+    UNGATED TP1    -> TP21001  +VBAT_SW               nets: +VBAT_SW
+    UNGATED TP2    -> TP21002  +VPRE                  nets: +VPRE
+    UNGATED TP3    -> TP21003  +VIN                   nets: +VIN
+    UNGATED TP4    -> TP21004  +VBAT_D                nets: +VBAT_D
+    UNGATED U1     -> U21001   TPS26631PWPR           nets: +VBAT_D, +VBAT_SW, DVDT_SET, GND, ILIM_SET, OVP_SET (+2 more)
+    UNGATED U2     -> U21002   LM61460AANRJRR         nets: +VBAT_SW, BIAS_PRE, BOOT_PRE, FB_PRE, GND, RT_PRE (+2 more)

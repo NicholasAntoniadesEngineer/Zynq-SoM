@@ -12,7 +12,7 @@
 	)
 	(lib_symbols
 		(symbol
-			"DF40C-100DP-0.4V_51:DF40C-100DP-0.4V_51"
+			"DF40C-100DP-0.4V_51:DF40C-100DP-0.4V_51_module_mate"
 			(pin_names
 				(offset 0.508)
 				(hide yes)
@@ -85,7 +85,7 @@
 				)
 			)
 			(symbol
-				"DF40C-100DP-0.4V_51_0_1"
+				"DF40C-100DP-0.4V_51_module_mate_0_1"
 				(rectangle
 					(start -2.54 67.31)
 					(end 2.54 -67.31)
@@ -99,7 +99,7 @@
 				)
 			)
 			(symbol
-				"DF40C-100DP-0.4V_51_1_1"
+				"DF40C-100DP-0.4V_51_module_mate_1_1"
 				(pin
 					passive
 					line
@@ -1214,7 +1214,7 @@
 						)
 					)
 					(number
-						"103"
+						"S2"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -1236,7 +1236,7 @@
 						)
 					)
 					(number
-						"101"
+						"S4"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -2358,7 +2358,7 @@
 						)
 					)
 					(number
-						"104"
+						"S1"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -2380,7 +2380,7 @@
 						)
 					)
 					(number
-						"102"
+						"S3"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -5131,7 +5131,7 @@
 		(uuid "ae21fc7a-782a-53d2-8c82-3862f86c1098")
 	)
 	(symbol
-		(lib_id "DF40C-100DP-0.4V_51:DF40C-100DP-0.4V_51")
+		(lib_id "DF40C-100DP-0.4V_51:DF40C-100DP-0.4V_51_module_mate")
 		(at 152.4 95.25 0)
 		(unit 1)
 		(exclude_from_sim no)
@@ -5161,7 +5161,7 @@
 		)
 		(property
 			"Footprint"
-			"DF40C-100DP-0.4V_51:DF40C-100DP-0.4V_51"
+			"Mylibrary:HRS_DF40C-100DP-0.4V_51_"
 			(at 152.4 95.25 0)
 			(effects
 				(font
@@ -5393,11 +5393,11 @@
 			(uuid "ba490afb-0f95-540e-aa4f-9c8e86d050c4")
 		)
 		(pin
-			"103"
+			"S2"
 			(uuid "27fb342d-64e9-579f-9d81-a6fc339e5aa6")
 		)
 		(pin
-			"101"
+			"S4"
 			(uuid "53a8c7e3-394d-571b-8208-b1ff6b7fe2a5")
 		)
 		(pin
@@ -5601,11 +5601,11 @@
 			(uuid "c141a00d-593d-5e10-b1b8-b9da1e8ae0e7")
 		)
 		(pin
-			"104"
+			"S1"
 			(uuid "07a003c0-0dbe-5286-9bd1-e816d2d9e50b")
 		)
 		(pin
-			"102"
+			"S3"
 			(uuid "84e275d6-0e88-56b5-b89f-f13bec58bf21")
 		)
 		(instances

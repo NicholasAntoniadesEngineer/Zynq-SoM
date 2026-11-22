@@ -1,0 +1,4 @@
+{
+ "counts": {},
+ "note": "fallback ratchet ceilings \u2014 a build whose count EXCEEDS its ceiling FAILS; ceilings only ever DECREASE (pinned from a measured build, reviewed in git). A name absent here is allowed zero firings."
+}

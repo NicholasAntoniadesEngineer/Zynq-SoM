@@ -1,12 +1,12 @@
 CONTRACT COVERAGE: 23 wired(gated) / 0 inert-met / 0 inert-VIOLATED  (authored SI/PI intent not yet placer-enforced)
-  board_qwiic            WIRED-gated      1 chk  0 viol  
+  board_qwiic            WIRED-gated      2 chk  0 viol  
   camera                 WIRED-gated      7 chk  0 viol  
   ethernet               WIRED-gated      6 chk  0 viol  
   fmc                    WIRED-gated      4 chk  0 viol  
   hdmi_rx                WIRED-gated      9 chk  0 viol  
   hdmi_rx_term           WIRED-gated      4 chk  0 viol  
   hdmi_tx                WIRED-gated     10 chk  0 viol  
-  lcd                    WIRED-gated     15 chk  0 viol  
+  lcd                    WIRED-gated     14 chk  0 viol  
   microsd                WIRED-gated      9 chk  0 viol  
   motor_pwm              WIRED-gated      9 chk  0 viol  
   motor_sense            WIRED-gated     10 chk  0 viol  

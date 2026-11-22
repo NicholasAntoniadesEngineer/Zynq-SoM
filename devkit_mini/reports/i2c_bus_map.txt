@@ -1,0 +1,13 @@
+buses	order=space,bus
+space	bus	sda	scl
+STM32_I2C2	STM32_I2C2	STM32_I2C2_SDA	STM32_I2C2_SCL
+devices	order=space,address,sheet,ref
+space	bus	address	sheet	ref	part
+STM32_I2C2	STM32_I2C2	0x40	power_mon	U1	INA3221AIRGVR
+STM32_I2C2	STM32_I2C2	0x41	power_mon	U2	INA3221AIRGVR
+bridges	order=sheet,ref,from
+sheet	ref	part	from	to	shared
+pullups	order=bus,line,sheet,ref
+bus	line	sheet	ref	value	rail
+STM32_I2C2	scl	debug_boot	R7	4k7	+3V3_SC
+STM32_I2C2	sda	debug_boot	R8	4k7	+3V3_SC
