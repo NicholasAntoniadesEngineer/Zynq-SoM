@@ -1,6 +1,23 @@
 #include "pcb_stage_internal.hpp"
 
 namespace schgen::pcb_stage {
+double Engine::connector_room(const Part &first, const Part &second) const {
+    const auto stated = [&](const Part &p) {
+        return connector_fact(in.connectors, std::filesystem::path(p.mod->source).stem().string());
+    };
+    const ConnectorFact *a = stated(first);
+    const ConnectorFact *b = stated(second);
+    if (!a || !b)
+        return 0;
+    const auto overhang = [&](const ConnectorFact &fact, const Part &p) {
+        if (!fact.mating || !fact.mating->plug_width_mm)
+            return 0.0;
+        const Box4 box = body(p);
+        return std::max(0.0, (*fact.mating->plug_width_mm - std::min(box.x1 - box.x0, box.y1 - box.y0)) / 2);
+    };
+    return overhang(*a, first) + overhang(*b, second) +
+           std::max(a->access ? a->access->side_mm : 0.0, b->access ? b->access->side_mm : 0.0);
+}
 Parts Engine::candidates(const std::string &ref, const std::vector<Attract> &att,
                          const std::vector<Repel> &rep, const Parts &placed, double pad,
                          const std::vector<Box4> &forbid) {
@@ -104,8 +121,16 @@ Parts Engine::candidates(const std::string &ref, const std::vector<Attract> &att
             (std::max(target.x1 - target.x0, target.y1 - target.y0) / 2 + bound + 9 + pad) / .5,
             &quantization),
         60);
+    std::vector<Box4> blocked = forbid;
+    for (const auto &p : placed) {
+        const double room = connector_room(subject, p);
+        if (room <= 0)
+            continue;
+        const Box4 b = body(p);
+        blocked.push_back({b.x0 - room, b.y0 - room, b.x1 + room, b.y1 + room});
+    }
     auto result =
-        seat_scan(center.first, center.second, n, .5, clear + pad, .1, 400, bodies(placed), forbid,
+        seat_scan(center.first, center.second, n, .5, clear + pad, .1, 400, bodies(placed), blocked,
                   subjects, attracts, repels, rotations, relative, bodies_rot, aligns);
     if (result.truncated)
         events.push_back("cand_cap_truncated");
@@ -387,8 +412,10 @@ Parts Engine::solve_contract() {
             for (const auto &r : comp)
                 if (roots.count(r)) {
                     bool is_conn = conn_roots.count(r);
-                    double gap = prev_conn && is_conn ? 20 : 2;
+                    double gap = 2;
                     auto p = part(r, rotations[r]);
+                    if (prev_conn && is_conn)
+                        cursor += connector_room(placed.back(), p);
                     auto b = body(p);
                     if (along_y)
                         p.y = stage_root_pose_precision4dp(cursor - b.y0, &quantization);
@@ -452,16 +479,25 @@ Parts Engine::compose(const std::vector<Parts> &clusters, const std::set<std::st
     bool along_y = ov && std::abs(vx) > std::abs(vy);
     double cursor = 0;
     bool prev = false;
+    const Parts *last = nullptr;
     std::vector<Parts> frames;
     for (const auto &cl : clusters) {
         bool has =
             std::any_of(cl.begin(), cl.end(), [&](const auto &p) { return conns.count(p.ref); });
-        double gap = prev && has ? 20 : 2;
+        double gap = 2;
+        if (prev && has) {
+            double room = 0;
+            for (const auto &a : *last)
+                for (const auto &c : cl)
+                    room = std::max(room, connector_room(a, c));
+            cursor += room;
+        }
         auto b = extent(cl);
         frames.push_back(shifted(cl, -b.x0 + (along_y ? 0 : cursor),
                                  -b.y0 + (along_y ? cursor : 0), quantization));
         cursor += (along_y ? b.y1 - b.y0 : b.x1 - b.x0) + clear + gap;
         prev = has;
+        last = &cl;
     }
     auto face = [&](const Parts &cl) -> std::optional<double> {
         std::vector<double> fs;

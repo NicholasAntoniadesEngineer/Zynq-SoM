@@ -252,8 +252,7 @@ void pcb_stages(Context& c){
                     batch(std::vector<std::size_t>(screened.begin()+static_cast<std::ptrdiff_t>(done),screened.begin()+static_cast<std::ptrdiff_t>(take)),lay);
                     done=take;
                     for(std::size_t k=0;k<done;++k){const auto& a=attempts[screened[k]];
-                        if(a.correct&&(!chosen||better(a,attempts[*chosen])))chosen=screened[k];
-                        if(search.mode=="quick"&&chosen)break;}
+                        if(a.correct&&(!chosen||better(a,attempts[*chosen])))chosen=screened[k];}
                     if(chosen)break;
                 }
                 return true;});
@@ -279,7 +278,7 @@ void pcb_stages(Context& c){
                 text<<" | "<<(a.correct?"yes":"no")<<" | "<<(src->layout?std::to_string(a.airwire):"-")<<" | "<<(a.first_finding.empty()?"-":a.first_finding)<<"\n";
             }
             for(const auto& a:attempts)if(!a.same_as&&!a.detail.empty())text<<"DETAIL seed "<<a.seed<<":\n"<<a.detail<<"\n";
-            if(chosen)text<<"CHOSEN seed "<<attempts[*chosen].seed<<" by "<<(search.mode=="quick"?"first correct in screening order":"objective")<<"\n";
+            if(chosen)text<<"CHOSEN seed "<<attempts[*chosen].seed<<" by "<<(search.mode=="quick"?"objective among the first batch laid out":"objective")<<"\n";
             if(!areas.empty()&&ran){
                 const double rate=static_cast<double>(passed)/static_cast<double>(ran);
                 const double median=areas[static_cast<std::size_t>(median_half*static_cast<double>(areas.size()-1))];
