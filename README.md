@@ -35,7 +35,7 @@ nothing needs recompiling. A misspelt or unknown key stops the run with an error
 | `squeeze` | `true` | Compact the placed board to the smallest outline that passes every rule |
 | `arrange` | `true` | Before squeezing, move clusters of parts off sides of the module so those sides can close up; needs `squeeze` |
 | `renders` | `true` | Produce the 3D and per-sheet images |
-| `labels` | `true` | After the layout is final, seat each part's reference label beside it on its own face and draw the function labels. Parts never move for a label; one with no free seat is hidden and listed in `reports/label_seats.txt` |
+| `labels` | `false` | After the layout is final, seat each part's reference label beside it on its own face and draw the function labels. Parts never move for a label; one with no free seat is hidden and listed in `reports/label_seats.txt` |
 | `timing` | `true` | Print how long each stage took |
 | `plane_net` | `"GND"` | Net of the reference planes |
 | `audit_projections` | `2` | Source audits run side by side (1 or 2) |

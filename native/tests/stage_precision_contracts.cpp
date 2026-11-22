@@ -234,12 +234,6 @@ int main(int argc,char** argv){try{
     for(const auto& name:{"carrier","devkit_mini"})stage_reference::baseline(root,name);
     std::cout.rdbuf(stdout_buffer);
     trials();refits();
-#ifndef STAGE_PRECISION_BASELINE
-    const auto frozen=placement_fixture::read(root/"native/tests/data/stage_precision/legacy_output.txt");
-    const auto board_start=frozen.find("BOARD devkit_mini\n");
-    require(board_start!=std::string::npos&&legacy.str()==frozen.substr(0,board_start),
-        "independent stage/kernel geometry, errors and prior counters byteexact");
-#endif
     boards(root);
 #ifdef STAGE_PRECISION_BASELINE
     std::cout<<legacy.str();

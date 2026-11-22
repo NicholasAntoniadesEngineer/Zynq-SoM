@@ -14,6 +14,8 @@
 namespace schgen::pcb_stage {
 using board_decision_policy::placement::clear;
 inline constexpr double zone_pad = .3, slide = 1.2;
+inline constexpr std::size_t contract_branch_width = 4, contract_node_budget = 96;
+inline constexpr double contract_branch_spacing = 4.0;
 using NamedBoxes = std::vector<std::pair<std::string, Box4>>;
 using Parts = std::vector<struct Part>;
 const JsonNode &field(const JsonNode &, const std::string &);

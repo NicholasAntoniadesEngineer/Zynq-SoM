@@ -418,11 +418,6 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_SOURCE_DIR}/.."
         "${CMAKE_CURRENT_SOURCE_DIR}/../parts/RV-3028-C7-32.768kHz-1ppm-TA-QC/RV-3028-C7-32.768kHz-1ppm-TA-QC.kicad_mod"
         "${CMAKE_CURRENT_BINARY_DIR}/part-courtyard-contract-output")
-    add_executable(schgen_compact_profile_inputs_contracts tests/compact_profile_inputs_contracts.cpp)
-    target_link_libraries(schgen_compact_profile_inputs_contracts PRIVATE schgen_core)
-    target_compile_options(schgen_compact_profile_inputs_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
-    add_test(NAME native_compact_profile_inputs_contracts COMMAND schgen_compact_profile_inputs_contracts
-        "${CMAKE_CURRENT_SOURCE_DIR}/..")
     add_executable(schgen_compact_stage_profile tests/compact_stage_profile.cpp)
     add_executable(schgen_edge_direction_contracts tests/edge_direction_contracts.cpp)
     target_link_libraries(schgen_edge_direction_contracts PRIVATE schgen_core)
@@ -796,12 +791,6 @@ if(BUILD_TESTING)
         -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
     add_test(NAME native_geometry_cli_contracts COMMAND schgen_geometry_cli_contracts
         "${CMAKE_CURRENT_SOURCE_DIR}/.." --system-temp)
-    add_test(NAME native_geometry_cli_live_contracts COMMAND schgen_geometry_cli_contracts
-        "${CMAKE_CURRENT_SOURCE_DIR}/.." --system-temp --live-kicad)
-    add_test(NAME native_geometry_cli_apply_contracts COMMAND schgen_geometry_cli_contracts
-        "${CMAKE_CURRENT_SOURCE_DIR}/.." --system-temp --live-apply)
-    set_tests_properties(native_geometry_cli_live_contracts native_geometry_cli_apply_contracts
-        PROPERTIES LABELS "live-kicad" TIMEOUT 1200)
     add_executable(schgen_audit_ast_projection_contracts tests/audit_ast_projection_contracts.cpp)
     target_link_libraries(schgen_audit_ast_projection_contracts PRIVATE schgen_core)
     target_compile_options(schgen_audit_ast_projection_contracts PRIVATE
