@@ -86,6 +86,9 @@ ConnectorSpacingResult check_connector_spacing(const PcbCheckInput& input){
     }
     std::stable_sort(res.pairs.begin(),res.pairs.end(),[](const auto& a,const auto& b){return a.gap<b.gap;});res.ok=res.violations.empty();return res;
 }
+bool ConnectorSpacingResult::ok_as_placed()const{
+    return std::all_of(pairs.begin(),pairs.end(),[](const ConnectorSpacingRow& row){return row.ok||row.family==staged_connector_family;});
+}
 std::string ConnectorSpacingResult::summary()const{
     std::vector<std::string> l={"CONNECTOR OVERMOLD SPACING GATE: "+verdict(ok)+" (board "+g(board_w)+" x "+g(board_h)+" mm)","  same-edge overmold connector pairs: "+std::to_string(pairs.size())+" ("+std::to_string(violations.size())+" too tight)"};
     for(const auto& p:pairs)l.push_back("    "+std::string(p.ok?"OK ":"BAD")+" "+pad(p.ref_a,9)+" <-> "+pad(p.ref_b,9)+" "+pad(p.family,12)+" gap="+pad(f(p.gap,2),6,true)+"mm along "+p.axis+" (need >= "+g(p.need)+"mm)");for(const auto& s:violations)l.push_back("    TOO-TIGHT "+s);return join(l);

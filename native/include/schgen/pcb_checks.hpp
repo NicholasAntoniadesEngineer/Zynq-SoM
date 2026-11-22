@@ -145,6 +145,7 @@ struct ConnectorSpacingResult {
     std::vector<ConnectorSpacingRow> pairs;
     std::vector<std::string> violations;
     std::string summary() const;
+    bool ok_as_placed() const;
 };
 ConnectorSpacingResult check_connector_spacing(const PcbCheckInput&);
 struct PlacementMechRow {

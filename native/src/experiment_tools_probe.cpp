@@ -84,6 +84,13 @@ ExperimentProbeResult run_w12_stageprobe(PcbPlacementInput input, const std::str
     const auto previous = input.experiment;
     auto observer = std::make_shared<PcbPlacementExperiment>();
     observer->checkpoint = [&](const auto &row) {
+        auto &rows = field(result.document.data, "rows").array_value;
+        if (row.stage == "plan_lattice" && rows.size() > 1) {
+            rows.erase(rows.begin() + 1, rows.end());
+            const std::string kept = "/rows/0/";
+            for (auto path = result.document.float_paths.begin(); path != result.document.float_paths.end();)
+                path = path->rfind(kept, 0) == 0 ? std::next(path) : result.document.float_paths.erase(path);
+        }
         add_stage(result.document, row);
         if (previous && previous->checkpoint) previous->checkpoint(row);
     };

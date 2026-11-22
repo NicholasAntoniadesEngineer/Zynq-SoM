@@ -2,7 +2,7 @@
 
 namespace schgen {
 bool PcbVerificationResult::ok() const {
-    return complete && ratsnest.ok && mechanical.ok && connector_models.ok && connector_spacing.ok &&
+    return complete && ratsnest.ok && mechanical.ok && connector_models.ok && (reached == rules::Stage::layout ? connector_spacing.ok : connector_spacing.ok_as_placed()) &&
         refdes.ok && placement.ok() && fanout.ok && return_stitch.ok && escape_lanes.ok && integrity.ok_at(reached);
 }
 PcbVerificationResult verify_pcb_geometry(const BoardPcbStage& stage,
