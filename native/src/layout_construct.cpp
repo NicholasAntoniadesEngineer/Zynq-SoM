@@ -104,6 +104,18 @@ ConstructReport construct_owned(Kernel& kernel, Nm pitch, Nm reach) {
             const Point at = kernel.placement()[peer].at;
             if (std::find(centres.begin(), centres.end(), at) == centres.end()) centres.push_back(at);
         }
+        std::optional<Box> hull;
+        if (led) {
+            hull = gate_at(problem, rule.anchor, owner);
+            for (const std::size_t other : order)
+                if (other != part && !kernel.parked(other) && owner_rule(problem, other)->anchor == rule.anchor)
+                    hull = united(*hull, gate_at(problem, other, kernel.placement()[other]));
+        }
+        const auto spread = [&](const Pose& pose) {
+            if (!hull) return Nm{0};
+            const Box grown = united(*hull, gate_at(problem, part, pose));
+            return (grown.x1 - grown.x0) + (grown.y1 - grown.y0) - (hull->x1 - hull->x0) - (hull->y1 - hull->y0);
+        };
         std::vector<Candidate> candidates;
         candidates.reserve(ring.size());
         for (const Point centre : centres)
@@ -121,7 +133,7 @@ ConstructReport construct_owned(Kernel& kernel, Nm pitch, Nm reach) {
                             within = length <= bound[index]->limit;
                             gap += length;
                         }
-                        if (within) candidates.push_back({pose, gap, rank});
+                        if (within) candidates.push_back({pose, gap + spread(pose), rank});
                     }
         trial[part] = original[part];
         if (led && (!rule.same_face || pair_faced(problem, kernel.board(), rule.anchor, owner, part, original[part], rule.or_under)) &&
