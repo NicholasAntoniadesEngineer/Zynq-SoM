@@ -15,6 +15,8 @@ inline constexpr const char* board_file = "board.json";
 inline constexpr const char* module_schema = "schgen.module/1";
 inline constexpr const char* module_file = "module.json";
 inline constexpr const char* module_interface_file = "som_interface.json";
+inline constexpr int densest_density = 10;
+inline constexpr int sparsest_density = 1;
 
 struct BoardPair {
     std::string positive, negative, kind;
@@ -92,6 +94,7 @@ struct BoardSheet {
     std::string module_connector, title;
     JsonNode settings;
     std::optional<JsonNode> additions;
+    std::optional<int> density;
     bool from_module() const { return !module_connector.empty(); }
 };
 
@@ -136,6 +139,8 @@ struct BoardDefinition {
     const BoardSheet& sheet(const std::string& name) const;
 };
 
+std::optional<int> density_level(const JsonNode& node);
+std::string density_range();
 const std::vector<DocumentKey>& board_document_keys();
 BoardHeader board_header_of(const JsonNode& document, const std::string& source);
 BoardHeader load_board_header(const std::filesystem::path& board_root);
@@ -148,5 +153,6 @@ BoardPower parse_board_power(const JsonNode& node, const std::string& source);
 BoardDefinition parse_board(const JsonNode& document, const std::string& source, ModuleDefinition module_definition);
 BoardDefinition load_board(const std::filesystem::path& board_root);
 BoardDefinition load_board(const std::filesystem::path& board_root, ModuleDefinition module);
+std::map<std::string, int> sheet_densities(const BoardDefinition& board);
 
 }

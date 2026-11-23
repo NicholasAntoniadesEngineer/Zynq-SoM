@@ -28,6 +28,8 @@ using namespace schgen::layout;
 
 namespace fixture {
 constexpr std::uint64_t walk_seed = 20261111;
+constexpr int sparse_density = 5;
+const char* const gaps_kept = "GAPS NOT KEPT: 0\n";
 constexpr Nm walk_range = 5000000, walk_grid = 50000;
 constexpr int flip_odds = 4, probe_stride = 25;
 constexpr Nm hull_tolerance = 500;
@@ -285,9 +287,20 @@ void squeezed_board_passes(const std::string& project, const PcbPlacementInput& 
         << land_spacing_kicad_rules(judge_land_spacing(PcbCheckInput(stage.model)));
     const auto drc = run_pcb_drc(directory / "Zynq_Carrier.kicad_pcb");
     require(drc.n_errors && *drc.n_errors == 0, project + " squeezed board has no KiCad design-rule errors");
-    if (project == fixture::repeat_project)
-        require(render_pcb(squeeze_stage(inputs, model, policy, options).model, policy).pcb == rendered.pcb,
-                project + " squeeze repeats exactly");
+    if (project != fixture::repeat_project) return;
+    require(render_pcb(squeeze_stage(inputs, model, policy, options).model, policy).pcb == rendered.pcb,
+            project + " squeeze repeats exactly");
+    require(stage.density.find(fixture::gaps_kept) != std::string::npos && stage.spread.widest == 0,
+            project + " at the densest level opens no gap and reports none missing");
+    AdapterOptions sparse = options;
+    sparse.density.board = fixture::sparse_density;
+    const StageResult spaced = squeeze_stage(inputs, model, policy, sparse);
+    std::cout << spaced.density;
+    const double spaced_area = to_mm(spaced.squeeze.after.width) * to_mm(spaced.squeeze.after.height);
+    require(spaced_area >= after, project + " at a lower density is not smaller than at the densest");
+    require(spaced.density.find(fixture::gaps_kept) != std::string::npos, project + " at a lower density keeps every gap it asks for");
+    const GateVerdict spaced_verdict = judge_model(inputs, spaced.model);
+    require(spaced_verdict.ok(), project + " at a lower density passes its gates: " + spaced_verdict.text());
 }
 
 void replay(const std::filesystem::path& root, const std::string& project, std::size_t states,
@@ -300,7 +313,7 @@ void replay(const std::filesystem::path& root, const std::string& project, std::
     const PcbPlacementGatePolicy gates = pcb_placement_gate_policy(stage.inputs);
     const AdapterOptions options{fixture::plane_net,
         project_edge_clearance(parse_json_text(file_text(paths.project_root / "Zynq_Carrier.kicad_pro"))),
-        {fixture::overmold_part}, 0, authored_intent(stage.inputs)};
+        {fixture::overmold_part}, 0, authored_intent(stage.inputs), {schgen::densest_density, {}}};
     ModelBinding binding = bind_model(model, policy, &gates, options);
     const Constraints& rules = binding.problem.constraints;
     std::map<std::string, std::size_t> ties;

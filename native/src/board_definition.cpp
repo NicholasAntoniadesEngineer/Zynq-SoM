@@ -91,7 +91,7 @@ BoardModule module_of(const JsonNode& node, const std::string& where) {
 }
 
 BoardSheet sheet_of(const JsonNode& row, const std::string& where) {
-    reject_unknown_keys(row, {"name", "module_connector", "title", "settings", "additions"}, where + " sheet");
+    reject_unknown_keys(row, {"name", "module_connector", "title", "settings", "additions", "density"}, where + " sheet");
     BoardSheet sheet;
     sheet.name = text(row, "name", where);
     sheet.settings.kind = JsonKind::Object;
@@ -109,6 +109,10 @@ BoardSheet sheet_of(const JsonNode& row, const std::string& where) {
     if (const JsonNode* additions = object_field(row, "additions")) {
         if (additions->kind != JsonKind::Object) fail(where, "sheet " + sheet.name + " additions is not an object");
         sheet.additions = *additions;
+    }
+    if (const JsonNode* density = object_field(row, "density")) {
+        sheet.density = density_level(*density);
+        if (!sheet.density) fail(where, "sheet " + sheet.name + " field 'density' must be " + density_range());
     }
     return sheet;
 }
@@ -159,6 +163,17 @@ BoardFiles files_of(const JsonNode& node, const std::string& where) {
     return files;
 }
 
+}
+
+std::optional<int> density_level(const JsonNode& node) {
+    if (node.kind != JsonKind::Number || !std::isfinite(node.number_value)) return std::nullopt;
+    for (int level = sparsest_density; level <= densest_density; ++level)
+        if (node.number_value == static_cast<double>(level)) return level;
+    return std::nullopt;
+}
+
+std::string density_range() {
+    return "a whole number from " + std::to_string(sparsest_density) + " to " + std::to_string(densest_density);
 }
 
 const std::vector<DocumentKey>& board_document_keys() {
@@ -363,6 +378,13 @@ BoardDefinition load_board(const std::filesystem::path& board_root, ModuleDefini
     BoardDefinition board = parse_board(parse_json_file(file.string()), file.string(), std::move(module));
     if (board.name != board_root.filename().string()) fail(file.string(), "name " + board.name + " differs from its folder");
     return board;
+}
+
+std::map<std::string, int> sheet_densities(const BoardDefinition& board) {
+    std::map<std::string, int> levels;
+    for (const BoardSheet& sheet : board.sheets)
+        if (sheet.density) levels[sheet.name] = *sheet.density;
+    return levels;
 }
 
 }

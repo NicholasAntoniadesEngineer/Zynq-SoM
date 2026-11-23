@@ -11,6 +11,7 @@ namespace {
 using namespace schgen;
 
 std::size_t checks = 0;
+constexpr int middle_level = 5, sparse_level = 1;
 
 void require(bool condition, const std::string& detail) {
     ++checks;
@@ -114,6 +115,22 @@ void reads_a_board() {
                 board.module_definition.pairs.back().impedance,
             "module draw is read and pair impedance is optional and kept when given");
     rejects([&] { board.sheet("absent"); }, "has no sheet absent");
+}
+
+void reads_subsystem_density() {
+    const std::string plain = "{\"name\": \"mechanical\"}";
+    const auto with = [&](const std::string& value) { return replaced(small, plain, "{\"name\": \"mechanical\", \"density\": " + value + "}"); };
+    const BoardDefinition unstated = parsed(small);
+    for (const BoardSheet& sheet : unstated.sheets) require(!sheet.density, "a sheet that states no density carries none");
+    require(sheet_densities(unstated).empty(), "a board that states no density overrides none");
+    const BoardDefinition stated = parsed(with("5"));
+    require(stated.sheet("mechanical").density == middle_level && !stated.sheet("power").density, "a sheet's own density is read for that sheet only");
+    const std::map<std::string, int> levels = sheet_densities(parsed(with("1")));
+    require(levels.size() == 1 && levels.at("mechanical") == sparse_level, "each stated density is listed by sheet");
+    for (const char* wrong : {"0", "11", "5.5", "-1", "\"5\"", "null", "true", "[5]"}) {
+        rejects([&] { parsed(with(wrong)); }, "board file fixture: sheet mechanical field 'density' must be a whole number from 1 to 10");
+    }
+    rejects([&] { parsed(replaced(small, plain, "{\"name\": \"mechanical\", \"densities\": 5}")); }, "densities");
 }
 
 void names_board_files() {
@@ -265,6 +282,7 @@ int main(int argc, char** argv) {
     try {
         if (argc != 2) throw std::runtime_error("usage: board_definition_contracts REPOSITORY");
         reads_a_board();
+        reads_subsystem_density();
         names_board_files();
         refuses_bad_boards();
         reads_a_module();

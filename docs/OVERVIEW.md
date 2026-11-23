@@ -98,12 +98,15 @@ A board is a folder of data; the compiled application builds it unchanged. Write
 
 1. `<board>/board.json`: `schema`, `name` (= the folder name), `files.stem`, `root_readme`, `owned_groups`,
    `module.folder`/`pairs`/`loads`, `power.sources`/`rails`/`inlet`, and `sheets` (library subsystems by
-   name with `settings`/`additions`, or module-connector sheets with `module_connector` and `title`).
+   name with `settings`/`additions`, or module-connector sheets with `module_connector` and `title`). A sheet
+   row may state `density` (a whole number from 1 to 10) to give that subsystem its own layout density in
+   place of the board's.
 2. The module folder named by `module.folder` (`som/` today: `module.json`, `som_interface.json`); shared,
    written once per module.
 3. `<board>/project.json`: `name`, `placement` (five keys), `placement_requirements`, `fpga.bank_rails`;
    optional `silk_labels`, `escape.genuine_pairs`. Unknown keys fail.
-4. `schgen.json`: the board in `boards`, a `stackup` entry from `native/stackups.json`, an
+4. `schgen.json`: the board in `boards`, a `stackup` entry from `native/stackups.json`, a `density`
+   entry (1 to 10; 10 is the densest and lets courtyards touch), an
    `overmold_parts` entry, and a `fabrication` entry (`fabricator`, `copper.outer_oz`/`inner_oz` equal to
    what the stack-up was published for, `finish`, `assembly_service`, `build_count`); see
    [FABRICATION.md](FABRICATION.md).

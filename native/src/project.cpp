@@ -219,6 +219,7 @@ ProjectConfig load_project_config(const ProjectPaths& paths) {
         out.labels = run.labels;
         out.arrange = run.arrange;
         out.construct = run.construct;
+        out.density = run.density_of(out.name);
         const auto& placement = field(out.raw, "placement");
         reject_unknown_project_keys(placement, "placement");
         out.wired_sheets = strings(field(placement, "wired_sheets"), "placement.wired_sheets");

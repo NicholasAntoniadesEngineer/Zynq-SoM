@@ -9,6 +9,7 @@
 namespace {
 
 std::size_t checks = 0;
+constexpr int dense_level = 10, middle_level = 5, sparse_level = 1;
 
 void require(bool condition, const std::string& detail) {
     ++checks;
@@ -46,6 +47,7 @@ void write(const std::filesystem::path& file, const std::string& text) {
 const std::string base = "{\"schema\":\"schgen.run/1\",\"boards\":[\"carrier\",\"devkit_mini\"],\"output\":\"out\",\"squeeze\":true,"
                          "\"arrange\":false,\"construct\":false,\"renders\":false,\"labels\":false,\"timing\":false,\"plane_net\":\"GND\","
                          "\"audit_projections\":2,\"stackup\":{\"carrier\":\"JLC06161H-3313\",\"devkit_mini\":\"JLC06161H-3313\"},"
+                         "\"density\":{\"carrier\":10,\"devkit_mini\":10},"
                          "\"fabrication\":{\"carrier\":{\"fabricator\":\"jlcpcb\",\"copper\":{\"outer_oz\":1,\"inner_oz\":0.5},\"finish\":\"ENIG\",\"assembly_service\":\"standard\",\"build_count\":5},\"devkit_mini\":{\"fabricator\":\"jlcpcb\",\"copper\":{\"outer_oz\":1,\"inner_oz\":0.5},\"finish\":\"ENIG\",\"assembly_service\":\"standard\",\"build_count\":5}},"
                          "\"search\":{\"mode\":\"quick\",\"seeds\":[0,1,2,3,4,5,6,7],\"promote\":3,\"threads\":4,\"objective\":[\"area\",\"airwire\"],\"max_minutes\":null,\"max_outline_mm\":null,\"reliability\":{\"pass_rate\":0.8,\"area_spread\":0.05,\"basis\":\"integrator's decision 2026-11-21; revisit after the first sweeps on three boards\"}},"
                          "\"overmold_parts\":{\"carrier\":[],\"devkit_mini\":[]}}";
@@ -73,6 +75,29 @@ void arguments() {
     rejects([] { parse_run_arguments({"--stackups"}, {study::stackups_option}); }, "--stackups needs a value");
     rejects([] { parse_run_arguments({"--stackups", "A", "--stackups", "B"}, {study::stackups_option}); }, "given twice");
     rejects([] { parse_run_arguments({"--layers", "A"}, {study::stackups_option}); }, "unknown option --layers");
+}
+
+void density_setting() {
+    using namespace schgen;
+    const std::string stated = "\"density\":{\"carrier\":10,\"devkit_mini\":10},";
+    const auto with = [&](const std::string& entry) { return parse_run_config(parse_json_text(replaced(base, stated, entry))); };
+    const RunConfig dense = parse_run_config(parse_json_text(base));
+    require(dense.density_of("carrier") == dense_level && dense.density_of("devkit_mini") == dense_level, "the stated density is not read");
+    const RunConfig mixed = with("\"density\":{\"carrier\":5,\"devkit_mini\":1},");
+    require(mixed.density_of("carrier") == middle_level && mixed.density_of("devkit_mini") == sparse_level, "each board keeps its own density");
+    require(study::row_config(mixed, "devkit_mini", "JLC08161H-3313").density_of("carrier") == middle_level, "a study row must keep the density");
+    rejects([&] { with(""); }, "schgen.json: field 'density' is missing");
+    rejects([&] { with("\"density\":10,"); }, "field 'density' is missing or has the wrong type");
+    for (const char* wrong : {"0", "11", "5.5", "-3", "\"5\"", "null", "true", "[5]"})
+        rejects([&] { with(std::string("\"density\":{\"carrier\":") + wrong + ",\"devkit_mini\":10},"); },
+                "schgen.json: 'density' of 'carrier' must be a whole number from 1 to 10");
+    rejects([&] { with("\"density\":{\"carrier\":10},"); }, "'density' names no level for board 'devkit_mini'");
+    rejects([&] { mixed.density_of("absent"); }, "'density' names no level for board 'absent'");
+    rejects([&] { parse_run_config(parse_json_text(replaced(replaced(base, stated, "\"density\":{\"carrier\":9,\"devkit_mini\":10},"),
+                                                            "\"squeeze\":true", "\"squeeze\":false"))); },
+            "'density' of 'carrier' is below 10, which needs 'squeeze'");
+    require(parse_run_config(parse_json_text(replaced(base, "\"squeeze\":true", "\"squeeze\":false"))).density_of("carrier") == dense_level,
+            "the densest level must not need the squeeze");
 }
 
 void configuration() {
@@ -216,6 +241,7 @@ int main() {
     try {
         arguments();
         configuration();
+        density_setting();
         catalogue_cells();
         reports();
         comparison();

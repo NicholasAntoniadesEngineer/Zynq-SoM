@@ -1,4 +1,5 @@
 #include "schgen/layout_construct.hpp"
+#include "schgen/layout_density.hpp"
 #include "schgen/layout_json.hpp"
 #include "schgen/layout_kernel.hpp"
 
@@ -46,6 +47,13 @@ constexpr Point via_site{3 * unit, 0}, via_near{24 * unit, 20 * unit}, via_clear
 constexpr Point via_mirror{16 * unit, 20 * unit};
 constexpr Nm via_pad = 11 * unit / 20, via_ground = unit / 4, via_hole = 3 * unit / 5;
 constexpr Nm construct_pitch = unit / 4, construct_reach = 6 * unit;
+constexpr Point abut_site{12 * unit, 10 * unit}, half_site{25 * unit / 2, 10 * unit}, quarter_site{49 * unit / 4, 10 * unit};
+constexpr Point gap_site{53 * unit / 4, 10 * unit}, third_site{10 * unit, 12 * unit}, loose_site{29 * unit / 2, 10 * unit};
+constexpr Point fourth_site{14 * unit, 10 * unit};
+constexpr int dense_level = 10, middle_level = 5, sparse_level = 1, below_level = 0, above_level = 11;
+constexpr Nm middle_gap = 5 * unit / 4, sparse_gap = 9 * unit / 4, small_gap = unit / 2;
+constexpr Nm tie_reach = 3 * unit / 2;
+constexpr double fraction_level = 5.5;
 constexpr std::uint64_t walk_seed = 20261111;
 constexpr int walk_steps = 400;
 constexpr Nm walk_range = 4 * unit, walk_grid = unit / 20;
@@ -415,6 +423,123 @@ void groups_stay_together() {
     require(has(Kernel(scene.problem, scene.placement).violations(), Breach::dispersion), "dispersed group is reported");
 }
 
+void density_adds_a_gap() {
+    Scene scene;
+    const auto smd = scene.footprint("smd", square_variant(fixture::body_half, fixture::passive_pins, false));
+    scene.add("A", "one", smd, fixture::first_site);
+    scene.add("B", "two", smd, fixture::abut_site);
+    const auto breached = [&] { return has(Kernel(scene.problem, scene.placement).violations(), Breach::spacing); };
+    const auto legal = [&] { return Kernel(scene.problem, scene.placement).violations().empty(); };
+    require(density_spacing(fixture::dense_level) == 0, "the densest level adds no gap");
+    require(density_spacing(fixture::middle_level) == fixture::middle_gap, "level five adds five steps");
+    require(density_spacing(fixture::sparse_level) == fixture::sparse_gap, "level one adds nine steps");
+    for (const int level : {fixture::below_level, fixture::above_level}) {
+        bool refused = false;
+        try {
+            density_spacing(level);
+        } catch (const LayoutError&) {
+            refused = true;
+        }
+        require(refused, "a level outside the scale is refused");
+    }
+    apply_density(scene.problem, {fixture::dense_level, {}});
+    require(scene.problem.parts.front().spacing == 0 && scene.problem.parts.back().spacing == 0 &&
+            scene.problem.constraints.spacing_limits.empty(), "the densest level leaves every part as it was");
+    require(legal(), "at the densest level touching courtyards stay legal");
+    bool unstated = false;
+    try {
+        apply_density(scene.problem, {});
+    } catch (const LayoutError&) {
+        unstated = true;
+    }
+    require(unstated, "a board with no stated level is refused");
+    apply_density(scene.problem, {fixture::dense_level, {{"one", fixture::middle_level}}});
+    require(scene.problem.parts.front().spacing == fixture::middle_gap && scene.problem.parts.back().spacing == 0,
+            "a subsystem's own level sets its parts only");
+    require(breached(), "touching courtyards breach the gap of the sparser subsystem");
+    scene.placement.back().at = fixture::half_site;
+    require(breached(), "a gap smaller than asked is a breach");
+    scene.placement.back().at = fixture::gap_site;
+    require(legal(), "a gap equal to the one asked is legal");
+    {
+        Kernel kernel(scene.problem, scene.placement);
+        const auto found = kernel.rejection(1, {fixture::half_site, Turn::none, Face::top});
+        require(found && found->kind == Breach::spacing, "a move that closes the gap is refused by name");
+        require(!kernel.move(1, {fixture::half_site, Turn::none, Face::top}), "the refused move is not made");
+        require(kernel.move(1, {fixture::abut_site, Turn::none, Face::bottom}), "the other face keeps no gap");
+    }
+    scene.placement.back().at = fixture::abut_site;
+    scene.placement.back().face = Face::bottom;
+    require(legal(), "parts on opposite faces keep no gap");
+    scene.placement.back().face = Face::top;
+    scene.problem.parts.front().fixed = scene.problem.parts.back().fixed = true;
+    require(legal(), "two fixed parts keep no gap");
+    scene.problem.parts.front().fixed = scene.problem.parts.back().fixed = false;
+    scene.problem.constraints.spacing_limits.push_back({0, 1, fixture::small_gap, "a rule that leaves half a millimetre"});
+    require(spacing_between(scene.problem, 0, 1) == fixture::small_gap, "a pair keeps the gap another rule limits it to");
+    scene.placement.back().at = fixture::half_site;
+    require(legal(), "the limited gap is enough for the pair");
+    scene.placement.back().at = fixture::quarter_site;
+    require(breached(), "the limited gap is still kept");
+    scene.problem.constraints.soft_gaps.push_back(
+        {0, 1, {}, fixture::tie_reach, Sense::at_most, "owner of B", true, false, fixture::tie_reach});
+    apply_density(scene.problem, {fixture::dense_level, {{"one", fixture::middle_level}}});
+    require(scene.problem.constraints.spacing_limits.size() == 1 && scene.problem.constraints.spacing_limits.front().limit == 0 &&
+            spacing_between(scene.problem, 0, 1) == 0, "a part keeps no added gap from the part it must stay near");
+    scene.placement.back().at = fixture::abut_site;
+    require(legal(), "the rule that needs the parts near wins over the gap");
+    scene.add("C", "two", smd, fixture::third_site);
+    scene.problem.constraints.soft_gaps.push_back(
+        {0, 2, {}, fixture::tie_reach, Sense::at_most, "owner of C", true, false, fixture::tie_reach});
+    apply_density(scene.problem, {fixture::middle_level, {}});
+    require(spacing_between(scene.problem, 1, 2) == 0, "two parts that serve one part keep no gap between them");
+    scene.problem.constraints.pad_gaps.push_back(
+        {0, 1, {}, fixture::tie_reach, Sense::at_most, "contract of B", true, false, fixture::tie_reach});
+    scene.add("E", "two", smd, fixture::fourth_site);
+    scene.problem.constraints.pad_gaps.push_back(
+        {1, 3, {}, fixture::tie_reach, Sense::at_most, "contract of E", true, false, fixture::tie_reach});
+    apply_density(scene.problem, {fixture::middle_level, {}});
+    require(spacing_between(scene.problem, 0, 3) == 0, "parts chained into one tied cluster keep no gap inside it");
+    require(spacing_between(scene.problem, 2, 3) == fixture::middle_gap, "a part outside the cluster keeps the full gap from it");
+    scene.problem.constraints.pad_gaps.clear();
+    scene.problem.parts.pop_back();
+    scene.placement.pop_back();
+    apply_density(scene.problem, {fixture::middle_level, {}});
+    scene.placement[1].at = fixture::half_site;
+    scene.add("D", "two", smd, fixture::loose_site);
+    apply_density(scene.problem, {fixture::middle_level, {}});
+    const std::string report = density_report(scene.problem, scene.placement, {fixture::middle_level, {}});
+    require(report.find("owner of B") != std::string::npos && report.find("GAPS NOT KEPT: 1") != std::string::npos,
+            "the report names the limiting rule and counts the gaps not kept");
+    const std::string exported = document_json(scene.problem, scene.placement);
+    const Document restored = read_document(schgen::parse_json_text(exported));
+    require(restored.problem.parts.front().spacing == fixture::middle_gap &&
+            restored.problem.constraints.spacing_limits.size() == scene.problem.constraints.spacing_limits.size() &&
+            document_json(restored.problem, restored.placement) == exported, "gaps and their limits survive the export");
+    schgen::JsonNode level;
+    level.kind = schgen::JsonKind::Number;
+    level.number_value = fixture::middle_level;
+    require(schgen::density_level(level) == fixture::middle_level, "a whole level is read");
+    for (const double wrong : {fixture::fraction_level, static_cast<double>(fixture::below_level), static_cast<double>(fixture::above_level)}) {
+        level.number_value = wrong;
+        require(!schgen::density_level(level), "a fraction or a level outside the scale is not a level");
+    }
+    level.kind = schgen::JsonKind::String;
+    require(!schgen::density_level(level), "text is not a level");
+}
+
+void round_courtyards_keep_the_gap() {
+    Scene scene;
+    const auto round = scene.footprint("round", round_variant(fixture::round_radius));
+    scene.add("H", "one", round, fixture::round_first);
+    scene.add("F", "two", round, fixture::round_second);
+    require(Kernel(scene.problem, scene.placement).violations().empty(), "discs beside each other are legal when dense");
+    apply_density(scene.problem, {fixture::middle_level, {}});
+    require(has(Kernel(scene.problem, scene.placement).violations(), Breach::spacing), "discs nearer than the gap breach it");
+    require(courtyard_gap(scene.problem, 0, scene.placement.front(), 1, scene.placement.back()) < to_mm(fixture::middle_gap),
+            "the measured gap between the discs is below the one asked");
+}
+
 Placement random_walk() {
     Scene scene;
     const auto smd = scene.footprint("smd", square_variant(fixture::body_half, fixture::passive_pins, false));
@@ -595,6 +720,8 @@ int main() {
         subsystem_rules_bind_groups();
         connectors_stay_at_their_edge();
         groups_stay_together();
+        density_adds_a_gap();
+        round_courtyards_keep_the_gap();
         via_sites_stay_clear();
         walks_repeat_exactly();
         std::cout << "layout kernel contracts ok\n";

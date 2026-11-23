@@ -1,4 +1,5 @@
 #include "schgen/run_config.hpp"
+#include "schgen/board_definition.hpp"
 #include "schgen/stackup.hpp"
 
 #include <algorithm>
@@ -111,6 +112,12 @@ const std::string& RunConfig::stackup_of(const std::string& board) const {
     return found->second;
 }
 
+int RunConfig::density_of(const std::string& board) const {
+    const auto found = density.find(board);
+    if (found == density.end()) fail("'density' names no level for board '" + board + "'");
+    return found->second;
+}
+
 const std::vector<std::string>& RunConfig::overmold_parts_of(const std::string& board) const {
     const auto found = overmold_parts.find(board);
     if (found == overmold_parts.end()) fail("'overmold_parts' names no entry for board '" + board + "'");
@@ -141,7 +148,7 @@ std::vector<std::string> RunConfig::board_arguments(const std::string& board, co
 RunConfig parse_run_config(const JsonNode& document) {
     if (document.kind != JsonKind::Object) fail("the file must hold one object");
     reject_unknown_keys(document, {"schema", "boards", "output", "squeeze", "arrange", "construct", "renders", "labels", "timing", "plane_net",
-                                   "audit_projections", "stackup", "overmold_parts", "fabrication", "study", "search"}, run_config_file);
+                                   "audit_projections", "stackup", "density", "overmold_parts", "fabrication", "study", "search"}, run_config_file);
     if (member(document, "schema", JsonKind::String).string_value != "schgen.run/1") fail("unknown schema");
     RunConfig config;
     config.boards = names(member(document, "boards", JsonKind::Array), "boards");
@@ -161,6 +168,11 @@ RunConfig parse_run_config(const JsonNode& document) {
     for (const auto& [board, name] : member(document, "stackup", JsonKind::Object).object_value) {
         if (name.kind != JsonKind::String || name.string_value.empty()) fail("stack-up of '" + board + "' is not a name");
         config.stackup[board] = name.string_value;
+    }
+    for (const auto& [board, level] : member(document, "density", JsonKind::Object).object_value) {
+        const std::optional<int> value = density_level(level);
+        if (!value) fail("'density' of '" + board + "' must be " + density_range());
+        config.density[board] = *value;
     }
     for (const auto& [board, parts] : member(document, "overmold_parts", JsonKind::Object).object_value) {
         if (parts.kind != JsonKind::Array) fail("overmold parts of '" + board + "' must be a list");
@@ -194,6 +206,8 @@ RunConfig parse_run_config(const JsonNode& document) {
     for (const std::string& board : config.boards) {
         config.stackup_of(board);
         config.fabrication_of(board);
+        if (config.density_of(board) < densest_density && !config.squeeze)
+            fail("'density' of '" + board + "' is below " + std::to_string(densest_density) + ", which needs 'squeeze'");
     }
     return config;
 }
