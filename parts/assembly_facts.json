@@ -2,7 +2,7 @@
   "schema": "schgen.assembly_facts/1",
   "unplaced_classes": ["fiducial", "mounting_hole", "test_point"],
   "needs": {
-    "battery_holder": {"item": "cell for the battery holder", "satisfied_by": []}
+    "battery_holder": {"item": "cell for the battery holder", "satisfied_by": [], "owner_fits": "user ruling 2026-11-23: the board ships with the CR1220 holder empty, so no lithium cell is shipped; the owner fits a cell if clock backup is wanted"}
   },
   "parts": {
     "C10214": {

@@ -25,6 +25,7 @@ struct AssemblyPart {
 struct AssemblyNeed {
     std::string item;
     std::vector<std::string> satisfied_by;
+    std::string owner_fits;
 };
 
 struct AssemblyFacts {

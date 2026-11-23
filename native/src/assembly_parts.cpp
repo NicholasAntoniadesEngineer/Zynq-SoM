@@ -59,6 +59,7 @@ AssemblyPartsVerdict check_assembly_parts(const std::vector<CircuitSheetIr>& she
     std::vector<std::string> unlisted;
     for (const std::string& ref : files.placed) if (!listed.count(ref)) unlisted.push_back(ref);
     if (!unlisted.empty()) fail("the board needs " + std::to_string(unlisted.size()) + " placed parts the BOM lacks: " + joined(unlisted));
+    std::vector<std::string> owner_fitted;
     for (const CircuitSheetIr& sheet : sheets) {
         std::map<PartClass, std::vector<std::string>> wanting;
         for (const CircuitPartIr& part : sheet.parts) {
@@ -68,7 +69,9 @@ AssemblyPartsVerdict check_assembly_parts(const std::vector<CircuitSheetIr>& she
         for (const auto& [part_class, refs] : wanting) {
             const AssemblyNeed& need = facts.needs.at(part_class);
             const bool met = std::any_of(need.satisfied_by.begin(), need.satisfied_by.end(), [&](const std::string& code) { return codes.count(code) > 0; });
-            if (!met) fail("the finished board needs a " + need.item + ", which is not a placed BOM part (needed by " + joined(refs) + ")");
+            if (met) continue;
+            if (need.owner_fits.empty()) fail("the finished board needs a " + need.item + ", which is not a placed BOM part (needed by " + joined(refs) + ")");
+            else owner_fitted.push_back(need.item + " for " + joined(refs) + ": " + need.owner_fits);
         }
     }
     std::string oldest;
@@ -83,6 +86,7 @@ AssemblyPartsVerdict check_assembly_parts(const std::vector<CircuitSheetIr>& she
                                   " boards), JLCPCB stock " + std::to_string(row->second.jlc_stock) + (row->second.route.empty() ? "" : ", route " + row->second.route));
     }
     verdict.facts.push_back(std::to_string(files.lines.size()) + " BOM lines, " + std::to_string(codes.size()) + " codes, facts rows read " + (oldest.empty() ? std::string("never") : "from " + oldest));
+    for (const std::string& line : owner_fitted) verdict.facts.push_back("NOT FITTED BY THE ASSEMBLER, by decision: " + line);
     if (!short_stock.empty()) {
         verdict.advisories.push_back("ADVISORY: out of stock today: " + std::to_string(short_stock.size()) + " lines");
         for (const std::string& line : short_stock) verdict.advisories.push_back("ADVISORY:   " + line);
