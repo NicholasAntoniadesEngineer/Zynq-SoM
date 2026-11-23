@@ -74,6 +74,7 @@ struct Part {
     std::optional<CornerRule> corner;
     std::vector<Point> via_sites = {};
     Face via_face = Face::top;
+    Nm spacing = 0;
 };
 
 struct Pin {
@@ -147,6 +148,12 @@ struct GroupGap {
     std::string source;
 };
 
+struct SpacingLimit {
+    std::size_t first = 0, second = 0;
+    Nm limit = 0;
+    std::string source;
+};
+
 struct ConnectorRules {
     Nm overlap_slack = 0, overmold_gap = 0, boot_gap = 0;
     double band_share = 0;
@@ -166,6 +173,7 @@ struct Constraints {
     std::vector<NetOrder> net_orders;
     std::vector<GroupGap> group_gaps;
     ConnectorRules connectors;
+    std::vector<SpacingLimit> spacing_limits = {};
 };
 
 struct PourRule {
@@ -251,7 +259,7 @@ std::optional<NetOrder> net_order_of(const Problem& problem, const PadGap& claim
 std::vector<NetOrder> net_orders_of(const Problem& problem);
 Nm rival_bound(const Problem& problem, const NetOrder& rule, const Placement& placement);
 bool net_order_met(const Problem& problem, const NetOrder& rule, const Placement& placement, std::size_t moved,
-                   const Pose* pose);
+                   const Pose* pose, const std::vector<char>* absent = nullptr);
 void derive_ownership(Problem& problem, const Placement& placement, const HoldPolicy& policy, const Intent& intent);
 void tighten_holds(Problem& problem, const Placement& placement, const HoldPolicy& policy);
 const char* tie_name(Tie tie);

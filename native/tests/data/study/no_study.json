@@ -4,6 +4,7 @@
   "output": "out",
   "squeeze": true,
   "arrange": true,
+  "construct": false,
   "renders": false,
   "labels": false,
   "timing": false,
@@ -11,6 +12,9 @@
   "audit_projections": 2,
   "stackup": {
     "devkit_mini": "JLC06161H-3313"
+  },
+  "density": {
+    "devkit_mini": 10
   },
   "fabrication": {
     "devkit_mini": {"fabricator":"jlcpcb","copper":{"outer_oz":1,"inner_oz":0.5},"finish":"ENIG","assembly_service":"standard","build_count":5}

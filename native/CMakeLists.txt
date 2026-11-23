@@ -81,7 +81,7 @@ target_sources(schgen_core PRIVATE src/regression_cli.cpp)
 target_sources(schgen_core PRIVATE src/measure_board.cpp src/measure_metrics.cpp src/measure_report.cpp src/measure_cli.cpp)
 target_sources(schgen_core PRIVATE src/json_text.cpp src/layout_geometry.cpp src/layout_problem.cpp src/layout_kernel.cpp
     src/layout_adapter.cpp src/layout_json.cpp src/layout_cli.cpp src/layout_squeeze.cpp src/layout_arrange.cpp src/layout_stage.cpp
-    src/layout_sink.cpp src/placement_integrity.cpp src/label_seats.cpp
+    src/layout_sink.cpp src/layout_construct.cpp src/layout_density.cpp src/placement_integrity.cpp src/label_seats.cpp
     src/placement_report.cpp src/testpoint_map.cpp src/decoupling_report.cpp src/i2c_inventory.cpp src/module_pin_map.cpp src/connector_pinout.cpp src/rated_bom.cpp)
 set(SCHGEN_RULE_SOURCES
     src/rules/rule_context.cpp src/roles.cpp src/rules/rule_book.cpp src/rules/rule_index.cpp

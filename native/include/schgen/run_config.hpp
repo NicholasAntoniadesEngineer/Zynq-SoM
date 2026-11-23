@@ -32,14 +32,16 @@ struct RunConfig {
     SearchConfig search;
     std::vector<std::string> boards;
     std::filesystem::path output;
-    bool squeeze = false, arrange = false, renders = false, labels = false, timing = false;
+    bool squeeze = false, arrange = false, construct = false, renders = false, labels = false, timing = false;
     std::string plane_net;
     int audit_projections = 0;
     std::map<std::string, std::string> stackup;
+    std::map<std::string, int> density;
     std::map<std::string, std::vector<std::string>> overmold_parts;
     std::map<std::string, FabricationConfig> fabrication;
     std::vector<std::string> study_stackups;
     const std::string& stackup_of(const std::string& board) const;
+    int density_of(const std::string& board) const;
     const std::vector<std::string>& overmold_parts_of(const std::string& board) const;
     const FabricationConfig& fabrication_of(const std::string& board) const;
     std::vector<std::string> board_arguments(const std::string& board, const std::filesystem::path& file) const;

@@ -42,7 +42,8 @@ struct ProjectPaths {
 
 struct ProjectConfig {
     std::string name, stackup, file_stem;
-    bool labels = true, arrange = false;
+    bool labels = true, arrange = false, construct = false;
+    int density = 0;
     // Set-like membership in Python; retained in source order here.
     std::vector<std::string> wired_sheets, pilot_prox_sheets;
     std::array<double, 2> module_offset{};

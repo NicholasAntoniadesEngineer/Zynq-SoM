@@ -17,7 +17,7 @@ inline constexpr std::array kernel_registry{hash_cell, key_shift};
 
 enum class Breach : std::uint8_t {
     overlap, off_board, fanout, module_core, bottom_face, dispersion, copper, contract, group_bound,
-    edge_mount, connector_gap, reserved, locked, corner, under_inductor, via_field
+    edge_mount, connector_gap, reserved, locked, corner, under_inductor, via_field, spacing
 };
 
 struct Violation {
@@ -40,6 +40,7 @@ struct Snapshot {
     Board board;
     std::vector<Box> reserves;
     std::vector<std::vector<std::size_t>> fields, freed;
+    std::vector<char> absent = {};
 };
 
 struct Probe {
@@ -60,7 +61,14 @@ public:
     const Placement& placement() const { return placement_; }
     const Board& board() const { return board_; }
     void set_board(const Board& board);
-    Snapshot snapshot() const { return {placement_, board_, reserve_boxes_, fields_, freed_}; }
+    Snapshot snapshot() const { return {placement_, board_, reserve_boxes_, fields_, freed_, absent_}; }
+    void park(std::size_t part);
+    bool parked(std::size_t part) const { return absent_[part] != 0; }
+    bool movable_alone(std::size_t part) const { return !problem_.parts[part].fixed && fields_[part].empty(); }
+    bool releasable(std::size_t part) const;
+    std::size_t parked_count() const;
+    std::optional<Violation> seat_rejection(std::size_t part, const Pose& pose) const;
+    bool seat(std::size_t part, const Pose& pose);
     bool release(std::size_t part);
     void restore(const Snapshot& snapshot);
     const std::vector<Box>& reserves() const { return reserve_boxes_; }
@@ -112,6 +120,7 @@ private:
     bool crowds(const Part& crowder, const Part& subject) const;
     bool copper_clear(const Shape& shape, Face face) const;
     Nm land_clearance(int net) const;
+    Nm spacing_needed(std::size_t first, std::size_t second) const;
     bool lands_clear(const Shape& first, Face first_face, const Shape& second, Face second_face) const;
     bool group_dispersed(const std::string& group, std::size_t moved, const Shape* shape) const;
     Nm named_gap(const Shape& anchor, const std::vector<std::size_t>& names, const Shape& member) const;
@@ -151,9 +160,11 @@ private:
     Board board_;
     std::vector<Box> reserve_boxes_;
     std::vector<std::vector<std::size_t>> fields_, freed_;
+    std::vector<char> absent_;
     Placement placement_;
     std::vector<Shape> shapes_;
     std::unordered_map<Key, std::vector<std::size_t>> cells_;
+    std::unordered_map<Key, Nm> spacing_limits_;
     std::map<std::string, std::vector<std::size_t>> groups_, members_;
     std::map<std::string, std::vector<std::size_t>> group_rules_;
     std::vector<std::vector<std::size_t>> pad_rules_, nearest_rules_, face_rules_, order_rules_;

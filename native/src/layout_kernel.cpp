@@ -47,6 +47,23 @@ bool beside_escape(const std::array<bool, edge_count>& escape, Box subject, Box 
            (above && escape[crowder.y0 + crowder.y1 >= subject.y0 + subject.y1 ? south_slot : north_slot]);
 }
 
+bool courts_apart(const std::vector<Box>& boxes, const std::vector<Disc>& discs, const std::vector<Box>& other_boxes,
+                  const std::vector<Disc>& other_discs, Nm need) {
+    for (const auto& box : boxes) {
+        for (const auto& other : other_boxes)
+            if (!gap_at_least(box, other, need)) return false;
+        for (const auto& other : other_discs)
+            if (!gap_at_least(box, other, need)) return false;
+    }
+    for (const auto& disc : discs) {
+        for (const auto& other : other_boxes)
+            if (!gap_at_least(other, disc, need)) return false;
+        for (const auto& other : other_discs)
+            if (!gap_at_least(disc, other, need)) return false;
+    }
+    return true;
+}
+
 double area_of(Box box) {
     return static_cast<double>(box.width()) * static_cast<double>(box.height());
 }
@@ -71,6 +88,7 @@ const char* breach_name(Breach breach) {
     case Breach::corner: return "corner";
     case Breach::under_inductor: return "under_inductor";
     case Breach::via_field: return "via_field";
+    case Breach::spacing: return "spacing";
     }
     return "unknown";
 }
@@ -78,10 +96,20 @@ const char* breach_name(Breach breach) {
 Kernel::Kernel(const Problem& problem, Placement placement)
     : problem_(problem), board_(problem.board), placement_(std::move(placement)) {
     validate(problem_, placement_);
-    for (const auto& part : problem_.parts)
+    for (const auto& part : problem_.parts) {
         if (part.fanout_subject) reach_ = std::max(reach_, part.fanout_need);
+        reach_ = std::max(reach_, part.spacing);
+    }
+    for (const SpacingLimit& limit : problem_.constraints.spacing_limits) {
+        if (limit.first >= placement_.size() || limit.second >= placement_.size() || limit.first == limit.second || limit.limit < 0)
+            throw LayoutError("layout: a spacing limit names an unknown pair or a negative gap: " + limit.source);
+        const Key key = key_of(static_cast<Nm>(std::min(limit.first, limit.second)), static_cast<Nm>(std::max(limit.first, limit.second)));
+        const auto found = spacing_limits_.find(key);
+        if (found == spacing_limits_.end() || limit.limit < found->second) spacing_limits_[key] = limit.limit;
+    }
     fields_.resize(placement_.size());
     freed_.resize(placement_.size());
+    absent_.assign(placement_.size(), 0);
     for (std::size_t reserve = 0; reserve < problem_.reserves.size(); ++reserve) {
         reserve_boxes_.push_back(problem_.reserves[reserve].box);
         for (const std::size_t member : problem_.reserves[reserve].members) fields_.at(member).push_back(reserve);
@@ -134,7 +162,7 @@ void Kernel::rebuild() {
     shapes_.reserve(placement_.size());
     for (std::size_t part = 0; part < placement_.size(); ++part) {
         shapes_.push_back(shape_of(part, placement_[part]));
-        insert(part);
+        if (!absent_[part]) insert(part);
     }
     routed_ = 0;
     net_lengths_.assign(problem_.nets.size(), 0);
@@ -153,8 +181,52 @@ void Kernel::restore(const Snapshot& snapshot) {
     std::vector<Move> changed;
     for (std::size_t part = 0; part < placement_.size(); ++part)
         if (placement_[part] != snapshot.placement[part]) changed.push_back({part, snapshot.placement[part]});
-    for (const Move& move : changed) place(move.part, move.pose);
+    for (const Move& move : changed) {
+        if (absent_[move.part]) {
+            placement_[move.part] = move.pose;
+            shapes_[move.part] = shape_of(move.part, move.pose);
+        } else {
+            place(move.part, move.pose);
+        }
+    }
+    if (!snapshot.absent.empty() && snapshot.absent != absent_) {
+        absent_ = snapshot.absent;
+        rebuild();
+        return;
+    }
     refresh_nets(changed);
+}
+
+void Kernel::park(std::size_t part) {
+    const Part& item = problem_.parts.at(part);
+    if (item.fixed || !fields_[part].empty())
+        throw LayoutError("layout: " + item.reference + " is fixed or field-bound and cannot be taken off the board");
+    if (absent_[part]) return;
+    remove(part);
+    absent_[part] = 1;
+    refresh_nets({{part, placement_[part]}});
+}
+
+std::size_t Kernel::parked_count() const {
+    return static_cast<std::size_t>(std::count_if(absent_.begin(), absent_.end(), [](char flag) { return flag != 0; }));
+}
+
+std::optional<Violation> Kernel::seat_rejection(std::size_t part, const Pose& pose) const {
+    const Part& item = problem_.parts.at(part);
+    if (!absent_[part]) throw LayoutError("layout: " + item.reference + " is already on the board");
+    if (pose.face != placement_[part].face && !problem_.footprints[item.footprint].flippable)
+        return Violation{Breach::locked, part, part};
+    return first_breach(part, shape_of(part, pose), pose, problem_.rules.compare_guard, nullptr);
+}
+
+bool Kernel::seat(std::size_t part, const Pose& pose) {
+    if (seat_rejection(part, pose)) return false;
+    placement_[part] = pose;
+    shapes_[part] = shape_of(part, pose);
+    insert(part);
+    absent_[part] = 0;
+    refresh_nets({{part, pose}});
+    return true;
 }
 
 void Kernel::place(std::size_t part, const Pose& pose) {
@@ -184,6 +256,15 @@ bool Kernel::release(std::size_t part) {
     }
     freed_[part].insert(freed_[part].end(), fields_[part].begin(), fields_[part].end());
     fields_[part].clear();
+    return true;
+}
+
+bool Kernel::releasable(std::size_t part) const {
+    if (problem_.parts[part].fixed) return false;
+    for (const std::size_t reserve : fields_[part]) {
+        const std::optional<PourRule>& pour = problem_.reserves[reserve].pour;
+        if (pour && pour->owner == part) return false;
+    }
     return true;
 }
 
@@ -269,6 +350,7 @@ bool Kernel::attempt(const std::vector<Move>& moves, std::vector<std::size_t>* b
     std::vector<char> moved(placement_.size(), 0);
     for (const auto& move : moves) {
         const Part& item = problem_.parts.at(move.part);
+        if (absent_[move.part]) throw LayoutError("layout: " + item.reference + " is off the board and must be seated before it moves");
         if (item.fixed || moved[move.part]) return false;
         if (move.pose.face != placement_[move.part].face && !problem_.footprints[item.footprint].flippable)
             return false;
@@ -388,21 +470,24 @@ Nm Kernel::net_length(std::size_t net, std::size_t moved, const Pose* pose) cons
     std::vector<Point> points;
     points.reserve(count);
     for (const auto& pin : pins) {
+        if (absent_[pin.part] && !(pose && pin.part == moved)) continue;
         const Pose& at = pose && pin.part == moved ? *pose : placement_[pin.part];
         const Variant& variant = problem_.footprints[problem_.parts[pin.part].footprint].on(at.face);
         points.push_back(placed(variant.pads[pin.pad].centre, at.at, at.turn));
     }
-    std::vector<Nm> best(count, std::numeric_limits<Nm>::max());
-    std::vector<char> used(count, 0);
+    const std::size_t present = points.size();
+    if (present < 2) return 0;
+    std::vector<Nm> best(present, std::numeric_limits<Nm>::max());
+    std::vector<char> used(present, 0);
     best.front() = 0;
     Nm total = 0;
-    for (std::size_t step = 0; step < count; ++step) {
-        std::size_t pick = count;
-        for (std::size_t index = 0; index < count; ++index)
-            if (!used[index] && (pick == count || best[index] < best[pick])) pick = index;
+    for (std::size_t step = 0; step < present; ++step) {
+        std::size_t pick = present;
+        for (std::size_t index = 0; index < present; ++index)
+            if (!used[index] && (pick == present || best[index] < best[pick])) pick = index;
         used[pick] = 1;
         total += best[pick];
-        for (std::size_t index = 0; index < count; ++index) {
+        for (std::size_t index = 0; index < present; ++index) {
             if (used[index]) continue;
             const Nm dx = points[pick].x - points[index].x, dy = points[pick].y - points[index].y;
             const Nm length = (dx < 0 ? -dx : dx) + (dy < 0 ? -dy : dy);
@@ -521,6 +606,16 @@ Nm Kernel::land_clearance(int net) const {
     return net == no_net ? problem_.rules.copper_clearance : problem_.nets[static_cast<std::size_t>(net)].clearance;
 }
 
+Nm Kernel::spacing_needed(std::size_t first, std::size_t second) const {
+    const Part& a = problem_.parts[first];
+    const Part& b = problem_.parts[second];
+    const Nm wanted = std::max(a.spacing, b.spacing);
+    if (wanted <= 0 || (a.fixed && b.fixed)) return 0;
+    const auto found = spacing_limits_.find(
+        key_of(static_cast<Nm>(std::min(first, second)), static_cast<Nm>(std::max(first, second))));
+    return found == spacing_limits_.end() ? wanted : std::min(wanted, found->second);
+}
+
 bool Kernel::lands_clear(const Shape& first, Face first_face, const Shape& second, Face second_face) const {
     if (gap_at_least(first.bound, second.bound, problem_.rules.copper_clearance)) return true;
     for (const auto& a : first.lands)
@@ -594,6 +689,9 @@ std::optional<Breach> Kernel::pair_breach(std::size_t first, const Shape& first_
     if (courts_overlap(first_shape.courts, first_shape.discs, second_shape.courts, second_shape.discs))
         return Breach::overlap;
     if (!lands_clear(first_shape, first_face, second_shape, second_face)) return Breach::copper;
+    const Nm spacing = spacing_needed(first, second);
+    if (spacing > 0 && !courts_apart(first_shape.courts, first_shape.discs, second_shape.courts, second_shape.discs, spacing))
+        return Breach::spacing;
     const Part& a = problem_.parts[first];
     const Part& b = problem_.parts[second];
     if (a.fanout_subject && crowds(b, a) && !gap_at_least(first_shape.gate, second_shape.gate, a.fanout_need) &&
@@ -632,10 +730,16 @@ bool Kernel::nearest_met(const NearestGap& rule, std::size_t moved, const Shape*
         return pose && part == moved ? pose->face : placement_[part].face;
     };
     Nm best = std::numeric_limits<Nm>::max();
+    bool pending = false;
     for (const std::size_t member : rule.members) {
+        if (absent_[member] && !(shape && member == moved)) {
+            pending = true;
+            continue;
+        }
         if (rule.same_face && face_of_part(member) != face_of_part(rule.anchor)) continue;
         best = std::min(best, named_gap(shape_of_part(rule.anchor), rule.anchor_names, shape_of_part(member)));
     }
+    if (pending && best == std::numeric_limits<Nm>::max()) return true;
     return rule.limit >= guard && best <= squared(rule.limit - guard);
 }
 
@@ -653,6 +757,7 @@ Kernel::GroupSummary Kernel::summarise(const GroupGap& rule, bool second, std::s
     const auto found = members_.find(second ? rule.second : rule.first);
     if (found == members_.end()) return summary;
     for (const std::size_t part : found->second) {
+        if (absent_[part] && !(shape && part == moved)) continue;
         const Shape& item = shape && part == moved ? *shape : shapes_[part];
         const Point at = pose && part == moved ? pose->at : placement_[part].at;
         if (item.pads) summary.hull = summary.hull ? united(*summary.hull, *item.pads) : *item.pads;
@@ -660,6 +765,7 @@ Kernel::GroupSummary Kernel::summarise(const GroupGap& rule, bool second, std::s
         summary.y += static_cast<double>(at.y);
         summary.count += 1;
     }
+    if (summary.count == 0) return summary;
     summary.x /= summary.count;
     summary.y /= summary.count;
     return summary;
@@ -855,12 +961,12 @@ bool Kernel::rule_breaches(std::size_t part, const Shape& shape, const Pose& pos
     }
     if (!owned)
         for (const std::size_t owner : via_owners_)
-            if (owner != part && via_blocked(owner, placement_[owner], shape) &&
+            if (owner != part && !absent_[owner] && via_blocked(owner, placement_[owner], shape) &&
                 sink(Violation{Breach::via_field, part, owner}))
                 return true;
     if (item.connector)
         for (const std::size_t peer : connectors_) {
-            if (peer == part || (owned && peer < part)) continue;
+            if (peer == part || absent_[peer] || (owned && peer < part)) continue;
             if (!connectors_met(part, shape, pose, peer, shapes_[peer], guard) &&
                 sink(Violation{Breach::connector_gap, part, peer}))
                 return true;
@@ -869,6 +975,7 @@ bool Kernel::rule_breaches(std::size_t part, const Shape& shape, const Pose& pos
         const PadGap& rule = rules.pad_gaps[index];
         if (owned && rule.anchor != part) continue;
         const std::size_t peer = rule.anchor == part ? rule.member : rule.anchor;
+        if (peer != part && absent_[peer]) continue;
         const Shape& anchor = rule.anchor == part ? shape : shapes_[rule.anchor];
         const Shape& member = rule.member == part ? shape : shapes_[rule.member];
         if (!pad_gap_met(rule, anchor, member, guard_for(peer)) && sink(Violation{Breach::contract, part, peer}))
@@ -877,6 +984,7 @@ bool Kernel::rule_breaches(std::size_t part, const Shape& shape, const Pose& pos
     for (const std::size_t index : nearest_rules_[part]) {
         const NearestGap& rule = rules.nearest_gaps[index];
         if (owned && rule.anchor != part) continue;
+        if (rule.anchor != part && absent_[rule.anchor]) continue;
         if (!nearest_met(rule, part, &shape, &pose, guard) && sink(Violation{Breach::contract, part, rule.anchor}))
             return true;
     }
@@ -884,7 +992,7 @@ bool Kernel::rule_breaches(std::size_t part, const Shape& shape, const Pose& pos
         const FacePair& rule = rules.face_pairs[index];
         const bool first = rule.first == part;
         const std::size_t peer = first ? rule.second : rule.first;
-        if (peer == part || (owned && !first)) continue;
+        if (peer == part || absent_[peer] || (owned && !first)) continue;
         if (!pair_faced(problem_, board_, rule.first, first ? pose : placement_[peer], rule.second,
                         first ? placement_[peer] : pose, rule.or_under) &&
             sink(Violation{Breach::contract, part, peer}))
@@ -893,7 +1001,8 @@ bool Kernel::rule_breaches(std::size_t part, const Shape& shape, const Pose& pos
     for (const std::size_t index : order_rules_[part]) {
         const NetOrder& rule = rules.net_orders[index];
         if (owned && rule.lead != part) continue;
-        if (!net_order_met(problem_, rule, placement_, part, &pose) &&
+        if ((rule.anchor != part && absent_[rule.anchor]) || (rule.lead != part && absent_[rule.lead])) continue;
+        if (!net_order_met(problem_, rule, placement_, part, &pose, &absent_) &&
             sink(Violation{Breach::contract, part, rule.lead == part ? rule.anchor : rule.lead}))
             return true;
     }
@@ -902,6 +1011,13 @@ bool Kernel::rule_breaches(std::size_t part, const Shape& shape, const Pose& pos
         for (const std::size_t index : found->second) {
             const GroupGap& rule = rules.group_gaps[index];
             if (owned && (rule.first != item.group || members_.at(rule.first).front() != part)) continue;
+            const auto waiting = [&](const std::string& name) {
+                const auto listed = members_.find(name);
+                return listed != members_.end() &&
+                       std::all_of(listed->second.begin(), listed->second.end(),
+                                   [&](std::size_t member) { return member != part && absent_[member]; });
+            };
+            if (waiting(rule.first) || (!rule.second_is_core && waiting(rule.second))) continue;
             if (!group_gap_met(rule, part, &shape, &pose, guard > 0 ? problem_.rules.group_guard : 0) &&
                 sink(Violation{Breach::group_bound, part, part}))
                 return true;
@@ -925,13 +1041,14 @@ bool Kernel::group_dispersed(const std::string& group, std::size_t moved, const 
     const auto members = groups_.find(group);
     if (members == groups_.end() || members->second.size() <= problem_.rules.dispersion_floor) return false;
     const auto gate_of = [&](std::size_t part) { return shape && part == moved ? shape->gate : shapes_[part].gate; };
-    Box hull = gate_of(members->second.front());
+    std::optional<Box> hull;
     double total = 0;
     for (const std::size_t part : members->second) {
-        hull = united(hull, gate_of(part));
+        if (absent_[part] && !(shape && part == moved)) continue;
+        hull = hull ? united(*hull, gate_of(part)) : gate_of(part);
         total += area_of(gate_of(part));
     }
-    return area_of(hull) > problem_.rules.dispersion_limit * total;
+    return hull && area_of(*hull) > problem_.rules.dispersion_limit * total;
 }
 
 std::vector<Violation> Kernel::violations() const {
@@ -941,9 +1058,9 @@ std::vector<Violation> Kernel::violations() const {
         return false;
     };
     for (std::size_t part = 0; part < placement_.size(); ++part)
-        geometry_breaches(part, shapes_[part], placement_[part], 0, true, keep);
+        if (!absent_[part]) geometry_breaches(part, shapes_[part], placement_[part], 0, true, keep);
     for (std::size_t part = 0; part < placement_.size(); ++part)
-        rule_breaches(part, shapes_[part], placement_[part], 0, nullptr, true, keep);
+        if (!absent_[part]) rule_breaches(part, shapes_[part], placement_[part], 0, nullptr, true, keep);
     return found;
 }
 

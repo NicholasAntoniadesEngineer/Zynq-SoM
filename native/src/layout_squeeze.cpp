@@ -108,6 +108,50 @@ public:
         return take_step(attempt);
     }
 
+    std::size_t separate(Breach kind) {
+        const auto close = [&] {
+            std::vector<char> marked(bundles_.units.size(), 0);
+            for (const Violation& violation : kernel_.violations())
+                if (violation.kind == kind)
+                    for (const std::size_t part : {violation.part, violation.other})
+                        if (!problem_.parts[part].fixed) marked[bundles_.unit_of[part]] = 1;
+            return marked;
+        };
+        const Point pivot{pivot_of(true), pivot_of(false)};
+        const auto centre = [&](std::size_t unit) {
+            const Box hull = hull_at(problem_, kernel_.placement(), bundles_.units[unit]);
+            return Point{(hull.x0 + hull.x1) / 2 - pivot.x, (hull.y0 + hull.y1) / 2 - pivot.y};
+        };
+        std::vector<std::size_t> order;
+        const std::vector<char> first = close();
+        for (std::size_t unit = 0; unit < bundles_.units.size(); ++unit)
+            if (first[unit]) order.push_back(unit);
+        std::stable_sort(order.begin(), order.end(), [&](std::size_t a, std::size_t b) {
+            const Point at_a = centre(a), at_b = centre(b);
+            return squared(at_a.x) + squared(at_a.y) > squared(at_b.x) + squared(at_b.y);
+        });
+        std::size_t moved = 0;
+        for (const std::size_t unit : order) {
+            if (!close()[unit]) continue;
+            const Point from = centre(unit);
+            const Point out{from.x > 0 ? 1 : from.x < 0 ? -1 : 0, from.y > 0 ? 1 : from.y < 0 ? -1 : 0};
+            if (move_unit(unit, ring(options_.pitch, options_.unit_reach, out)) ||
+                move_unit(unit, ring(static_cast<Nm>(constants::wide_pitch.value), static_cast<Nm>(constants::wide_reach.value), out)))
+                ++moved;
+        }
+        return moved;
+    }
+
+    bool legalise(std::string& blocker) {
+        Attempt attempt;
+        attempt.scaled = true;
+        attempt.step = options_.last_step;
+        settled_.assign(bundles_.units.size(), 0);
+        const bool legal = settle(attempt);
+        blocker = attempt.blocker;
+        return legal;
+    }
+
     bool open(Side side, Nm by) {
         Attempt attempt;
         attempt.side = side;
@@ -588,6 +632,12 @@ SqueezeReport squeeze(Kernel& kernel, const SqueezeOptions& options) { return Sq
 
 bool widen(Kernel& kernel, const SqueezeOptions& options, Side side, Nm by) {
     return Squeezer(kernel, options).widen(side, by);
+}
+
+std::size_t separate(Kernel& kernel, const SqueezeOptions& options, Breach kind) { return Squeezer(kernel, options).separate(kind); }
+
+bool legalise(Kernel& kernel, const SqueezeOptions& options, std::string& blocker) {
+    return Squeezer(kernel, options).legalise(blocker);
 }
 
 bool open_side(Kernel& kernel, const SqueezeOptions& options, Side side, Nm by) {

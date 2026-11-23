@@ -4,6 +4,7 @@
   "output": "out",
   "squeeze": true,
   "arrange": true,
+  "construct": false,
   "renders": true,
   "labels": false,
   "timing": true,
@@ -13,6 +14,11 @@
     "carrier": "JLC06161H-3313",
     "devkit_mini": "JLC06161H-3313",
     "motor_carrier": "JLC06161H-3313"
+  },
+  "density": {
+    "carrier": 10,
+    "devkit_mini": 10,
+    "motor_carrier": 10
   },
   "overmold_parts": {
     "carrier": ["HDMI-019S"],

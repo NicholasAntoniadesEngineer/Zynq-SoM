@@ -594,6 +594,38 @@ std::vector<RepairRow> legalise_rest(Kernel& kernel, const SqueezeOptions& setti
     return rows;
 }
 
+void open_spacing(Kernel& kernel, const SqueezeOptions& settings, SpreadReport& report) {
+    const auto closed = [&] {
+        const auto found = kernel.violations();
+        return static_cast<std::size_t>(std::count_if(found.begin(), found.end(),
+            [](const Violation& violation) { return violation.kind == Breach::spacing; }));
+    };
+    for (const Part& part : kernel.problem().parts) report.widest = std::max(report.widest, part.spacing);
+    report.before = report.after = kernel.board();
+    report.closed_before = report.closed_after = closed();
+    if (report.widest == 0) return;
+    std::string blocker;
+    for (;;) {
+        for (std::size_t moved = separate(kernel, settings, Breach::spacing); moved > 0; moved = separate(kernel, settings, Breach::spacing))
+            report.moved += moved;
+        if (closed() > 0) legalise(kernel, settings, blocker);
+        report.closed_after = closed();
+        if (report.closed_after == 0 || report.rounds == static_cast<std::size_t>(constants::spread_rounds.value)) break;
+        for (const Side side : {Side::north, Side::south, Side::west, Side::east}) open_side(kernel, settings, side, report.widest);
+        ++report.rounds;
+    }
+    report.after = kernel.board();
+    if (report.closed_after == 0) return;
+    std::string left;
+    std::size_t shown = 0;
+    for (const Violation& violation : kernel.violations()) {
+        if (violation.kind != Breach::spacing || ++shown > straggler_rows) continue;
+        left += " " + kernel.problem().parts[violation.part].reference + "/" + kernel.problem().parts[violation.other].reference;
+    }
+    throw LayoutError("layout: " + std::to_string(report.closed_after) + " courtyard gaps asked for by the density setting are still closed after the outline was opened " +
+                      std::to_string(report.rounds) + " times:" + left + "; first obstacle: " + blocker);
+}
+
 void repair_start(Kernel& kernel, const SqueezeOptions& settings, StageResult& result, const std::function<void(bool)>& mark) {
     const std::size_t gaps_inherited = gap_count(kernel);
     mark(false);
@@ -612,7 +644,8 @@ StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model
                           const AdapterOptions& options, const SearchChoice& choice) {
     const PcbPlacementGatePolicy gates = pcb_placement_gate_policy(inputs);
     const ModelBinding binding = bind_model(model, policy, &gates, options);
-    Kernel attracted(binding.problem, binding.placement);
+    const Problem dense = without_density(binding.problem);
+    Kernel attracted(dense, binding.placement);
     const auto rear = [](const Placement& placement) {
         return static_cast<std::size_t>(std::count_if(placement.begin(), placement.end(),
             [](const Pose& pose) { return pose.face == Face::bottom; }));
@@ -634,10 +667,15 @@ StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model
         return text + " (" + std::to_string(attracted.violations().size()) + ")\n";
     };
     std::string illegal_entry, illegal_separated;
+    if (inputs.floorplan.project.construct) {
+        result.construct = construct_owned(attracted, settings.pitch, static_cast<Nm>(constants::construct_reach.value));
+        if (!result.construct->unseated.empty())
+            throw LayoutError("layout: no seat by rule for some owned parts\n" + construct_summary(*result.construct));
+    }
     repair_start(attracted, settings, result, [&](bool separated) { (separated ? illegal_separated : illegal_entry) = listed(separated ? "after connector separation" : "handed over"); });
     {
         const std::size_t left = unmet_count(attracted) + gap_count(attracted);
-        result.convergence = convergence_text(result, left) + illegal_entry + illegal_separated + listed("after repair");
+        result.convergence = (result.construct ? construct_summary(*result.construct) : std::string()) + convergence_text(result, left) + illegal_entry + illegal_separated + listed("after repair");
         const Problem& entry = attracted.problem();
         for (const PadGap& rule : entry.constraints.soft_gaps)
             if (rule.same_face && !pair_faced(entry, attracted.board(), rule.anchor, attracted.placement()[rule.anchor], rule.member,
@@ -690,6 +728,7 @@ StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model
     held.rules.tall_module_clearance = to_nm(constants::tall_module_clearance.value);
     Kernel kernel(held, attracted.placement());
     kernel.set_board(attracted.board());
+    open_spacing(kernel, settings, result.spread);
     const Bundles clusters = bundle(held);
     for (const Violation& crowding : kernel.violations()) {
         if (crowding.kind != Breach::module_core) continue;
@@ -936,6 +975,16 @@ StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model
         for (const std::string& line : provenance) text << "    " << line << "\n";
     }
     result.report = text.str();
+    std::ostringstream density;
+    density << density_report(held, kernel.placement(), options.density);
+    if (result.spread.widest > 0)
+        density << "OPENING: " << result.spread.closed_before << " gaps were closed in the placement handed over; " << result.spread.moved
+                << " cluster moves opened them, and the outline was opened " << result.spread.rounds << " times by "
+                << to_mm(result.spread.widest) << " mm a side, from "
+                << to_mm(result.spread.before.width) << " x " << to_mm(result.spread.before.height) << " mm to "
+                << to_mm(result.spread.after.width) << " x " << to_mm(result.spread.after.height) << " mm, before the squeeze closed it to "
+                << to_mm(kernel.board().width) << " x " << to_mm(kernel.board().height) << " mm\n";
+    result.density = density.str();
     return result;
 }
 

@@ -115,14 +115,16 @@ Nm rival_bound(const Problem& problem, const NetOrder& rule, const Placement& pl
 }
 
 bool net_order_met(const Problem& problem, const NetOrder& rule, const Placement& placement, std::size_t moved,
-                   const Pose* pose) {
+                   const Pose* pose, const std::vector<char>* absent) {
     const auto at = [&](std::size_t part) -> const Pose& { return pose && part == moved ? *pose : placement[part]; };
     const auto gap = [&](std::size_t part) {
         return squared_net_gap(problem, rule.anchor, at(rule.anchor), rule.anchor_names, part, at(part), rule.net);
     };
     const Nm lead = gap(rule.lead);
     if (pose && moved != rule.anchor && moved != rule.lead) return gap(moved) >= lead;
-    return std::all_of(rule.rivals.begin(), rule.rivals.end(), [&](std::size_t rival) { return gap(rival) >= lead; });
+    return std::all_of(rule.rivals.begin(), rule.rivals.end(), [&](std::size_t rival) {
+        return (absent && (*absent)[rival] && rival != moved) || gap(rival) >= lead;
+    });
 }
 
 void derive_ownership(Problem& problem, const Placement& placement, const HoldPolicy& policy, const Intent& intent) {
