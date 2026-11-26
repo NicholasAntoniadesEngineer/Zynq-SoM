@@ -461,23 +461,11 @@ SchematicRoutedSheet route_schematic(const CircuitSheetIr& circuit,
     for (const auto& [net, paths] : placement.plans) {
         const auto found = geoms.find(net);
         if (found == geoms.end()) throw SchematicRouteError("plan for undeclared net " + repr(net));
-        const std::string& planned = net;
-        const auto declared = std::find_if(circuit.nets.begin(), circuit.nets.end(), [&planned](const auto& item) { return item.name == planned; });
-        const bool rerouted = declared != circuit.nets.end() && declared->net_class != "power" && declared->net_class != "ground";
-        for (const auto& path : paths) {
-            bool clear = true;
-            for (std::size_t i = 1; clear && i < path.size(); ++i) {
-                const auto a = rounded(path[i - 1]), b = rounded(path[i]);
-                if (a == b) continue;
-                for (const auto& taken : cells(a, b)) if (!grid.free_or(net, taken)) { clear = false; break; }
-            }
-            if (!clear && rerouted) continue;
-            for (std::size_t i = 1; i < path.size(); ++i) {
-                const auto a = rounded(path[i - 1]), b = rounded(path[i]);
-                if (a == b) continue;
-                claim(grid, net, cells(a, b), "wire " + net);
-                found->second.legs.emplace_back(a, b);
-            }
+        for (const auto& path : paths) for (std::size_t i = 1; i < path.size(); ++i) {
+            const auto a = rounded(path[i - 1]), b = rounded(path[i]);
+            if (a == b) continue;
+            claim(grid, net, cells(a, b), "wire " + net);
+            found->second.legs.emplace_back(a, b);
         }
     }
     // Preserve net insertion order even for failure priority.

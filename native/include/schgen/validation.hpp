@@ -92,6 +92,7 @@ struct VisualResult {
 // than allowing malformed geometry to evade predicates. A negative/nonfinite
 // clearance is also an input error; these cases throw ValidationError.
 bool wire_over_text(const VisualSegment& wire, const VisualBox& box);
+bool visual_text_kind(const std::string& kind);
 
 VisualResult check_visual_geometry(
     const SheetGeometry& geometry,

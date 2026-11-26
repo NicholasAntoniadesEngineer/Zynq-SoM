@@ -684,7 +684,9 @@ SchematicPlacement Engine::run() {
         }
         result = !stages.empty() && shared_ok ? _regulator_template(std::move(stages)) : _chain_template();
     }
-    if (_label_open_stubs()) result = pl;
+    const auto drawn = pl.parts.size();
+    _graft_unplaced();
+    if (pl.parts.size() != drawn || _label_open_stubs()) result = pl;
     Refs missing; for (const auto& p : c.parts) if (!_done.count(p.ref)) missing.push_back(p.ref);
     std::sort(missing.begin(), missing.end());
     require(missing.empty(), "engine left parts unplaced: " + ref_list(missing) + " — no topology pattern matched them");
@@ -820,6 +822,11 @@ SchematicPlacement Engine::_chain_template() {
     }
     const auto seat = [&](const std::string& ref, double ax, double ay) {
         anchors[ref] = {ax, ay}; _collect_trunk_pins(ref, ax, ay, trunk_jobs, rung_keys);
+        const auto next = std::next(std::find(order.begin(), order.end(), ref));
+        if (next != order.end()) for (const auto& info : binfo.at(*next)) {
+            const Point tip{r3(ax + info.first.a.first), r3(ay + info.first.a.second)};
+            _reserve(info.first.net, tip, {r3(tip.first + PAPER_W_BUDGET), tip.second});
+        }
         _cell(ref, ax, ay, handled, trunk_jobs, true, order.size() > 1 && ref == order.back() ? 1 : -1);
     };
     for (std::size_t i = 0; i < order.size(); ++i) {
@@ -881,7 +888,7 @@ SchematicPlacement Engine::_chain_template() {
                     pl.plan(p.net, {{tx, ty}, {ex, ty}}); llabel(p.net, ex, ty);
                 }
                 for (const auto tip : all_tips(p.b, p.b_extra)) handled.erase({ref, _pin_num_at(ref, tip, "left"), "left"});
-                _bridge(p.net);
+                _bridge(p.net); _release(p.net);
             }
             binfo[ref].clear();
             const double bottom = _extent().y1;
@@ -906,6 +913,12 @@ SchematicPlacement Engine::_chain_template() {
             channels.emplace_back(p.net, a_ref, ref);
             channel_tips[p.net] = {{r3(a.first + p.a.first), r3(a.second + p.a.second)},
                                   {r3(ax + p.b.first), r3(ay + p.b.second)}, jx};
+            const auto& tips = channel_tips.at(p.net);
+            _release(p.net);
+            if (jx) {
+                const Point knee{*jx, tips.a.second}, turn{*jx, tips.b.second};
+                _reserve(p.net, tips.a, knee); _reserve(p.net, knee, turn); _reserve(p.net, turn, tips.b);
+            } else _reserve(p.net, tips.a, tips.b);
         }
         seat(ref, ax, ay);
     }
@@ -926,10 +939,13 @@ SchematicPlacement Engine::_chain_template() {
         std::vector<double> nodes{start_x};
         const auto hangs = take(hang, name); const double xs = gfloor(tips.b.first - 4 * U);
         for (std::size_t i = 0; i < hangs.size(); ++i) {
-            const double xc = r3(xs - static_cast<double>(i) * sp.cap_pitch); nodes.push_back(xc);
+            const double xc = r3(xs - static_cast<double>(i) * sp.cap_pitch);
+            const auto saved = _checkpoint();
             pl.plan(name, {{xc, y}, {xc, y + 4 * U}});
             const auto far = _vertical_2pin(hangs[i], xc, y + 4 * U, name, true, i % 2 ? "left" : "right");
             power(far.second, far.first.first, far.first.second);
+            if (_fault_since(saved.mark)) { _rollback(saved); _defer({hangs[i]}); }
+            else nodes.push_back(xc);
         }
         nodes.push_back(tips.b.first);
         double mid, label_y;
@@ -950,12 +966,14 @@ SchematicPlacement Engine::_chain_template() {
             nodes.push_back(lx); pl.plan(name, {{lx, y}, *label_end}); label(name, label_end->first, label_end->second, 90);
         }
         horizontal(pl, name, nodes, y);
+        _release(name);
         if (net(name).net_class == "signal") {
             const bool first_leg = tips.jog && label_y == tips.a.second && *tips.jog - tips.a.first > tips.b.first - *tips.jog;
             const double lo = first_leg ? tips.a.first : start_x, hi = first_leg ? *tips.jog : tips.b.first;
             llabel(name, _clear_label_x(name, mid, label_y, lo, hi), label_y);
         }
     }
+    _graft_pending();
     for (const auto& entry : trunk_jobs) _build_trunk(*entry.second);
     for (const auto& item : _deferred_texts) _part_texts(item.first, item.second);
     _deferred_texts.clear();

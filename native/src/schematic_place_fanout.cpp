@@ -675,7 +675,10 @@ void Engine::_fan_side(const std::string& ref, const std::string& side, const st
         }
         const bool is_labeled = labeled(line);
         Point tap{lx, py};
-        if (line.attach || line.attach_div || line.chain) {
+        bool hung = line.attach || line.attach_div || line.chain;
+        if (hung) {
+            const double plain_lx = lx;
+            const auto saved = _checkpoint();
             const auto [left, right] = line.chain ? _chain_band(*line.chain, sign) : _attach_band(line);
             const double depth = line.chain
                 ? static_cast<double>(line.chain->legs.size()) * PASSIVE_SPAN + RAIL_SYMBOL_SPAN + sp.hang_stub : 12 * U;
@@ -689,16 +692,23 @@ void Engine::_fan_side(const std::string& ref, const std::string& side, const st
             }
             tap = {tx, py};
             if (is_labeled) lx = tx + sign * sp.label_tap_gap;
+            for (const auto& [a, b] : _escape_run_legs(line.net, px, py, tap.first)) pl.plan(line.net, {a, b});
+            if (line.attach_div) _divider(line, tap);
+            else if (line.attach) _attach_column(line, tap, rank_y, hang_sign > 0);
+            else _attach_chain(line, tap, rank_y, hang_sign > 0, sign);
+            if (_fault_since(saved.mark)) {
+                _rollback(saved);
+                _defer(attachments(line));
+                if (line.chain) for (const auto& leg : line.chain->legs) _defer({leg.ref});
+                hung = false; lx = plain_lx; tap = {lx, py};
+            }
         }
-        for (const auto& [a, b] : _escape_run_legs(line.net, px, py, tap.first)) pl.plan(line.net, {a, b});
-        if (line.attach_div) _divider(line, tap);
-        else if (line.attach) _attach_column(line, tap, rank_y, hang_sign > 0);
-        else if (line.chain) _attach_chain(line, tap, rank_y, hang_sign > 0, sign);
+        if (!hung) for (const auto& [a, b] : _escape_run_legs(line.net, px, py, tap.first)) pl.plan(line.net, {a, b});
         if (!is_labeled) {
             const auto leg = line.net_class == "signal" ? _series_of(line.net) : std::nullopt;
             if (leg) {
                 const auto& inline_part = part(leg->ref);
-                const double clear = sp.refine && (line.attach || line.attach_div || line.chain)
+                const double clear = sp.refine && hung
                     ? gceil(std::max(text_wh(inline_part.ref).first, text_wh(inline_part.value).first)) : 0.0;
                 previous_box = _series_inline(*leg, line.net, tap, sign, previous_box, clear).second;
             }
@@ -706,13 +716,22 @@ void Engine::_fan_side(const std::string& ref, const std::string& side, const st
                 _open_stubs.push_back({line.net, leg ? Point{py_round(px + sign * U, 3), py} : tap, side == "left" ? 180 : 0});
             continue;
         }
-        if (tap != Point{lx, py}) pl.plan(line.net, {tap, {lx, py}});
         const int rot = side == "left" ? 180 : 0;
-        if (line.net_class == "port") {
-            label(line.net, lx, py, rot, label_shape(line.pin_etype)); previous_box = glabel_box(line.net, lx, py, rot);
-        } else {
-            llabel(line.net, lx, py, rot); _bridge(line.net); previous_box = llabel_box(line.net, lx, py, rot);
+        const double first_lx = lx;
+        bool seated = false;
+        for (int k = 0; k < SEAT_SEARCH_STEPS && !seated; ++k) {
+            lx = py_round(first_lx + sign * k * GRAFT_STEP, static_cast<int>(COORDINATE_DECIMALS.value));
+            const auto saved = _checkpoint();
+            if (tap != Point{lx, py}) pl.plan(line.net, {tap, {lx, py}});
+            if (line.net_class == "port") {
+                label(line.net, lx, py, rot, label_shape(line.pin_etype)); previous_box = glabel_box(line.net, lx, py, rot);
+            } else {
+                llabel(line.net, lx, py, rot); _bridge(line.net); previous_box = llabel_box(line.net, lx, py, rot);
+            }
+            seated = !_fault_since(saved.mark);
+            if (!seated) _rollback(saved);
         }
+        require(seated, line.net + ": no free seat for its label beside " + ref + " at " + point_text(line.pin_pt));
         // Python's lane_edge accumulation is unused; it has no observable state.
     }
     finish_rails();
@@ -819,9 +838,9 @@ void Engine::_cell(const std::string& ref, double ax, double ay, Handled& handle
                 else rails.push_back({n->name, {pt}});
                 continue;
             }
-            if (pin_stacks.contains(n->name)) { const auto chain = take(pin_stacks, n->name); _stack_from_pin(*chain, pt, side); continue; }
+            if (pin_stacks.contains(n->name)) { const auto chain = take(pin_stacks, n->name); _stack_or_defer(*chain, pt, side); continue; }
             if (n->net_class == "port") { ports.push_back(item); continue; }
-            if (const auto local = _local_drop_chain(n->name, ref)) { _stack_from_pin(*local, pt, side); continue; }
+            if (const auto local = _local_drop_chain(n->name, ref)) { _stack_or_defer(*local, pt, side); continue; }
             if (n->net_class == "signal") { _signal_islet_drop(n->name, pt, side); continue; }
             throw SchematicPlaceError(ref + "." + number + " (" + n->name + ") on the " + side + " edge: no engine pattern applies");
         }
@@ -839,6 +858,7 @@ void Engine::_cell(const std::string& ref, double ax, double ay, Handled& handle
             row = gceil(row + 4 * U);
         }
     }
+    _graft_pending();
     if (defer_texts) _deferred_texts.emplace_back(placed.part_index, placed.body);
     else _part_texts(placed.part_index, placed.body);
 }

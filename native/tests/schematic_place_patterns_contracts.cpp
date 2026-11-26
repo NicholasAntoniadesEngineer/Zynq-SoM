@@ -228,6 +228,52 @@ void bus_drawn_one_way(SymbolLibrary& lib) {
     require(labelled(true) == 2, "the refine round left one member of a bus wired while its sibling is labelled");
 }
 
+CircuitSheetIr backup_selector(const std::string& name, bool three_way) {
+    const std::string memory = "24AA025E48T-I_OT:24AA025E48T-I_OT", clock = "RV-3028-C7-32.768kHz-1ppm-TA-QC:RV-3028-C7-32.768kHz-1ppm-TA-QC";
+    const std::string holder = "KH-CR1220-2:KH-CR1220-2", watchdog = "TPS3823-33DBVR:TPS3823-33DBVR";
+    const std::string header = three_way ? "Connector_Generic:Conn_01x03" : "Connector_Generic:Conn_01x02";
+    std::vector<CircuitNetIr> nets{
+        {"+3V3_AUX", "power", Pins{{"U1", "6"}, {"U1", "5"}, {"C1", "1"}, {"U2", "7"}, {"R1", "1"}, {"C2", "1"}, {"U3", "5"}, {"C3", "1"}}},
+        {"GND", "ground", Pins{{"U1", "2"}, {"U1", "4"}, {"C1", "2"}, {"U2", "5"}, {"U2", "8"}, {"C2", "2"}, {"BT1", "2"}, {"U3", "2"}, {"C3", "2"}, {"R3", "2"}}},
+        {"BUS_SCL", "port", Pins{{"U1", "1"}, {"U2", "3"}}}, {"BUS_SDA", "port", Pins{{"U1", "3"}, {"U2", "4"}}},
+        {"CLOCK_INT", "signal", Pins{{"U2", "2"}, {"R1", "2"}}}, {"KICK_IN", "signal", Pins{{"U3", "4"}, {"R2", "2"}}},
+        {"KICK", "port", Pins{{"R2", "1"}}}, {"RESET_OUT", "port", Pins{{"U3", "1"}}}};
+    if (three_way) {
+        nets.push_back({"BACKUP_LOW", "signal", Pins{{"J1", "1"}, {"R3", "1"}}});
+        nets.push_back({"BACKUP_CELL", "signal", Pins{{"BT1", "1"}, {"J1", "3"}}});
+        nets.push_back({"BACKUP", "signal", Pins{{"U2", "6"}, {"J1", "2"}}});
+    } else {
+        nets.push_back({"BACKUP", "signal", Pins{{"U2", "6"}, {"BT1", "1"}, {"J1", "1"}}});
+        nets.push_back({"BACKUP_LOW", "signal", Pins{{"J1", "2"}, {"R3", "1"}}});
+    }
+    auto circuit = sheet(name,
+        {part("U1", memory, "memory"), part("C1", capacitor, "100n"), part("U2", clock, "clock"), part("R1", resistor, "10k"),
+         part("C2", capacitor, "100n"), part("BT1", holder, "cell"), part("J1", header, "select"), part("R3", resistor, "10k"),
+         part("U3", watchdog, "watchdog"), part("C3", capacitor, "100n"), part("R2", resistor, "1k")}, std::move(nets));
+    circuit.nc = {{"U2", "1"}, {"U3", "3"}};
+    return circuit;
+}
+
+void drawn_at_first_pitch(const CircuitSheetIr& circuit, SymbolLibrary& lib, const std::vector<std::pair<std::string, std::string>>& neighbours) {
+    const auto page = place_and_route_schematic(circuit, lib, {}, 1);
+    const auto visual = check_visual_geometry(page.geometry);
+    require(visual.ok, circuit.name + ": " + visual.summary());
+    const double reach = GRAFT_REACH.value * GRAFT_STEP + PASSIVE_SPAN;
+    for (const auto& [hung, owner] : neighbours) {
+        const auto& a = placed(page.placement, hung); const auto& b = placed(page.placement, owner);
+        require(std::abs(a.x - b.x) + std::abs(a.y - b.y) <= reach, circuit.name + ": " + hung + " is not drawn beside " + owner);
+    }
+    for (const auto& p : circuit.parts) placed(page.placement, p.ref);
+}
+
+void backup_selector_three_way(SymbolLibrary& lib) {
+    drawn_at_first_pitch(backup_selector("backup_selector_three_way", true), lib, {{"BT1", "J1"}, {"R3", "J1"}});
+}
+
+void backup_selector_in_series(SymbolLibrary& lib) {
+    drawn_at_first_pitch(backup_selector("backup_selector_in_series", false), lib, {{"J1", "BT1"}, {"R3", "J1"}});
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -237,6 +283,9 @@ int main(int argc, char** argv) {
         SymbolLibrary lib(std::vector<fs::path>{root / "schgen/lib", root / "native/tests/data/schematic_place_chain/symbols"});
         ground_template(lib); side_pin_chain(lib); divider_ladder(lib); trunk_port_tail(lib);
         power_path(lib); compact_retry(lib); pack_relocates(lib); enclosing_taps(lib); bus_drawn_one_way(lib); pack_near_served_part(lib);
+        SymbolLibrary headers(std::vector<fs::path>{root / "native/tests/data/schematic_place_patterns/symbols", root / "schgen/lib",
+                                                    root / "native/tests/data/schematic_place_chain/symbols"});
+        backup_selector_three_way(headers); backup_selector_in_series(headers);
         std::cout << "schematic place pattern contracts passed\n";
         return 0;
     } catch (const std::exception& error) {
