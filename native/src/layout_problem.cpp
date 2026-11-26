@@ -334,6 +334,12 @@ void validate(const Problem& problem, const Placement& placement) {
     for (const auto& footprint : problem.footprints)
         if (footprint.top.names != footprint.bottom.names)
             throw LayoutError("layout: pad names of " + footprint.key + " differ between variants");
+    for (const auto& footprint : problem.footprints)
+        for (const Variant* variant : {&footprint.top, &footprint.bottom})
+            for (const auto& pad : variant->pads)
+                if (pad.land && (!inside(pad.box, *pad.land) || !variant->pad_hull || !inside(*pad.land, *variant->pad_hull)))
+                    throw LayoutError("layout: the drawn land of pad " + pad.name + " of " + footprint.key +
+                                      " does not cover its pad or lies outside the pad extent of its footprint");
     for (const auto& rule : problem.constraints.pad_gaps)
         if (!part_known(rule.anchor) || !part_known(rule.member) || !names_known(rule.anchor, rule.anchor_names))
             throw LayoutError("layout: pad-gap rule names an unknown part or pad: " + rule.source);

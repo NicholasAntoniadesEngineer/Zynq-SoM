@@ -21,6 +21,8 @@ struct PadShape {
     bool through = false;
     Nm radius = 0;
     Nm drill = 0;
+    std::optional<Box> land = std::nullopt;
+    Box copper() const { return land ? *land : box; }
 };
 
 struct Variant {

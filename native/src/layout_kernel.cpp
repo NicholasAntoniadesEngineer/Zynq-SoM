@@ -449,7 +449,7 @@ Kernel::Shape Kernel::shape_of(std::size_t part, const Pose& pose) const {
     for (const auto& disc : variant.court_discs) shape.discs.push_back(placed(disc, pose.at, pose.turn));
     const auto& nets = problem_.parts[part].pad_nets;
     for (std::size_t pad = 0; pad < variant.pads.size(); ++pad) {
-        const Box box = placed(variant.pads[pad].box, pose.at, pose.turn);
+        const Box box = placed(variant.pads[pad].copper(), pose.at, pose.turn);
         shape.lands.push_back({box, nets[pad], variant.pads[pad].through,
                                {placed(variant.pads[pad].centre, pose.at, pose.turn), variant.pads[pad].radius},
                                variant.pads[pad].drill});

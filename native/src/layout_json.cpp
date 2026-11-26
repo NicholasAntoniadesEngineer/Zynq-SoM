@@ -46,13 +46,16 @@ std::string variant_json(const Variant& variant) {
     std::vector<std::string> boxes, discs, pads;
     for (const auto& box : variant.court_boxes) boxes.push_back(box_json(box));
     for (const auto& disc : variant.court_discs) discs.push_back(disc_json(disc));
-    for (const auto& pad : variant.pads)
-        pads.push_back(object({{"name", text_value(pad.name)},
-                               {"centre", point_json(pad.centre)},
-                               {"box", box_json(pad.box)},
-                               {"through", boolean(pad.through)},
-                               {"radius", integer(pad.radius)},
-                               {"drill", integer(pad.drill)}}));
+    for (const auto& pad : variant.pads) {
+        std::vector<json_text::Field> fields{{"name", text_value(pad.name)},
+                                                                {"centre", point_json(pad.centre)},
+                                                                {"box", box_json(pad.box)},
+                                                                {"through", boolean(pad.through)},
+                                                                {"radius", integer(pad.radius)},
+                                                                {"drill", integer(pad.drill)}};
+        if (pad.land) fields.emplace_back("land", box_json(*pad.land));
+        pads.push_back(object(fields));
+    }
     return object({{"gate_box", box_json(variant.gate_box)},
                    {"court_boxes", array(boxes)},
                    {"court_discs", array(discs)},
@@ -108,12 +111,13 @@ Variant variant_of(const JsonNode& node) {
     for (const auto& entry : field(node, "court_discs", JsonKind::Array).array_value)
         variant.court_discs.push_back(disc_of(entry));
     for (const auto& entry : field(node, "pads", JsonKind::Array).array_value) {
-        reject_unknown_keys(entry, {"name", "centre", "box", "through", "radius", "drill"}, "layout pad");
+        reject_unknown_keys(entry, {"name", "centre", "box", "through", "radius", "drill", "land"}, "layout pad");
         PadShape pad{text(entry, "name"), point_of(field(entry, "centre", JsonKind::Array)),
                      box_of(field(entry, "box", JsonKind::Array)), flag(entry, "through"),
                      whole(field(entry, "radius", JsonKind::Number))};
         if (object_field(entry, "drill")) pad.drill = whole(field(entry, "drill", JsonKind::Number));
-        variant.pad_hull = variant.pad_hull ? united(*variant.pad_hull, pad.box) : pad.box;
+        if (object_field(entry, "land")) pad.land = box_of(field(entry, "land", JsonKind::Array));
+        variant.pad_hull = variant.pad_hull ? united(*variant.pad_hull, pad.copper()) : pad.copper();
         variant.pads.push_back(std::move(pad));
     }
     index_names(variant);

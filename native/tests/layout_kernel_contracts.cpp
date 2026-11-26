@@ -53,6 +53,8 @@ constexpr Point fourth_site{14 * unit, 10 * unit};
 constexpr int dense_level = 10, middle_level = 5, sparse_level = 1, below_level = 0, above_level = 11;
 constexpr Nm middle_gap = 5 * unit / 4, sparse_gap = 9 * unit / 4, small_gap = unit / 2;
 constexpr Nm tie_reach = 3 * unit / 2;
+constexpr Nm land_spill = unit / 10;
+constexpr Point shaped_site{113 * unit / 10, 10 * unit};
 constexpr double fraction_level = 5.5;
 constexpr std::uint64_t walk_seed = 20261111;
 constexpr int walk_steps = 400;
@@ -305,6 +307,38 @@ void pads_keep_copper_clearance() {
     scene.problem.parts.front().pad_nets.assign(scene.problem.parts.front().pad_nets.size(), static_cast<int>(second));
     scene.problem.parts.back().pad_nets.assign(scene.problem.parts.back().pad_nets.size(), static_cast<int>(second));
     require(Kernel(scene.problem, scene.placement).violations().empty(), "same-net pads may touch");
+}
+
+void shaped_pads_keep_their_whole_copper_clear() {
+    Scene scene;
+    scene.problem.rules.copper_clearance = fixture::copper_clearance;
+    const auto pin = scene.footprint("pin", square_variant(fixture::pad_half, fixture::passive_pins, true));
+    Variant shaped = square_variant(fixture::pad_half, fixture::passive_pins, false);
+    for (auto& pad : shaped.pads) pad.land = grown(pad.box, fixture::land_spill);
+    shaped.pad_hull = grown(*shaped.pad_hull, fixture::land_spill);
+    const auto smd = scene.footprint("shaped", shaped);
+    scene.add("J", "one", pin, fixture::first_site);
+    scene.add("Q", "two", smd, fixture::spaced_site, Face::bottom);
+    scene.connect(scene.net("first", Category::signal), 0);
+    scene.connect(scene.net("second", Category::signal), 1);
+    require(has(Kernel(scene.problem, scene.placement).violations(), Breach::copper),
+            "copper drawn beyond a pad's anchor keeps the clearance from a hole on the other face");
+    scene.placement.back().at = fixture::shaped_site;
+    require(Kernel(scene.problem, scene.placement).violations().empty(), "the whole land at the clearance is legal");
+    const std::string exported = document_json(scene.problem, scene.placement);
+    const Document restored = read_document(schgen::parse_json_text(exported));
+    require(document_json(restored.problem, restored.placement) == exported &&
+            restored.problem.footprints.back().top.pads.front().land == shaped.pads.front().land,
+            "the drawn land survives the export");
+    shaped.pad_hull = shaped.pads.front().box;
+    scene.footprint("stray", shaped);
+    bool refused = false;
+    try {
+        Kernel(scene.problem, scene.placement);
+    } catch (const LayoutError&) {
+        refused = true;
+    }
+    require(refused, "a land outside the pad extent of its footprint is refused loudly");
 }
 
 void protection_leads_its_net() {
@@ -715,6 +749,7 @@ int main() {
     single_part_rules_hold();
         fixed_copper_keeps_its_clearance();
         pads_keep_copper_clearance();
+        shaped_pads_keep_their_whole_copper_clear();
         contract_rules_bind_pads();
         protection_leads_its_net();
         subsystem_rules_bind_groups();
