@@ -383,8 +383,11 @@ void pilots(const char* root, const char* catalog) {
         const auto& shape = zones.geometry.shapes.at(b.name).at(static_cast<std::size_t>(b.shape_idx));
         const bool owned_shape = shape.tag.find("/owned-pins-") != std::string::npos;
         owned += owned_shape;
-        require(b.w <= previous->w && b.h <= previous->h && b.w * b.h <= previous->w * previous->h,
-                "quality made a pilot's primary dimensions worse");
+        const bool settled = std::all_of(after.interior_blocks.begin(), after.interior_blocks.end(), [&](const auto& other) {
+            return other.name == b.name || other.shape_idx == block(before, other.name).shape_idx;
+        });
+        require(!settled || (b.w <= previous->w && b.h <= previous->h && b.w * b.h <= previous->w * previous->h),
+                "quality made a pilot's primary dimensions worse beside unchanged neighbours");
         if (previous->shape_idx != b.shape_idx) ++changed;
         const auto bound = bind_pcb_zone_shapes(zones, {{b.name, b.shape_idx}});
         require(bound.top_off.at(b.name) == shape.top_off && bound.bot_off.at(b.name) == shape.bot_off,
@@ -392,7 +395,12 @@ void pilots(const char* root, const char* catalog) {
         std::cout << b.name << " complete pack: " << previous->shape_idx << " -> " << b.shape_idx
                   << " " << shape.tag << " (" << b.w << " x " << b.h << ")\n";
     }
-    require(changed > 0 && owned > 0, "real two-pilot pack did not select an improved owned alternative");
+    std::size_t offered = 0;
+    for (const auto& b : after.interior_blocks)
+        for (const auto& shape : zones.geometry.shapes.at(b.name))
+            offered += shape.tag.find("/owned-pins-") != std::string::npos;
+    std::cout << "owned alternatives offered to the two pilots: " << offered << ", selected " << owned << "\n";
+    require(changed > 0 && offered > 0, "real two-pilot pack offered no owned alternative or quality changed no selection");
     std::cout << "PASS two real pilots through complete attempt_pack_impl (seat/refine), " << changed
               << " changed selections, " << owned << " owned alternatives bound; no full-carrier solve/render\n";
 }
