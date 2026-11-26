@@ -376,7 +376,8 @@ BalanceReport balance_faces(Kernel& kernel, Nm pitch, Nm reach, BalanceScope sco
         for (std::size_t index = 0; index < grown.size(); ++index)
             for (const PadGap& tie : problem.constraints.pad_gaps) {
                 if (tie.sense != Sense::at_most || (tie.anchor != grown[index] && tie.member != grown[index])) continue;
-                grown = with_sets(std::move(grown), taken, tie.anchor == grown[index] ? tie.member : tie.anchor);
+                const std::size_t partner = tie.anchor == grown[index] ? tie.member : tie.anchor;
+                grown = with_sets(std::move(grown), taken, partner);
             }
         return grown;
     };
