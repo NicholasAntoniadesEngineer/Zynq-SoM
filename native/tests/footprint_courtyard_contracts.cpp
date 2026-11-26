@@ -105,6 +105,16 @@ void derived() {
         return sexpr_dumps(footprint);
     };
     require(strip(general) == strip(bare), "pads and silk are untouched");
+    const auto stamped = [](Sexpr footprint) {
+        auto& nodes = std::get<SexprList>(footprint.v);
+        nodes.insert(nodes.begin() + 2, sexpr_loads(std::string("(generator \"") + courtyard::part_generator + "\")"));
+        return footprint;
+    };
+    const auto added = courtyard::derived_clearance(stamped(general));
+    require(added && std::abs(*added - courtyard::constants::general_clearance.value) < courtyard::constants::court_grid.value,
+            "a courtyard this tool derived reports the clearance it added");
+    require(!courtyard::derived_clearance(general), "a footprint from another generator is taken as drawn");
+    require(!courtyard::derived_clearance(stamped(bare)), "a provider outline kept as the courtyard has no derived clearance");
     const auto connector = courtyard::measure(courtyard::enclosed(bare, body, {courtyard::Kind::connector, std::nullopt}, "probe"));
     require(same(*connector.court, {-2.5, -3.61, 2.5, 3.6}), "connector clearance");
     for (const auto kind : {courtyard::Kind::canned_capacitor, courtyard::Kind::crystal})
