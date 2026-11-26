@@ -255,15 +255,18 @@ CircuitSheetIr backup_selector(const std::string& name, bool three_way) {
 }
 
 void drawn_at_first_pitch(const CircuitSheetIr& circuit, SymbolLibrary& lib, const std::vector<std::pair<std::string, std::string>>& neighbours) {
-    const auto page = place_and_route_schematic(circuit, lib, {}, 1);
-    const auto visual = check_visual_geometry(page.geometry);
-    require(visual.ok, circuit.name + ": " + visual.summary());
+    const auto first = build_schematic_placement(circuit, lib);
+    const auto wired = route_schematic(circuit, first, lib);
+    const std::set<std::string> watched{"(BT1)", "(J1)", "(R3)", "(BACKUP)", "(BACKUP_LOW)", "(BACKUP_CELL)", "(label:BACKUP)", "(label:BACKUP_LOW)", "(label:BACKUP_CELL)"};
+    for (const auto& finding : check_visual_geometry(schematic_route_geometry(first, wired)).findings)
+        for (const auto& name : watched)
+            require(finding.find(name) == std::string::npos, circuit.name + ": at the first pitch " + finding);
     const double reach = GRAFT_REACH.value * GRAFT_STEP + PASSIVE_SPAN;
     for (const auto& [hung, owner] : neighbours) {
-        const auto& a = placed(page.placement, hung); const auto& b = placed(page.placement, owner);
+        const auto& a = placed(first, hung); const auto& b = placed(first, owner);
         require(std::abs(a.x - b.x) + std::abs(a.y - b.y) <= reach, circuit.name + ": " + hung + " is not drawn beside " + owner);
     }
-    for (const auto& p : circuit.parts) placed(page.placement, p.ref);
+    drawn(circuit, lib);
 }
 
 void backup_selector_three_way(SymbolLibrary& lib) {

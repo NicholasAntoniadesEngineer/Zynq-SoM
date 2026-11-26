@@ -98,6 +98,7 @@ void Engine::_rollback(const Checkpoint& saved) {
 
 Occupancy Engine::_occupancy(const PlacementMark& upto, bool guard_pins) {
     Occupancy out;
+    out.strict = guard_pins;
     for (std::size_t i = 0; i < upto.parts; ++i) {
         const auto& placed = pl.parts[i];
         const auto& symbol = lib.get(placed.lib_id);
@@ -139,6 +140,7 @@ std::optional<std::string> Engine::_fault_since(const PlacementMark& since, cons
         for (const std::map<RouteCell, std::string>* map : {&base.fixed, &base.wired, &base.guard, &std::as_const(fixed)})
             if (const auto* other = owner_at(*map, *cell); other && *other != owner)
                 return what + " lands on " + *other + " at " + at_text(*cell);
+        if (base.strict && !base.walls.free_or(owner, *cell)) return what + " lands inside a symbol or text at " + at_text(*cell);
         fixed.emplace(*cell, owner);
         return std::nullopt;
     };
@@ -194,6 +196,8 @@ std::optional<std::string> Engine::_fault_since(const PlacementMark& since, cons
         }
         for (const auto& [cell, owner] : base.guard)
             if (walled(fresh, cell) && !own_fixed(cell, owner)) return "the way out of a pin on " + owner + " is covered at " + at_text(cell);
+        if (base.strict) for (const auto& [cell, owner] : base.fixed)
+            if (walled(fresh, cell)) return "a pin or symbol end on " + owner + " is covered at " + at_text(cell);
     }
     for (const auto& [name, paths] : pl.plans) {
         const auto kept = since.plans.find(name);
@@ -215,8 +219,19 @@ std::optional<std::string> Engine::_fault_since(const PlacementMark& since, cons
                     wired.emplace(cell, name);
                 }
                 const VisualSegment wire{a.first, a.second, b.first, b.second, name};
-                for (const auto& box : pl.boxes)
+                const Point first = paths[i].front(), last = paths[i].back();
+                const VisualBox lane{std::min(a.first, b.first), std::min(a.second, b.second), std::max(a.first, b.first), std::max(a.second, b.second), "wire", name};
+                const auto ends_in = [&](const VisualBox& box) {
+                    for (const auto& end : {first, last})
+                        if (box.x0 - clearance <= end.first && end.first <= box.x1 + clearance
+                            && box.y0 - clearance <= end.second && end.second <= box.y1 + clearance) return true;
+                    return false;
+                };
+                for (const auto& box : pl.boxes) {
                     if (wire_over_text(wire, box)) return "wire(" + name + ") over " + box.kind + "(" + box.owner + ")";
+                    if (base.strict && lane.intersects(box, clearance) && !ends_in(box))
+                        return "wire(" + name + ") brushes " + box.kind + "(" + box.owner + ")";
+                }
             }
     }
     return std::nullopt;
@@ -251,14 +266,24 @@ std::string Engine::_graft_tag(const std::string& name, const std::string& ref) 
     return alone ? "local" : "";
 }
 
-void Engine::_graft_end(const std::string& name, const std::string& ref, Point at, bool downward) {
-    if (rail(net(name))) { power(name, at.first, at.second, _power_rot(name, downward)); return; }
+void Engine::_graft_end(const std::string& name, const std::string& ref, Point at, Point outward) {
+    const bool upright = outward.first == 0;
+    if (rail(net(name))) {
+        const bool grounded = net(name).net_class == "ground";
+        if (upright) { power(name, at.first, at.second, _power_rot(name, outward.second > 0)); return; }
+        const Point knee{r3(at.first + outward.first * GRAFT_STEP), at.second};
+        const Point end{knee.first, r3(knee.second + (grounded ? 1 : -1) * GRAFT_STEP)};
+        pl.plan(name, {at, knee, end});
+        power(name, end.first, end.second, _power_rot(name, grounded));
+        return;
+    }
     const auto tag = _graft_tag(name, ref);
     if (tag.empty()) return;
-    const Point end{at.first, r3(at.second + (downward ? 1 : -1) * GRAFT_STEP)};
+    const Point end{r3(at.first + outward.first * GRAFT_STEP), r3(at.second + outward.second * GRAFT_STEP)};
     pl.plan(name, {at, end});
-    if (tag == "port") label(name, end.first, end.second, static_cast<int>((downward ? LABEL_BELOW : LABEL_ABOVE).value));
-    else { llabel(name, end.first, end.second, 0); _bridge(name); }
+    const Tuned turned = upright ? (outward.second > 0 ? LABEL_BELOW : LABEL_ABOVE) : (outward.first < 0 ? LABEL_LEFT : Tuned{0, ""});
+    if (tag == "port") label(name, end.first, end.second, static_cast<int>(turned.value));
+    else { llabel(name, end.first, end.second, upright ? 0 : static_cast<int>(turned.value)); _bridge(name); }
 }
 
 bool Engine::_graftable(const std::string& ref) {
@@ -272,7 +297,14 @@ bool Engine::_graftable(const std::string& ref) {
     return !decoupling;
 }
 
-bool Engine::_graft(const std::string& ref, bool plant) {
+bool Engine::_graft_settled(const std::string& ref, bool plant) {
+    const auto before = _done;
+    if (!_graft(ref, plant, static_cast<int>(GRAFT_REACH.value))) return false;
+    for (const auto& seated : _done) if (!before.count(seated)) _forget(seated);
+    return true;
+}
+
+bool Engine::_graft(const std::string& ref, bool plant, int reach) {
     require(_graftable(ref), ref + ": only a two-pin part off a signal net can be seated beside its net");
     const auto numbers = lib.pin_numbers(part(ref).lib_id);
     const std::array<const CircuitNetIr*, 2> ends{net_of(ref, *numbers.begin()), net_of(ref, *std::next(numbers.begin()))};
@@ -298,23 +330,48 @@ bool Engine::_graft(const std::string& ref, bool plant) {
             const auto tip = pin_page_position(pin, placed.x, placed.y, placed.rotation);
             hubs.insert({r3(tip.first), r3(tip.second)});
         }
+    const auto& symbol = lib.get(part(ref).lib_id);
+    const auto& near_pin = pin(symbol, _pin_of_net(ref, near->name));
+    const auto& far_pin = pin(symbol, other_pin(ref, near_pin.number));
+    struct Pose { int rotation; Point near_tip, far_tip, near_out, far_out; int rank; };
+    std::vector<Pose> poses;
+    for (int rotation = 0; rotation < static_cast<int>(FULL_TURN.value); rotation += static_cast<int>(QUARTER_TURN.value)) {
+        const auto near_tip = pin_page_position(near_pin, 0.0, 0.0, rotation), far_tip = pin_page_position(far_pin, 0.0, 0.0, rotation);
+        const auto near_stem = stem_dir(near_pin.rotation, rotation), far_stem = stem_dir(far_pin.rotation, rotation);
+        const double dx = far_tip.first - near_tip.first, dy = far_tip.second - near_tip.second;
+        const bool rises = far->net_class == "power";
+        const bool upright = std::fabs(dy) >= std::fabs(dx);
+        const int rank = upright ? ((dy > 0) != rises ? 0 : 1) : 2;
+        poses.push_back({rotation, near_tip, far_tip, {-near_stem.first, -near_stem.second}, {-far_stem.first, -far_stem.second}, rank});
+    }
+    std::stable_sort(poses.begin(), poses.end(), [](const Pose& a, const Pose& b) { return a.rank < b.rank; });
     const auto saved = _checkpoint();
     const auto base = _occupancy(saved.mark, true);
-    const std::array<bool, 2> directions{far->net_class != "power", far->net_class == "power"};
     static const std::vector<Offset> offsets = ring_offsets();
+    Refs followers;
+    if (!rail(*far)) for (const auto& p : c.parts)
+        if (p.ref != ref && !_done.count(p.ref) && _graftable(p.ref)
+            && std::any_of(far->pins.begin(), far->pins.end(), [&](const auto& pin_ref) { return pin_ref.ref == p.ref; })) followers.push_back(p.ref);
     for (const auto& offset : offsets) for (const auto& from : points) {
+        if (std::abs(offset.i) + std::abs(offset.j) > reach) return false;
         if (offset.i == 0 && offset.j == 0 && hubs.count(from)) continue;
         const Point seat{r3(from.first + offset.i * GRAFT_STEP), r3(from.second + offset.j * GRAFT_STEP)};
         std::vector<std::vector<Point>> ways;
         if (planted || (offset.i == 0 && offset.j == 0)) ways.push_back({});
         else if (offset.i == 0 || offset.j == 0) ways.push_back({from, seat});
-        else if (!planted) { ways.push_back({from, {seat.first, from.second}, seat}); ways.push_back({from, {from.first, seat.second}, seat}); }
-        for (const bool downward : directions) for (const auto& way : ways) for (const std::string side : {"right", "left"}) {
+        else { ways.push_back({from, {seat.first, from.second}, seat}); ways.push_back({from, {from.first, seat.second}, seat}); }
+        for (const auto& pose : poses) for (const auto& way : ways) for (const std::string side : {"right", "left"}) {
             if (!way.empty()) pl.plan(near->name, way);
-            if (planted) _graft_end(near->name, ref, seat, !downward);
-            const auto [tip, reached] = _vertical_2pin(ref, seat.first, seat.second, near->name, downward, side);
-            _graft_end(reached, ref, tip, downward);
-            if (!_fault_since(saved.mark, base)) { _forget(ref); return true; }
+            if (planted) _graft_end(near->name, ref, seat, pose.near_out);
+            const Point centre{r3(seat.first - pose.near_tip.first), r3(seat.second - pose.near_tip.second)};
+            passive(ref, centre.first, centre.second, pose.rotation, side);
+            const auto pin_texts = pin_text_boxes(symbol, pl.parts.back());
+            pl.boxes.insert(pl.boxes.end(), pin_texts.begin(), pin_texts.end());
+            _graft_end(far->name, ref, {r3(centre.first + pose.far_tip.first), r3(centre.second + pose.far_tip.second)}, pose.far_out);
+            bool settled = !_fault_since(saved.mark, base);
+            for (std::size_t k = 0; settled && k < followers.size(); ++k)
+                settled = _done.count(followers[k]) != 0 || _graft(followers[k], false, static_cast<int>(GRAFT_NEAR.value));
+            if (settled) return true;
             _rollback(saved);
         }
     }
@@ -351,7 +408,7 @@ void Engine::_stack_or_defer(const FloatChain& chain, Point pt, const std::strin
 void Engine::_graft_pending() {
     const auto pending = _grafts;
     _grafts.clear();
-    for (const auto& ref : pending) if (!_done.count(ref) && !_graft(ref, false)) _grafts.push_back(ref);
+    for (const auto& ref : pending) if (!_done.count(ref) && !_graft_settled(ref, false)) _grafts.push_back(ref);
 }
 
 void Engine::_graft_unplaced() {
@@ -370,7 +427,7 @@ void Engine::_graft_unplaced() {
         std::sort(waiting.begin(), waiting.end());
         std::string names;
         for (const auto& ref : waiting) names += (names.empty() ? "'" : ", '") + ref + "'";
-        require(_graft(next, anchored == waiting.end()), "engine left parts unplaced: [" + names + "] — no free seat within "
+        require(_graft_settled(next, anchored == waiting.end()), "engine left parts unplaced: [" + names + "] — no free seat within "
             + std::to_string(static_cast<int>(GRAFT_REACH.value * GRAFT_STEP)) + " mm of the nets they hang from, first " + next);
     }
 }
