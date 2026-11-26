@@ -90,7 +90,7 @@ const char* pinned_as(const Problem& problem, std::size_t part) {
     return nullptr;
 }
 
-std::vector<FaceTie> face_ties(const Kernel& kernel, const std::vector<char>& leaves) {
+std::vector<FaceTie> face_ties(const Kernel& kernel, const std::vector<char>& leaves, bool wide) {
     const Problem& problem = kernel.problem();
     std::vector<FaceTie> ties;
     for (const auto& rule : problem.constraints.nearest_gaps)
@@ -98,7 +98,7 @@ std::vector<FaceTie> face_ties(const Kernel& kernel, const std::vector<char>& le
             for (const std::size_t member : rule.members) ties.push_back({rule.anchor, member, rule.source});
     for (const auto& rule : problem.constraints.face_pairs) {
         const bool held = pinned_as(problem, rule.first) || pinned_as(problem, rule.second);
-        if (!rule.or_under || !held) ties.push_back({rule.first, rule.second, rule.source});
+        if (!wide || !rule.or_under || !held) ties.push_back({rule.first, rule.second, rule.source});
     }
     for (const auto& reserve : problem.reserves) {
         std::optional<std::size_t> hub;
@@ -163,8 +163,9 @@ std::string held_by(const Problem& problem, const Placement& placement, const st
 
 }
 
-BalanceReport balance_faces(Kernel& kernel, Nm pitch, Nm reach) {
+BalanceReport balance_faces(Kernel& kernel, Nm pitch, Nm reach, BalanceScope scope) {
     const Problem& problem = kernel.problem();
+    const bool wide = scope == BalanceScope::anywhere;
     const std::size_t count = problem.parts.size();
     std::vector<char> face_tied(count, 0), leaves(count, 0);
     for (const auto& rule : problem.constraints.nearest_gaps)
@@ -174,8 +175,9 @@ BalanceReport balance_faces(Kernel& kernel, Nm pitch, Nm reach) {
         }
     for (const auto& rule : problem.constraints.face_pairs) face_tied[rule.first] = face_tied[rule.second] = 1;
     for (std::size_t part = 0; part < count; ++part)
-        leaves[part] = pinned_as(problem, part) && !face_tied[part] && !kernel.movable_alone(part) && kernel.releasable(part);
-    const std::vector<FaceTie> ties = face_ties(kernel, leaves);
+        leaves[part] = wide && pinned_as(problem, part) && !face_tied[part] && !kernel.movable_alone(part) &&
+                       kernel.releasable(part);
+    const std::vector<FaceTie> ties = face_ties(kernel, leaves, wide);
     const auto leavers_of = [&](const std::vector<std::size_t>& members) {
         std::vector<std::size_t> out;
         for (const auto& reserve : problem.reserves) {
@@ -237,7 +239,10 @@ BalanceReport balance_faces(Kernel& kernel, Nm pitch, Nm reach) {
     for (std::size_t lead = 0; lead < count; ++lead) {
         const auto& members = sets[lead];
         if (members.empty()) continue;
-        if (!free_set(members)) {
+        const bool straddles = std::any_of(members.begin(), members.end(), [&](std::size_t part) {
+            return kernel.placement()[part].face == Face::bottom;
+        });
+        if (!free_set(members) || (!wide && straddles)) {
             double area = 0;
             for (const std::size_t part : members)
                 if (kernel.placement()[part].face == Face::top && !pinned_as(problem, part))
@@ -431,7 +436,10 @@ BalanceReport balance_faces(Kernel& kernel, Nm pitch, Nm reach) {
         std::size_t freed = released(members);
         bool flipped = in_place(members, lead, why);
         const std::vector<std::size_t> wider = contract_set(members);
-        const bool grew = wider.size() > members.size() && fits(wider);
+        const bool grew = wider.size() > members.size() && fits(wider) &&
+                          (wide || std::all_of(wider.begin(), wider.end(), [&](std::size_t part) {
+                              return kernel.placement()[part].face == Face::top;
+                          }));
         if (!flipped && grew) {
             freed += released(wider);
             if (in_place(wider, lead + " with the parts its contracts tie to it", wider_why)) {
@@ -440,12 +448,12 @@ BalanceReport balance_faces(Kernel& kernel, Nm pitch, Nm reach) {
             }
         }
         const std::vector<std::size_t>& body = grew ? wider : members;
-        if (!flipped && elsewhere(body)) {
+        if (!flipped && wide && elsewhere(body)) {
             flipped = true;
             moved = body;
             ++report.shifted;
         }
-        if (!flipped) {
+        if (!flipped && wide) {
             const std::vector<std::size_t> grown = exchange_set(body, swap_why);
             if (grown.size() > body.size() && fits(grown)) freed += released(grown);
             if (grown.size() > body.size() && fits(grown) && (in_place(grown, lead, swap_why) || elsewhere(grown))) {
@@ -459,9 +467,11 @@ BalanceReport balance_faces(Kernel& kernel, Nm pitch, Nm reach) {
             if (freed > 0) why += "; " + std::to_string(freed) + " face-bound parts released from its copper field first";
             if (!wider_why.empty()) why += "; " + wider_why;
             if (!why.empty()) {
-                std::ostringstream wide;
-                wide << "; no rear seat in any turn within " << to_mm(static_cast<Nm>(constants::balance_reach.value)) << " mm";
-                why += wide.str();
+                std::ostringstream far_text;
+                if (wide)
+                    far_text << "; no rear seat in any turn within " << to_mm(static_cast<Nm>(constants::balance_reach.value))
+                             << " mm";
+                why += far_text.str();
                 if (!swap_why.empty()) why += "; changing faces with what is under it: " + swap_why;
                 report.kept_on_top.emplace_back(gain, why);
             }

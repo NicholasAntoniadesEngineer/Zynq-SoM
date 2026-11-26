@@ -53,7 +53,9 @@ struct BalanceReport {
     std::vector<std::pair<double, std::string>> kept_on_top;
 };
 
-BalanceReport balance_faces(Kernel& kernel, Nm pitch, Nm reach);
+enum class BalanceScope : std::uint8_t { mirrored, anywhere };
+
+BalanceReport balance_faces(Kernel& kernel, Nm pitch, Nm reach, BalanceScope scope);
 AttractReport attract(Kernel& kernel, Nm pitch, Nm reach);
 OrderReport lead_first(Kernel& kernel, Nm pitch);
 std::string seat_obstacles(const Kernel& kernel, const PadGap& rule, Nm pitch);
