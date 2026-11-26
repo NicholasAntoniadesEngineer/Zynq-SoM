@@ -47,12 +47,12 @@ bool may_sink(const Problem& problem, const Placement& placement, std::size_t pa
 }
 
 bool crowds_escape(const Problem& problem, const Placement& placement, std::size_t part, const Pose& pose) {
-    const Box gate = gate_at(problem, part, pose);
+    const Box gate = body_at(problem, part, pose);
     for (std::size_t other = 0; other < problem.parts.size(); ++other) {
         const Part& subject = problem.parts[other];
         if (other == part || !subject.fanout_subject || placement[other].face == pose.face) continue;
         if (!counts_as_crowder(problem.parts[part], subject)) continue;
-        const Box body = gate_at(problem, other, placement[other]);
+        const Box body = body_at(problem, other, placement[other]);
         if (!inside(gate, body) && !gap_at_least(gate, body, subject.fanout_need)) return true;
     }
     return false;
@@ -572,9 +572,44 @@ bool seat_first(Kernel& kernel, const NetOrder& rule, Nm pitch) {
             seats.push_back({pose, gap_of(rule.lead, pose)});
         }
     std::stable_sort(seats.begin(), seats.end(), [](const Seat& a, const Seat& b) { return a.gap < b.gap; });
-    const auto settle = [&](const Seat& seat) {
+    const auto carried_back = [&](std::size_t rival, const Pose& from, double beyond) {
+        std::vector<std::size_t> set{rival};
+        for (std::size_t index = 0; index < set.size(); ++index) {
+            const auto follow = [&](const PadGap& tie) {
+                if (tie.anchor == set[index] && tie.member != rule.lead && tie.member != rule.anchor &&
+                    !problem.parts[tie.member].fixed && std::find(set.begin(), set.end(), tie.member) == set.end())
+                    set.push_back(tie.member);
+            };
+            for (const PadGap& tie : problem.constraints.pad_gaps) follow(tie);
+            for (const PadGap& tie : problem.constraints.soft_gaps) follow(tie);
+        }
+        if (set.size() == 1) return false;
+        for (const std::vector<Point>* offsets : {&ring, &far_ring})
+            for (const Point by : *offsets) {
+                Pose pose = from;
+                pose.at = shifted(from.at, by);
+                if (gap_of(rival, pose) <= beyond || crowds_escape(problem, kernel.placement(), rival, pose)) continue;
+                std::vector<Move> moves{{rival, pose}};
+                for (std::size_t index = 1; index < set.size(); ++index) {
+                    Pose with = kernel.placement()[set[index]];
+                    with.at = shifted(with.at, by);
+                    moves.push_back({set[index], with});
+                }
+                const Snapshot held = kernel.snapshot();
+                if (kernel.force(moves) &&
+                    std::none_of(set.begin(), set.end(), [&](std::size_t member) { return kernel.breach(member).has_value(); }))
+                    return true;
+                kernel.restore(held);
+            }
+        return false;
+    };
+    const auto settle = [&](const Seat& seat, bool clearing) {
         const Snapshot before = kernel.snapshot();
-        if (!kernel.force({{rule.lead, seat.pose}})) return false;
+        std::size_t stepped = 0;
+        if (clearing ? !evicts(kernel, rule.lead, seat.pose, std::vector<char>(problem.parts.size(), 0),
+                               seat_ring(pitch, static_cast<Nm>(constants::aside_reach.value), {0, 0}), stepped)
+                     : !kernel.force({{rule.lead, seat.pose}}))
+            return false;
         bool sound = true;
         for (const std::size_t rival : rule.rivals) {
             const Pose from = kernel.placement()[rival];
@@ -597,6 +632,7 @@ bool seat_first(Kernel& kernel, const NetOrder& rule, Nm pitch) {
               }
               if (moved) break;
             }
+            if (!moved) moved = carried_back(rival, from, seat.gap);
             if (!moved) {
                 sound = false;
                 break;
@@ -617,9 +653,21 @@ bool seat_first(Kernel& kernel, const NetOrder& rule, Nm pitch) {
             }))
             continue;
         ++tries;
-        if (settle(seat)) return true;
+        if (settle(seat, false)) return true;
     }
-    if (settle({lead_from, gap_of(rule.lead, lead_from)})) return true;
+    if (settle({lead_from, gap_of(rule.lead, lead_from)}, false)) return true;
+    std::size_t cleared = 0;
+    for (const Seat& seat : seats) {
+        if (cleared >= static_cast<std::size_t>(constants::evict_tries.value)) break;
+        if (crowds_escape(problem, kernel.placement(), rule.lead, seat.pose)) continue;
+        const Probe probe = kernel.probe({{rule.lead, seat.pose}});
+        if (!probe.placeable || std::all_of(probe.blockers.begin(), probe.blockers.end(), [&](std::size_t blocker) {
+                return std::find(rule.rivals.begin(), rule.rivals.end(), blocker) != rule.rivals.end();
+            }))
+            continue;
+        ++cleared;
+        if (settle(seat, true)) return true;
+    }
     return false;
 }
 

@@ -57,6 +57,7 @@ std::string variant_json(const Variant& variant) {
         pads.push_back(object(fields));
     }
     return object({{"gate_box", box_json(variant.gate_box)},
+                   {"body_box", box_json(variant.body_box)},
                    {"court_boxes", array(boxes)},
                    {"court_discs", array(discs)},
                    {"pads", array(pads)}});
@@ -103,9 +104,10 @@ std::string text(const JsonNode& node, const std::string& key) {
 }
 
 Variant variant_of(const JsonNode& node) {
-    reject_unknown_keys(node, {"gate_box", "court_boxes", "court_discs", "pads"}, "layout variant");
+    reject_unknown_keys(node, {"gate_box", "body_box", "court_boxes", "court_discs", "pads"}, "layout variant");
     Variant variant;
     variant.gate_box = box_of(field(node, "gate_box", JsonKind::Array));
+    variant.body_box = box_of(field(node, "body_box", JsonKind::Array));
     for (const auto& entry : field(node, "court_boxes", JsonKind::Array).array_value)
         variant.court_boxes.push_back(box_of(entry));
     for (const auto& entry : field(node, "court_discs", JsonKind::Array).array_value)

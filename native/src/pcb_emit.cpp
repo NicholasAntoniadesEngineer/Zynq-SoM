@@ -168,7 +168,7 @@ PcbEmissionResult render_pcb(const PcbModel &m, const PcbEmitPolicy &p, Quantiza
             for (const CopperLayer& layer : board_stackup().copper) {
                 if (layer.role == CopperRole::signal) continue;
                 root.push_back(emit_iso_void_zone(
-                    rect_corners_ccw(isolation_void_rect(courtyard(i), isolation->margin_mm, counts)),
+                    rect_corners_ccw(isolation_void_rect(body_box(i), isolation->margin_mm, counts)),
                     uid(layer.name == p.ground_layer ? "iso-void:" + i.ref : "iso-void:" + i.ref + ":" + layer.name),
                     "ethernet_isolation_void_" + i.ref + (layer.name == p.ground_layer ? "" : "_" + layer.name.substr(0, layer.name.find('.'))),
                     layer.name, p.zone_min_thickness));

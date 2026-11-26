@@ -26,7 +26,7 @@ struct PadShape {
 };
 
 struct Variant {
-    Box gate_box;
+    Box gate_box, body_box;
     std::vector<Box> court_boxes;
     std::vector<Disc> court_discs;
     std::vector<PadShape> pads;
@@ -241,6 +241,7 @@ inline bool counts_as_crowder(const Part& crowder, const Part& subject) {
 Point corner_site(const Board& board, const CornerRule& rule);
 std::optional<bool> mirrors_across_x(const Footprint& footprint);
 Box gate_at(const Problem& problem, std::size_t part, const Pose& pose);
+Box body_at(const Problem& problem, std::size_t part, const Pose& pose);
 Box pour_box(const PourRule& rule, const Pose& owner, const Board& board);
 bool pair_faced(const Problem& problem, const Board& board, std::size_t owner, const Pose& owner_pose,
                 std::size_t member, const Pose& member_pose, bool or_under);

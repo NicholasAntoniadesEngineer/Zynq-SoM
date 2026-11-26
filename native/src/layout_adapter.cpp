@@ -158,6 +158,8 @@ Variant read_variant(const PcbCheckFootprint& footprint) {
     if (!footprint.bbox) throw LayoutError("layout: footprint has no courtyard extent: " + footprint.source);
     Variant variant;
     variant.gate_box = box_nm(footprint.bbox->x0, footprint.bbox->y0, footprint.bbox->x1, footprint.bbox->y1);
+    if (!footprint.body) throw LayoutError("layout: footprint has no body or pad extent: " + footprint.source);
+    variant.body_box = box_nm(footprint.body->x0, footprint.body->y0, footprint.body->x1, footprint.body->y1);
     read_courtyard(footprint, variant);
     const auto forms = pad_forms(footprint);
     const auto lands = pad_lands(footprint);
@@ -542,7 +544,7 @@ std::array<bool, edge_count> escape_flags(const Variant& variant, const Part& pa
         pads.push_back({Box4{to_mm(box.x0), to_mm(box.y0), to_mm(box.x1), to_mm(box.y1)},
                         connected && !(through && plane)});
     }
-    const Box& gate = variant.gate_box;
+    const Box& gate = variant.body_box;
     const PcbEscapeSides sides = pcb_escape_sides(
         Box4{to_mm(gate.x0), to_mm(gate.y0), to_mm(gate.x1), to_mm(gate.y1)}, pads, constants::escape_tie.value);
     return {sides.north, sides.south, sides.west, sides.east};

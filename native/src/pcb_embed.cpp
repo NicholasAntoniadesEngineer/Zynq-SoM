@@ -23,6 +23,15 @@ Box4 courtyard(const PcbFootprintInst &i) {
             throw PcbEmissionError(i.ref + ": nonfinite footprint courtyard");
     return b;
 }
+Box4 body_box(const PcbFootprintInst &i) {
+    if (!i.mod || !i.mod->body)
+        throw PcbEmissionError(i.ref + ": missing footprint body geometry");
+    auto b = inst_placed_box(*i.mod->body, i.x, i.y, i.rotation, 4);
+    for (double v : {b.x0, b.y0, b.x1, b.y1})
+        if (!std::isfinite(v))
+            throw PcbEmissionError(i.ref + ": nonfinite footprint body");
+    return b;
+}
 namespace {
 const std::string silk_layer_suffix = ".SilkS";
 const std::vector<std::string> silk_text_tags{"fp_text", "property"};

@@ -446,6 +446,7 @@ Kernel::Shape Kernel::shape_of(std::size_t part, const Pose& pose) const {
     const Variant& variant = problem_.footprints[problem_.parts[part].footprint].on(pose.face);
     Shape shape;
     shape.gate = placed(variant.gate_box, pose.at, pose.turn);
+    shape.body = placed(variant.body_box, pose.at, pose.turn);
     shape.bound = shape.gate;
     const std::array<Point, edge_count> sides{Point{0, -1}, Point{0, 1}, Point{-1, 0}, Point{1, 0}};
     const auto& escape = problem_.parts[part].escape_on(pose.face);
@@ -707,11 +708,11 @@ std::optional<Breach> Kernel::pair_breach(std::size_t first, const Shape& first_
         return Breach::spacing;
     const Part& a = problem_.parts[first];
     const Part& b = problem_.parts[second];
-    if (a.fanout_subject && crowds(b, a) && !gap_at_least(first_shape.gate, second_shape.gate, a.fanout_need) &&
-        beside_escape(first_shape.escape, first_shape.gate, second_shape.gate, guard))
+    if (a.fanout_subject && crowds(b, a) && !gap_at_least(first_shape.body, second_shape.body, a.fanout_need) &&
+        beside_escape(first_shape.escape, first_shape.body, second_shape.body, guard))
         return Breach::fanout;
-    if (b.fanout_subject && crowds(a, b) && !gap_at_least(first_shape.gate, second_shape.gate, b.fanout_need) &&
-        beside_escape(second_shape.escape, second_shape.gate, first_shape.gate, guard))
+    if (b.fanout_subject && crowds(a, b) && !gap_at_least(first_shape.body, second_shape.body, b.fanout_need) &&
+        beside_escape(second_shape.escape, second_shape.body, first_shape.body, guard))
         return Breach::fanout;
     return std::nullopt;
 }

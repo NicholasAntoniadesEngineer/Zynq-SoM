@@ -119,7 +119,7 @@ set_source_files_properties(src/experiment_observers.cpp src/experiment_floorpla
     src/experiment_tools_probe.cpp src/experiment_tools_catalog.cpp
     PROPERTIES COMPILE_OPTIONS "-Wall;-Wextra;-Wpedantic;-Werror;-ffp-contract=off")
 target_sources(schgen_core PRIVATE src/part_import.cpp src/part_import_symbol.cpp
-    src/part_import_footprint.cpp src/part_import_io.cpp src/part_import_cli.cpp)
+    src/part_import_footprint.cpp src/part_import_io.cpp src/part_import_cli.cpp src/footprint_courtyard.cpp)
 target_sources(schgen_core PRIVATE
     src/board_pipeline.cpp src/board_pipeline_authoring.cpp src/board_pipeline_audits.cpp
     src/board_pipeline_cc.cpp src/board_pipeline_checks.cpp src/board_pipeline_coverage.cpp
@@ -418,6 +418,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_SOURCE_DIR}/.."
         "${CMAKE_CURRENT_SOURCE_DIR}/../parts/RV-3028-C7-32.768kHz-1ppm-TA-QC/RV-3028-C7-32.768kHz-1ppm-TA-QC.kicad_mod"
         "${CMAKE_CURRENT_BINARY_DIR}/part-courtyard-contract-output")
+    add_executable(schgen_footprint_courtyard_contracts tests/footprint_courtyard_contracts.cpp)
+    target_link_libraries(schgen_footprint_courtyard_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_footprint_courtyard_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME native_footprint_courtyard_contracts COMMAND schgen_footprint_courtyard_contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/.." "$<TARGET_FILE:schgen>")
     add_executable(schgen_compact_stage_profile tests/compact_stage_profile.cpp)
     add_executable(schgen_edge_direction_contracts tests/edge_direction_contracts.cpp)
     target_link_libraries(schgen_edge_direction_contracts PRIVATE schgen_core)

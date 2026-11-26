@@ -27,7 +27,8 @@ No hosted workflow or gate bypass is introduced.
 
 1. **`parts/`** — one folder per physical part, named by MPN, GENERATED from
    LCSC/EasyEDA (`native/bin/schgen part-import --parts-root parts --lcsc C…`):
-   pin table, symbol, footprint, 3D.
+   pin table, symbol, footprint, 3D. Courtyards enclose body and pads with
+   the KiCad Library Convention clearance (`schgen part-courtyard`).
    See `parts/README.md`.
 2. **`subsystems/`** — project-agnostic subsystem assets: interface contracts
    and independent reference data. C++ netlist

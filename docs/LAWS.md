@@ -99,7 +99,7 @@ layout engineer:
   slot / mouth physically reaches or OVERHANGS the Edge.Cuts. A connector recessed
   inboard cannot mate (the cable's overmold hits the board first). This is not a
   matter of eyeballing the render: the `placement_mech` gate measures every
-  off-board connector's BODY (courtyard) outer face to its edge and HARD-FAILS the
+  off-board connector's BODY (fabrication outline and pads, not the courtyard) outer face to its edge and HARD-FAILS the
   board if it is recessed more than `EDGE_FLUSH_MM` (= `EDGE_PAD_CLEAR` + 0.2 ≈
   0.6 mm — the pad-clearance floor plus a hair, NOT a slack inset). A pad-limited
   connector whose outer pad IS its mating face (USB-C shell-ground pads, the QWIIC

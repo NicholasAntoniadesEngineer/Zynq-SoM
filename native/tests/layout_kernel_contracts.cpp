@@ -72,6 +72,7 @@ void require(bool condition, const std::string& what) {
 Variant square_variant(Nm half, int pads, bool through) {
     Variant variant;
     variant.gate_box = {-half, -half, half, half};
+    variant.body_box = {-half, -half, half, half};
     variant.court_boxes.push_back(variant.gate_box);
     for (int pad = 0; pad < pads; ++pad) {
         const Box box{-fixture::pad_half, -fixture::pad_half, fixture::pad_half, fixture::pad_half};
@@ -85,6 +86,7 @@ Variant square_variant(Nm half, int pads, bool through) {
 Variant strip_variant() {
     Variant variant;
     variant.gate_box = {-fixture::strip_reach, -fixture::pad_half, fixture::strip_reach, fixture::pad_half};
+    variant.body_box = {-fixture::strip_reach, -fixture::pad_half, fixture::strip_reach, fixture::pad_half};
     variant.court_boxes.push_back(variant.gate_box);
     for (const Nm x : {-fixture::unit, fixture::unit}) {
         const Box box{x - fixture::strip_pad, -fixture::strip_pad, x + fixture::strip_pad, fixture::strip_pad};
@@ -98,6 +100,7 @@ Variant strip_variant() {
 Variant round_variant(Nm radius) {
     Variant variant;
     variant.gate_box = {-radius, -radius, radius, radius};
+    variant.body_box = {-radius, -radius, radius, radius};
     variant.court_discs.push_back({{0, 0}, radius});
     return variant;
 }
