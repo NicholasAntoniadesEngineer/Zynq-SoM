@@ -45,9 +45,15 @@ std::size_t depth_of(const Problem& problem, const std::vector<char>& taken, std
     return depth;
 }
 
+bool free_root(const Kernel& kernel, std::size_t part) {
+    const Part& item = kernel.problem().parts[part];
+    if (item.fixed || item.connector || item.module || item.corner || item.edge) return false;
+    return kernel.releasable(part);
 }
 
-ConstructReport construct_owned(Kernel& kernel, Nm pitch, Nm reach) {
+}
+
+ConstructReport construct_owned(Kernel& kernel, Nm pitch, Nm reach, bool arrange) {
     const Problem& problem = kernel.problem();
     ConstructReport report;
     report.length_before = kernel.routed_length();
@@ -82,9 +88,11 @@ ConstructReport construct_owned(Kernel& kernel, Nm pitch, Nm reach) {
     }
     report.taken = order.size();
     const std::vector<Point> ring = seat_ring(pitch, reach, Point{0, 0});
-    std::deque<std::size_t> queue(order.begin(), order.end());
+    std::deque<std::size_t> queue;
     std::vector<std::size_t> evictions(count, 0);
     std::vector<char> by_rule(count, 0);
+    bool stuck = false;
+    const std::vector<char>* scope = nullptr;
     const auto evict_budget = static_cast<std::size_t>(constants::construct_evictions.value);
     const auto evict_window = static_cast<std::size_t>(constants::construct_window.value);
     const auto seats_of = [&](std::size_t part) {
@@ -147,7 +155,7 @@ ConstructReport construct_owned(Kernel& kernel, Nm pitch, Nm reach) {
         });
         return candidates;
     };
-    const auto drain = [&] {
+    const auto drain = [&](bool firm, bool deep) {
     while (!queue.empty()) {
         const std::size_t part = queue.front();
         queue.pop_front();
@@ -174,6 +182,7 @@ ConstructReport construct_owned(Kernel& kernel, Nm pitch, Nm reach) {
                 }
                 const std::size_t blocker = refusal->other;
                 if (blocker == part || !taken[blocker] || kernel.parked(blocker) || !by_rule[blocker]) break;
+                if (scope && !(*scope)[blocker]) break;
                 if (evictions[part] + lifted.size() >= evict_budget) break;
                 lifted.emplace_back(blocker, kernel.placement()[blocker]);
                 kernel.park(blocker);
@@ -183,7 +192,6 @@ ConstructReport construct_owned(Kernel& kernel, Nm pitch, Nm reach) {
                 evictions[part] += lifted.size();
                 for (const auto& [blocker, held] : lifted) {
                     by_rule[blocker] = 0;
-                    --report.seated;
                     queue.push_back(blocker);
                 }
                 seated = true;
@@ -194,11 +202,10 @@ ConstructReport construct_owned(Kernel& kernel, Nm pitch, Nm reach) {
                     throw LayoutError("layout: the constructor could not put " + problem.parts[entry->first].reference + " back on its seat");
         }
         if (seated) {
-            ++report.seated;
             by_rule[part] = 1;
             continue;
         }
-        if (!seated) {
+        if (!seated && deep) {
             const auto tied = [&](std::size_t other) {
                 return std::any_of(ties[part].begin(), ties[part].end(),
                                    [&](const PadGap* tie) { return tie->anchor == other || tie->member == other; });
@@ -262,11 +269,15 @@ ConstructReport construct_owned(Kernel& kernel, Nm pitch, Nm reach) {
                         throw LayoutError("layout: the constructor could not put " + problem.parts[member].reference + " back on its seat");
             }
             if (arranged) {
-                ++report.seated;
                 ++report.searched;
                 by_rule[part] = 1;
                 continue;
             }
+        }
+        if (!firm) {
+            stuck = true;
+            queue.clear();
+            return;
         }
         if (kernel.seat(part, original[part])) {
             ++report.returned;
@@ -290,7 +301,113 @@ ConstructReport construct_owned(Kernel& kernel, Nm pitch, Nm reach) {
         report.causes.push_back(std::move(line));
     }
     };
-    drain();
+    if (arrange) {
+        std::vector<std::size_t> root_of(count, count);
+        for (const std::size_t part : order) {
+            std::size_t at = part;
+            while (taken[at]) at = *problem.ownership[at].owner;
+            root_of[part] = at;
+        }
+        std::vector<std::size_t> roots;
+        for (std::size_t part = 0; part < count; ++part)
+            if (!taken[part] && free_root(kernel, part)) roots.push_back(part);
+        std::vector<std::vector<std::size_t>> members(count);
+        std::vector<double> weight(count, 0);
+        const auto area = [&](std::size_t member) {
+            const Box gate = problem.footprints[problem.parts[member].footprint].top.gate_box;
+            return static_cast<double>(gate.x1 - gate.x0) * static_cast<double>(gate.y1 - gate.y0);
+        };
+        for (const std::size_t root : roots) weight[root] = area(root);
+        for (const std::size_t part : order) {
+            members[root_of[part]].push_back(part);
+            weight[root_of[part]] += area(part);
+        }
+        for (const std::size_t part : order)
+            if (!free_root(kernel, root_of[part])) queue.push_back(part);
+        drain(true, true);
+        std::stable_sort(roots.begin(), roots.end(), [&](std::size_t a, std::size_t b) { return weight[a] > weight[b]; });
+        for (const std::size_t root : roots) {
+            if (!kernel.movable_alone(root) && !kernel.release(root))
+                throw LayoutError("layout: " + problem.parts[root].reference + " could not be released from its reserved field");
+            kernel.park(root);
+        }
+        report.roots = roots.size();
+        const Nm span = problem.board.width + problem.board.height;
+        const std::vector<Point> sweep = seat_ring(static_cast<Nm>(constants::construct_sweep.value), span, Point{0, 0});
+        const Box outline = kernel.board().outline();
+        for (const std::size_t root : roots) {
+            std::vector<char> inside(count, 0);
+            inside[root] = 1;
+            for (const std::size_t member : members[root]) inside[member] = 1;
+            double sum_x = 0, sum_y = 0, pulls = 0;
+            for (const Net& net : problem.nets) {
+                if (net.category == Category::plane) continue;
+                if (std::none_of(net.pins.begin(), net.pins.end(), [&](const Pin& pin) { return inside[pin.part] != 0; })) continue;
+                for (const Pin& pin : net.pins) {
+                    if (inside[pin.part] || kernel.parked(pin.part)) continue;
+                    sum_x += static_cast<double>(kernel.placement()[pin.part].at.x);
+                    sum_y += static_cast<double>(kernel.placement()[pin.part].at.y);
+                    pulls += 1;
+                }
+            }
+            const Point target = pulls > 0 ? Point{static_cast<Nm>(sum_x / pulls), static_cast<Nm>(sum_y / pulls)}
+                                           : Point{(outline.x0 + outline.x1) / 2, (outline.y0 + outline.y1) / 2};
+            const Point snapped{target.x - target.x % pitch, target.y - target.y % pitch};
+            const Part& item = problem.parts[root];
+            const bool flips = problem.footprints[item.footprint].flippable && !item.top_only;
+            bool built = false;
+            scope = &inside;
+            const auto attempt = [&](std::size_t budget) {
+                std::size_t tried = 0;
+                for (std::size_t rank = 0; tried < budget && rank < sweep.size(); ++rank) {
+                    const Point at = shifted(snapped, sweep[rank]);
+                    if (at.x < outline.x0 || at.x > outline.x1 || at.y < outline.y0 || at.y > outline.y1) continue;
+                    bool legal = false;
+                    for (const Face face : {original[root].face, original[root].face == Face::top ? Face::bottom : Face::top}) {
+                        if (face != original[root].face && !flips) continue;
+                        for (int turn = 0; turn < turn_count; ++turn) {
+                            const Pose pose{at, static_cast<Turn>(turn), face};
+                            if (face == Face::bottom && crowds_escape(problem, kernel.placement(), root, pose)) continue;
+                            if (!kernel.seat(root, pose)) continue;
+                            legal = true;
+                            ++report.trials;
+                            stuck = false;
+                            queue.assign(members[root].begin(), members[root].end());
+                            drain(false, false);
+                            if (!stuck) return true;
+                            for (const std::size_t member : members[root]) {
+                                if (!kernel.parked(member)) kernel.park(member);
+                                by_rule[member] = 0;
+                            }
+                            kernel.park(root);
+                        }
+                    }
+                    if (legal) ++tried;
+                }
+                return false;
+            };
+            built = attempt(static_cast<std::size_t>(constants::construct_trials.value));
+            scope = nullptr;
+            if (built) {
+                ++report.arranged;
+                continue;
+            }
+            report.kept.push_back(item.reference + " (" + std::to_string(members[root].size()) + " owned parts)");
+            bool back = kernel.seat(root, original[root]);
+            for (std::size_t rank = 0; !back && rank < sweep.size(); ++rank)
+                for (int turn = 0; !back && turn < turn_count; ++turn)
+                    back = kernel.seat(root, Pose{shifted(original[root].at, sweep[rank]), static_cast<Turn>(turn), original[root].face});
+            if (!back) {
+                report.unseated.push_back(item.reference);
+                continue;
+            }
+            queue.assign(members[root].begin(), members[root].end());
+            drain(true, true);
+        }
+    } else {
+        queue.assign(order.begin(), order.end());
+        drain(true, true);
+    }
     for (std::size_t round = 0; round < static_cast<std::size_t>(constants::construct_rounds.value); ++round) {
         for (const std::size_t part : order) {
             if (!by_rule[part] || kernel.parked(part)) continue;
@@ -300,12 +417,12 @@ ConstructReport construct_owned(Kernel& kernel, Nm pitch, Nm reach) {
                 continue;
             kernel.park(part);
             by_rule[part] = 0;
-            --report.seated;
             queue.push_back(part);
         }
         if (queue.empty()) break;
-        drain();
+        drain(true, true);
     }
+    report.seated = static_cast<std::size_t>(std::count(by_rule.begin(), by_rule.end(), 1));
     report.length_after = kernel.routed_length();
     return report;
 }
@@ -315,7 +432,11 @@ std::string construct_summary(const ConstructReport& report) {
                       std::to_string(report.seated) + " by rule, returned " + std::to_string(report.returned) +
                       " to their first seats, could not seat " + std::to_string(report.unseated.size()) + "; " +
                       std::to_string(report.searched) + " needed their owner's parts arranged together\n";
+    if (report.roots != 0)
+        out += "  took " + std::to_string(report.roots) + " unowned parts off the board with their owned parts, placed " +
+               std::to_string(report.arranged) + " of them afresh after " + std::to_string(report.trials) + " trial seats\n";
     out += "  wire length " + std::to_string(report.length_before) + " nm before, " + std::to_string(report.length_after) + " nm after\n";
+    for (const auto& name : report.kept) out += "  no fresh place, kept beside its first seat: " + name + "\n";
     for (const auto& name : report.unseated) out += "  unseated: " + name + "\n";
     for (const auto& cause : report.causes) out += "  " + cause + "\n";
     return out;

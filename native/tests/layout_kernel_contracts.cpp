@@ -727,7 +727,7 @@ void owned_parts_are_seated_by_rule() {
     scene.problem.ownership = {{Tie::none, std::nullopt}, {Tie::authored, 0}, {Tie::authored, 0}};
     Kernel kernel(scene.problem, scene.placement);
     require(kernel.violations().size() == 2, "both owned parts start beyond their ties");
-    const ConstructReport report = construct_owned(kernel, fixture::construct_pitch, fixture::construct_reach);
+    const ConstructReport report = construct_owned(kernel, fixture::construct_pitch, fixture::construct_reach, false);
     require(report.taken == 2 && report.seated == 2 && report.unseated.empty() && report.returned == 0,
             "the constructor seats every owned part");
     require(kernel.parked_count() == 0 && kernel.violations().empty(), "the constructed placement breaks no rule");

@@ -668,7 +668,7 @@ StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model
     };
     std::string illegal_entry, illegal_separated;
     if (inputs.floorplan.project.construct) {
-        result.construct = construct_owned(attracted, settings.pitch, static_cast<Nm>(constants::construct_reach.value));
+        result.construct = construct_owned(attracted, settings.pitch, static_cast<Nm>(constants::construct_reach.value), true);
         if (!result.construct->unseated.empty())
             throw LayoutError("layout: no seat by rule for some owned parts\n" + construct_summary(*result.construct));
     }
