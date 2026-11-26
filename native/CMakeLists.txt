@@ -119,7 +119,7 @@ set_source_files_properties(src/experiment_observers.cpp src/experiment_floorpla
     src/experiment_tools_probe.cpp src/experiment_tools_catalog.cpp
     PROPERTIES COMPILE_OPTIONS "-Wall;-Wextra;-Wpedantic;-Werror;-ffp-contract=off")
 target_sources(schgen_core PRIVATE src/part_import.cpp src/part_import_symbol.cpp
-    src/part_import_footprint.cpp src/part_import_io.cpp src/part_import_cli.cpp)
+    src/part_import_footprint.cpp src/part_import_io.cpp src/part_import_cli.cpp src/footprint_courtyard.cpp)
 target_sources(schgen_core PRIVATE
     src/board_pipeline.cpp src/board_pipeline_authoring.cpp src/board_pipeline_audits.cpp
     src/board_pipeline_cc.cpp src/board_pipeline_checks.cpp src/board_pipeline_coverage.cpp

@@ -24,7 +24,7 @@ struct PcbCheckFootprint {
     Sexpr document;
     std::vector<std::tuple<std::string, std::string, double, double, double,
                            double, double>> pads;
-    std::optional<Box4> bbox;
+    std::optional<Box4> bbox, body;
 };
 using PcbCheckFootprintPtr = std::shared_ptr<const PcbCheckFootprint>;
 PcbCheckFootprintPtr pcb_check_footprint(std::string source, std::string bytes);
@@ -99,7 +99,7 @@ struct PcbCheckModel {
     std::set<std::string> edge_sheets;
 };
 struct PcbCheckGeometry {
-    std::optional<Box4> courtyard, pad_bbox;
+    std::optional<Box4> courtyard, pad_bbox, body;
     std::map<std::string, Box4> pad_boxes;
 };
 // An immutable prepared snapshot avoids stale geometry after source mutation.
@@ -113,6 +113,7 @@ public:
     const PcbCheckGeometry& geometry_at(std::size_t index) const;
     Box4 courtyard_at(std::size_t index) const;
     Box4 pad_bbox_at(std::size_t index) const;
+    Box4 body_at(std::size_t index) const;
 private:
     PcbCheckModel model_;
     std::vector<std::optional<PcbCheckGeometry>> geometry_;

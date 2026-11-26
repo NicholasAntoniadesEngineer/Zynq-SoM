@@ -731,7 +731,7 @@ void primitive_points(const SexprList& node, std::vector<std::pair<double, doubl
 }
 
 void footprint_bbox_walk(const SexprList& node, std::vector<double>* xs,
-                         std::vector<double>* ys) {
+                         std::vector<double>* ys, FootprintExtent which) {
     for (const Sexpr& child : node) {
         if (!std::holds_alternative<SexprList>(child.v)) {
             continue;
@@ -749,7 +749,12 @@ void footprint_bbox_walk(const SexprList& node, std::vector<double>* xs,
                 continue;
             }
             const std::string layer = py_str((*lyr)[1]);
-            if (layer.find("CrtYd") == std::string::npos) {
+            const bool court = layer.find("CrtYd") != std::string::npos;
+            const bool fab = layer.find("Fab") != std::string::npos;
+            const bool wanted = which == FootprintExtent::fab
+                ? fab
+                : court && (which == FootprintExtent::outline || which == FootprintExtent::court);
+            if (!wanted) {
                 continue;
             }
             if(is_sym(sub[0],"fp_arc")&&find_tagged_child(sub,"mid"))
@@ -797,6 +802,9 @@ void footprint_bbox_walk(const SexprList& node, std::vector<double>* xs,
             continue;
         }
         if (is_sym(sub[0], "pad")) {
+            if (which == FootprintExtent::court || which == FootprintExtent::fab) {
+                continue;
+            }
             const SexprList* at = find_tagged_child(sub, "at");
             const SexprList* size = find_tagged_child(sub, "size");
             if (at == nullptr || size == nullptr || at->size() < 3
@@ -838,7 +846,7 @@ void footprint_bbox_walk(const SexprList& node, std::vector<double>* xs,
             }
             continue;
         }
-        footprint_bbox_walk(sub, xs, ys);
+        footprint_bbox_walk(sub, xs, ys, which);
     }
 }
 
@@ -905,7 +913,7 @@ std::string trim_copy(const std::string& raw) {
 
 }  // namespace
 
-Box4 footprint_bbox(const Sexpr& doc, int decimals) {
+std::optional<Box4> footprint_extent(const Sexpr& doc, FootprintExtent which, int decimals) {
     if (decimals < 0) {
         throw std::runtime_error("footprint_bbox: decimals required");
     }
@@ -914,14 +922,28 @@ Box4 footprint_bbox(const Sexpr& doc, int decimals) {
     }
     std::vector<double> xs;
     std::vector<double> ys;
-    footprint_bbox_walk(std::get<SexprList>(doc.v), &xs, &ys);
+    if (which == FootprintExtent::body) {
+        footprint_bbox_walk(std::get<SexprList>(doc.v), &xs, &ys, FootprintExtent::fab);
+        footprint_bbox_walk(std::get<SexprList>(doc.v), &xs, &ys,
+                            xs.empty() ? FootprintExtent::outline : FootprintExtent::land);
+    } else {
+        footprint_bbox_walk(std::get<SexprList>(doc.v), &xs, &ys, which);
+    }
     if (xs.empty()) {
-        throw std::runtime_error("footprint_bbox: no measurable extent");
+        return std::nullopt;
     }
     const auto [xmin, xmax] = std::minmax_element(xs.begin(), xs.end());
     const auto [ymin, ymax] = std::minmax_element(ys.begin(), ys.end());
     return Box4{py_round(*xmin, decimals), py_round(*ymin, decimals),
                 py_round(*xmax, decimals), py_round(*ymax, decimals)};
+}
+
+Box4 footprint_bbox(const Sexpr& doc, int decimals) {
+    const auto box = footprint_extent(doc, FootprintExtent::outline, decimals);
+    if (!box) {
+        throw std::runtime_error("footprint_bbox: no measurable extent");
+    }
+    return *box;
 }
 
 SomOutline extract_som_scan(const std::string& text, const std::vector<std::string>& connectors) {
