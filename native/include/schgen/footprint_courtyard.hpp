@@ -52,6 +52,7 @@ inline constexpr std::array court_registry{general_clearance, small_clearance, s
                                            court_grid, body_stroke, extent_quantum, extent_places};
 }
 
+inline constexpr const char* part_generator = "schgen_part_gen";
 inline constexpr const char* rule_file = "courtyard_classes.json";
 inline constexpr const char* rule_schema = "schgen.courtyard_classes/1";
 
@@ -85,6 +86,8 @@ Extents measure(const Sexpr& footprint);
 std::optional<std::string> defect(const Sexpr& footprint);
 void require_sound(const Sexpr& footprint, const std::string& source);
 
+bool generated(const Sexpr& footprint);
+std::optional<double> derived_clearance(const Sexpr& footprint);
 std::vector<Edge> court_edges(const Sexpr& footprint);
 Sexpr enclosed(const Sexpr& footprint, const std::vector<Edge>& body, const PartRule& rule, const std::string& part);
 

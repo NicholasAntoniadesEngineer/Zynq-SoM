@@ -296,6 +296,24 @@ void require_sound(const Sexpr& footprint, const std::string& source) {
     if (const auto why = defect(footprint)) throw CourtyardError("footprint " + source + " is refused: " + *why);
 }
 
+bool generated(const Sexpr& footprint) {
+    for (const auto& node : items(footprint))
+        if (tag(node, "generator") && items(node).size() > 1)
+            if (const auto* name = std::get_if<std::string>(&items(node)[1].v)) return *name == part_generator;
+    return false;
+}
+
+std::optional<double> derived_clearance(const Sexpr& footprint) {
+    if (!generated(footprint)) return std::nullopt;
+    const Extents extents = measure(footprint);
+    if (!extents.court || !extents.body) return std::nullopt;
+    const std::array<double, 4> sides{extents.body->x0 - extents.court->x0, extents.body->y0 - extents.court->y0,
+                                      extents.court->x1 - extents.body->x1, extents.court->y1 - extents.body->y1};
+    const auto [least, most] = std::minmax_element(sides.begin(), sides.end());
+    if (*least <= 0 || *most - *least > constants::court_grid.value) return std::nullopt;
+    return *least;
+}
+
 std::vector<Edge> court_edges(const Sexpr& footprint) {
     std::vector<Edge> edges;
     for (const auto& node : items(footprint)) {
