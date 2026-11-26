@@ -677,6 +677,8 @@ ConnectorFacts connectors_from(const JsonNode& section, const std::map<std::stri
         fact.pair_label = text_of(entry, "pair_label", where);
         if (fact.edge_pinned && !fact.description) refuse(where + ": an edge-pinned connector needs a description");
         if (fact.edge_pinned && fact.mating_face.back() == face_axes.back()) refuse(where + ": a connector mated from above (+Z) cannot be edge-pinned");
+        if (!fact.edge_pinned && fact.mating_face.back() != face_axes.back())
+            refuse(where + ": a connector mated from the side must be edge-pinned; its plug cannot reach it from inside the board");
         fact.handling = require_string(entry, "handling", false, where);
         const auto& handling = connector_handling_classes();
         if (std::find(handling.begin(), handling.end(), fact.handling) == handling.end())
