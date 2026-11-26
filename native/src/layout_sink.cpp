@@ -80,13 +80,26 @@ struct FaceTie {
     std::string source;
 };
 
+const char* pinned_as(const Problem& problem, std::size_t part) {
+    const Part& item = problem.parts[part];
+    const Footprint& footprint = problem.footprints[item.footprint];
+    if (item.fixed) return "fixed";
+    if (item.top_only) return "top-only";
+    if (!footprint.flippable) return "unmirrorable";
+    if (!mirrors_across_x(footprint)) return "axis-less";
+    return nullptr;
+}
+
 std::vector<FaceTie> face_ties(const Kernel& kernel, const std::vector<char>& leaves) {
     const Problem& problem = kernel.problem();
     std::vector<FaceTie> ties;
     for (const auto& rule : problem.constraints.nearest_gaps)
         if (rule.same_face)
             for (const std::size_t member : rule.members) ties.push_back({rule.anchor, member, rule.source});
-    for (const auto& rule : problem.constraints.face_pairs) ties.push_back({rule.first, rule.second, rule.source});
+    for (const auto& rule : problem.constraints.face_pairs) {
+        const bool held = pinned_as(problem, rule.first) || pinned_as(problem, rule.second);
+        if (!rule.or_under || !held) ties.push_back({rule.first, rule.second, rule.source});
+    }
     for (const auto& reserve : problem.reserves) {
         std::optional<std::size_t> hub;
         for (const std::size_t member : reserve.members) {
@@ -96,16 +109,6 @@ std::vector<FaceTie> face_ties(const Kernel& kernel, const std::vector<char>& le
         }
     }
     return ties;
-}
-
-const char* pinned_as(const Problem& problem, std::size_t part) {
-    const Part& item = problem.parts[part];
-    const Footprint& footprint = problem.footprints[item.footprint];
-    if (item.fixed) return "fixed";
-    if (item.top_only) return "top-only";
-    if (!footprint.flippable) return "unmirrorable";
-    if (!mirrors_across_x(footprint)) return "axis-less";
-    return nullptr;
 }
 
 std::string held_by(const Problem& problem, const Placement& placement, const std::vector<std::size_t>& members,

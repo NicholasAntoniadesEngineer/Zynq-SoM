@@ -39,6 +39,7 @@ constexpr Nm stub_half = 3 * unit / 2;
 constexpr Nm shaft_width = 7 * unit, shaft_height = 50 * unit, roof_half = 3 * unit, roof_reach = 19 * unit / 2;
 constexpr Nm strip_reach = 10 * unit;
 constexpr Point mark_site{24 * unit, 15 * unit};
+constexpr Point beside_site{24 * unit, 15 * unit};
 constexpr double pour_reach = 5.0;
 constexpr Point roof_site{7 * unit / 2, 79 * unit / 2}, shaft_site{7 * unit / 2, 15 * unit};
 }
@@ -394,6 +395,30 @@ void balance_releases_a_face_bound_part_from_a_field() {
             "a top-only part tied by a face rule is never released and keeps its cluster on top");
 }
 
+void balance_sinks_a_part_that_may_sit_under_its_top_bound_owner() {
+    Scene scene(fixture::board_width, fixture::board_height);
+    scene.add("WALL", block(fixture::wall_half, fixture::wall_reach), fixture::balance_wall_site, true);
+    const std::size_t owner =
+        scene.add("OWNER", block(fixture::roof_half, fixture::roof_half), fixture::owner_site, false, true);
+    scene.problem.parts[owner].top_only = true;
+    const std::size_t guest = scene.add("GUEST", block(fixture::cap_half, fixture::cap_half), fixture::beside_site, false, true);
+    scene.problem.constraints.face_pairs.push_back({owner, guest, "under", true});
+    Kernel kernel(scene.problem, scene.placement);
+    require(kernel.violations().empty(), "the guest starts legal beside its owner");
+    const BalanceReport report = balance_faces(kernel, fixture::seat_pitch, fixture::seat_reach);
+    const Pose& seat = kernel.placement()[guest];
+    require(report.flipped == 1 && seat.face == Face::bottom && kernel.placement()[owner].face == Face::top,
+            "the guest goes to the rear while its top-only owner stays");
+    require(overlaps(gate_at(scene.problem, guest, seat), gate_at(scene.problem, owner, kernel.placement()[owner])),
+            "its rear seat lies under the owner, as the rule between them allows");
+    require(kernel.violations().empty(), "the seat under the owner keeps every rule");
+    scene.problem.constraints.face_pairs.back().or_under = false;
+    Kernel strict(scene.problem, scene.placement);
+    const BalanceReport held = balance_faces(strict, fixture::seat_pitch, fixture::seat_reach);
+    require(held.flipped == 0 && strict.placement()[guest].face == Face::top && held.kept_on_top.size() == 1,
+            "without that allowance the guest stays on its owner's face");
+}
+
 }
 
 int main() {
@@ -412,6 +437,7 @@ int main() {
         balance_seats_a_cluster_beside_a_blocked_mirror();
         balance_exchanges_faces_with_a_stranger_underneath();
         balance_releases_a_face_bound_part_from_a_field();
+        balance_sinks_a_part_that_may_sit_under_its_top_bound_owner();
         std::cout << "layout squeeze contracts ok\n";
         return 0;
     } catch (const std::exception& error) {
