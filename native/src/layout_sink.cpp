@@ -75,19 +75,82 @@ bool sink_part(Kernel& kernel, std::size_t part, const std::vector<Point>& offse
 
 namespace {
 
-std::string held_by(const Problem& problem, const Placement& placement, const std::vector<std::size_t>& members) {
+struct FaceTie {
+    std::size_t first = 0, second = 0;
+    std::string source;
+};
+
+std::vector<FaceTie> face_ties(const Problem& problem) {
+    std::vector<FaceTie> ties;
+    for (const auto& rule : problem.constraints.nearest_gaps)
+        if (rule.same_face)
+            for (const std::size_t member : rule.members) ties.push_back({rule.anchor, member, rule.source});
+    for (const auto& rule : problem.constraints.face_pairs) ties.push_back({rule.first, rule.second, rule.source});
+    for (const auto& reserve : problem.reserves)
+        for (const std::size_t member : reserve.members)
+            if (member != reserve.members.front())
+                ties.push_back({reserve.members.front(), member, "copper field " + reserve.source});
+    return ties;
+}
+
+const char* pinned_as(const Problem& problem, std::size_t part) {
+    const Part& item = problem.parts[part];
+    const Footprint& footprint = problem.footprints[item.footprint];
+    if (item.fixed) return "fixed";
+    if (item.top_only) return "top-only";
+    if (!footprint.flippable) return "unmirrorable";
+    if (!mirrors_across_x(footprint)) return "axis-less";
+    return nullptr;
+}
+
+std::string held_by(const Problem& problem, const Placement& placement, const std::vector<std::size_t>& members,
+                    const std::vector<FaceTie>& ties) {
+    const auto name = [&](std::size_t part) { return problem.parts[part].reference; };
+    std::vector<std::size_t> waiting, pinned, sunk;
     for (const std::size_t part : members) {
-        const Part& item = problem.parts[part];
-        if (item.fixed) return problem.parts[members.front()].reference + ": tied to fixed " + item.reference;
-        if (item.top_only) return problem.parts[members.front()].reference + ": tied to top-only " + item.reference;
-        if (!problem.footprints[item.footprint].flippable)
-            return problem.parts[members.front()].reference + ": tied to unmirrorable " + item.reference;
-        if (!mirrors_across_x(problem.footprints[item.footprint]))
-            return problem.parts[members.front()].reference + ": " + item.reference + " has no mirror axis";
-        if (placement[part].face == Face::bottom)
-            return problem.parts[members.front()].reference + ": tied to " + item.reference + " already on the rear";
+        if (pinned_as(problem, part)) pinned.push_back(part);
+        else if (placement[part].face == Face::bottom) sunk.push_back(part);
+        else waiting.push_back(part);
     }
-    return problem.parts[members.front()].reference + ": not movable";
+    if (waiting.empty()) return name(members.front()) + ": no part on top is free to change face";
+    const std::vector<std::size_t>& holders = pinned.empty() ? sunk : pinned;
+    const auto holds = [&](std::size_t part) { return std::find(holders.begin(), holders.end(), part) != holders.end(); };
+    struct Step {
+        std::size_t from = 0;
+        const FaceTie* tie = nullptr;
+    };
+    std::map<std::size_t, Step> came;
+    std::vector<std::size_t> queue{waiting.front()};
+    came[waiting.front()] = {};
+    std::optional<std::size_t> holder;
+    for (std::size_t index = 0; !holder && index < queue.size(); ++index) {
+        const std::size_t at = queue[index];
+        if (holds(at)) {
+            holder = at;
+            break;
+        }
+        for (const FaceTie& tie : ties) {
+            if (tie.first != at && tie.second != at) continue;
+            const std::size_t next = tie.first == at ? tie.second : tie.first;
+            if (came.count(next)) continue;
+            came[next] = {at, &tie};
+            queue.push_back(next);
+        }
+    }
+    std::string text = name(waiting.front());
+    if (waiting.size() > 1) text += " and " + std::to_string(waiting.size() - 1) + " more";
+    if (!holder) return text + ": tied to no part that holds a face";
+    text += pinned.empty() ? ": on top while " + name(*holder) : ": held on top by " + std::string(pinned_as(problem, *holder)) + " " + name(*holder);
+    if (pinned.empty()) {
+        if (sunk.size() > 1) text += " and " + std::to_string(sunk.size() - 1) + " more";
+        text += " of the same cluster already on the rear";
+    }
+    std::vector<std::string> chain;
+    for (std::size_t at = *holder; came[at].tie; at = came[at].from)
+        chain.push_back(came[at].tie->source + " (" + name(came[at].from) + " to " + name(at) + ")");
+    for (auto link = chain.rbegin(); link != chain.rend(); ++link)
+        text += (link == chain.rbegin() ? "; tied through " : ", then ") + *link;
+    return text;
 }
 
 }
@@ -101,16 +164,11 @@ BalanceReport balance_faces(Kernel& kernel, Nm pitch, Nm reach) {
         while (parent[part] != part) part = parent[part] = parent[parent[part]];
         return part;
     };
-    const auto join = [&](std::size_t first, std::size_t second) {
-        const std::size_t a = root(first), b = root(second);
+    const std::vector<FaceTie> ties = face_ties(problem);
+    for (const FaceTie& tie : ties) {
+        const std::size_t a = root(tie.first), b = root(tie.second);
         if (a != b) parent[std::max(a, b)] = std::min(a, b);
-    };
-    for (const auto& rule : problem.constraints.nearest_gaps)
-        if (rule.same_face)
-            for (const std::size_t member : rule.members) join(rule.anchor, member);
-    for (const auto& rule : problem.constraints.face_pairs) join(rule.first, rule.second);
-    for (const auto& reserve : problem.reserves)
-        for (const std::size_t member : reserve.members) join(reserve.members.front(), member);
+    }
     std::vector<std::vector<std::size_t>> sets(count);
     for (std::size_t part = 0; part < count; ++part) sets[root(part)].push_back(part);
     BalanceReport report;
@@ -140,7 +198,7 @@ BalanceReport balance_faces(Kernel& kernel, Nm pitch, Nm reach) {
             for (const std::size_t part : members)
                 if (kernel.placement()[part].face == Face::top && may_sink(problem, kernel.placement(), part))
                     area += area_mm2(gate_at(problem, part, kernel.placement()[part]));
-            if (area > 0) report.kept_on_top.emplace_back(area, held_by(problem, kernel.placement(), members));
+            if (area > 0) report.kept_on_top.emplace_back(area, held_by(problem, kernel.placement(), members, ties));
             continue;
         }
         for (const std::size_t part : members) area += area_mm2(gate_at(problem, part, kernel.placement()[part]));
@@ -192,13 +250,16 @@ BalanceReport balance_faces(Kernel& kernel, Nm pitch, Nm reach) {
                 if (sampled++ >= static_cast<std::size_t>(constants::balance_samples.value)) continue;
                 const Snapshot before = kernel.snapshot();
                 if (!kernel.force(moves)) {
-                    ++blocked["move refused"];
+                    ++blocked["a copper field that cannot change face"];
                 } else {
                     for (const std::size_t part : members)
                         if (const auto found = kernel.breach(part)) {
                             const std::size_t other = found->part == part ? found->other : found->part;
+                            const bool peer = other != part && other < count;
                             ++blocked[std::string(breach_name(found->kind)) + " " + problem.parts[part].reference + "/" +
-                                      (other != part && other < count ? problem.parts[other].reference : "board")];
+                                      (!peer ? "board"
+                                             : problem.parts[other].reference +
+                                                   (kernel.placement()[other].face == Face::bottom ? " on the rear" : " on top"))];
                             break;
                         }
                 }
