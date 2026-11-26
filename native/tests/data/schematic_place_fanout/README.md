@@ -74,3 +74,19 @@ clang++ -std=c++17 -O2 -DNDEBUG -Wall -Wextra -Wpedantic -Werror \
   -o "$fanout_build_dir/fanout_contracts"
 "$fanout_build_dir/fanout_contracts" native/tests/data/schematic_place_fanout
 ```
+
+## Cases re-captured from the native engine
+
+Five cases no longer follow the Python reference, because the reference result
+was a defect the engine now refuses:
+
+- `fan_hang`, `fan_divider`: the reference seated the hung parts 160 mm from
+  their pin after its column search ran out, with the ground symbol's text over
+  the part. The engine now undoes a hung part that fails the same checks the
+  router and the visual gate apply, and leaves it for the seat beside the net
+  that `_cell` runs after the fan-out.
+- `fan_two_pulls`, `fan_two_hangs`, `fan_many_divider`: the reference refused a
+  pin with more than one pull-up, filter capacitor or divider element. The
+  engine now draws the first with the pin and seats the others beside the net.
+
+Their expected state is the native result of the same operations.
