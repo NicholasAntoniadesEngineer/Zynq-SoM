@@ -203,7 +203,7 @@ PcbEscapeCopperResult build_pcb_escape_copper(const PcbEscapeInput &input, Quant
         const IsolationFact *isolation = part_fact_for(m.isolation, oi.value, oi.footprint);
         if (!isolation)
             continue;
-        auto vr = isolation_void_rect(input.geometry().courtyard_at(i), isolation->margin_mm, counts);
+        auto vr = isolation_void_rect(input.geometry().body_at(i), isolation->margin_mm, counts);
         auto label = "ethernet_isolation_void_" + oi.ref;
         meta.voids_checked.push_back(label);
         if (rects_intersect_open(vr, zone))

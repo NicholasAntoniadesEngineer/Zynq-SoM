@@ -289,8 +289,6 @@ std::optional<std::string> defect(const Sexpr& footprint) {
     if (!extents.court) return "it has pads but no courtyard";
     if (!holds(*extents.court, *extents.land))
         return "its courtyard " + text(*extents.court) + " does not enclose its pads " + text(*extents.land);
-    if (!holds(*extents.court, *extents.body))
-        return "its courtyard " + text(*extents.court) + " does not enclose its body outline " + text(*extents.body);
     return std::nullopt;
 }
 

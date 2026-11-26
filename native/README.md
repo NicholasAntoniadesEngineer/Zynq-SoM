@@ -402,6 +402,13 @@ first and replaces each file atomically, but is not a multi-file transaction.
 The native tests compare 62 recorded parts (three model variants each) byte for
 byte, exercise the real offline CLI and reject malformed input, HTTP failures,
 oversized/truncated responses, duplicate models and symlink output targets.
+An import through the command derives the courtyard from body, pads and the
+clearance of the part's class in `parts/courtyard_classes.json` (KiCad Library
+Convention F5.3) and refuses a part with no class there; the recorded
+comparison keeps the provider conversion as it was recorded.
+`part-courtyard --parts-root DIRECTORY [--write]` re-derives every stored
+footprint's courtyard and fails on a stale one unless `--write` is given;
+`part-courtyard --footprint FILE` judges one footprint.
 
 The native `pcb-stage --project NAME -o DIRECTORY` command now performs live
 KiCad netlist extraction, immutable input loading, floorplanning, placement,

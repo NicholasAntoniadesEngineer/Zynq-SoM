@@ -66,6 +66,28 @@ std::size_t courts(const Sexpr& n) {
     const auto& l = std::get<SexprList>(n.v);
     return std::count_if(l.begin(), l.end(), court);
 }
+Sexpr recorded_form(Sexpr live) {
+    require(!courtyard::defect(live) && courts(live) == 4, "reviewed live courtyard: four edges that enclose the pads");
+    auto& nodes = std::get<SexprList>(live.v);
+    nodes.erase(std::remove_if(nodes.begin(), nodes.end(), court), nodes.end());
+    std::size_t outline = 0;
+    for (auto& node : nodes) {
+        if (!tag(node, "fp_line") || text(child(node, "layer"), 1) != "F.Fab") continue;
+        for (auto& part : std::get<SexprList>(node.v)) {
+            if (tag(part, "layer")) std::get<SexprList>(part.v).at(1) = Sexpr{std::string("F.CrtYd")};
+            if (!tag(part, "stroke")) continue;
+            for (auto& entry : std::get<SexprList>(part.v))
+                if (tag(entry, "width")) {
+                    auto& width = std::get<SexprList>(entry.v).at(1);
+                    require(std::get<double>(width.v) == courtyard::constants::body_stroke.value, "reviewed body outline stroke");
+                    width = Sexpr{courtyard::constants::court_stroke.value};
+                }
+        }
+        ++outline;
+    }
+    require(outline == 4, "reviewed live body outline: the four provider edges on the fabrication layer");
+    return live;
+}
 const std::string& file(const PartImportPlan& p, const std::string& name) {
     for (const auto& f : p.files) if (f.name == name) return f.bytes;
     throw std::runtime_error("missing generated " + name);
@@ -104,7 +126,7 @@ int main(int argc, char** argv) {
         schgen::apply_run_config(std::filesystem::path(argv[1])/schgen::run_config_file,"carrier");
         const fs::path root(argv[1]), output(argv[3]); fs::create_directories(output);
         const std::string name = "RV-3028-C7-32.768kHz-1ppm-TA-QC";
-        const auto corrected = sexpr_loads(read(argv[2]));
+        const auto corrected = recorded_form(sexpr_loads(read(argv[2])));
         require(courts(corrected) == 4, "source contains precisely four rectangle edges");
         auto checked = corrected; require(remove_zero(checked) == 0, "source has no degenerate court edges");
         std::size_t cases = 0, variants = 0, changed = 0, removed = 0; bool found = false;

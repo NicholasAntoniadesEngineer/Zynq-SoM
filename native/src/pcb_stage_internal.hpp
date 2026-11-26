@@ -7,6 +7,7 @@
 #include "schgen/stage_precision.hpp"
 #include "schgen/turn.hpp"
 #include <algorithm>
+#include <set>
 #include <cmath>
 #include <limits>
 #include <numeric>
@@ -57,10 +58,21 @@ struct Demand {
     std::vector<std::string> keep;
     double minimum = 0;
 };
+struct Landing {
+    std::set<std::string> &slot;
+    std::set<std::string> before;
+    Landing(std::set<std::string> &target, const std::set<std::string> &anchors) : slot(target), before(target) {
+        slot.insert(anchors.begin(), anchors.end());
+    }
+    Landing(const Landing &) = delete;
+    Landing &operator=(const Landing &) = delete;
+    ~Landing() { slot = before; }
+};
 class Engine {
   public:
     explicit Engine(const PcbStageInput &in) : in(in) {}
     const PcbStageInput &in;
+    std::set<std::string> landed;
     std::vector<std::string> events;
     std::map<std::string, std::size_t> quantization;
     double credit(double v) {

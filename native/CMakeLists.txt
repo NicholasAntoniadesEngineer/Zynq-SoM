@@ -418,6 +418,11 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_SOURCE_DIR}/.."
         "${CMAKE_CURRENT_SOURCE_DIR}/../parts/RV-3028-C7-32.768kHz-1ppm-TA-QC/RV-3028-C7-32.768kHz-1ppm-TA-QC.kicad_mod"
         "${CMAKE_CURRENT_BINARY_DIR}/part-courtyard-contract-output")
+    add_executable(schgen_footprint_courtyard_contracts tests/footprint_courtyard_contracts.cpp)
+    target_link_libraries(schgen_footprint_courtyard_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_footprint_courtyard_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME native_footprint_courtyard_contracts COMMAND schgen_footprint_courtyard_contracts
+        "${CMAKE_CURRENT_SOURCE_DIR}/.." "$<TARGET_FILE:schgen>")
     add_executable(schgen_compact_stage_profile tests/compact_stage_profile.cpp)
     add_executable(schgen_edge_direction_contracts tests/edge_direction_contracts.cpp)
     target_link_libraries(schgen_edge_direction_contracts PRIVATE schgen_core)
