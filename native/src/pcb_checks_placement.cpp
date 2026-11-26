@@ -50,7 +50,7 @@ std::pair<double,std::string> pcb_fanout_need(int pins){return intelligent_need(
 PcbFanoutResult check_fanout_strict(const PcbCheckInput& input,std::optional<int> baseline){
     const auto& m=input.model();PcbFanoutResult res;std::vector<Box4> boxes;
     // fanout_gate.check deliberately reads every courtyard before filtering.
-    for(std::size_t i=0;i<m.insts.size();++i)boxes.push_back(input.courtyard_at(i));
+    for(std::size_t i=0;i<m.insts.size();++i)boxes.push_back(input.body_at(i));
     for(std::size_t i=0;i<m.insts.size();++i){const auto& inst=m.insts[i];int pins=static_cast<int>(inst.pad_nets.size());if(pcb_is_df40_part(inst.module_connector,pins)||pins<3)continue;
         auto need=pcb_fanout_need(pins);std::vector<Box4> others;std::vector<std::size_t> indices;
         for(std::size_t j=0;j<m.insts.size();++j){const auto& o=m.insts[j];if(i!=j&&o.side==inst.side&&pcb_counts_as_crowder(o.ref,o.sheet,o.module_connector,static_cast<int>(o.pad_nets.size()),o.footprint,inst.sheet)){others.push_back(boxes[j]);indices.push_back(j);}}
@@ -90,7 +90,7 @@ bool pcb_crowds_escape(const Box4& subject,const PcbEscapeSides& sides,const Box
 }
 PcbFanoutResult check_fanout(const PcbCheckInput& input,std::optional<int> baseline){
     const auto& m=input.model();PcbFanoutResult res;std::vector<Box4> boxes;
-    for(std::size_t i=0;i<m.insts.size();++i)boxes.push_back(input.courtyard_at(i));
+    for(std::size_t i=0;i<m.insts.size();++i)boxes.push_back(input.body_at(i));
     for(std::size_t i=0;i<m.insts.size();++i){const auto& inst=m.insts[i];int pins=static_cast<int>(inst.pad_nets.size());const int nets=pcb_escape_nets(inst);if(pcb_is_df40_part(inst.module_connector,pins)||nets<3)continue;
         auto need=pcb_escape_need(nets);const auto sides=pcb_escape_sides(boxes[i],pcb_escape_pads(inst,input.geometry_at(i)),pcb_escape_tie_mm);std::vector<Box4> others;std::vector<std::size_t> indices;
         for(std::size_t j=0;j<m.insts.size();++j){const auto& o=m.insts[j];if(i!=j&&o.side==inst.side&&pcb_counts_as_crowder(o.ref,o.sheet,o.module_connector,static_cast<int>(o.pad_nets.size()),o.footprint,inst.sheet)&&pcb_crowds_escape(boxes[i],sides,boxes[j])){others.push_back(boxes[j]);indices.push_back(j);}}

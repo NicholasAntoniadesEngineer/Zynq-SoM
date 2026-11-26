@@ -51,6 +51,7 @@ void require(bool condition, const std::string& what) {
 Variant block(Nm half_x, Nm half_y) {
     Variant variant;
     variant.gate_box = {-half_x, -half_y, half_x, half_y};
+    variant.body_box = {-half_x, -half_y, half_x, half_y};
     variant.court_boxes.push_back(variant.gate_box);
     const Box pad{-fixture::pad_half, -fixture::pad_half, fixture::pad_half, fixture::pad_half};
     variant.pads.push_back({"1", {0, 0}, pad, false, 0});
@@ -62,6 +63,7 @@ Variant block(Nm half_x, Nm half_y) {
 Variant round(Nm radius) {
     Variant variant;
     variant.gate_box = {-radius, -radius, radius, radius};
+    variant.body_box = {-radius, -radius, radius, radius};
     variant.court_discs.push_back({{0, 0}, radius});
     return variant;
 }

@@ -290,6 +290,10 @@ Box gate_at(const Problem& problem, std::size_t part, const Pose& pose) {
     return placed(problem.footprints[problem.parts[part].footprint].on(pose.face).gate_box, pose.at, pose.turn);
 }
 
+Box body_at(const Problem& problem, std::size_t part, const Pose& pose) {
+    return placed(problem.footprints[problem.parts[part].footprint].on(pose.face).body_box, pose.at, pose.turn);
+}
+
 Point corner_site(const Board& board, const CornerRule& rule) {
     const auto snapped = [&](Nm value) {
         if (rule.grid <= 0) return value;

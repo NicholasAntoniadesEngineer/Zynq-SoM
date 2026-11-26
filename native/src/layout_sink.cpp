@@ -47,12 +47,12 @@ bool may_sink(const Problem& problem, const Placement& placement, std::size_t pa
 }
 
 bool crowds_escape(const Problem& problem, const Placement& placement, std::size_t part, const Pose& pose) {
-    const Box gate = gate_at(problem, part, pose);
+    const Box gate = body_at(problem, part, pose);
     for (std::size_t other = 0; other < problem.parts.size(); ++other) {
         const Part& subject = problem.parts[other];
         if (other == part || !subject.fanout_subject || placement[other].face == pose.face) continue;
         if (!counts_as_crowder(problem.parts[part], subject)) continue;
-        const Box body = gate_at(problem, other, placement[other]);
+        const Box body = body_at(problem, other, placement[other]);
         if (!inside(gate, body) && !gap_at_least(gate, body, subject.fanout_need)) return true;
     }
     return false;

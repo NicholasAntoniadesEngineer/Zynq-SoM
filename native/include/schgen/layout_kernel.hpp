@@ -94,7 +94,7 @@ private:
         Nm drill = 0;
     };
     struct Shape {
-        Box gate, bound;
+        Box gate, body, bound;
         std::array<bool, edge_count> escape{};
         std::vector<Land> lands;
         std::vector<Box> named;
