@@ -165,7 +165,7 @@ std::string held_by(const Problem& problem, const Placement& placement, const st
 
 BalanceReport balance_faces(Kernel& kernel, Nm pitch, Nm reach, BalanceScope scope) {
     const Problem& problem = kernel.problem();
-    const bool wide = scope != BalanceScope::mirrored, roams = scope == BalanceScope::anywhere;
+    const bool wide = scope == BalanceScope::anywhere;
     const std::size_t count = problem.parts.size();
     std::vector<char> face_tied(count, 0), leaves(count, 0);
     for (const auto& rule : problem.constraints.nearest_gaps)
@@ -449,7 +449,7 @@ BalanceReport balance_faces(Kernel& kernel, Nm pitch, Nm reach, BalanceScope sco
             }
         }
         const std::vector<std::size_t>& body = grew ? wider : members;
-        if (!flipped && roams && elsewhere(body)) {
+        if (!flipped && wide && elsewhere(body)) {
             flipped = true;
             moved = body;
             ++report.shifted;
@@ -457,7 +457,7 @@ BalanceReport balance_faces(Kernel& kernel, Nm pitch, Nm reach, BalanceScope sco
         if (!flipped && wide) {
             const std::vector<std::size_t> grown = exchange_set(body, swap_why);
             if (grown.size() > body.size() && fits(grown)) freed += released(grown);
-            if (grown.size() > body.size() && fits(grown) && (in_place(grown, lead, swap_why) || (roams && elsewhere(grown)))) {
+            if (grown.size() > body.size() && fits(grown) && (in_place(grown, lead, swap_why) || elsewhere(grown))) {
                 flipped = true;
                 moved = grown;
                 ++report.exchanged;
@@ -469,7 +469,7 @@ BalanceReport balance_faces(Kernel& kernel, Nm pitch, Nm reach, BalanceScope sco
             if (!wider_why.empty()) why += "; " + wider_why;
             if (!why.empty()) {
                 std::ostringstream far_text;
-                if (roams)
+                if (wide)
                     far_text << "; no rear seat in any turn within " << to_mm(static_cast<Nm>(constants::balance_reach.value))
                              << " mm";
                 why += far_text.str();

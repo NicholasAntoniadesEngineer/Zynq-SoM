@@ -324,7 +324,7 @@ void balance_swaps_a_cluster_with_the_part_under_it() {
             narrow.kept_on_top.front().second.find("OWNER: no mirrored seat within reach") == 0 &&
             narrow.kept_on_top.front().second.find("UNDER on the rear") != std::string::npos,
             "the mirrored-only balance leaves a stacked pair alone and names the part under it");
-    const BalanceReport report = balance_faces(kernel, fixture::seat_pitch, fixture::seat_reach, BalanceScope::stacked);
+    const BalanceReport report = balance_faces(kernel, fixture::seat_pitch, fixture::seat_reach, BalanceScope::anywhere);
     require(report.flipped == 1 && report.parts == 1 && report.risen == 1, "the owner goes down and the part under it comes up");
     require(kernel.placement()[owner].face == Face::bottom && kernel.placement()[under].face == Face::top &&
             kernel.placement()[owner].at == kernel.placement()[under].at,
@@ -342,9 +342,8 @@ void balance_seats_a_cluster_beside_a_blocked_mirror() {
     scene.placement[post].face = Face::bottom;
     Kernel kernel(scene.problem, scene.placement);
     require(kernel.violations().empty(), "the part over a fixed rear part starts legal");
-    for (const BalanceScope scope : {BalanceScope::mirrored, BalanceScope::stacked})
-        require(balance_faces(kernel, fixture::seat_pitch, fixture::seat_reach, scope).flipped == 0 &&
-                kernel.placement() == scene.placement, "a balance that keeps clusters in place finds no seat within its reach");
+    require(balance_faces(kernel, fixture::seat_pitch, fixture::seat_reach, BalanceScope::mirrored).flipped == 0 &&
+            kernel.placement() == scene.placement, "the mirrored-only balance finds no seat within its reach");
     const BalanceReport report = balance_faces(kernel, fixture::seat_pitch, fixture::seat_reach, BalanceScope::anywhere);
     const Pose& seat = kernel.placement()[mover];
     require(report.flipped == 1 && report.shifted == 1 && seat.face == Face::bottom, "the part takes a rear seat beside the fixed part");
