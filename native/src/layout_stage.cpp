@@ -752,7 +752,7 @@ StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model
     std::optional<SqueezeReport> balanced;
     std::optional<Snapshot> balanced_state;
     std::vector<Placement> starts;
-    for (const BalanceScope scope : {BalanceScope::mirrored, BalanceScope::anywhere}) {
+    for (const BalanceScope scope : {BalanceScope::mirrored, BalanceScope::stacked, BalanceScope::anywhere}) {
         kernel.restore(seated);
         BalanceTrial trial{scope, balance_faces(kernel, settings.pitch, sink_reach, scope)};
         const bool repeats = std::find(starts.begin(), starts.end(), kernel.placement()) != starts.end();
@@ -783,17 +783,17 @@ StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model
     }
     for (bool improved = true; improved;) {
         improved = false;
-        std::optional<Placement> tried;
-        for (const BalanceScope scope : {BalanceScope::anywhere, BalanceScope::mirrored}) {
+        std::vector<Placement> tried;
+        for (const BalanceScope scope : {BalanceScope::anywhere, BalanceScope::stacked, BalanceScope::mirrored}) {
             const Snapshot squeezed = kernel.snapshot();
             const BalanceReport again = balance_faces(kernel, settings.pitch, sink_reach, scope);
             if (scope == BalanceScope::anywhere) result.left_on_top = again.kept_on_top;
             if (again.flipped == 0) continue;
-            if (tried && *tried == kernel.placement()) {
+            if (std::find(tried.begin(), tried.end(), kernel.placement()) != tried.end()) {
                 kernel.restore(squeezed);
                 continue;
             }
-            tried = kernel.placement();
+            tried.push_back(kernel.placement());
             SqueezeReport next = squeeze_best(kernel, settings);
             Rebalance pass{again, area(result.squeeze), area(next), area(next) < area(result.squeeze), scope};
             result.rebalances.push_back(pass);
@@ -897,7 +897,12 @@ StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model
          << "  routed airwire " << to_mm(result.attract.routed_before) << " to "
          << to_mm(result.attract.routed_after) << " mm\n";
     const auto scope_name = [](BalanceScope scope) {
-        return scope == BalanceScope::mirrored ? "mirrored in place only" : "with seats away from the mirrored place, exchanges and releases";
+        switch (scope) {
+        case BalanceScope::mirrored: return "mirrored in place only";
+        case BalanceScope::stacked: return "with face exchanges and releases in place";
+        case BalanceScope::anywhere: break;
+        }
+        return "with seats away from the mirrored place, exchanges and releases";
     };
     text << "FACE BALANCE: " << result.balance.flipped << " of " << result.balance.sets
          << " movable clusters mirrored to the rear (" << result.balance.parts << " parts); courtyard area top "

@@ -53,7 +53,7 @@ struct BalanceReport {
     std::vector<std::pair<double, std::string>> kept_on_top;
 };
 
-enum class BalanceScope : std::uint8_t { mirrored, anywhere };
+enum class BalanceScope : std::uint8_t { mirrored, stacked, anywhere };
 
 BalanceReport balance_faces(Kernel& kernel, Nm pitch, Nm reach, BalanceScope scope);
 AttractReport attract(Kernel& kernel, Nm pitch, Nm reach);
