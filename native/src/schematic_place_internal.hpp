@@ -169,6 +169,10 @@ struct PlacementMark {
     OrderedMap<std::size_t> plans;
 };
 
+class UnmatchedTopology : public SchematicPlaceError {
+public:
+    using SchematicPlaceError::SchematicPlaceError;
+};
 struct ReservedWire { std::string net; Point a, b; };
 struct Checkpoint {
     PlacementMark mark;

@@ -269,6 +269,23 @@ void drawn_at_first_pitch(const CircuitSheetIr& circuit, SymbolLibrary& lib, con
     drawn(circuit, lib);
 }
 
+void several_parts_on_one_pin(SymbolLibrary& lib) {
+    const auto circuit = sheet("several_parts_on_one_pin",
+        {part("U1", gate, "AND"), part("C1", capacitor, "100n"), part("C2", capacitor, "10u"), part("R1", resistor, "10k"), part("R2", resistor, "47k")},
+        gate_nets({{"+3V3", "power", Pins{{"U1", "5"}, {"R1", "1"}, {"R2", "1"}}}, {"GND", "ground", Pins{{"U1", "3"}, {"C1", "2"}, {"C2", "2"}}},
+                   {"NODE", "signal", Pins{{"U1", "4"}, {"C1", "1"}, {"C2", "1"}, {"R1", "2"}, {"R2", "2"}}}}));
+    drawn(circuit, lib);
+}
+
+void branched_floating_node(SymbolLibrary& lib) {
+    const auto circuit = sheet("branched_floating_node",
+        {part("U1", gate, "AND"), part("R1", resistor, "10k"), part("R2", resistor, "10k"), part("R3", resistor, "10k")},
+        gate_nets({{"+3V3", "power", Pins{{"U1", "5"}, {"R1", "1"}}}, {"+1V8", "power", Pins{{"R3", "1"}}},
+                   {"GND", "ground", Pins{{"U1", "3"}, {"R2", "2"}}}, {"OUT_Y", "port", Pins{{"U1", "4"}}},
+                   {"SUM", "signal", Pins{{"R1", "2"}, {"R2", "1"}, {"R3", "2"}}}}));
+    drawn(circuit, lib);
+}
+
 void backup_selector_three_way(SymbolLibrary& lib) {
     drawn_at_first_pitch(backup_selector("backup_selector_three_way", true), lib, {{"BT1", "J1"}, {"R3", "J1"}});
 }
@@ -289,6 +306,7 @@ int main(int argc, char** argv) {
         SymbolLibrary headers(std::vector<fs::path>{root / "native/tests/data/schematic_place_patterns/symbols", root / "schgen/lib",
                                                     root / "native/tests/data/schematic_place_chain/symbols"});
         backup_selector_three_way(headers); backup_selector_in_series(headers);
+        several_parts_on_one_pin(lib); branched_floating_node(lib);
         std::cout << "schematic place pattern contracts passed\n";
         return 0;
     } catch (const std::exception& error) {

@@ -975,6 +975,7 @@ SchematicPlacement Engine::_chain_template() {
     }
     _graft_pending();
     for (const auto& entry : trunk_jobs) _build_trunk(*entry.second);
+    _graft_pending();
     for (const auto& item : _deferred_texts) _part_texts(item.first, item.second);
     _deferred_texts.clear();
     const auto first = std::find_if(pl.parts.begin(), pl.parts.end(), [&](const auto& p) { return p.ref == order.front(); });
