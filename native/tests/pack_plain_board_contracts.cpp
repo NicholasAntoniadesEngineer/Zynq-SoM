@@ -74,7 +74,7 @@ int main(int argc,char** argv){try{
   // Use its actual emission input; current model construction above still
   // exercises today's policy, requirements, determinism and exact receipts.
   historicalPolicy.interface_reference_labels_only=false;
-  historicalPolicy.silk_to_floor=false;
+  historicalPolicy.silk_to_floor=false;historicalPolicy.title_inside=false;
   QuantizationCounts emittedCounts;begin();
   const auto emission=render_pcb(frozenModel,historicalPolicy,&emittedCounts);
   receipt(emittedCounts,end());

@@ -1,3 +1,4 @@
+#include "schgen/pack.hpp"
 #include "schgen/turn.hpp"
 #include "schgen/stackup.hpp"
 #include "pcb_emit_internal.hpp"
@@ -46,6 +47,7 @@ PcbEmitPolicy pcb_emit_policy(const ProjectConfig &c) {
     auto p = default_pcb_emit_policy();
     p.drc_floors = drc_floors_of(board_fabrication());
     p.silk_to_floor = true;
+    p.title_inside = true;
     p.interface_reference_labels_only = true;
     p.labels = c.labels;
     p.board_stem = c.file_stem;
@@ -183,10 +185,14 @@ PcbEmissionResult render_pcb(const PcbModel &m, const PcbEmitPolicy &p, Quantiza
         auto [ax, ay] = round_xy(b.x0, b.y0 + 3, 3, counts);
         auto [bx, by] = round_xy(b.x0 + 3, b.y0, 3, counts);
         root.push_back(emit_gr_line(ax, ay, bx, by, .15, "F.SilkS", uid("som-silk:ch")));
-        auto [x, y] = round_xy(b.x0 + labels::constants::title_indent.value, b.y0 - labels::constants::title_rise.value, 3, counts);
+        const double margin = labels::constants::label_margin.value;
+        const auto seat = p.title_inside ? std::optional<layout::Box>(labels::title_box(m)) : std::nullopt;
+        auto [x, y] = seat
+            ? round_xy(layout::to_mm(seat->x0) + margin, layout::to_mm(seat->y0) + margin, 3, counts)
+            : round_xy(b.x0 + labels::constants::recorded_indent.value, b.y0 - labels::constants::recorded_rise.value, 3, counts);
         root.push_back(emit_gr_text(labels::module_title, x, y, 0, "F.SilkS", uid("som-silk:label"),
                                     labels::constants::title_height.value, .25,
-                                    "left bottom"));
+                                    p.title_inside ? "left top" : "left bottom"));
     }
     for (const auto &i : m.insts)
         root.push_back(embed(i, p, uid));

@@ -133,14 +133,6 @@ Box box_of(const Box4& box) {
             layout::nearest_nm(box.y1)};
 }
 
-Box title_box(const Box4& core) {
-    const Box4 flat = text_box(module_title, 0, 0, constants::title_height.value, constants::label_margin.value);
-    const Nm margin = layout::ceil_nm(constants::label_margin.value);
-    const Nm left = layout::nearest_nm(core.x0 + constants::title_indent.value) - margin;
-    const Nm base = layout::nearest_nm(core.y0 - constants::title_rise.value) + margin;
-    return {left, base - 2 * layout::ceil_nm(flat.y1), left + 2 * layout::ceil_nm(flat.x1), base};
-}
-
 Subject subject_of(const PcbCheckInstance& instance, const PcbEmitPolicy& policy) {
     if (!instance.mod || !instance.mod->bbox)
         throw LabelError("labels: " + instance.ref + " has no footprint courtyard to seat a label beside");
@@ -154,6 +146,36 @@ Subject subject_of(const PcbCheckInstance& instance, const PcbEmitPolicy& policy
     subject.pads = instance.mod->pads.size();
     return subject;
 }
+
+}
+
+Box title_box(const PcbModel& model) {
+    if (!model.som_core) throw LabelError("labels: a board without a module has no module title");
+    const Box4& core = *model.som_core;
+    const Box4 flat = text_box(module_title, 0, 0, constants::title_height.value, constants::label_margin.value);
+    const Nm wide = 2 * layout::ceil_nm(flat.x1), tall = 2 * layout::ceil_nm(flat.y1);
+    const Nm margin = layout::ceil_nm(constants::label_margin.value);
+    const Nm step = static_cast<Nm>(constants::label_step.value);
+    const Nm left = layout::nearest_nm(core.x0 + constants::title_indent.value) - margin;
+    const Nm top = layout::nearest_nm(core.y0 + constants::title_rise.value) - margin;
+    const Nm right = layout::nearest_nm(core.x1) - wide, bottom = layout::nearest_nm(core.y1) - tall;
+    std::vector<Box> courts;
+    for (const auto& instance : model.insts)
+        if (instance.side == "top" && instance.mod && instance.mod->bbox)
+            courts.push_back(layout::placed(box_of(*instance.mod->bbox), {layout::to_nm(instance.x), layout::to_nm(instance.y)},
+                                            layout::turn_of(instance.rotation)));
+    for (Nm y = top; y <= bottom; y += step)
+        for (Nm x = left; x <= right; x += step) {
+            const Box seat{x, y, x + wide, y + tall};
+            if (std::none_of(courts.begin(), courts.end(), [&](const Box& court) {
+                    return std::min(seat.x1, court.x1) > std::max(seat.x0, court.x0) && std::min(seat.y1, court.y1) > std::max(seat.y0, court.y0);
+                }))
+                return seat;
+        }
+    throw LabelError("labels: no clear place inside the module outline for the module title");
+}
+
+namespace {
 
 Nm side_limit(const Box& court, const Box& extent, Side side) {
     const bool along_x = side == Side::above || side == Side::below;
@@ -295,7 +317,7 @@ LabelSeating seat_labels(const PcbModel& model, const PcbEmitPolicy& policy) {
     }
     for (const auto& body : {model.som_keepout, model.som_core})
         if (body) on(faces, Face::top).add(box_of(*body), Block::module, model.insts.size());
-    if (model.som_core) on(faces, Face::top).add(title_box(*model.som_core), Block::mark, model.insts.size());
+    if (model.som_core) on(faces, Face::top).add(title_box(model), Block::mark, model.insts.size());
 
     std::vector<std::size_t> order(model.insts.size());
     std::iota(order.begin(), order.end(), std::size_t{0});
