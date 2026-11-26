@@ -2,6 +2,7 @@
 #include "schgen/layout_density.hpp"
 #include "schgen/layout_json.hpp"
 #include "schgen/layout_kernel.hpp"
+#include "schgen/layout_stage.hpp"
 
 #include <algorithm>
 #include <iostream>
@@ -825,9 +826,29 @@ void plug_paths_stay_clear() {
     require(std::string(breach_name(Breach::plug_path)) == "plug_path", "the breach has a name");
 }
 
+void blocked_plug_paths_are_repaired() {
+    Scene scene;
+    scene.problem.rules.compare_guard = 1;
+    const auto body = scene.footprint("body", square_variant(fixture::body_half, fixture::passive_pins, false));
+    scene.add("BT", "one", body, fixture::subject_site).plug =
+        PlugRule{{-1, 0}, {1, 0}, fixture::plug_depth, 0, fixture::plug_clear};
+    scene.add("J", "two", body, fixture::in_path_site).height = fixture::tall_height;
+    scene.problem.ownership.assign(scene.problem.parts.size(), {Tie::none, std::nullopt});
+    Kernel kernel(scene.problem, scene.placement);
+    require(has(kernel.violations(), Breach::plug_path), "the placement handed over has a blocked path");
+    StageResult result;
+    repair_start(kernel, default_squeeze(), result, [](bool) {});
+    require(kernel.violations().empty(), "the repair clears the path and breaks nothing else");
+    require(result.inherited == 1, "the blocked path is counted among the breaches handed over");
+    require(std::any_of(result.repairs.begin(), result.repairs.end(),
+                        [](const RepairRow& row) { return row.kept && row.rule == "plug path" && row.before == 1 && row.after == 0; }),
+            "the kept step is reported against the plug path");
+}
+
 int main() {
     try {
         plug_paths_stay_clear();
+        blocked_plug_paths_are_repaired();
         parts_wait_off_the_board();
         owned_parts_are_seated_by_rule();
         courtyards_block_their_face();
