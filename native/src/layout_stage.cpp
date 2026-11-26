@@ -156,6 +156,13 @@ std::vector<RepairRow> repair_inherited(Kernel& kernel, const SqueezeOptions& se
         if (attempt({"1", rule.source, subject, "take the seat at the pin and reseat the parts in it by their own rules"},
                     [&] { return seat_faced_chain(kernel, rule, settings.pitch, near, aside); }))
             continue;
+        if (attempt({"1", rule.source, subject, "seat every part owned by " + problem.parts[rule.anchor].reference + " again by rule, face-bound parts first"},
+                    [&] {
+                        const std::vector<char> under = owned_under(problem, rule.anchor);
+                        const ConstructReport rebuilt = construct_owned(kernel, settings.pitch, static_cast<Nm>(constants::construct_reach.value), false, &under);
+                        return rebuilt.unseated.empty() && faced();
+                    }))
+            continue;
         if (attempt({"2", rule.source, subject, "move " + problem.parts[rule.anchor].reference + " and its face-tied set to the other face"},
                     [&] { return flip_set(kernel, rule.anchor); }))
             continue;

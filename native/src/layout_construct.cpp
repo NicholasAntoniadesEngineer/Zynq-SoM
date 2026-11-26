@@ -53,13 +53,29 @@ bool free_root(const Kernel& kernel, std::size_t part) {
 
 }
 
-ConstructReport construct_owned(Kernel& kernel, Nm pitch, Nm reach, bool arrange) {
+std::vector<char> owned_under(const Problem& problem, std::size_t owner) {
+    std::vector<char> under(problem.parts.size(), 0);
+    if (problem.ownership.empty()) return under;
+    for (std::size_t part = 0; part < problem.parts.size(); ++part) {
+        std::size_t at = part;
+        for (std::size_t depth = 0; problem.ownership[at].owner && depth < problem.parts.size(); ++depth) {
+            at = *problem.ownership[at].owner;
+            if (at == owner) {
+                under[part] = 1;
+                break;
+            }
+        }
+    }
+    return under;
+}
+
+ConstructReport construct_owned(Kernel& kernel, Nm pitch, Nm reach, bool arrange, const std::vector<char>* only) {
     const Problem& problem = kernel.problem();
     ConstructReport report;
     report.length_before = kernel.routed_length();
     const std::size_t count = problem.parts.size();
     std::vector<char> taken(count, 0);
-    for (std::size_t part = 0; part < count; ++part) taken[part] = eligible(kernel, part) ? 1 : 0;
+    for (std::size_t part = 0; part < count; ++part) taken[part] = eligible(kernel, part) && (!only || (*only)[part]) ? 1 : 0;
     std::vector<std::size_t> order;
     for (std::size_t part = 0; part < count; ++part)
         if (taken[part]) order.push_back(part);

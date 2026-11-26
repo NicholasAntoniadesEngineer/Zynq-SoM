@@ -743,6 +743,15 @@ void owned_parts_are_seated_by_rule() {
                 pad_gap_length(scene.problem, second, kernel.placement()) <= second.limit,
             "each part sits within its tie");
     require(report.length_after <= report.length_before, "the constructed placement is no longer in wire");
+    const std::vector<char> under = owned_under(scene.problem, 0);
+    require(under == std::vector<char>{0, 1, 1}, "the parts under an owner are the ones it owns, not the owner");
+    require(owned_under(scene.problem, 1) == std::vector<char>{0, 0, 0}, "an owned part with nothing tied to it has nothing under it");
+    Kernel scoped(scene.problem, scene.placement);
+    const std::vector<char> only{0, 1, 0};
+    const ConstructReport part = construct_owned(scoped, fixture::construct_pitch, fixture::construct_reach, false, &only);
+    require(part.taken == 1 && part.seated == 1 && scoped.placement()[2] == scene.placement[2],
+            "a scoped constructor seats only the parts it is given and leaves the others where they stand");
+    require(pad_gap_length(scene.problem, first, scoped.placement()) <= first.limit, "the scoped part sits within its tie");
 }
 
 void plug_paths_stay_clear() {

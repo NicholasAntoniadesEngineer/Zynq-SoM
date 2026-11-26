@@ -384,17 +384,19 @@ static PcbPlacementResult build_pcb_model_strategy(const PcbPlacementInput& inpu
     ExecutionFailureReceipt first;
     try {return build_pcb_model_once(input,&first,vertical_compaction);}
     catch(const PcbEdgeGeometryMismatch& mismatch) {
-        // One full-geometry retry, never recursive and never a geometry waiver.
-        // The first receipt already owns its input seed, zones, packing and
-        // rejected placement. Transfer it, rather than adding that seed twice.
         if(failure)*failure=first;
         if(!first.captured||first.unavailable)throw;
         auto retry=input;
-        retry.floorplan.spec=mismatch.retry_spec;
         retry.floorplan.accounting.quantization_engagements=first.accounting.quantization_engagements;
         retry.floorplan.accounting.fallback_events=first.accounting.fallback_events;
-        retry.floorplan.accounting.fallback_events.push_back("edge_geometry_replan_retry");
-        return build_pcb_model_once(retry,failure,vertical_compaction);
+        FloorplanSpec spec=mismatch.retry_spec;
+        for(int round=1;;++round) {
+            retry.floorplan.spec=spec;
+            retry.floorplan.accounting.fallback_events.push_back("edge_geometry_replan_retry");
+            if(round>=placement_constants::edge_replan_rounds.value)return build_pcb_model_once(retry,failure,vertical_compaction);
+            try {return build_pcb_model_once(retry,failure,vertical_compaction);}
+            catch(const PcbEdgeGeometryMismatch& again) {spec=again.retry_spec;}
+        }
     } catch(...) {
         if(failure)*failure=first;
         throw;

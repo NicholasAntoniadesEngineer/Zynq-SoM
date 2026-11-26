@@ -39,7 +39,8 @@ struct ConstructReport {
     Nm length_before = 0, length_after = 0;
 };
 
-ConstructReport construct_owned(Kernel& kernel, Nm pitch, Nm reach, bool arrange);
+ConstructReport construct_owned(Kernel& kernel, Nm pitch, Nm reach, bool arrange, const std::vector<char>* only = nullptr);
+std::vector<char> owned_under(const Problem& problem, std::size_t owner);
 std::string construct_summary(const ConstructReport& report);
 
 }
