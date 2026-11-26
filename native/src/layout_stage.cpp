@@ -863,11 +863,17 @@ StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model
          << " movable clusters mirrored to the rear (" << result.balance.parts << " parts); courtyard area top "
          << result.balance.top_before << " to " << result.balance.top_after << " mm2, rear "
          << result.balance.rear_before << " to " << result.balance.rear_after << " mm2\n"
+         << "  " << result.balance.shifted << " clusters took a rear seat away from their mirrored place, "
+         << result.balance.exchanged << " changed faces together with the parts in their way, " << result.balance.risen
+         << " parts came up to the top in exchange, " << result.balance.released
+         << " face-bound parts were released from a copper field that went to the rear\n"
          << "  squeezed area with mirroring " << result.balanced_area << " mm2, without " << result.plain_area
          << " mm2; kept the " << (result.balanced ? "mirrored" : "unmirrored") << " board\n";
     for (const Rebalance& pass : result.rebalances)
         text << "  on the squeezed board " << pass.balance.flipped << " of " << pass.balance.sets
-             << " movable clusters mirrored to the rear (" << pass.balance.parts << " parts); squeezed again "
+             << " movable clusters mirrored to the rear (" << pass.balance.parts << " parts, " << pass.balance.shifted
+             << " away from their mirrored place, " << pass.balance.exchanged << " exchanged, " << pass.balance.risen
+             << " parts up, " << pass.balance.released << " released); squeezed again "
              << pass.before << " to " << pass.after << " mm2; " << (pass.kept ? "kept" : "discarded") << "\n";
     {
         const BalanceReport& last = result.rebalances.empty() ? result.balance : result.rebalances.back().balance;

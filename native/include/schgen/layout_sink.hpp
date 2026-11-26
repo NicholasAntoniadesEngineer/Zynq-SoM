@@ -25,8 +25,12 @@ inline constexpr NamedConstant order_tries{"order_tries", 24, "seats", "policy",
     "seats at a connector pin tried for a protection part when the parts nearer than it are moved back together"};
 inline constexpr NamedConstant balance_samples{"balance_samples", 48, "seats", "report",
     "refused rear seats examined to name what keeps a cluster on top; the report needs the commonest causes, not every seat"};
+inline constexpr NamedConstant balance_reach{"balance_reach", 12e6, "nm", "policy",
+    "farthest from its mirrored place that a cluster is seated on the rear when that place is taken; the squeeze closes the board over it afterwards"};
+inline constexpr NamedConstant exchange_rounds{"exchange_rounds", 4, "rounds", "policy",
+    "times a cluster with no rear seat takes the parts found in its way along, so that they change faces together"};
 inline constexpr std::array sink_registry{sink_reach, ring_limit, aside_reach, evict_tries, small_pins, far_pitch, obstacle_rows,
-                                          order_tries, balance_samples};
+                                          order_tries, balance_samples, balance_reach, exchange_rounds};
 }
 
 struct AttractReport {
@@ -44,7 +48,7 @@ bool may_sink(const Problem& problem, const Placement& placement, std::size_t pa
 bool crowds_escape(const Problem& problem, const Placement& placement, std::size_t part, const Pose& pose);
 bool sink_part(Kernel& kernel, std::size_t part, const std::vector<Point>& offsets);
 struct BalanceReport {
-    std::size_t sets = 0, flipped = 0, parts = 0;
+    std::size_t sets = 0, flipped = 0, parts = 0, shifted = 0, exchanged = 0, risen = 0, released = 0;
     double top_before = 0, rear_before = 0, top_after = 0, rear_after = 0;
     std::vector<std::pair<double, std::string>> kept_on_top;
 };
