@@ -745,32 +745,69 @@ StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model
     const Snapshot seated = kernel.snapshot();
     SqueezeReport plain = squeeze_best(kernel, settings);
     const Snapshot plain_state = kernel.snapshot();
-    kernel.restore(seated);
-    result.balance = balance_faces(kernel, settings.pitch, static_cast<Nm>(constants::sink_reach.value));
-    SqueezeReport balanced = plain;
-    if (result.balance.flipped == 0) kernel.restore(plain_state);
-    else balanced = squeeze_best(kernel, settings);
+    const Nm sink_reach = static_cast<Nm>(constants::sink_reach.value);
+    const auto smaller = [&](const SqueezeReport& one, const SqueezeReport& other) {
+        return area(one) < area(other) || (area(one) == area(other) && one.routed_after < other.routed_after);
+    };
+    std::optional<SqueezeReport> balanced;
+    std::optional<Snapshot> balanced_state;
+    std::vector<Placement> starts;
+    for (const BalanceScope scope : {BalanceScope::mirrored, BalanceScope::anywhere}) {
+        kernel.restore(seated);
+        BalanceTrial trial{scope, balance_faces(kernel, settings.pitch, sink_reach, scope)};
+        const bool repeats = std::find(starts.begin(), starts.end(), kernel.placement()) != starts.end();
+        if (trial.balance.flipped != 0 && !repeats) {
+            starts.push_back(kernel.placement());
+            SqueezeReport squeezed = squeeze_best(kernel, settings);
+            trial.area = area(squeezed);
+            trial.squeezed = true;
+            if (!balanced || smaller(squeezed, *balanced)) {
+                balanced = std::move(squeezed);
+                balanced_state = kernel.snapshot();
+                for (BalanceTrial& earlier : result.trials) earlier.kept = false;
+                trial.kept = true;
+            }
+        }
+        result.trials.push_back(std::move(trial));
+    }
     result.plain_area = area(plain);
-    result.balanced_area = area(balanced);
-    result.balanced = result.balanced_area < result.plain_area ||
-                      (result.balanced_area == result.plain_area && balanced.routed_after < plain.routed_after);
-    if (!result.balanced) kernel.restore(plain_state);
-    result.squeeze = result.balanced ? std::move(balanced) : std::move(plain);
-    for (;;) {
-        const Snapshot squeezed = kernel.snapshot();
-        const BalanceReport again = balance_faces(kernel, settings.pitch, static_cast<Nm>(constants::sink_reach.value));
-        if (again.flipped == 0) break;
-        SqueezeReport next = squeeze_best(kernel, settings);
-        Rebalance pass{again, area(result.squeeze), area(next), area(next) < area(result.squeeze)};
-        result.rebalances.push_back(pass);
-        if (!pass.kept) {
-            kernel.restore(squeezed);
+    result.balanced_area = balanced ? area(*balanced) : result.plain_area;
+    result.balanced = balanced && smaller(*balanced, plain);
+    if (!result.balanced)
+        for (BalanceTrial& trial : result.trials) trial.kept = false;
+    kernel.restore(result.balanced ? *balanced_state : plain_state);
+    result.squeeze = result.balanced ? std::move(*balanced) : std::move(plain);
+    for (const BalanceTrial& trial : result.trials) {
+        if (trial.kept || (!result.balanced && trial.scope == BalanceScope::anywhere)) result.balance = trial.balance;
+        if (trial.scope == BalanceScope::anywhere) result.left_on_top = trial.balance.kept_on_top;
+    }
+    for (bool improved = true; improved;) {
+        improved = false;
+        std::optional<Placement> tried;
+        for (const BalanceScope scope : {BalanceScope::anywhere, BalanceScope::mirrored}) {
+            const Snapshot squeezed = kernel.snapshot();
+            const BalanceReport again = balance_faces(kernel, settings.pitch, sink_reach, scope);
+            if (scope == BalanceScope::anywhere) result.left_on_top = again.kept_on_top;
+            if (again.flipped == 0) continue;
+            if (tried && *tried == kernel.placement()) {
+                kernel.restore(squeezed);
+                continue;
+            }
+            tried = kernel.placement();
+            SqueezeReport next = squeeze_best(kernel, settings);
+            Rebalance pass{again, area(result.squeeze), area(next), area(next) < area(result.squeeze), scope};
+            result.rebalances.push_back(pass);
+            if (!pass.kept) {
+                kernel.restore(squeezed);
+                continue;
+            }
+            result.squeeze.after = next.after;
+            result.squeeze.routed_after = next.routed_after;
+            result.squeeze.fallen += next.fallen;
+            result.squeeze.attempts.insert(result.squeeze.attempts.end(), next.attempts.begin(), next.attempts.end());
+            improved = true;
             break;
         }
-        result.squeeze.after = next.after;
-        result.squeeze.routed_after = next.routed_after;
-        result.squeeze.fallen += next.fallen;
-        result.squeeze.attempts.insert(result.squeeze.attempts.end(), next.attempts.begin(), next.attempts.end());
     }
     result.reseat = attract(kernel, settings.pitch, static_cast<Nm>(constants::sink_reach.value));
     result.rear_after = rear(kernel.placement());
@@ -858,22 +895,37 @@ StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model
          << result.attract.met_before << " to " << result.attract.met_after << " of "
          << binding.problem.constraints.soft_gaps.size() << "\n"
          << "  routed airwire " << to_mm(result.attract.routed_before) << " to "
-         << to_mm(result.attract.routed_after) << " mm\n"
-         << "FACE BALANCE: " << result.balance.flipped << " of " << result.balance.sets
+         << to_mm(result.attract.routed_after) << " mm\n";
+    const auto scope_name = [](BalanceScope scope) {
+        return scope == BalanceScope::mirrored ? "mirrored in place only" : "with seats away from the mirrored place, exchanges and releases";
+    };
+    text << "FACE BALANCE: " << result.balance.flipped << " of " << result.balance.sets
          << " movable clusters mirrored to the rear (" << result.balance.parts << " parts); courtyard area top "
          << result.balance.top_before << " to " << result.balance.top_after << " mm2, rear "
          << result.balance.rear_before << " to " << result.balance.rear_after << " mm2\n"
-         << "  squeezed area with mirroring " << result.balanced_area << " mm2, without " << result.plain_area
+         << "  " << result.balance.shifted << " clusters took a rear seat away from their mirrored place, "
+         << result.balance.exchanged << " changed faces together with the parts in their way, " << result.balance.risen
+         << " parts came up to the top in exchange, " << result.balance.released
+         << " face-bound parts were released from a copper field that went to the rear\n";
+    for (const BalanceTrial& trial : result.trials) {
+        text << "  tried " << scope_name(trial.scope) << ": " << trial.balance.flipped << " clusters (" << trial.balance.parts
+             << " parts down, " << trial.balance.risen << " up)";
+        if (trial.squeezed) text << ", squeezes to " << trial.area << " mm2";
+        else text << (trial.balance.flipped == 0 ? ", nothing moved" : ", the same placement as the trial before it");
+        text << (trial.kept ? "; KEPT" : "") << "\n";
+    }
+    text << "  squeezed area with mirroring " << result.balanced_area << " mm2, without " << result.plain_area
          << " mm2; kept the " << (result.balanced ? "mirrored" : "unmirrored") << " board\n";
     for (const Rebalance& pass : result.rebalances)
-        text << "  on the squeezed board " << pass.balance.flipped << " of " << pass.balance.sets
-             << " movable clusters mirrored to the rear (" << pass.balance.parts << " parts); squeezed again "
+        text << "  on the squeezed board, " << scope_name(pass.scope) << ": " << pass.balance.flipped << " of " << pass.balance.sets
+             << " movable clusters mirrored to the rear (" << pass.balance.parts << " parts, " << pass.balance.shifted
+             << " away from their mirrored place, " << pass.balance.exchanged << " exchanged, " << pass.balance.risen
+             << " parts up, " << pass.balance.released << " released); squeezed again "
              << pass.before << " to " << pass.after << " mm2; " << (pass.kept ? "kept" : "discarded") << "\n";
     {
-        const BalanceReport& last = result.rebalances.empty() ? result.balance : result.rebalances.back().balance;
-        std::vector<std::pair<double, std::string>> left = last.kept_on_top;
+        std::vector<std::pair<double, std::string>> left = result.left_on_top;
         std::stable_sort(left.begin(), left.end(), [](const auto& a, const auto& b) { return a.first > b.first; });
-        text << "  rear-capable courtyard left on top, largest clusters:\n";
+        text << "  rear-capable courtyard left on top when last examined, largest clusters:\n";
         for (std::size_t index = 0; index < left.size() && index < straggler_rows; ++index)
             text << "    " << left[index].first << " mm2 " << left[index].second << "\n";
     }
