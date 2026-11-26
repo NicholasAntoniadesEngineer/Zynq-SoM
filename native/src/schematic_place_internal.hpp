@@ -29,6 +29,19 @@ inline constexpr int TAP_STUB_STEPS = 12;
 inline constexpr double TAP_STUB_MARGIN = 0.25;
 inline constexpr double PATH_TAG_RISE = 4 * U;
 inline constexpr double PACK_WIDTH_BUDGET = 380.0, PACK_GAP = 2 * U, PACK_STEP = 2 * U;
+struct Tuned { double value; const char* basis; };
+inline constexpr Tuned COORDINATE_DECIMALS{3, "decimal places every planned coordinate is rounded to, the precision SchematicPlacement::plan keeps"};
+inline constexpr Tuned STEM_ROUNDING{1e-6, "tolerance the router adds before it counts the grid steps of a pin stem"};
+inline constexpr Tuned PIN_ESCAPE{2, "grid steps kept free in front of every pin of a multi-pin part while a part is seated beside a net: one 2.54 mm pin pitch, the shortest wire a pin leaves on"};
+inline constexpr Tuned GRAFT_REACH{24, "rings of one pin pitch searched around each drawn point of a net: 61 mm, a quarter of the A4 drawing width"};
+inline constexpr Tuned GRAFT_NEAR{4, "rings within which every part hanging from a seated part's far pin must seat too, or the seat is refused: one port run, the stand-off the pin fan-out gives a hung part"};
+inline constexpr Tuned GRAFT_APART{8, "grid units between the drawing and a part seated with no drawn net to hang from, the gap the passive columns below the sheet use"};
+inline constexpr Tuned LABEL_BELOW{270, "rotation in degrees of a port label closing a wire that runs down, as the series port columns draw it"};
+inline constexpr Tuned LABEL_ABOVE{90, "rotation in degrees of a port label closing a wire that runs up, as the port strap columns draw it"};
+inline constexpr Tuned LABEL_LEFT{180, "rotation in degrees of a label closing a wire that runs left, as the pin fan-out draws it"};
+inline constexpr Tuned QUARTER_TURN{90, "degrees between the orientations a schematic symbol can be drawn in"};
+inline constexpr Tuned FULL_TURN{360, "degrees in one turn, the end of the orientations tried for a seated part"};
+inline constexpr double GRAFT_STEP = 2 * U;
 // Count attempted scalar entry, including a throwing quantizer; no arithmetic replay.
 inline double gsnap(double v, QuantizationCounts* counts) {
     return schematic_grid::gsnap(v, U, counts);
@@ -156,6 +169,23 @@ struct PlacementMark {
     OrderedMap<std::size_t> plans;
 };
 
+class UnmatchedTopology : public SchematicPlaceError {
+public:
+    using SchematicPlaceError::SchematicPlaceError;
+};
+struct ReservedWire { std::string net; Point a, b; };
+struct Checkpoint {
+    PlacementMark mark;
+    std::size_t powers = 0, flags = 0;
+    std::set<std::string> done, bridged;
+};
+struct Occupancy {
+    std::map<RouteCell, std::string> fixed, wired, guard;
+    bool strict = false;
+    RouteGrid walls;
+    std::vector<VisualSegment> wires;
+};
+
 VisualBox body_box_page(const SymbolDef&, double ax, double ay, int rotation,
                         const std::string& kind, const std::string& owner);
 Point value_anchor(const SymbolDef&, double ax, double ay, int rotation);
@@ -194,6 +224,8 @@ public:
     std::vector<double> _sig_rows;
     std::map<double, std::string> _rail_row_net;
     std::vector<std::pair<std::size_t, VisualBox>> _deferred_texts;
+    std::vector<ReservedWire> _reserved;
+    Refs _grafts;
     OrderedMap<int> orient;
     Refs multi, shunts;
     std::set<std::string> multi_nets;
@@ -362,6 +394,25 @@ public:
     std::optional<Point> _pack_anchor(const PlacementMark&) const;
     double _clear_label_x(const std::string& name, double x, double y, double lo, double hi) const;
     void _pin_divider_columns();
+
+    void _reserve(const std::string& net, Point a, Point b);
+    void _release(const std::string& net);
+    Checkpoint _checkpoint() const;
+    void _rollback(const Checkpoint&);
+    Occupancy _occupancy(const PlacementMark& upto, bool guard_pins);
+    std::optional<std::string> _fault_since(const PlacementMark& since, const Occupancy& base);
+    std::optional<std::string> _fault_since(const PlacementMark& since);
+    std::vector<Point> _net_points(const std::string& net);
+    std::string _graft_tag(const std::string& net, const std::string& ref) const;
+    void _graft_end(const std::string& net, const std::string& ref, Point at, Point outward);
+    bool _graftable(const std::string& ref);
+    bool _graft(const std::string& ref, bool plant, int reach);
+    bool _graft_settled(const std::string& ref, bool plant);
+    void _forget(const std::string& ref);
+    void _defer(const Refs& refs);
+    void _stack_or_defer(const FloatChain&, Point, const std::string& side);
+    void _graft_pending();
+    void _graft_unplaced();
     SchematicPlacement run();
 
 private:

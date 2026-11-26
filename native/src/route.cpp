@@ -84,6 +84,7 @@ void RouteGrid::claim(const std::string& owner,
 
 void RouteGrid::block_box(double x0, double y0, double x1, double y1,
                           double grid) {
+    walls_.push_back({x0, y0, x1, y1});
     const int i0 = static_cast<int>(x0 / grid) - 1;
     const int i1 = static_cast<int>(x1 / grid) + 2;
     const int j0 = static_cast<int>(y0 / grid) - 1;
@@ -98,6 +99,22 @@ void RouteGrid::block_box(double x0, double y0, double x1, double y1,
             }
         }
     }
+}
+
+bool RouteGrid::crosses_box(RouteCell from, RouteCell to, double grid) const {
+    const double xa = static_cast<double>(from.first) * grid, ya = static_cast<double>(from.second) * grid;
+    const double xb = static_cast<double>(to.first) * grid, yb = static_cast<double>(to.second) * grid;
+    const double lo_x = std::min(xa, xb), hi_x = std::max(xa, xb), lo_y = std::min(ya, yb), hi_y = std::max(ya, yb);
+    for (const auto& wall : walls_) {
+        const double x0 = wall[0] + kBlockEps, y0 = wall[1] + kBlockEps, x1 = wall[2] - kBlockEps, y1 = wall[3] - kBlockEps;
+        if (x0 >= x1 || y0 >= y1) continue;
+        if (from.first == to.first) {
+            if (x0 < xa && xa < x1 && lo_y < y1 && y0 < hi_y) return true;
+        } else if (y0 < ya && ya < y1 && lo_x < x1 && x0 < hi_x) {
+            return true;
+        }
+    }
+    return false;
 }
 
 bool RouteGrid::free_or(const std::string& net, RouteCell cell) const {
@@ -192,7 +209,7 @@ std::vector<RoutePoint> route_bfs_join(
                   && n.second <= j1)) {
                 continue;
             }
-            if (prev.count(pack(n)) != 0 || !grid.free_or(net, n)) {
+            if (prev.count(pack(n)) != 0 || !grid.free_or(net, n) || grid.crosses_box(c, n, grid_mm)) {
                 continue;
             }
             prev.emplace(pack(n), c);

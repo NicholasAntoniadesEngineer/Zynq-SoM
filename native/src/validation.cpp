@@ -267,6 +267,8 @@ bool wire_over_text(const VisualSegment& wire, const VisualBox& box) {
     return wire_box_over_text(segment_box(wire), wire.net, box);
 }
 
+bool visual_text_kind(const std::string& kind) { return is_text(kind); }
+
 VisualResult check_visual_geometry(const SheetGeometry& geo, double clearance_mm) {
     valid_geometry(geo, clearance_mm);
     VisualResult out;
