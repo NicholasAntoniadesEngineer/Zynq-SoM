@@ -183,6 +183,7 @@ void Placer::instantiate() {
     m.board_h = height;
     m.two_side = ctx.in.two_side;
     m.connectors = ctx.in.floorplan.project.connectors;
+    m.plug_paths = ctx.in.floorplan.project.plug_paths;
     m.isolation = ctx.in.floorplan.project.isolation;
     for (const auto &[sheet, row] : floorplan_sheet_edges(ctx.in.floorplan)) {
         (void)row;

@@ -2,6 +2,7 @@
 #include "schgen/layout_density.hpp"
 #include "schgen/layout_json.hpp"
 #include "schgen/layout_kernel.hpp"
+#include "schgen/layout_stage.hpp"
 
 #include <algorithm>
 #include <iostream>
@@ -56,6 +57,9 @@ constexpr Nm tie_reach = 3 * unit / 2;
 constexpr Nm land_spill = unit / 10;
 constexpr Point shaped_site{113 * unit / 10, 10 * unit};
 constexpr double fraction_level = 5.5;
+constexpr Nm plug_depth = 6 * unit, plug_clear = unit, tall_height = 2 * unit, low_height = unit / 2, narrow_width = unit;
+constexpr Point in_path_site{16 * unit, 20 * unit}, beside_path_site{16 * unit, 108 * unit / 5};
+constexpr Point west_edge_site{6 * unit / 5, 40 * unit}, near_west_site{3 * unit, 20 * unit}, by_module_site{63 * unit, 40 * unit};
 constexpr std::uint64_t walk_seed = 20261111;
 constexpr int walk_steps = 400;
 constexpr Nm walk_range = 4 * unit, walk_grid = unit / 20;
@@ -738,8 +742,113 @@ void owned_parts_are_seated_by_rule() {
     require(report.length_after <= report.length_before, "the constructed placement is no longer in wire");
 }
 
+void plug_paths_stay_clear() {
+    const auto kinds = [](const Scene& scene) { return Kernel(scene.problem, scene.placement).violations(); };
+    Scene scene;
+    scene.problem.rules.compare_guard = 1;
+    const auto body = scene.footprint("body", square_variant(fixture::body_half, fixture::passive_pins, false));
+    scene.add("BT", "one", body, fixture::subject_site).plug =
+        PlugRule{{-1, 0}, {1, 0}, fixture::plug_depth, 0, fixture::plug_clear};
+    scene.add("J", "two", body, fixture::in_path_site).height = fixture::tall_height;
+    const auto found = kinds(scene);
+    require(found.size() == 1 && found.front().kind == Breach::plug_path && found.front().part == 0 && found.front().other == 1,
+            "a tall part in the path is one breach, named from the part that is entered");
+    scene.problem.parts.back().height = fixture::low_height;
+    require(kinds(scene).empty(), "a part below the clear height may stand in the path");
+    scene.problem.parts.back().height = fixture::plug_clear;
+    require(kinds(scene).empty(), "a part exactly as tall as the clear height may stand in the path");
+    scene.problem.parts.back().height.reset();
+    require(has(kinds(scene), Breach::plug_path), "a part of unknown height blocks the path");
+    scene.placement.back().face = Face::bottom;
+    require(kinds(scene).empty(), "a part on the other face is not in the path");
+    scene.placement.back().face = Face::top;
+    scene.problem.parts.back().height = fixture::tall_height;
+    scene.placement.front().turn = Turn::half;
+    require(kinds(scene).empty(), "the path turns with the part");
+    scene.placement.front().turn = Turn::none;
+    scene.placement.back().at = fixture::beside_path_site;
+    require(has(kinds(scene), Breach::plug_path), "the path is as wide as the body when no width is stated");
+    scene.problem.parts.front().plug->width = fixture::narrow_width;
+    require(kinds(scene).empty(), "a stated width narrows the path about the middle of the body");
+    scene.problem.parts.front().plug->width = 0;
+    scene.placement.back().at = fixture::remote_site;
+    {
+        Kernel kernel(scene.problem, scene.placement);
+        require(kernel.violations().empty(), "the scene is legal with the tall part away");
+        const auto entering = kernel.rejection(1, {fixture::in_path_site, Turn::none, Face::top});
+        require(entering && entering->kind == Breach::plug_path && entering->other == 0, "a tall part may not move into the path");
+        require(!kernel.move(1, {fixture::in_path_site, Turn::none, Face::top}), "the move into the path is refused");
+        require(!kernel.rejection(1, {fixture::in_path_site, Turn::none, Face::bottom}), "it may pass on the other face");
+        const auto leaving = kernel.rejection(0, {fixture::near_west_site, Turn::none, Face::top});
+        require(leaving && leaving->kind == Breach::plug_path && leaving->other == 0, "the path may not run off the board");
+        require(!kernel.rejection(0, {fixture::near_west_site, Turn::half, Face::top}), "turned inward the same seat is legal");
+        kernel.park(1);
+        const auto seating = kernel.seat_rejection(1, {fixture::in_path_site, Turn::none, Face::top});
+        require(seating && seating->kind == Breach::plug_path, "a seat in the path is refused like a move");
+        kernel.park(0);
+        require(kernel.seat(1, {fixture::in_path_site, Turn::none, Face::top}), "with the entered part off the board its path binds nobody");
+        const auto arriving = kernel.seat_rejection(0, {fixture::subject_site, Turn::none, Face::top});
+        require(arriving && arriving->kind == Breach::plug_path && arriving->other == 1,
+                "the entered part may not be seated with its path across a tall part");
+    }
+    {
+        Scene edge;
+        edge.add("J", "one", edge.footprint("jack", square_variant(fixture::body_half, fixture::passive_pins, false)), fixture::west_edge_site);
+        Part& jack = edge.problem.parts.back();
+        jack.plug = PlugRule{{-1, 0}, {1, 0}, fixture::plug_depth, 0, fixture::plug_clear};
+        require(has(kinds(edge), Breach::plug_path), "a path off the board is a breach for a part that is not edge-mounted");
+        jack.connector = true;
+        jack.edge = EdgeRule{{-1, 0}, {1, 0}, fixture::edge_reach, fixture::west_edge_site.x};
+        require(kinds(edge).empty(), "an edge-mounted part with its mouth off the board keeps its path outside");
+    }
+    {
+        Scene module;
+        module.problem.board.module_body = fixture::module_core;
+        module.add("BT", "one", module.footprint("body", square_variant(fixture::body_half, fixture::passive_pins, false)),
+                   fixture::by_module_site)
+            .plug = PlugRule{{-1, 0}, {1, 0}, fixture::plug_depth, 0, fixture::plug_clear};
+        require(has(kinds(module), Breach::plug_path), "the module body blocks a path that runs under it");
+        module.placement.front().turn = Turn::half;
+        require(kinds(module).empty(), "turned away from the module the path is clear");
+    }
+    {
+        Scene bad;
+        bad.add("BT", "one", bad.footprint("body", square_variant(fixture::body_half, fixture::passive_pins, false)), fixture::subject_site).plug =
+            PlugRule{{-1, 0}, {1, 0}, 0, 0, fixture::plug_clear};
+        bool threw = false;
+        try {
+            Kernel kernel(bad.problem, bad.placement);
+        } catch (const LayoutError&) {
+            threw = true;
+        }
+        require(threw, "a plug path without a depth is refused");
+    }
+    require(std::string(breach_name(Breach::plug_path)) == "plug_path", "the breach has a name");
+}
+
+void blocked_plug_paths_are_repaired() {
+    Scene scene;
+    scene.problem.rules.compare_guard = 1;
+    const auto body = scene.footprint("body", square_variant(fixture::body_half, fixture::passive_pins, false));
+    scene.add("BT", "one", body, fixture::subject_site).plug =
+        PlugRule{{-1, 0}, {1, 0}, fixture::plug_depth, 0, fixture::plug_clear};
+    scene.add("J", "two", body, fixture::in_path_site).height = fixture::tall_height;
+    scene.problem.ownership.assign(scene.problem.parts.size(), {Tie::none, std::nullopt});
+    Kernel kernel(scene.problem, scene.placement);
+    require(has(kernel.violations(), Breach::plug_path), "the placement handed over has a blocked path");
+    StageResult result;
+    repair_start(kernel, default_squeeze(), result, [](bool) {});
+    require(kernel.violations().empty(), "the repair clears the path and breaks nothing else");
+    require(result.inherited == 1, "the blocked path is counted among the breaches handed over");
+    require(std::any_of(result.repairs.begin(), result.repairs.end(),
+                        [](const RepairRow& row) { return row.kept && row.rule == "plug path" && row.before == 1 && row.after == 0; }),
+            "the kept step is reported against the plug path");
+}
+
 int main() {
     try {
+        plug_paths_stay_clear();
+        blocked_plug_paths_are_repaired();
         parts_wait_off_the_board();
         owned_parts_are_seated_by_rule();
         courtyards_block_their_face();

@@ -93,6 +93,7 @@ struct PcbCheckModel {
     // nullopt means no metadata, "" means present metadata missing the hash.
     std::optional<std::string> escape_interface_sha256;
     ConnectorFacts connectors;
+    PlugPathFacts plug_paths;
     std::optional<LandSpacingPolicy> land_spacing;
     IsolationFacts isolation;
     std::set<std::string> module_connectors;
@@ -148,6 +149,25 @@ struct ConnectorSpacingResult {
     bool ok_as_placed() const;
 };
 ConnectorSpacingResult check_connector_spacing(const PcbCheckInput&);
+namespace plug_path_constants {
+inline constexpr NamedConstant gate_slack{"gate_slack", 1e-3, "mm", "policy",
+    "overlap the plug-path gate disregards; it reads courtyards rounded to four decimals of a millimetre, and the layout kernel keeps one nanometre"};
+inline constexpr std::array plug_path_registry{gate_slack};
+}
+struct PlugPathRow {
+    std::string ref, part, blocker;
+    std::pair<int, int> mouth;
+    double depth = 0, width = 0, clear_height = 0, clearance = 0;
+    bool leaves_board = false, ok = true;
+};
+struct PlugPathResult {
+    bool ok = true;
+    double board_w = 0, board_h = 0;
+    std::vector<PlugPathRow> paths;
+    std::vector<std::string> violations;
+    std::string summary() const;
+};
+PlugPathResult check_plug_paths(const PcbCheckInput&, const std::optional<Box4>& module_body);
 struct PlacementMechRow {
     std::string ref, mpn, edge;
     double rotation = 0, flush = 0;

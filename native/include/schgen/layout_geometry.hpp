@@ -159,6 +159,33 @@ constexpr bool gap_at_least(Disc a, Disc b, Nm need) {
     return reach <= 0 || squared(a.centre.x - b.centre.x) + squared(a.centre.y - b.centre.y) >= squared(reach);
 }
 
+template <typename Rectangle, typename Length>
+constexpr Rectangle path_ahead(const Rectangle& body, int out_x, int out_y, Length depth, Length width) {
+    Rectangle path = body;
+    if (out_x > 0) {
+        path.x0 = body.x1;
+        path.x1 = body.x1 + depth;
+    } else if (out_x < 0) {
+        path.x1 = body.x0;
+        path.x0 = body.x0 - depth;
+    } else if (out_y > 0) {
+        path.y0 = body.y1;
+        path.y1 = body.y1 + depth;
+    } else {
+        path.y1 = body.y0;
+        path.y0 = body.y0 - depth;
+    }
+    if (!(width > 0)) return path;
+    if (out_x != 0) {
+        path.y0 = (body.y0 + body.y1 - width) / 2;
+        path.y1 = path.y0 + width;
+    } else {
+        path.x0 = (body.x0 + body.x1 - width) / 2;
+        path.x1 = path.x0 + width;
+    }
+    return path;
+}
+
 constexpr Nm overlap_area(Box a, Box b) {
     const Nm width = std::min(a.x1, b.x1) - std::max(a.x0, b.x0);
     const Nm height = std::min(a.y1, b.y1) - std::max(a.y0, b.y0);

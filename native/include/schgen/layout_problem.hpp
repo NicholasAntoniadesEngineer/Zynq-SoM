@@ -41,6 +41,12 @@ struct EdgeRule {
     Point mouth_on(Face face) const { return face == Face::top ? mouth : rear_mouth; }
 };
 
+struct PlugRule {
+    Point mouth, rear_mouth;
+    Nm depth = 0, width = 0, clear_height = 0;
+    Point mouth_on(Face face) const { return face == Face::top ? mouth : rear_mouth; }
+};
+
 struct CornerRule {
     bool east = false, south = false;
     Point inset;
@@ -74,6 +80,7 @@ struct Part {
     bool field_source = false, field_sensitive = false;
     std::optional<EdgeRule> edge;
     std::optional<CornerRule> corner;
+    std::optional<PlugRule> plug = std::nullopt;
     std::vector<Point> via_sites = {};
     Face via_face = Face::top;
     Nm spacing = 0;
