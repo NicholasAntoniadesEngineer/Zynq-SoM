@@ -17,6 +17,7 @@
     {"sheet": "board_services", "target": "C2", "attribute": "value", "declaration": "carrier.board_services.decap", "type": "Device:C"},
     {"sheet": "board_services", "target": "C3", "attribute": "value", "declaration": "carrier.board_services.decap", "type": "Device:C"},
     {"sheet": "board_services", "target": "R2", "attribute": "value", "declaration": "carrier.board_services.wdi_series_r", "type": "Device:R"},
+    {"sheet": "board_services", "target": "R3", "attribute": "value", "declaration": "carrier.board_services.backup_pulldown", "type": "Device:R"},
     {"sheet": "bringup_en", "target": "R1", "attribute": "value", "declaration": "carrier.bringup_en.dip_pulldown", "type": "Device:R"},
     {"sheet": "bringup_en", "target": "R2", "attribute": "value", "declaration": "carrier.bringup_en.override_pullup", "type": "Device:R"},
     {"sheet": "bringup_en", "target": "C1", "attribute": "value", "declaration": "carrier.bringup_en.gate_decap", "type": "Device:C"},

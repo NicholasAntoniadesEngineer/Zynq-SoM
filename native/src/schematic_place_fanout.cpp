@@ -333,8 +333,8 @@ void Engine::_rail_stub(const std::string& name, Point pt, const std::string& si
     const double dy = side == "top" ? -2.54 : 2.54;
     const auto& symbol = lib.get(_power_lib(name));
     const int rot = _rail_rot(name, side);
-    for (const int k : {1, 2, 3, 4, 5, 6, 8})
-        for (const double dx : {0.0, 5.08, -5.08, 10.16, -10.16, 15.24, -15.24, 20.32, -20.32, 25.4, -25.4}) {
+    for (const int k : {1, 2, 3, 4, 5, 6, 8, 10, 12, 14, 16})
+        for (const double dx : {0.0, 5.08, -5.08, 10.16, -10.16, 15.24, -15.24, 20.32, -20.32, 25.4, -25.4, 30.48, -30.48, 35.56, -35.56, 40.64, -40.64}) {
             const Point end{py_round(pt.first + dx, 3), py_round(pt.second + dy * k, 3)};
             const auto vp = value_anchor(symbol, end.first, end.second, rot);
             const auto body = body_box_page(symbol, end.first, end.second, rot, "body", "?");
@@ -347,6 +347,23 @@ void Engine::_rail_stub(const std::string& name, Point pt, const std::string& si
             if (!ok) continue;
             if (dx == 0) pl.plan(name, {pt, end});
             else pl.plan(name, {pt, {pt.first, end.second}, end});
+            power(name, end.first, end.second, rot);
+            return;
+        }
+    for (const int k : {1, 2, 3, 4, 5, 6, 8, 10, 12, 14, 16})
+        for (const double dx : {5.08, -5.08, 10.16, -10.16, 15.24, -15.24, 20.32, -20.32, 25.4, -25.4, 30.48, -30.48, 35.56, -35.56, 40.64, -40.64}) {
+            const Point corner{py_round(pt.first + dx, 3), pt.second};
+            const Point end{corner.first, py_round(pt.second + dy * k, 3)};
+            const auto vp = value_anchor(symbol, end.first, end.second, rot);
+            const auto body = body_box_page(symbol, end.first, end.second, rot, "body", "?");
+            const double lo = std::min(pt.second, end.second), hi = std::max(pt.second, end.second);
+            const double left = std::min(pt.first, corner.first), right = std::max(pt.first, corner.first);
+            const bool ok = _spot_free(centered_box(name, vp.first, vp.second)) && _spot_free(body.bounds())
+                && _vband_stem_free(corner.first, lo + 0.2, hi - 0.2, {name})
+                && _spot_free({corner.first - 0.15, lo + 0.2, corner.first + 0.15, hi - 0.2}, 0.0)
+                && _spot_free({left + 0.2, pt.second - 0.15, right, pt.second + 0.15}, 0.0);
+            if (!ok) continue;
+            pl.plan(name, {pt, corner, end});
             power(name, end.first, end.second, rot);
             return;
         }
