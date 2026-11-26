@@ -20,7 +20,7 @@ const std::string good_entry =
     "\"cite\": \"fixture drawing\"}, \"access\": {\"side_mm\": 25, \"front_mm\": 0, \"cite\": \"fixture standard\"}, "
     "\"description\": \"fixture socket\", \"numbered_label\": \"SOCK\", \"pair_label\": \"PAIR\"}";
 const std::string plain_entry =
-    "{\"mating_face\": \"+Y\", \"edge_pinned\": false, \"overmold\": true, \"pad_row_face_check\": false, \"handling\": \"none\", "
+    "{\"mating_face\": \"+Z\", \"edge_pinned\": false, \"overmold\": true, \"pad_row_face_check\": false, \"handling\": \"none\", "
     "\"access\": {\"side_mm\": 0, \"front_mm\": 0, \"cite\": \"fixture: mated once at assembly\"}}";
 }
 
@@ -61,7 +61,7 @@ void entries_are_read(const std::filesystem::path& scratch) {
     const ConnectorFact& other = connector_fact_of(plain.connectors, "P1");
     require(!other.description && !other.numbered_label && !other.pair_label, "absent optional strings stay absent");
     require(other.handling == "none" && !other.mating && other.access && other.access->side_mm == 0, "an absent envelope stays absent and a zero access is stated");
-    require(mating_face_vector(other) == std::make_pair(0, 1), "a +Y face is the vector (0, 1)");
+    require(mating_face_vector(other) == std::make_pair(0, 0), "a face mated from above has no direction in the board plane");
     require(connector_fact(plain.connectors, "Device:R") == nullptr, "a name without an entry has no fact");
     refuses([&] { connector_fact_of(plain.connectors, "R1"); }, "R1", "a required fact for an unknown name is refused");
 }
@@ -77,6 +77,8 @@ void entries_are_refused(const std::filesystem::path& scratch) {
             "a flag that is not true or false is refused");
     refuses([&] { facts_from(scratch, with("\"-X\"", "\"-Z\"")); }, "mating_face", "a face through the board is refused");
     refuses([&] { facts_from(scratch, with("\"-X\"", "\"+Z\"")); }, "edge-pinned", "a connector mated from above cannot be edge-pinned");
+    refuses([&] { facts_from(scratch, with("\"edge_pinned\": true", "\"edge_pinned\": false")); }, "must be edge-pinned",
+            "a connector mated from the side that is not edge-pinned is refused");
     refuses([&] { facts_from(scratch, with("\"handling\": \"grip_sides\", ", "")); }, "handling", "an entry without a handling class is refused");
     refuses([&] { facts_from(scratch, with("\"grip_sides\"", "\"gloves\"")); }, "handling", "an unknown handling class is refused");
     refuses([&] { facts_from(scratch, with("\"cite\": \"fixture drawing\"", "\"cite\": null")); }, "cite",

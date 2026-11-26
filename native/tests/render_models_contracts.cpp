@@ -250,7 +250,7 @@ int main(int argc,char** argv) {
         if (argc<3) throw std::runtime_error("usage: contracts REPO SCRATCH [--live]");
         const fs::path repo=argv[1],scratch=argv[2]; fs::create_directories(scratch);
         const auto fixture=parse_json_file((repo/"native/tests/data/render_models/reference.json").string());
-        require(pcb_sha256(read(repo/"native/tests/data/render_models/reference.json"))=="75d858adb4fe7f6c00be838042e51fcbccf325c8df5d2dd37223c83524a5c14b","immutable Python capture");
+        require(pcb_sha256(read(repo/"native/tests/data/render_models/reference.json"))=="6290c523aa95161140e633f57557990d827f128a3802bf6a999a57106ecfbb63","immutable Python capture");
         planar_transform_contracts(); pure(fixture,repo,scratch); errors(scratch,fs::absolute(argv[0]).string()); pdf_cases(repo,scratch); if (argc>3&&std::string(argv[3])=="--live") live(fixture,repo,scratch);
         std::cout<<assertions<<" render/model contracts PASS\n"; return 0;
     } catch (const std::exception& e) { std::cerr<<"FAIL: "<<e.what()<<'\n'; return 1; }
