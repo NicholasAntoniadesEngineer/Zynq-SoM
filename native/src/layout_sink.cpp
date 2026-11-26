@@ -90,16 +90,13 @@ const char* pinned_as(const Problem& problem, std::size_t part) {
     return nullptr;
 }
 
-std::vector<FaceTie> face_ties(const Kernel& kernel, const std::vector<char>& leaves, bool wide) {
+std::vector<FaceTie> face_ties(const Kernel& kernel, const std::vector<char>& leaves) {
     const Problem& problem = kernel.problem();
     std::vector<FaceTie> ties;
     for (const auto& rule : problem.constraints.nearest_gaps)
         if (rule.same_face)
             for (const std::size_t member : rule.members) ties.push_back({rule.anchor, member, rule.source});
-    for (const auto& rule : problem.constraints.face_pairs) {
-        const bool held = pinned_as(problem, rule.first) || pinned_as(problem, rule.second);
-        if (!wide || !rule.or_under || !held) ties.push_back({rule.first, rule.second, rule.source});
-    }
+    for (const auto& rule : problem.constraints.face_pairs) ties.push_back({rule.first, rule.second, rule.source});
     for (const auto& reserve : problem.reserves) {
         std::optional<std::size_t> hub;
         for (const std::size_t member : reserve.members) {
@@ -177,7 +174,7 @@ BalanceReport balance_faces(Kernel& kernel, Nm pitch, Nm reach, BalanceScope sco
     for (std::size_t part = 0; part < count; ++part)
         leaves[part] = wide && pinned_as(problem, part) && !face_tied[part] && !kernel.movable_alone(part) &&
                        kernel.releasable(part);
-    const std::vector<FaceTie> ties = face_ties(kernel, leaves, wide);
+    const std::vector<FaceTie> ties = face_ties(kernel, leaves);
     const auto leavers_of = [&](const std::vector<std::size_t>& members) {
         std::vector<std::size_t> out;
         for (const auto& reserve : problem.reserves) {
