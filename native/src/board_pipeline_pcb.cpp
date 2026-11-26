@@ -349,6 +349,7 @@ void pcb_stages(Context& c){
         const auto gate=[&](const std::string& name,bool ok,const std::string& report){c.report(name+".txt",report);c.gate(name,ok,report);};
         gate("ratsnest",r.ratsnest.ok,r.ratsnest.summary());gate("placement_mech",r.mechanical.ok,r.mechanical.summary());
         gate("connector_model",r.connector_models.ok,r.connector_models.summary());gate("connector_spacing",r.connector_spacing.ok,r.connector_spacing.summary());
+        gate("plug_path",r.plug_paths.ok,r.plug_paths.summary());
         std::string silk_report="emitted-board refdes overlaps checked: top="+
             std::to_string(r.refdes.top_pairs.size())+" bottom="+std::to_string(r.refdes.bottom_pairs);
         for(const auto& pair:r.refdes.top_pairs)

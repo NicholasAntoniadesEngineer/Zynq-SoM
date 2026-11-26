@@ -58,7 +58,7 @@ native/bin/schgen catalog-compile parts native/catalog.bin
 
 ## Part facts (`part_facts.json`)
 
-`parts/part_facts.json` (`schema: schgen.part_facts/5`) is the one reviewed,
+`parts/part_facts.json` (`schema: schgen.part_facts/6`) is the one reviewed,
 hand-kept file in this folder. It holds what the generator cannot know:
 
 - `classes` — the class of every schematic symbol the boards may place, keyed
@@ -87,6 +87,17 @@ hand-kept file in this folder. It holds what the generator cannot know:
   edge-pinned; the floorplan edge table), `numbered_label` (silk label stem,
   numbered across the board) and `pair_label` (name of a two-part IN/OUT pair
   in the assembly notes).
+- `plug_paths` — keyed by part number (the name of the part's folder), one
+  entry per part that a plug, card or cell enters from the side, connector or
+  not: `entry` (`face`: `+X`, `-X`, `+Y` or `-Y`, the side of the footprint at
+  rotation 0 that the thing arrives over), `depth` (how far in front of that
+  side the path runs), the optional `width` (across the mouth; the width of
+  the courtyard when left out) and `clear_height` (a part on the same face no
+  taller than this may stand in the path). Every one is an object with `mm`
+  (`face` for the entry) and its own `cite`. The layout keeps the path on the
+  board and free of taller parts, and the `plug_path` board gate reports each
+  path with its measured clearance. A `connector` whose `mating_face` is
+  lateral must be edge-pinned or have an entry here on the same face.
 - `stated_heights` — the height above the board face, in millimetres, of every
   footprint that names no 3D model, keyed by footprint id, each with its
   `basis` and the date it was `reviewed`.

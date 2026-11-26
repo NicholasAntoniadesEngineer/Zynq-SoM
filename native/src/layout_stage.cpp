@@ -707,6 +707,18 @@ StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model
             if (violation.kind == Breach::connector_gap)
                 result.convergence += "LEFT connector spacing " + entry.parts[violation.part].reference + " / " +
                                       entry.parts[violation.other].reference + "\n";
+        std::string shut;
+        for (const Violation& violation : attracted.violations()) {
+            if (violation.kind != Breach::plug_path) continue;
+            const std::string line = entry.parts[violation.part].reference + " is entered through a path that " +
+                                     (violation.other == violation.part ? std::string("leaves the board or runs into the module")
+                                                                        : entry.parts[violation.other].reference + " stands in");
+            result.convergence += "LEFT plug path: " + line + "\n";
+            shut += "\n  " + line;
+        }
+        if (!shut.empty())
+            throw LayoutError("layout: a plug path was handed over blocked and no legal seat near either part clears it:" + shut + "\n" +
+                              result.convergence);
         if (left > 0)
             throw LayoutError("layout: " + std::to_string(left) +
                               " face pairs or protection orders could not be repaired within the stated budget\n" + result.convergence);

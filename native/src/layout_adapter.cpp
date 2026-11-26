@@ -507,6 +507,26 @@ void mark_connectors(const PcbModel& model, const AdapterOptions& options, const
     rules.boot_gap = to_nm(constants::boot_gap.value);
 }
 
+void mark_plug_paths(const PcbModel& model, const Placement& placement, Problem& problem) {
+    for (std::size_t index = 0; index < problem.parts.size(); ++index) {
+        const PcbCheckInstance& instance = model.insts[index];
+        const PlugPathFact* fact = part_fact_for(model.plug_paths, instance.value, instance.footprint);
+        if (!fact) continue;
+        Part& part = problem.parts[index];
+        const auto face = plug_path_vector(*fact);
+        const auto world = turn_point(face.first, instance.mirror ? -face.second : face.second, instance.rotation);
+        const Point out{static_cast<Nm>(std::lround(world.first)), static_cast<Nm>(std::lround(world.second))};
+        const auto back = static_cast<Turn>((turn_count - static_cast<int>(placement[index].turn)) % turn_count);
+        const Point here = turned(out, back);
+        const Footprint& footprint = problem.footprints[part.footprint];
+        const auto across_x = footprint.flippable ? mirrors_across_x(footprint) : std::nullopt;
+        const Point there = !across_x ? here : *across_x ? Point{-here.x, here.y} : Point{here.x, -here.y};
+        const bool top = placement[index].face == Face::top;
+        part.plug = PlugRule{top ? here : there, top ? there : here, to_nm(fact->depth_mm),
+                             fact->width_mm ? to_nm(*fact->width_mm) : Nm{0}, to_nm(fact->clear_height_mm)};
+    }
+}
+
 std::array<bool, edge_count> escape_flags(const Variant& variant, const Part& part, const Problem& problem) {
     std::vector<PcbEscapePad> pads;
     for (std::size_t name = 0; name < variant.names.size(); ++name) {
@@ -762,6 +782,7 @@ ModelBinding bind_model(const PcbModel& model, const PcbEmitPolicy& policy, cons
     problem.rules.compare_guard = static_cast<Nm>(constants::compare_guard.value);
     problem.rules.group_guard = static_cast<Nm>(constants::group_guard.value);
     mark_connectors(model, options, binding.placement, problem);
+    mark_plug_paths(model, binding.placement, problem);
     reserve_thermal_fields(model, policy, binding.placement, problem);
     claim_via_fields(model, policy, binding.placement, problem);
     if (gates) translate_gates(model, *gates, problem);
@@ -866,7 +887,7 @@ std::string GateVerdict::text() const {
     const auto word = [](bool pass) { return pass ? "pass" : "FAIL"; };
     return std::string("fanout=") + word(fanout) + " mechanical=" + word(mechanical) + " on_board=" +
            word(on_board) + " grouped=" + word(grouped) + " contracts=" + word(contracts) + " spacing=" +
-           word(spacing) + " integrity=" + word(integrity);
+           word(spacing) + " integrity=" + word(integrity) + " plug_paths=" + word(plug_paths);
 }
 
 GateVerdict judge_model(const PcbPlacementInput& inputs, const PcbModel& model) {
@@ -877,7 +898,7 @@ GateVerdict judge_model(const PcbPlacementInput& inputs, const PcbModel& model) 
     const bool placed_spacing = spacing.ok_as_placed();
     return {check_fanout(input, 0).ok, check_placement_mech(input).ok, ratsnest.off_board.empty(),
             ratsnest.dispersed.empty(), check_pcb_placement_gates(inputs, model).ok(),
-            spacing.ok, integrity.ok, integrity.placement_ok, placed_spacing};
+            spacing.ok, integrity.ok, integrity.placement_ok, placed_spacing, check_plug_paths(input, model.som_keepout).ok};
 }
 
 PcbModel model_with(const PcbModel& base, const ModelBinding& binding, const Placement& placement) {

@@ -51,6 +51,7 @@ struct ProjectConfig {
     std::vector<std::string> reg_band_prefixes;
     ProjectStrings bank_rails, header_desc, switch_desc;
     ConnectorFacts connectors;
+    PlugPathFacts plug_paths;
     ModuleDefinition module;
     IsolationFacts isolation;
     ThermalCopperFacts thermal_copper;
