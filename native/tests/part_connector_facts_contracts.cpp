@@ -25,7 +25,7 @@ const std::string good_entry =
     "\"cite\": \"fixture drawing\"}, \"access\": {\"side_mm\": 25, \"front_mm\": 0, \"cite\": \"fixture standard\"}, "
     "\"description\": \"fixture socket\", \"numbered_label\": \"SOCK\", \"pair_label\": \"PAIR\"}";
 const std::string plain_entry =
-    "{\"mating_face\": \"+Z\", \"edge_pinned\": false, \"overmold\": true, \"pad_row_face_check\": false, \"handling\": \"none\", "
+    "{\"mating_face\": \"+Z\", \"face_cite\": \"fixture drawing, top view\", \"edge_pinned\": false, \"overmold\": true, \"pad_row_face_check\": false, \"handling\": \"none\", "
     "\"access\": {\"side_mm\": 0, \"front_mm\": 0, \"cite\": \"fixture: mated once at assembly\"}}";
 }
 
@@ -140,6 +140,8 @@ void entries_are_refused(const std::filesystem::path& scratch) {
             "a flag that is not true or false is refused");
     refuses([&] { facts_from(scratch, with("\"-X\"", "\"-Z\"")); }, "mating_face", "a face through the board is refused");
     refuses([&] { facts_from(scratch, with("\"-X\"", "\"+Z\"")); }, "edge-pinned", "a connector mated from above cannot be edge-pinned");
+    refuses([&] { facts_from(scratch, "{\"P1\": " + [&] { std::string text = fixture::plain_entry; const std::string cite = "\"face_cite\": \"fixture drawing, top view\", "; text.erase(text.find(cite), cite.size()); return text; }() + "}"); },
+            "face_cite", "a connector said to mate from above without a source is refused");
     refuses([&] { facts_from(scratch, with("\"edge_pinned\": true", "\"edge_pinned\": false")); }, "must be edge-pinned",
             "a connector mated from the side that is not edge-pinned is refused");
     refuses([&] { facts_from(scratch, with("\"handling\": \"grip_sides\", ", "")); }, "handling", "an entry without a handling class is refused");

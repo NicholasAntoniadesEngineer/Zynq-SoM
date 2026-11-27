@@ -1452,7 +1452,7 @@ if(BUILD_TESTING)
     foreach(command board build nets chir-rung w11-sweep w12-bound w12-stageprobe dump-circuits
             selftest project-check circuit-check som-interface xdc bom link
             design-rules testpoints board-schematic pcb-stage pcb-drc subsystem-new render3d board-step
-            model3d-check assembly ratsnest gallery diagram si-constraints fab-profile manifest preflight
+            model3d-check gallery diagram si-constraints fab-profile manifest preflight
             constraints powertree thermal part-rules bom-values footprint-pads pin-completeness symbol-law
             spice power-sequence subsystem-check carrier-check check floorplan compose)
         add_test(NAME native_${command}_help COMMAND schgen ${command} --help --repo /nonexistent/schgen-help-must-not-read)

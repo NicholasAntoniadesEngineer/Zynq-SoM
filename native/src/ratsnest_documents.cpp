@@ -86,7 +86,7 @@ std::string render_ratsnest_svg(const PcbModel& m,const RatsnestPalette& palette
     int i=0;for(const auto& [name,c]:palette){const double yy=ly+16+i++*12;
         e.push_back("<rect x=\""+pyfloat(lx)+"\" y=\""+pyfloat(yy-8)+"\" width=\"9\" height=\"9\" fill=\""+hex(c)+"\"/>");
         e.push_back("<text x=\""+pyfloat(lx+14)+"\" y=\""+pyfloat(yy)+"\" fill=\"#cbd5e1\">"+xml(name)+"</text>");}
-    e.push_back("<text x=\"28.0\" y=\""+std::to_string(height-10)+"\" fill=\"#94a3b8\">board "+g(m.board_w)+" x "+g(m.board_h)+" mm — boxes=footprints (top solid / bottom faint), red=cross-subsystem airwire, grey=intra, gold dash=SoM keep-out. schgen ratsnest (deterministic).</text>");
+    e.push_back("<text x=\"28.0\" y=\""+std::to_string(height-10)+"\" fill=\"#94a3b8\">board "+g(m.board_w)+" x "+g(m.board_h)+" mm — boxes=footprints (top solid / bottom faint), red=cross-subsystem airwire, grey=intra, gold dash=SoM keep-out. schgen run (deterministic).</text>");
     e.push_back("</svg>");return join(e)+"\n";
 }
 RatsnestDocuments render_ratsnest_documents(const PcbModel& m,const RatsnestNets* supplied,const RatsnestEdges* supplied_edges) {

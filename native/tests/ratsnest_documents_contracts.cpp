@@ -103,7 +103,7 @@ int main(int argc,char** argv){try{
     if(argc!=3)throw std::runtime_error("usage: ratsnest_documents_contracts REPOSITORY SCRATCH_PARENT");
     const fs::path root=argv[1];fs::create_directories(argv[2]);auto pattern=(fs::path(argv[2])/"run-XXXXXX").string();std::vector<char> path(pattern.begin(),pattern.end());path.push_back(0);if(!mkdtemp(path.data()))throw std::runtime_error("mkdtemp failed");const fs::path scratch=path.data();std::cout<<"scratch: "<<scratch<<"\n";
     const auto fixture_path=root/"native/tests/data/ratsnest_documents/reference.json";
-    require(pcb_sha256(read(fixture_path))=="21c1e68c4ea12e4cadce261dcbd122be88a045e29af873de8a538dd4763d7569","immutable reference fixture");
+    require(pcb_sha256(read(fixture_path))=="1ea831184f877aa5426631aff845f8e7f2d633987caa2f3c0786b3e3b93ad784","immutable reference fixture");
     const auto fixture=parse_json_file(fixture_path.string());
     const auto& raster=field(fixture,"raster");ratsnest_detail::Raster im(91,79);
     for(const auto& line:field(raster,"lines").array_value){const auto& p=field(line,"points").array_value;const auto& c=field(line,"color").array_value;
