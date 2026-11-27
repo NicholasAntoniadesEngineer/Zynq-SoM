@@ -1,46 +1,46 @@
 TEST POINT GATE: PASS
   a test point sits within its limit of another pad of its net, or adds no more than its limit to the path between two of them, on either face;
   beside a module connector pin the limit counts from the edge of the area kept clear for that connector (the module on top, its escape corridor on the rear)
-  test points on routed nets: 41 (0 over their limit, 37 on the rear face); test points on plane nets connect by a via and are not listed
-    OK   TP10001 (rear) on +VBUS_IN: stub 18.9817 mm to C10001, detour 8.68289e-05 mm, limit 3 mm
-    OK   TP10002 (rear) on +VIN_PD: stub 2.84074 mm to J21001, detour 3.59069 mm, limit 3 mm
-    OK   TP1001 (rear) on /board_control/XP16: stub 2.98861 mm to U1001, limit 3 mm
-    OK   TP1002 (rear) on /board_control/XP17: stub 0.802395 mm to U1001, limit 3 mm
-    OK   TP1005 (rear) on STM32_I2C2_SCL: stub 21.0198 mm to J16001, detour 5.55071e-05 mm, limit 3 mm plus 2.65 mm to leave the module connector's keep-out
-    OK   TP1006 (rear) on STM32_I2C2_SDA: stub 11.8143 mm to U12002, detour 0.240479 mm, limit 3 mm
-    OK   TP1007 (rear) on +3V3_SC: stub 15.808 mm to U12002, detour 6.23509e-05 mm, limit 3 mm
-    OK   TP1008 (rear) on SC_INT_N: stub 18.6714 mm to J16001, detour 0.0225211 mm, limit 3 mm plus 2.65 mm to leave the module connector's keep-out
-    OK   TP1009 (rear) on PUDC_34: stub 2.80491 mm to R1008, detour 8.30792 mm, limit 3 mm
-    OK   TP1010 (rear) on +5V_FAN: stub 2.055 mm to J1001, detour 5.15458 mm, limit 3 mm
-    OK   TP1011 (top) on ESC_PWR_REQ: stub 2.97033 mm to R1009, detour 3.98949 mm, limit 3 mm
-    OK   TP11001 (rear) on +5V: stub 27.256 mm to C11007, detour 0.000729858 mm, limit 3 mm
-    OK   TP11002 (rear) on +3V3: stub 8.50032 mm to C11012, detour 2.06794e-05 mm, limit 3 mm
-    OK   TP11003 (rear) on +1V8: stub 23.8347 mm to U12002, detour 0.0558544 mm, limit 3 mm
-    OK   TP13001 (top) on +5V_SOM: stub 6.30464 mm to R13014, detour 0.0237214 mm, limit 3 mm
-    OK   TP19001 (rear) on ZYNQ_PS_UART0_TXD: stub 7.543 mm to J16001, detour 0.52881 mm, limit 3 mm plus 2.65 mm to leave the module connector's keep-out
-    OK   TP19002 (rear) on ZYNQ_PS_UART0_RXD: stub 9.48974 mm to U19001, detour 0.909882 mm, limit 3 mm
-    OK   TP2001 (rear) on EN_5V0: stub 2.95645 mm to U2001, detour 8.34462 mm, limit 3 mm
-    OK   TP2002 (rear) on EN_3V3: stub 12.8427 mm to U2002, detour 0.0463545 mm, limit 3 mm
-    OK   TP2003 (rear) on EN_1V8: stub 3.98167 mm to U11003, detour 2.80551 mm, limit 3 mm
-    OK   TP21001 (top) on +VBAT_SW: stub 2.6849 mm to U21002, detour 0.0115015 mm, limit 3 mm
-    OK   TP21002 (rear) on +VPRE: stub 8.615 mm to C21011, detour 2.89695 mm, limit 3 mm
-    OK   TP21003 (rear) on +VIN: stub 7.42566 mm to J21001, detour 2.59558 mm, limit 3 mm
-    OK   TP21004 (rear) on +VBAT_D: stub 2.86117 mm to R21001, detour 8.26881 mm, limit 3 mm
-    OK   TP3001 (rear) on /can_bus/CAN_H: stub 2.97058 mm to U3001, detour 6.84555 mm, limit 3 mm
-    OK   TP3002 (rear) on /can_bus/CAN_L: stub 4.11196 mm to U3001, detour 2.85833 mm, limit 3 mm
-    OK   TP4001 (rear) on VBUS_OUT_EN: stub 5.45431 mm to J16001, limit 3 mm plus 2.65 mm to leave the module connector's keep-out
-    OK   TP5001 (rear) on +5V_MOTOR_IO: stub 3.058 mm to J5001, detour 0.208599 mm, limit 3 mm
-    OK   TP5002 (rear) on /esc_io/ESC_BIAS: stub 9.94291 mm to R5007, detour 2.92284 mm, limit 3 mm
-    OK   TP5003 (rear) on /esc_io/OE_BUF_N: stub 2.95571 mm to R5001, detour 3.1388 mm, limit 3 mm
-    OK   TP6001 (rear) on +VESC_IN: stub 2.92558 mm to F6001, detour 7.26483 mm, limit 3 mm
-    OK   TP6002 (rear) on +VESC: stub 9.6879 mm to RS6001, detour 2.86568 mm, limit 3 mm
-    OK   TP6003 (rear) on GND_MOTOR: stub 20.5078 mm to C6001, detour 2.94278 mm, limit 3 mm
-    OK   TP6005 (rear) on +VESC_F: stub 14.8586 mm to Q6001, detour 2.99235 mm, limit 3 mm
-    OK   TP6006 (top) on +VESC_MID: stub 11.5939 mm to Q6001, detour 0.167205 mm, limit 3 mm
-    OK   TP6007 (rear) on +VESC_P: stub 16.6895 mm to RS6001, detour 0.510715 mm, limit 3 mm
-    OK   TP6008 (rear) on ESC_PWR_EN: stub 11.5672 mm to U6002, detour 2.99638 mm, limit 3 mm
-    OK   TP6009 (rear) on /esc_power/PROT_IMON: stub 2.87001 mm to R6008, detour 7.35522 mm, limit 3 mm
-    OK   TP6010 (rear) on /esc_power/VSENSE_DIV: stub 2.80859 mm to R6013, detour 6.68772 mm, limit 3 mm
-    OK   TP9001 (rear) on SDIO_CMD: stub 3.525 mm to J16001, detour 7.43986 mm, limit 1 mm plus 2.65 mm to leave the module connector's keep-out
-    OK   TP9002 (rear) on SDIO_CLK: stub 3.61688 mm to J16001, detour 9.24375 mm, limit 1 mm plus 2.65 mm to leave the module connector's keep-out
+  test points on routed nets: 41 (0 over their limit, 41 on the rear face); test points on plane nets connect by a via and are not listed
+    OK   TP10001 (rear) on +VBUS_IN: stub 11.3493 mm to D10001, detour 2.9147 mm, limit 3 mm
+    OK   TP10002 (rear) on +VIN_PD: stub 3.33005 mm to U10001, detour 2.38452 mm, limit 3 mm
+    OK   TP1001 (rear) on /board_control/XP16: stub 2.87855 mm to U1001, limit 3 mm
+    OK   TP1002 (rear) on /board_control/XP17: stub 2.82756 mm to U1001, limit 3 mm
+    OK   TP1005 (rear) on STM32_I2C2_SCL: stub 18.5336 mm to U6001, detour 0.000363118 mm, limit 3 mm
+    OK   TP1006 (rear) on STM32_I2C2_SDA: stub 18.0157 mm to J16001, detour 0.00403857 mm, limit 3 mm plus 2.65 mm to leave the module connector's keep-out
+    OK   TP1007 (rear) on +3V3_SC: stub 13.8822 mm to C15014, detour 2.10356e-05 mm, limit 3 mm
+    OK   TP1008 (rear) on SC_INT_N: stub 19.8496 mm to J16001, detour 1.72569 mm, limit 3 mm plus 2.65 mm to leave the module connector's keep-out
+    OK   TP1009 (rear) on PUDC_34: stub 5.63053 mm to J18003, detour 11.6705 mm, limit 3 mm plus 2.65 mm to leave the module connector's keep-out
+    OK   TP1010 (rear) on +5V_FAN: stub 1.20095 mm to U1002, detour 4.71554 mm, limit 3 mm
+    OK   TP1011 (rear) on ESC_PWR_REQ: stub 3.92596 mm to SW5001, detour 2.56524 mm, limit 3 mm
+    OK   TP11001 (rear) on +5V: stub 26.2855 mm to U1002, detour 0.000130072 mm, limit 3 mm
+    OK   TP11002 (rear) on +3V3: stub 10.5494 mm to U5007, detour 1.23401e-05 mm, limit 3 mm
+    OK   TP11003 (rear) on +1V8: stub 17.9379 mm to R11007, detour 1.61112 mm, limit 3 mm
+    OK   TP13001 (rear) on +5V_SOM: stub 3.425 mm to C15004, detour 1.4371 mm, limit 3 mm
+    OK   TP19001 (rear) on ZYNQ_PS_UART0_TXD: stub 16.2103 mm to J16001, detour 0.315714 mm, limit 3 mm plus 2.65 mm to leave the module connector's keep-out
+    OK   TP19002 (rear) on ZYNQ_PS_UART0_RXD: stub 17.3285 mm to J16001, detour 2.96697 mm, limit 3 mm plus 2.65 mm to leave the module connector's keep-out
+    OK   TP2001 (rear) on EN_5V0: stub 4.81458 mm to U11001, detour 2.76348 mm, limit 3 mm
+    OK   TP2002 (rear) on EN_3V3: stub 1.65963 mm to U2002, detour 4.7169 mm, limit 3 mm
+    OK   TP2003 (rear) on EN_1V8: stub 14.5861 mm to U2003, detour 2.98968 mm, limit 3 mm
+    OK   TP21001 (rear) on +VBAT_SW: stub 0.9801 mm to C21004, detour 0.0110745 mm, limit 3 mm
+    OK   TP21002 (rear) on +VPRE: stub 6.09205 mm to D21001, detour 2.10998 mm, limit 3 mm
+    OK   TP21003 (rear) on +VIN: stub 32.5048 mm to U12001, detour 2.31713 mm, limit 3 mm
+    OK   TP21004 (rear) on +VBAT_D: stub 2.9349 mm to D21002, detour 9.4377 mm, limit 3 mm
+    OK   TP3001 (rear) on /can_bus/CAN_H: stub 6.02479 mm to U3001, detour 2.78924 mm, limit 3 mm
+    OK   TP3002 (rear) on /can_bus/CAN_L: stub 15.6005 mm to U3001, detour 2.2065 mm, limit 3 mm
+    OK   TP4001 (rear) on VBUS_OUT_EN: stub 3.85233 mm to J16001, limit 3 mm plus 2.65 mm to leave the module connector's keep-out
+    OK   TP5001 (rear) on +5V_MOTOR_IO: stub 2.85284 mm to C5003, detour 6.02275 mm, limit 3 mm
+    OK   TP5002 (rear) on /esc_io/ESC_BIAS: stub 4.3888 mm to R5007, detour 2.10578 mm, limit 3 mm
+    OK   TP5003 (rear) on /esc_io/OE_BUF_N: stub 2.875 mm to R5001, detour 7.25755 mm, limit 3 mm
+    OK   TP6001 (rear) on +VESC_IN: stub 9.0673 mm to J6001, detour 0.31587 mm, limit 3 mm
+    OK   TP6002 (rear) on +VESC: stub 4.45917 mm to U6001, detour 2.81415 mm, limit 3 mm
+    OK   TP6003 (rear) on GND_MOTOR: stub 14.8165 mm to R6003, detour 0.000165072 mm, limit 3 mm
+    OK   TP6005 (rear) on +VESC_F: stub 37.6269 mm to D21002, detour 2.17713 mm, limit 3 mm
+    OK   TP6006 (rear) on +VESC_MID: stub 31.8789 mm to Q6002, detour 0.00440827 mm, limit 3 mm
+    OK   TP6007 (rear) on +VESC_P: stub 2.88714 mm to RS6001, detour 3.13137 mm, limit 3 mm
+    OK   TP6008 (rear) on ESC_PWR_EN: stub 8.3407 mm to R6011, detour 1.63226 mm, limit 3 mm
+    OK   TP6009 (rear) on /esc_power/PROT_IMON: stub 2.97576 mm to R6008, detour 8.14656 mm, limit 3 mm
+    OK   TP6010 (rear) on /esc_power/VSENSE_DIV: stub 2.80629 mm to R6012, detour 5.93557 mm, limit 3 mm
+    OK   TP9001 (rear) on SDIO_CMD: stub 0 mm to U9001, detour 1.71155 mm, limit 1 mm
+    OK   TP9002 (rear) on SDIO_CLK: stub 0.601107 mm to U9001, detour 3.35781 mm, limit 1 mm
 

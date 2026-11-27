@@ -379,8 +379,8 @@
 		thru_hole
 		oval
 		(at -3 6.75 90)
-		(size 1.199998 2.199996)
-		(drill oval 0.599998 1.599997)
+		(size 1.4 2.5)
+		(drill oval 0.8 1.9)
 		(layers "*.Cu" "*.Mask")
 	)
 	(pad
@@ -388,8 +388,8 @@
 		thru_hole
 		oval
 		(at -3 -6.7501 90)
-		(size 1.199998 2.199996)
-		(drill oval 0.599998 1.599997)
+		(size 1.4 2.5)
+		(drill oval 0.8 1.9)
 		(layers "*.Cu" "*.Mask")
 	)
 	(pad
@@ -419,7 +419,7 @@
 			(xyz 1 1 1)
 		)
 		(rotate
-			(xyz 0 0 0)
+			(xyz 0 0 180)
 		)
 	)
 )

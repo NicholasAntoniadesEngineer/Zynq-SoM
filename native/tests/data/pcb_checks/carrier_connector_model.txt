@@ -13,8 +13,8 @@ LAW-6 CONNECTOR-MODEL ORIENTATION GATE: PASS
     OK  J29001    TYPE-C-31-M-12   model_z=180
     OK  J31001    TYPE-C-31-M-12   model_z=180
     OK  J32002    TYPE-C-31-M-12   model_z=180
-    OK  J37002    XT60PW-M         model_z=0
-    OK  J37003    XT60PW-M         model_z=0
+    OK  J37002    XT60PW-M         model_z=180
+    OK  J37003    XT60PW-M         model_z=180
     OK  J8001     SFW15R-1STE1LF   model_z=0
   non-zero model-Z (flipped opening): 0
   geometry-cross-checked (through-shell): 6 -> 0 conflict(s)

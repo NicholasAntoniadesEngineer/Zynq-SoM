@@ -86,7 +86,7 @@ level | rule | subject | action | breaches before>after | kept
 2 | test point on CAM_SCL | TP8001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
 2 | test point on CAM_SDA | TP8002 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
 2 | test point on CAM_EN | TP8003 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
-ILLEGAL handed over: contract:J12001/U12004 (1)
-ILLEGAL after connector separation: contract:J12001/U12004 (1)
+ILLEGAL handed over: (0)
+ILLEGAL after connector separation: (0)
 ILLEGAL after repair: (0)
 

@@ -1,6 +1,7 @@
 #include "schgen/mirror.hpp"
 #include "schgen/pcb_checks.hpp"
 #include "schgen/floorplan.hpp"
+#include "connector_facts_fixture.hpp"
 #include "sheet_roles_fixture.hpp"
 #include "legacy_power_policy.hpp"
 #include <algorithm>
@@ -89,7 +90,7 @@ struct Live {
     std::map<std::string,PcbCheckFootprintPtr> pool,return_footprints;
 };
 Live load_live(const fs::path& root,const std::string& project,bool historical){
-    Live live;live.model.connectors=load_connector_facts(root/"parts");auto dir=root/project;
+    Live live;live.model.connectors=load_connector_facts(root/"parts");if(historical)frozen_inlet_facing(live.model.connectors);auto dir=root/project;
     if(const auto spec=load_floorplan_spec((dir/"floorplan.json").string()))for(const auto& [sheet,edge]:spec->edge_of()){(void)edge;live.model.edge_sheets.insert(sheet);}live.board={"Zynq_Carrier.kicad_pcb",sexpr_loads(read(dir/"Zynq_Carrier.kicad_pcb"))};live.iface_bytes=read(module_root_of(dir)/module_interface_file);live.iface=load_som_interface(module_root_of(dir)/module_interface_file);live.mapping=link_mapping_from_json(parse_json_file((dir/"som_mapping.json").string()),load_board_module(dir).do_not_load_straps);auto config=parse_json_file((dir/"project.json").string());live.population=pcb_escape_population_from_json(field(config,"escape"),load_board_module(dir));auto block=parse_json_file((dir/"escape_block.json").string());live.model.escape_plan=pcb_escape_plan_from_json(block);live.model.escape_interface_sha256=field(field(block,"escape_meta"),"som_interface_sha256").string_value;
     auto index=parse_json_file((dir/"sheet_index.json").string());std::map<int,std::string> bands;for(const auto& [name,n]:index.object_value)bands[static_cast<int>(n.number_value)]=name;
     if(historical){

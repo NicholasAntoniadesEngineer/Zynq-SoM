@@ -1,23 +1,29 @@
-CONVERGENCE: 12 breaches of staged rules (connector spacing, plug paths, face pairs, protection orders) handed over by the placer; 53 repair steps kept of 60 tried; 0 left
+CONVERGENCE: 13 breaches of staged rules (connector spacing, plug paths, face pairs, protection orders) handed over by the placer; 54 repair steps kept of 66 tried; 0 left
 level | rule | subject | action | breaches before>after | kept
-0 | connector access and envelope | J1001 / J14001 | slide J14001 along its edge | 3>2 | yes
+0 | connector access and envelope | J1001 / J5002 | slide J5002 along its edge; 84 contract D5003; 55 connector_gap J1001; 55 overlap J5001; 50 module_core board | 3>3 | no
+0 | connector access and envelope | J1001 / J5002 | slide J1001 along its edge | 3>2 | yes
 0 | connector access and envelope | J3001 / J3002 | slide J3002 along its edge | 2>1 | yes
-0 | connector access and envelope | J6001 / J6002 | slide J6002 along its edge; 178 off_board board; 70 overlap C6004; 32 reserved board; 24 overlap D6001 | 1>1 | no
-0 | connector access and envelope | J6001 / J6002 | slide J6001 along its edge; 178 off_board board; 82 overlap D6004; 48 module_core board; 25 overlap Q6001 | 1>1 | no
-1 | connector access and envelope | J6001 / J6002 | slide J6002 with the parts tied to it; 178 off_board J6002/board; 93 overlap J6002/D6001; 32 reserved J6002/board; 20 edge_mount J6002/board | 1>1 | no
-1 | connector access and envelope | J6001 / J6002 | slide J6001 with the parts tied to it; 178 off_board J6001/board; 82 overlap J6001/D6004; 48 module_core J6001/board; 25 overlap J6001/Q6001 | 1>1 | no
+0 | connector access and envelope | J6001 / J6002 | slide J6002 along its edge; 178 off_board board; 69 overlap C6004; 55 edge_mount board; 24 overlap D6001 | 1>1 | no
+0 | connector access and envelope | J6001 / J6002 | slide J6001 along its edge; 178 off_board board; 82 overlap D6004; 54 edge_mount board; 29 overlap Q6002 | 1>1 | no
+1 | connector access and envelope | J6001 / J6002 | slide J6002 with the parts tied to it; 178 off_board J6002/board; 93 overlap J6002/D6001; 55 edge_mount J6002/board; 17 overlap J6002/D6003 | 1>1 | no
+1 | connector access and envelope | J6001 / J6002 | slide J6001 with the parts tied to it; 178 off_board J6001/board; 82 overlap J6001/D6004; 54 edge_mount J6001/board; 29 overlap J6001/Q6002 | 1>1 | no
 4 | connector access and envelope | J6001 / J6002 | open the board between them and shift everything beyond the gap | 1>0 | yes
-0 | owner of C13014 | C13014 -> U13004 | reseat at the pin on its face | 9>8 | yes
-0 | owner of C13022 | C13022 -> U13004 | reseat at the pin on its face | 8>7 | yes
-0 | owner of C13025 | C13025 -> U13004 | reseat at the pin on its face | 7>6 | yes
-0 | owner of R13018 | R13018 -> U13004 | reseat at the pin on its face | 6>5 | yes
-0 | owner of R13019 | R13019 -> U13004 | reseat at the pin on its face | 5>4 | yes
-0 | owner of C13018 | C13018 -> L13003 | reseat at the pin on its face | 4>3 | yes
-0 | owner of C13019 | C13019 -> L13003 | reseat at the pin on its face | 3>2 | yes
-0 | owner of D6001 | D6001 -> F6001 | reseat at the pin on its face | 2>2 | no
-1 | owner of D6001 | D6001 -> F6001 | reseat after moving small parts aside | 2>2 | no
-1 | owner of D6001 | D6001 -> F6001 | reseat in the wide ring | 2>2 | no
-1 | owner of D6001 | D6001 -> F6001 | reseat together with the parts tied to it | 2>1 | yes
+0 | owner of C13014 | C13014 -> U13004 | reseat at the pin on its face | 10>9 | yes
+0 | owner of C13022 | C13022 -> U13004 | reseat at the pin on its face | 9>8 | yes
+0 | owner of C13025 | C13025 -> U13004 | reseat at the pin on its face | 8>8 | no
+1 | owner of C13025 | C13025 -> U13004 | reseat after moving small parts aside | 8>8 | no
+1 | owner of C13025 | C13025 -> U13004 | reseat in the wide ring | 8>8 | no
+1 | owner of C13025 | C13025 -> U13004 | reseat together with the parts tied to it | 8>8 | no
+1 | owner of C13025 | C13025 -> U13004 | take the seat at the pin and reseat the parts in it by their own rules | 8>7 | yes
+0 | owner of R13018 | R13018 -> U13004 | reseat at the pin on its face | 7>6 | yes
+0 | owner of R13019 | R13019 -> U13004 | reseat at the pin on its face | 6>5 | yes
+0 | owner of C13018 | C13018 -> L13003 | reseat at the pin on its face | 5>4 | yes
+0 | owner of C13019 | C13019 -> L13003 | reseat at the pin on its face | 4>3 | yes
+0 | owner of D6001 | D6001 -> F6001 | reseat at the pin on its face | 3>3 | no
+1 | owner of D6001 | D6001 -> F6001 | reseat after moving small parts aside | 3>3 | no
+1 | owner of D6001 | D6001 -> F6001 | reseat in the wide ring | 3>3 | no
+1 | owner of D6001 | D6001 -> F6001 | reseat together with the parts tied to it | 3>2 | yes
+1 | protection order | D5002 -> J5001 | seat the protection part first and move the parts nearer than it back | 2>1 | yes
 1 | protection order | U9002 -> J9001 | seat the protection part first and move the parts nearer than it back | 1>0 | yes
 2 | test point on +VBUS_IN | TP10001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
 2 | test point on +VIN_PD | TP10002 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
@@ -60,7 +66,7 @@ level | rule | subject | action | breaches before>after | kept
 2 | test point on /esc_power/VSENSE_DIV | TP6010 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
 2 | test point on fast net SDIO_CMD | TP9001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
 2 | test point on fast net SDIO_CLK | TP9002 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
-ILLEGAL handed over: under_inductor:C21012/L21001 under_inductor:L13003/R13014 under_inductor:L13003/R13015 under_inductor:L13003/R13019 under_inductor:L21001/R21002 under_inductor:L21001/R21003 under_inductor:L21001/R21008 under_inductor:L21001/R21010 connector_gap:J1001/J14001 connector_gap:J3001/J3002 connector_gap:J6001/J6002 (11)
-ILLEGAL after connector separation: under_inductor:C21012/L21001 under_inductor:L13003/R13014 under_inductor:L13003/R13015 under_inductor:L13003/R13019 under_inductor:L21001/R21002 under_inductor:L21001/R21003 under_inductor:L21001/R21008 under_inductor:L21001/R21010 (8)
+ILLEGAL handed over: under_inductor:C21012/L21001 under_inductor:L13003/R13014 under_inductor:L13003/R13015 under_inductor:L13003/R13019 under_inductor:L21001/R21002 under_inductor:L21001/R21003 under_inductor:L21001/R21008 under_inductor:L21001/R21009 under_inductor:L21001/R21010 connector_gap:J1001/J5002 connector_gap:J3001/J3002 connector_gap:J6001/J6002 (12)
+ILLEGAL after connector separation: under_inductor:C21012/L21001 under_inductor:L13003/R13014 under_inductor:L13003/R13015 under_inductor:L13003/R13019 under_inductor:L21001/R21002 under_inductor:L21001/R21003 under_inductor:L21001/R21008 under_inductor:L21001/R21009 under_inductor:L21001/R21010 (9)
 ILLEGAL after repair: (0)
 

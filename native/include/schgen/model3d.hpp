@@ -13,7 +13,9 @@ using Model3dBox = std::array<double, 4>;
 struct Model3dGeometry {
     std::optional<std::pair<double, double>> model_xy, fab_xy;
     std::optional<Model3dBox> model_box, pad_box;
-    std::optional<std::string> misfit, misplaced;
+    std::optional<std::string> misfit, misplaced, unseated;
+    bool tilted = false;
+    std::vector<std::pair<double, double>> pins;
 };
 // Legacy XY point-envelope measurement, NOT a STEP solid/VRML scene evaluator.
 // Bounds planar Z rotation and signed XY scale of the measured envelope.
@@ -23,10 +25,15 @@ Model3dGeometry measure_model3d(const std::string& footprint,
                               const std::string& clause,
                               const std::string& model_text,
                               const std::string& extension);
+struct Model3dSource {
+    std::string clause, text, extension;
+};
+Model3dGeometry measure_models3d(const std::string& footprint, const std::vector<Model3dSource>& models);
 struct Model3dResult {
     bool ok = true;
     std::size_t total = 0, covered = 0;
-    std::map<std::string, std::string> unmatched, broken, misfit, misplaced, invalid;
+    std::map<std::string, std::string> unmatched, broken, misfit, misplaced, unseated, invalid;
+    std::vector<std::string> tilted;
     std::vector<std::string> missing;
     std::string line() const;
     std::string report() const;
