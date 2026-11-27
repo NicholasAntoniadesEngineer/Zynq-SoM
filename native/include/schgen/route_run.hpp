@@ -8,9 +8,15 @@
 namespace schgen::route {
 
 namespace constants {
-inline constexpr NamedConstant route_passes{"route_passes", 6, "passes", "policy",
-    "times the whole board is routed again with the nets that failed routed first; a pass that fails the same nets as the one before ends the search"};
-inline constexpr std::array route_run_registry{route_passes};
+inline constexpr NamedConstant route_passes{"route_passes", 6, "rounds", "policy",
+    "rounds in which every net still open has the nets walling it in pulled out and routed again after it; a round that gains no connection ends the search"};
+inline constexpr NamedConstant rip_nets{"rip_nets", 3, "nets", "policy",
+    "nets pulled out at once to let one blocked net through; KiCadRoutingTools reports that small limits beat large ones (docs/rip-up-reroute.md, read 2026-11-27)"};
+inline constexpr NamedConstant rip_cap{"rip_cap", 4, "times", "policy",
+    "times one net may be pulled out for others before it is left alone, so two nets cannot displace each other for ever"};
+inline constexpr NamedConstant probe_budget{"probe_budget", 30000, "points", "policy",
+    "lattice points opened from the blocked end to find what walls it in"};
+inline constexpr std::array route_run_registry{route_passes, rip_nets, rip_cap, probe_budget};
 }
 
 struct RunSetup {
@@ -22,12 +28,13 @@ struct NetOutcome {
     int net = no_net;
     std::size_t links = 0, joined = 0, vias = 0;
     double length = 0;
+    Nm least_width = 0;
     std::string failure;
 };
 
 struct RunReport {
     std::vector<NetOutcome> nets;
-    std::size_t links = 0, joined = 0, vias = 0, passes = 0, opened = 0;
+    std::size_t links = 0, joined = 0, vias = 0, passes = 0, opened = 0, ripped = 0, first_joined = 0;
     double length = 0;
     std::vector<std::size_t> pass_failures;
     bool complete() const { return links == joined; }

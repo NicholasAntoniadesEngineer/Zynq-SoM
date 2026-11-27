@@ -144,6 +144,7 @@ Board board_from_pcb(const Sexpr& pcb, const JsonNode& project, ReadNotes* notes
     board.rules.edge_clearance = length(rules, "min_copper_edge_clearance", "rules");
     board.rules.hole_clearance = length(rules, "min_hole_clearance", "rules");
     board.rules.hole_spacing = length(rules, "min_hole_to_hole", "rules");
+    board.rules.least_track = length(rules, "min_track_width", "rules");
     const std::size_t rear = board.rules.layers.size() - 1;
     const auto net_index = [&](const Sexpr& node) {
         const Sexpr* net = child(node, "net");

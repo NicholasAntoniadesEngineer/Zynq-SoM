@@ -14,6 +14,7 @@ constexpr std::array<int, directions> step_y{0, 1, 1, 1, 0, -1, -1, -1};
 constexpr std::int64_t straight = 1000, diagonal = 1414;
 constexpr int sharpest = 2;
 constexpr std::int64_t greed_base = 100;
+constexpr Nm neck_step = 1000;
 
 struct Cell {
     std::int64_t column = 0, row = 0;
@@ -47,14 +48,52 @@ struct Open {
 
 class Search {
 public:
-    Search(const World& world, const SearchSetup& setup, int net) : world_(world), setup_(setup), net_(net), board_(world.board()) {
+    Search(const World& world, const SearchSetup& setup, int net, bool guarded) : world_(world), setup_(setup), net_(net), board_(world.board()) {
         const NetClass& entry = board_.rules.classes[board_.nets[static_cast<std::size_t>(net)].net_class];
         half_ = entry.track / 2;
         const Nm reach = half_ + entry.clearance;
-        sag_ = setup.pitch * setup.pitch / (4 * std::max<Nm>(reach, 1)) + 1;
+        sag_ = guarded ? setup.pitch * setup.pitch / (4 * std::max<Nm>(reach, 1)) + 1 : 0;
         greed_ = static_cast<std::int64_t>(constants::search_greed.value * static_cast<double>(greed_base));
         turn_ = setup.turn * straight / setup.pitch;
         via_ = setup.via * straight / setup.pitch;
+    }
+
+    void neck_at(const Item& pad) {
+        const Box bound = pad.shape.bound();
+        const Point centre{(bound.x0 + bound.x1) / 2, (bound.y0 + bound.y1) / 2};
+        const auto fits = [&](Nm width) {
+            Item probe{ItemKind::track, net_, pad.first, pad.first, disc(centre, width / 2), 0, {}, 0};
+            for (std::size_t layer = pad.first; layer <= pad.last; ++layer) {
+                if (board_.rules.layers[layer].kind == LayerKind::plane) continue;
+                probe.first = probe.last = layer;
+                if (world_.conflicts(probe).empty()) return true;
+            }
+            return false;
+        };
+        Nm wide = std::min(2 * half_, std::min(bound.x1 - bound.x0, bound.y1 - bound.y0)), narrow = board_.rules.least_track;
+        if (setup_.narrowest) wide = narrow;
+        if (wide >= 2 * half_ && fits(wide)) return;
+        if (wide > narrow && !fits(wide)) {
+            if (!fits(narrow)) wide = narrow;
+            else {
+                while (wide - narrow > neck_step) {
+                    const Nm middle = narrow + (wide - narrow) / 2;
+                    (fits(middle) ? narrow : wide) = middle;
+                }
+                wide = narrow;
+            }
+        }
+        necks_.push_back({bound, std::max(wide, board_.rules.least_track) / 2});
+    }
+
+    Nm half_at(const Cell& cell) const {
+        const Point at = point(cell);
+        Nm half = half_;
+        for (const auto& [bound, narrow] : necks_) {
+            const Nm dx = std::max<Nm>({bound.x0 - at.x, at.x - bound.x1, 0}), dy = std::max<Nm>({bound.y0 - at.y, at.y - bound.y1, 0});
+            if (dx * dx + dy * dy <= setup_.neck * setup_.neck) half = std::min(half, narrow);
+        }
+        return half;
     }
 
     Point point(const Cell& cell) const { return {board_.outline.x0 + cell.column * setup_.pitch, board_.outline.y0 + cell.row * setup_.pitch}; }
@@ -80,7 +119,7 @@ public:
         const auto known = legal_.find(key);
         if (known != legal_.end()) return known->second;
         const Point at = point(cell);
-        Item probe{ItemKind::track, net_, cell.layer, cell.layer, disc(at, half_ + sag_), 0, {}};
+        Item probe{ItemKind::track, net_, cell.layer, cell.layer, disc(at, half_at(cell) + sag_), 0, {}, 0};
         bool free = at.x >= window_.x0 && at.x <= window_.x1 && at.y >= window_.y0 && at.y <= window_.y1;
         if (free) {
             if (!within(probe.shape, board_.outline, board_.rules.edge_clearance)) free = false;
@@ -183,7 +222,10 @@ public:
         const auto flush = [&](std::size_t to) {
             if (to == from) return;
             const Point a = point(chain[from]->cell), b = point(chain[to]->cell);
-            path.items.push_back(track(board_, net_, chain[from]->cell.layer, a, b));
+            Nm half = half_;
+            for (std::size_t step = from; step <= to; ++step) half = std::min(half, half_at(chain[step]->cell));
+            path.items.push_back({ItemKind::track, net_, chain[from]->cell.layer, chain[from]->cell.layer, capsule(a, b, half), 0, {}, 0});
+            path.least_width = path.least_width == 0 ? 2 * half : std::min(path.least_width, 2 * half);
             path.length += length_of(a, b);
             from = to;
         };
@@ -195,7 +237,9 @@ public:
                 from = index;
                 continue;
             }
-            if (index + 1 < chain.size() && chain[index + 1]->cell.layer == chain[index]->cell.layer && chain[index + 1]->heading == chain[index]->heading) continue;
+            if (index + 1 < chain.size() && chain[index + 1]->cell.layer == chain[index]->cell.layer && chain[index + 1]->heading == chain[index]->heading &&
+                half_at(chain[index + 1]->cell) == half_at(chain[index]->cell) && half_at(chain[index]->cell) == half_at(chain[index - 1]->cell))
+                continue;
             flush(index);
         }
         if (drop) {
@@ -231,6 +275,7 @@ private:
     int net_;
     const Board& board_;
     Nm half_ = 0, sag_ = 0;
+    std::vector<std::pair<Box, Nm>> necks_;
     std::int64_t turn_ = 0, via_ = 0, greed_ = 0;
     Box window_;
     std::unordered_map<Key, bool> legal_, drill_;
@@ -246,10 +291,15 @@ Box grown_within(Box box, Nm by, const Box& limit) {
 
 bool covers(const Box& a, const Box& b) { return a.x0 <= b.x0 && a.y0 <= b.y0 && a.x1 >= b.x1 && a.y1 >= b.y1; }
 
-SearchResult search(const World& world, const SearchSetup& setup, int net, const std::vector<std::size_t>& sources, const std::vector<std::size_t>& goals, bool drop) {
-    Search engine(world, setup, net);
+SearchResult search(const World& world, const SearchSetup& setup, int net, const std::vector<std::size_t>& sources, const std::vector<std::size_t>& goals, bool drop,
+                    bool guarded) {
+    Search engine(world, setup, net, guarded);
     std::vector<Cell> starts, ends;
     Box span = world.item(sources.front()).shape.bound();
+    for (const std::size_t id : sources)
+        if (world.item(id).kind == ItemKind::pad) engine.neck_at(world.item(id));
+    for (const std::size_t id : goals)
+        if (world.item(id).kind == ItemKind::pad) engine.neck_at(world.item(id));
     for (const std::size_t id : sources) {
         const std::vector<Cell> cells = engine.cells_on(world.item(id));
         starts.insert(starts.end(), cells.begin(), cells.end());
@@ -286,16 +336,26 @@ SearchResult search(const World& world, const SearchSetup& setup, int net, const
     }
 }
 
+SearchResult checked(const World& world, const SearchSetup& setup, int net, const std::vector<std::size_t>& sources, const std::vector<std::size_t>& goals, bool drop) {
+    SearchResult exact = search(world, setup, net, sources, goals, drop, false);
+    if (!exact.path) return exact;
+    const bool sound = std::none_of(exact.path->items.begin(), exact.path->items.end(), [&](const Item& item) { return world.conflict(item).has_value(); });
+    if (sound) return exact;
+    SearchResult guarded = search(world, setup, net, sources, goals, drop, true);
+    guarded.opened += exact.opened;
+    return guarded;
+}
+
 }
 
 SearchResult find_path(const World& world, const SearchSetup& setup, int net, const std::vector<std::size_t>& sources, const std::vector<std::size_t>& goals) {
     if (sources.empty() || goals.empty()) throw RouteError("route: a path needs a source and a goal");
-    return search(world, setup, net, sources, goals, false);
+    return checked(world, setup, net, sources, goals, false);
 }
 
 SearchResult find_plane_drop(const World& world, const SearchSetup& setup, int net, const std::vector<std::size_t>& sources) {
     if (sources.empty()) throw RouteError("route: a plane drop needs a source");
-    return search(world, setup, net, sources, {}, true);
+    return checked(world, setup, net, sources, {}, true);
 }
 
 }

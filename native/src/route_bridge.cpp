@@ -2,6 +2,7 @@
 
 #include "schgen/route_check.hpp"
 
+#include <array>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
@@ -18,7 +19,9 @@ const char* const usage = "usage: schgen route-try BOARD PROJECT SETUP [BOARD_OU
                           "  routes a KiCad board file under the rules and net classes of its project file, with the search\n"
                           "  settings of a route setup file, then judges the copper with the independent route check.\n"
                           "  The layer count, plane layers, net classes and clearances are all read from the two KiCad files.\n"
-                          "  With BOARD_OUT the copper is added to a copy of the board.\n";
+                          "  With BOARD_OUT the copper is added to a copy of the board.\n"
+                          "       schgen route-explain BOARD PROJECT SETUP PAD\n"
+                          "  says what stops a track leaving one pad (for example J3.12) in each of the eight directions.\n";
 
 std::string slurp(const std::string& path) {
     std::ifstream in(path, std::ios::binary);
@@ -80,7 +83,52 @@ std::string with_copper(const std::string& board_text, const Board& board, const
     return board_text.substr(0, end) + copper_text(board, copper, numbers) + board_text.substr(end);
 }
 
+int explain(const World& world, const RunSetup& setup, const std::string& owner) {
+    const Board& board = world.board();
+    constexpr std::array<int, 8> step_x{1, 1, 0, -1, -1, -1, 0, 1}, step_y{0, 1, 1, 1, 0, -1, -1, -1};
+    constexpr int reach_steps = 60;
+    constexpr Nm explain_step = 1000;
+    for (std::size_t id = 0; id < board.fixed.size(); ++id) {
+        const Item& pad = board.fixed[id];
+        if (pad.owner != owner || pad.net == no_net) continue;
+        const Box bound = pad.shape.bound();
+        const Point centre{(bound.x0 + bound.x1) / 2, (bound.y0 + bound.y1) / 2};
+        const NetClass& entry = board.rules.classes[board.nets[static_cast<std::size_t>(pad.net)].net_class];
+        Nm neck = std::max(board.rules.least_track, std::min(entry.track, std::min(bound.x1 - bound.x0, bound.y1 - bound.y0)));
+        while (neck > board.rules.least_track && world.conflict(Item{ItemKind::track, pad.net, pad.first, pad.first, disc(centre, neck / 2), 0, {}, 0})) neck -= explain_step;
+        neck = std::max(neck, board.rules.least_track);
+        std::cout << owner << " on " << board.nets[static_cast<std::size_t>(pad.net)].name << " (class " << entry.name << ", track " << layout::to_mm(entry.track) << ", clearance "
+                  << layout::to_mm(entry.clearance) << "), pad " << layout::to_mm(bound.x1 - bound.x0) << " x " << layout::to_mm(bound.y1 - bound.y0) << " mm on layers " << pad.first
+                  << "-" << pad.last << ", neck " << layout::to_mm(neck) << " mm\n";
+        for (std::size_t heading = 0; heading < step_x.size(); ++heading) {
+            std::string stop = "free";
+            for (int steps = 1; steps <= reach_steps; ++steps) {
+                const Point at{centre.x + step_x[heading] * steps * setup.search.pitch, centre.y + step_y[heading] * steps * setup.search.pitch};
+                const Item probe{ItemKind::track, pad.net, pad.first, pad.first, disc(at, neck / 2), 0, {}, 0};
+                const auto hit = world.conflict(probe);
+                if (!hit) continue;
+                std::ostringstream text;
+                text << "stopped after " << layout::to_mm(steps * setup.search.pitch) << " mm by ";
+                if (hit->edge) text << "the board edge";
+                else text << kind_name(world.item(hit->item).kind) << " " << world.item(hit->item).owner << " on "
+                          << (world.item(hit->item).net == no_net ? std::string("no net") : board.nets[static_cast<std::size_t>(world.item(hit->item).net)].name);
+                stop = text.str();
+                break;
+            }
+            std::cout << "  heading " << step_x[heading] << "," << step_y[heading] << ": " << stop << "\n";
+        }
+        return 0;
+    }
+    std::cout << "no pad named " << owner << " on a net\n";
+    return 1;
+}
+
 std::optional<int> run_route_command(int argc, char** argv) {
+    if (argc == 6 && std::string(argv[1]) == "route-explain") {
+        const Board board = board_from_pcb(sexpr_loads(slurp(argv[2])), parse_json_file(argv[3]));
+        const World world(board);
+        return explain(world, read_setup(parse_json_file(argv[4])), argv[5]);
+    }
     if (argc < 2 || std::string(argv[1]) != "route-try") return std::nullopt;
     if (argc != 5 && argc != 6) {
         std::cout << usage;

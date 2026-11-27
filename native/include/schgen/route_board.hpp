@@ -57,7 +57,7 @@ struct Rules {
     std::vector<Layer> layers;
     std::vector<NetClass> classes;
     std::vector<ViaKind> vias;
-    Nm edge_clearance = 0, hole_clearance = 0, hole_spacing = 0;
+    Nm edge_clearance = 0, hole_clearance = 0, hole_spacing = 0, least_track = 0;
     Nm clearance(std::size_t first, std::size_t second) const;
     Nm between(const Item& first, const Item& second, const std::vector<Net>& nets) const;
     void validate() const;

@@ -22,7 +22,9 @@ inline constexpr NamedConstant search_budget{"search_budget", 400000, "points", 
     "lattice points one search may open before it reports no path; a count, so results never depend on the clock"};
 inline constexpr NamedConstant search_greed{"search_greed", 1.5, "ratio", "policy",
     "weight of the remaining-distance estimate against the cost so far; above one the search heads for the goal and opens far fewer points, at the price of a path up to that factor longer than the best"};
-inline constexpr std::array route_search_registry{lattice_pitch, turn_length, via_length, search_margin, search_growth, search_budget, search_greed};
+inline constexpr NamedConstant neck_reach{"neck_reach", 2500000, "nm", "policy",
+    "distance from a pad within which a track may be as narrow as the pad instead of its class width; the figure KiCadRoutingTools documents for power nets (docs/power-nets.md, read 2026-11-27)"};
+inline constexpr std::array route_search_registry{lattice_pitch, turn_length, via_length, search_margin, search_growth, search_budget, search_greed, neck_reach};
 }
 
 struct SearchSetup {
@@ -31,12 +33,15 @@ struct SearchSetup {
     Nm via = static_cast<Nm>(constants::via_length.value);
     Nm margin = static_cast<Nm>(constants::search_margin.value);
     std::size_t budget = static_cast<std::size_t>(constants::search_budget.value);
+    Nm neck = static_cast<Nm>(constants::neck_reach.value);
+    bool narrowest = false;
 };
 
 struct Path {
     std::vector<Item> items;
     double length = 0;
     std::size_t vias = 0;
+    Nm least_width = 0;
 };
 
 struct SearchResult {
