@@ -75,6 +75,7 @@ struct SearchChoice {
 
 void open_spacing(Kernel& kernel, const SqueezeOptions& settings, SpreadReport& report);
 void repair_start(Kernel& kernel, const SqueezeOptions& settings, StageResult& result, const std::function<void(bool)>& mark);
+std::size_t start_debt(const Kernel& kernel);
 
 StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model, const PcbEmitPolicy& policy,
                           const AdapterOptions& options, const SearchChoice& choice = SearchChoice{});

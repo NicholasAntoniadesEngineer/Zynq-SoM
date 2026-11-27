@@ -778,6 +778,8 @@ void repair_start(Kernel& kernel, const SqueezeOptions& settings, StageResult& r
     result.inherited += gaps_inherited;
 }
 
+std::size_t start_debt(const Kernel& kernel) { return unmet_count(kernel) + gap_count(kernel) + shut_count(kernel); }
+
 StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model, const PcbEmitPolicy& policy,
                           const AdapterOptions& options, const SearchChoice& choice) {
     const PcbPlacementGatePolicy gates = pcb_placement_gate_policy(inputs);
@@ -812,7 +814,7 @@ StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model
     }
     repair_start(attracted, settings, result, [&](bool separated) { (separated ? illegal_separated : illegal_entry) = listed(separated ? "after connector separation" : "handed over"); });
     {
-        const std::size_t left = unmet_count(attracted) + gap_count(attracted) + shut_count(attracted);
+        const std::size_t left = start_debt(attracted);
         result.convergence = (result.construct ? construct_summary(*result.construct) : std::string()) + convergence_text(result, left) + illegal_entry + illegal_separated + listed("after repair");
         const Problem& entry = attracted.problem();
         for (const PadGap& rule : entry.constraints.soft_gaps)

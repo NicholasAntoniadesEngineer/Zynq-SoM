@@ -111,6 +111,9 @@ ConstructReport construct_owned(Kernel& kernel, Nm pitch, Nm reach, bool arrange
     const std::vector<char>* scope = nullptr;
     const auto evict_budget = static_cast<std::size_t>(constants::construct_evictions.value);
     const auto evict_window = static_cast<std::size_t>(constants::construct_window.value);
+    std::vector<char> leads_face(count, 0);
+    for (const auto& rule : problem.constraints.soft_gaps)
+        if (rule.same_face && !rule.or_under) leads_face[rule.anchor] = 1;
     const auto seats_of = [&](std::size_t part) {
         const PadGap& rule = *owner_rule(problem, part);
         const Pose owner = kernel.placement()[rule.anchor];
@@ -163,9 +166,11 @@ ConstructReport construct_owned(Kernel& kernel, Nm pitch, Nm reach, bool arrange
         if (led && (!rule.same_face || pair_faced(problem, kernel.board(), rule.anchor, owner, part, original[part], rule.or_under)) &&
             std::none_of(candidates.begin(), candidates.end(), [&](const Candidate& seat) { return seat.pose == original[part]; }))
             candidates.push_back({original[part], pad_gap_length(problem, rule, trial), ring.size()});
+        const bool leads = leads_face[part] != 0;
         std::stable_sort(candidates.begin(), candidates.end(), [&](const Candidate& a, const Candidate& b) {
-            if (a.gap != b.gap) return a.gap < b.gap;
             const bool away_a = a.pose.face != owner.face, away_b = b.pose.face != owner.face;
+            if (leads && away_a != away_b) return !away_a;
+            if (a.gap != b.gap) return a.gap < b.gap;
             if (away_a != away_b) return !away_a;
             return a.rank < b.rank;
         });
@@ -366,6 +371,12 @@ ConstructReport construct_owned(Kernel& kernel, Nm pitch, Nm reach, bool arrange
                     pulls += 1;
                 }
             }
+            for (std::size_t mate = 0; mate < count; ++mate) {
+                if (inside[mate] || kernel.parked(mate) || problem.parts[mate].group != problem.parts[root].group) continue;
+                sum_x += static_cast<double>(kernel.placement()[mate].at.x);
+                sum_y += static_cast<double>(kernel.placement()[mate].at.y);
+                pulls += 1;
+            }
             const Point target = pulls > 0 ? Point{static_cast<Nm>(sum_x / pulls), static_cast<Nm>(sum_y / pulls)}
                                            : Point{(outline.x0 + outline.x1) / 2, (outline.y0 + outline.y1) / 2};
             const Point snapped{target.x - target.x % pitch, target.y - target.y % pitch};
@@ -390,7 +401,7 @@ ConstructReport construct_owned(Kernel& kernel, Nm pitch, Nm reach, bool arrange
                             stuck = false;
                             queue.assign(members[root].begin(), members[root].end());
                             drain(false, false);
-                            if (!stuck) return true;
+                            if (!stuck && !kernel.breach(root)) return true;
                             for (const std::size_t member : members[root]) {
                                 if (!kernel.parked(member)) kernel.park(member);
                                 by_rule[member] = 0;
@@ -415,6 +426,12 @@ ConstructReport construct_owned(Kernel& kernel, Nm pitch, Nm reach, bool arrange
                     back = kernel.seat(root, Pose{shifted(original[root].at, sweep[rank]), static_cast<Turn>(turn), original[root].face});
             if (!back) {
                 report.unseated.push_back(item.reference);
+                const auto refused = kernel.seat_rejection(root, original[root]);
+                report.causes.push_back(item.reference + " (unowned): its first seat is refused by " +
+                                        (refused ? std::string(breach_name(refused->kind)) + " against " +
+                                                       (refused->other < count ? problem.parts[refused->other].reference : std::string("the board"))
+                                                 : std::string("nothing")) +
+                                        "; no seat on the board at the sweep pitch");
                 continue;
             }
             queue.assign(members[root].begin(), members[root].end());

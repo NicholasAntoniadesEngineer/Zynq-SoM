@@ -17,6 +17,7 @@
 #include "schgen/assembly_parts.hpp"
 #include "schgen/stackup.hpp"
 #include "schgen/run_config.hpp"
+#include "schgen/layout_json.hpp"
 #include <chrono>
 #include <cmath>
 #include <climits>
@@ -73,7 +74,7 @@ std::pair<layout::SearchChoice,std::size_t> tuning_of(std::uint64_t seed){
 }
 struct SearchAttempt {
     std::uint64_t seed=0;std::size_t order=0;std::map<std::string,std::size_t> choice;layout::SearchChoice tuning;std::size_t permutation=0;std::optional<std::size_t> same_as,placed_by;
-    std::string reached="-",first_finding,detail;bool correct=false,promoted=false;
+    std::string reached="-",first_finding,detail,handed;bool correct=false,promoted=false;
     std::optional<PcbPlacementResult> placement;std::optional<layout::StageResult> layout;ExecutionFailureReceipt receipt;
     double screen_area=0,area=0,long_side=0,airwire=0;std::size_t rear=0;
 };
@@ -244,7 +245,12 @@ void pcb_stages(Context& c){
                     a.correct=!search.max_outline_mm||(std::max(m.board_w,m.board_h)<=std::max(search.max_outline_mm->first,search.max_outline_mm->second)&&
                                                      std::min(m.board_w,m.board_h)<=std::min(search.max_outline_mm->first,search.max_outline_mm->second));
                     if(!a.correct)a.first_finding="outline above search.max_outline_mm";
-                }catch(const std::exception& error){a.reached="S3";a.first_finding=first_line(error.what());a.detail=error.what();}
+                }catch(const std::exception& error){
+                    a.reached="S3";a.first_finding=first_line(error.what());a.detail=error.what();
+                    const PcbPlacementGatePolicy gates=pcb_placement_gate_policy(stage.inputs);
+                    const layout::ModelBinding handed=layout::bind_model(a.placement->model,pcb_emit_policy(stage.inputs.floorplan.project),&gates,layout_options());
+                    a.handed=layout::document_json(handed.problem,handed.placement);
+                }
             };
             c.measure("pcb_layout_squeeze",[&]{
                 const std::size_t first=search.mode=="release"?std::min(search.promote,screened.size()):std::min(search.threads,screened.size());
@@ -280,6 +286,11 @@ void pcb_stages(Context& c){
                 text<<" | "<<(a.correct?"yes":"no")<<" | "<<(src->layout?std::to_string(a.airwire):"-")<<" | "<<(a.first_finding.empty()?"-":a.first_finding)<<"\n";
             }
             for(const auto& a:attempts)if(!a.same_as&&!a.detail.empty())text<<"DETAIL seed "<<a.seed<<":\n"<<a.detail<<"\n";
+            for(const auto& a:attempts)if(!a.same_as&&!a.handed.empty()){
+                const std::string name="failed_seed_"+std::to_string(a.seed)+".layout.json";
+                c.report(name,a.handed);
+                text<<"REPLAY seed "<<a.seed<<": schgen layout-"<<(stage.inputs.floorplan.project.construct?"arrange":"check")<<" reports/"<<name<<"\n";
+            }
             if(chosen)text<<"CHOSEN seed "<<attempts[*chosen].seed<<" by "<<(search.mode=="quick"?"objective among the first batch laid out":"objective")<<"\n";
             if(!areas.empty()&&ran){
                 const double rate=static_cast<double>(passed)/static_cast<double>(ran);

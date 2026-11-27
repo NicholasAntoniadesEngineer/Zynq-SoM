@@ -1,4 +1,6 @@
 #include "schgen/layout_construct.hpp"
+#include "schgen/layout_stage.hpp"
+#include "schgen/layout_density.hpp"
 #include "schgen/layout_squeeze.hpp"
 #include "schgen/layout_cli.hpp"
 
@@ -119,7 +121,8 @@ std::optional<int> run_layout_command(int argc, char** argv) {
     if (argc != 3) throw LayoutError(command + ": exactly one problem file is required");
     const auto document = layout::read_document(parse_json_file(argv[2]));
     if (command == "layout-construct" || command == "layout-arrange") {
-        layout::Kernel kernel(document.problem, document.placement);
+        const layout::Problem dense = layout::without_density(document.problem);
+        layout::Kernel kernel(dense, document.placement);
         const auto off_face = [&] {
             std::size_t count = 0;
             for (const auto& rule : document.problem.constraints.soft_gaps)
@@ -134,7 +137,18 @@ std::optional<int> run_layout_command(int argc, char** argv) {
                                                    static_cast<layout::Nm>(layout::constants::construct_reach.value), command == "layout-arrange");
         std::cout << layout::construct_summary(built) << "  violations " << before << " before, " << kernel.violations().size() << " after\n"
                   << "  owned parts off their owner's face " << faced_before << " before, " << off_face() << " after\n";
-        return built.unseated.empty() ? 0 : 1;
+        if (!built.unseated.empty()) return 1;
+        layout::StageResult repaired;
+        try {
+            layout::repair_start(kernel, layout::default_squeeze(), repaired, [](bool) {});
+        } catch (const LayoutError& error) {
+            std::cout << "  repair: " << error.what() << "\n";
+            return 1;
+        }
+        std::cout << "  after repair: violations " << kernel.violations().size() << ", staged rules left " << layout::start_debt(kernel) << "\n";
+        for (const auto& row : repaired.repairs)
+            if (!row.kept) std::cout << "    not kept: " << row.rule << " | " << row.subject << " | " << row.action << "\n";
+        return kernel.violations().empty() && layout::start_debt(kernel) == 0 ? 0 : 1;
     }
     return report(document.problem, document.placement);
 }
