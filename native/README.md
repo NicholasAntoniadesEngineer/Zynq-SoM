@@ -424,8 +424,10 @@ The equivalent ratsnest run (36 PNGs plus SVG) measured approximately 1.79 s
 through the previous renderer and 0.68 s through the bounded parallel C++
 renderer, with all output bytes unchanged.
 
-Standalone `assembly`, `ratsnest`, `si-constraints`, `fab-profile` and `manifest`
-commands now use native implementations. Explicit output directories retain the
+Standalone `si-constraints`, `fab-profile` and `manifest` commands use native
+implementations. Assembly and ratsnest documents come only from `schgen run`,
+which draws them from the repaired and squeezed board; there is no standalone
+command that would draw them from the first-stage placement. Explicit output directories retain the
 project layout (`docs/`, `renders/`, `manufacturing/`). `preflight` uses native
 stock/price/alternate analysis and a shell-free HTTPS-only `curl` subprocess;
 it requires network access only when that optional command is invoked. Transport

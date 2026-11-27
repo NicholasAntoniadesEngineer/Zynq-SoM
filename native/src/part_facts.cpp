@@ -700,7 +700,7 @@ ConnectorFacts connectors_from(const JsonNode& section, const std::map<std::stri
         const std::string where = file + " connectors " + name;
         if (entry.kind != JsonKind::Object) refuse(where + " must be an object");
         reject_unknown_keys(entry, {"mating_face", "edge_pinned", "overmold", "pad_row_face_check", "description",
-                                    "numbered_label", "pair_label", "handling", "mating", "access"}, where);
+                                    "numbered_label", "pair_label", "handling", "mating", "access", "face_cite"}, where);
         ConnectorFact fact;
         fact.mating_face = require_string(entry, "mating_face", false, where);
         if (fact.mating_face.size() != face_length || face_signs.find(fact.mating_face.front()) == std::string_view::npos ||
@@ -715,6 +715,9 @@ ConnectorFacts connectors_from(const JsonNode& section, const std::map<std::stri
         fact.pair_label = text_of(entry, "pair_label", where);
         if (fact.edge_pinned && !fact.description) refuse(where + ": an edge-pinned connector needs a description");
         if (fact.edge_pinned && fact.mating_face.back() == face_axes.back()) refuse(where + ": a connector mated from above (+Z) cannot be edge-pinned");
+        fact.face_cite = text_of(entry, "face_cite", where);
+        if (fact.mating_face.back() == face_axes.back() && !fact.face_cite)
+            refuse(where + ": a connector stated to mate from above needs face_cite, the source that shows it is not a side-entry part");
         const auto path = paths.find(name);
         if (!fact.edge_pinned && fact.mating_face.back() != face_axes.back() && path == paths.end())
             refuse(where + ": a connector mated from the side must be edge-pinned or state a plug path in plug_paths; "

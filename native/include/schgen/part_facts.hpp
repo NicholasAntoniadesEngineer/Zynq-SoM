@@ -68,7 +68,7 @@ struct ConnectorAccess {
 struct ConnectorFact {
     std::string mating_face, handling;
     bool edge_pinned = false, overmold = false, pad_row_face_check = false;
-    std::optional<std::string> description, numbered_label, pair_label;
+    std::optional<std::string> description, numbered_label, pair_label, face_cite;
     std::optional<ConnectorMating> mating;
     std::optional<ConnectorAccess> access;
 };

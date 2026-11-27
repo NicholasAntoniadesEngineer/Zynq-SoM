@@ -92,7 +92,7 @@ struct Options {
     std::set<std::string> help_options;
     long long quantity = 1, minimum_stock = 50;
 };
-const std::set<std::string> commands{"selftest", "project-check", "circuit-check", "som-interface", "xdc", "bom", "link", "design-rules", "testpoints", "board-schematic", "pcb-stage", "pcb-drc", "subsystem-new", "render3d", "board-step", "model3d-check", "assembly", "ratsnest", "gallery", "diagram", "si-constraints", "fab-profile", "manifest", "preflight", "constraints", "powertree", "thermal", "part-rules", "bom-values", "footprint-pads", "pin-completeness", "symbol-law", "spice", "power-sequence"};
+const std::set<std::string> commands{"selftest", "project-check", "circuit-check", "som-interface", "xdc", "bom", "link", "design-rules", "testpoints", "board-schematic", "pcb-stage", "pcb-drc", "subsystem-new", "render3d", "board-step", "model3d-check", "gallery", "diagram", "si-constraints", "fab-profile", "manifest", "preflight", "constraints", "powertree", "thermal", "part-rules", "bom-values", "footprint-pads", "pin-completeness", "symbol-law", "spice", "power-sequence"};
 bool experiment_command(const std::string& name){
     return name=="chir-rung"||name=="w11-sweep"||name=="w12-bound"||name=="w12-stageprobe"||name=="dump-circuits";
 }
@@ -350,7 +350,7 @@ Options parse(int argc, char** argv) {
         allowed.insert("--pcb"); allowed.insert("--kicad-cli");
     } else if (out.command == "model3d-check") {
         // Checks the selected project's real model inventory.
-    } else if (out.command == "board-schematic" || out.command == "selftest" || out.command == "pcb-stage" || out.command == "assembly" || out.command == "ratsnest") {
+    } else if (out.command == "board-schematic" || out.command == "selftest" || out.command == "pcb-stage") {
         if(out.command=="pcb-stage")allowed.insert("--compact-placement");
         allowed.insert("--kicad-cli");
         if (out.command == "selftest") allowed.insert("--keep");
@@ -710,25 +710,6 @@ std::optional<int> run_project_command(int argc, char** argv) {
             selftest_model_fixtures(pcb_check_footprint(resistor->string(), bytes)), library, run);
         if (!options.output.empty()) publish_text(options.output, result.report);
         return result.exit_code();
-    }
-    if (options.command == "assembly" || options.command == "ratsnest") {
-        if (!options.subsystems.empty()) throw ProjectError(options.command + " requires the complete project");
-        BoardInputOptions pcb_options;
-        pcb_options.compact_search=options.compact_search;
-        const auto stage = prepare_board_pcb(paths, {options.kicad_cli}, pcb_options);
-        const auto directory = options.output.empty() ? paths.project_root : options.output;
-        if (options.command == "ratsnest") {
-            const auto result = run_ratsnest_documents(stage.placement.model, directory);
-            std::cout << ratsnest_document_summary(result, directory);
-            return 0;
-        }
-        const auto result = run_assembly_documents(stage.placement.model,
-            analyze_power(stage.circuits, stage.inputs.floorplan.power), stage.inputs.floorplan.project.name,
-            directory / "manufacturing/ASSEMBLY.md", directory / "renders/assembly",
-            pcb_emit_policy(stage.inputs.floorplan.project));
-        const auto verdict = assembly_verdict(result, directory);
-        std::cout << verdict.second << '\n';
-        return verdict.first ? 0 : 1;
     }
     if (options.command == "fab-profile") {
         if (!options.subsystems.empty()) throw ProjectError("fab-profile requires the emitted project board");
