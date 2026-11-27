@@ -1,20 +1,20 @@
-LAW-6 PLACEMENT (mechanical) GATE: PASS (board 164 x 97.5 mm)
-  SoM module-body core: (84.2,88.9)..(135.8,132.1) mm — bottom-passives-only, TOP keepout
+LAW-6 PLACEMENT (mechanical) GATE: PASS (board 151.5 x 102.25 mm)
+  SoM module-body core: (79.2,91.9)..(130.8,135.1) mm — bottom-passives-only, TOP keepout
   off-board connectors: 14 (0 mis-placed)
-    OK  J12001    HDMI-019S        edge=S rot=  0 mouth->(0, 1) flush=-2.8mm
+    OK  J12001    HDMI-019S        edge=N rot=180 mouth->(0, -1) flush=-2.8mm
     OK  J14001    HDMI-019S        edge=S rot=  0 mouth->(0, 1) flush=-2.8mm
-    OK  J15001    AFC07-S40FCA-00  edge=N rot=180 mouth->(0, -1) flush=-0.7mm
-    OK  J16001    TF-01A           edge=S rot=  0 mouth->(0, 1) flush=-2.9mm
+    OK  J15001    AFC07-S40FCA-00  edge=W rot=270 mouth->(-1, 0) flush=-0.7mm
+    OK  J16001    TF-01A           edge=E rot= 90 mouth->(1, 0) flush=-2.9mm
     OK  J17001    TYPE-C-31-M-12   edge=W rot=270 mouth->(-1, 0) flush=-1.3mm
     OK  J18001    DS1024-2x6R2     edge=N rot=180 mouth->(0, -1) flush=-9.0mm
     OK  J18002    DS1024-2x6R2     edge=N rot=180 mouth->(0, -1) flush=-9.0mm
-    OK  J19001    DS1024-2x6R2     edge=W rot=270 mouth->(-1, 0) flush=-9.0mm
-    OK  J29001    TYPE-C-31-M-12   edge=N rot=180 mouth->(0, -1) flush=-1.3mm
-    OK  J31001    TYPE-C-31-M-12   edge=E rot= 90 mouth->(1, 0) flush=-1.3mm
-    OK  J32002    TYPE-C-31-M-12   edge=N rot=180 mouth->(0, -1) flush=-1.3mm
-    OK  J37002    XT60PW-M         edge=S rot=270 mouth->(0, 1) flush=0.3mm
-    OK  J37003    XT60PW-M         edge=S rot=270 mouth->(0, 1) flush=0.3mm
-    OK  J8001     SFW15R-1STE1LF   edge=W rot=270 mouth->(-1, 0) flush=-1.3mm
+    OK  J19001    DS1024-2x6R2     edge=N rot=180 mouth->(0, -1) flush=-9.0mm
+    OK  J29001    TYPE-C-31-M-12   edge=W rot=270 mouth->(-1, 0) flush=-1.3mm
+    OK  J31001    TYPE-C-31-M-12   edge=S rot=  0 mouth->(0, 1) flush=-1.3mm
+    OK  J32002    TYPE-C-31-M-12   edge=S rot=  0 mouth->(0, 1) flush=-1.3mm
+    OK  J37002    XT60PW-M         edge=S rot= 90 mouth->(0, 1) flush=-8.5mm
+    OK  J37003    XT60PW-M         edge=S rot= 90 mouth->(0, 1) flush=-8.5mm
+    OK  J8001     SFW15R-1STE1LF   edge=S rot=  0 mouth->(0, 1) flush=-1.3mm
   non-passive parts under SoM core: 0
   controls under SoM core: 0
   carrier TOP parts under SoM core (keepout): 0

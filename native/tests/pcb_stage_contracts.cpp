@@ -62,7 +62,7 @@ PcbCheckFootprintPtr footprint(const PcbFootprintPool &pool, const std::string &
 }
 PcbStageInput input(const JsonNode &fixture, const JsonNode &row, const PcbFootprintPool &pool) {
     PcbStageInput in;
-    in.connectors = repository_connector_facts();
+    in.connectors = snapshot_connector_facts();
     in.sheet = field(row, "sheet").string_value;
     in.contract = field(row, "contract");
     in.refs = strings(field(row, "refs"));

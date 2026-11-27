@@ -6,6 +6,7 @@
 #include "schgen/project.hpp"
 
 #include <filesystem>
+#include <stdexcept>
 
 inline std::filesystem::path repository_parts_directory() {
     return std::filesystem::path(__FILE__).parent_path().parent_path().parent_path() / "parts";
@@ -23,6 +24,18 @@ inline schgen::LandSpacingPolicy repository_land_spacing(const schgen::KicadNetl
 
 inline schgen::ConnectorFacts repository_connector_facts() {
     return schgen::load_connector_facts(repository_parts_directory());
+}
+
+inline void frozen_inlet_facing(schgen::ConnectorFacts& connectors) {
+    const auto inlet = connectors.find("XT60PW-M");
+    if (inlet == connectors.end()) throw std::runtime_error("frozen snapshots hold an XT60PW-M inlet and the part facts have none");
+    inlet->second.mating_face = "+X";
+}
+
+inline schgen::ConnectorFacts snapshot_connector_facts() {
+    schgen::ConnectorFacts connectors = repository_connector_facts();
+    frozen_inlet_facing(connectors);
+    return connectors;
 }
 
 inline schgen::PartFacts repository_part_facts() {

@@ -115,6 +115,7 @@ void sidecar_independence(const schgen::ProjectPaths& paths,
 const std::string rtc_id = "RV-3028-C7-32.768kHz-1ppm-TA-QC:RV-3028-C7-32.768kHz-1ppm-TA-QC";
 const std::string hdmi_id = "HDMI-019S:HDMI-019S";
 const std::string usb_id = "TYPE-C-31-M-12:TYPE-C-31-M-12";
+const std::string inlet_id = "XT60PW-M:XT60PW-M";
 const std::string clamp_id = "SMBJ28A:SMBJ28A";
 std::string zero_court_line(const std::string& point) {
     return "\t(fp_line\n\t\t(start " + point + ")\n\t\t(end " + point +
@@ -179,6 +180,19 @@ std::string current_footprint_reference(const std::string& id, std::string froze
             frozen.erase(pos, line.size());
         }
         require(frozen.find(zero_court_line("-6.1 -3.5838")) == std::string::npos, "no HDMI zero edge is left");
+        return frozen;
+    }
+    if (id == inlet_id) {
+        for (const auto& [before, after] : std::vector<std::pair<std::string, std::string>>{
+                {"(size 1.199998 2.199996)", "(size 1.4 2.5)"},
+                {"(size 1.199998 2.199996)", "(size 1.4 2.5)"},
+                {"(drill oval 0.599998 1.599997)", "(drill oval 0.8 1.9)"},
+                {"(drill oval 0.599998 1.599997)", "(drill oval 0.8 1.9)"},
+                {"(rotate\n\t\t\t(xyz 0 0 0)", "(rotate\n\t\t\t(xyz 0 0 180)"}}) {
+            const auto pos = frozen.find(before);
+            require(pos != std::string::npos, "historical inlet slot or model turn " + before);
+            frozen.replace(pos, before.size(), after);
+        }
         return frozen;
     }
     if (id == usb_id) {

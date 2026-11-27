@@ -1411,9 +1411,6 @@ model3d: PASS — 3D model coverage gate (custom footprints reference a stock Ki
 STATUS: SOFT — gaps are reported, never fail the board (some bespoke parts have no faithful stock body)
 71/71 custom footprints have a resolving 3D model
 unmatched: none — every custom footprint has a model
-
-MISFIT (1) — model resolves but does NOT match the footprint body (LAW):
-  HX_PZ2.54-3x8P_ZZ: model 20.3x2.5 mm vs footprint body 21.0x7.6 mm (ratio 0.97,0.33 outside [0.5,2.0])
 render3d: PASS (advisory) — 3D RENDERS: 8 view(s) -> /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/devkit_mini/renders/3d_top.png, /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/devkit_mini/renders/3d_bottom.png, /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/devkit_mini/renders/3d_left.png, /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/devkit_mini/renders/3d_right.png, /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/devkit_mini/renders/3d_front.png, /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/devkit_mini/renders/3d_back.png, /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/devkit_mini/renders/3d_persp.png, /Users/nicholasantoniades/Documents/GitHub/Zynq-SoM/devkit_mini/renders/3d_persp_rear.png (VISUAL-verify: LAW 1)
 gallery: PASS — GALLERY: 12 sheets -> devkit_mini/README.md (unchanged)
 si: PASS — SI constraints: 7 diff pairs, 4 length-match groups emitted — every declared pair covered.
@@ -1611,73 +1608,73 @@ pipeline_doc: PASS — unchanged
 === board native exclusive timing (wall s; audits included) ===
 Nested scopes pause parents; parallel batches use launch/join wall time, never summed worker spans.
 Scope: pipeline entry through build-ledger publication; excludes final summary publications and caller/process setup. Mixed stages remain mixed; not a generation-only total.
-pipeline_setup_and_other: 0.006306
-inputs: 0.005861
-authoring_audit: 10.208040
-authoring_guard_reporting_and_recheck: 0.002484
-input_factory_generation_and_ir_conversion: 0.280106
-input_circuit_validation: 0.006377
-input_publication: 0.007723
-board_definition: 0.060434
-subsystem_structure: 0.203935
-carrier_structure: 0.006991
-sheet_prepare_other: 0.002941
-sheet_electrical_validation: 0.001488
-sheet_place_route_with_internal_checks: 0.044465
-sheet_cc_validation: 0.003649
-sheet_emit_and_publish: 0.023421
-sheet_visual_validation: 0.007862
-sheet_parallel_checks_and_render_wall: 13.912959
-symbol_law: 0.000297
-link: 0.001424
-constraints: 0.000760
-diagram: 0.001035
-board_schematic: 3.995022
-bom_footprints: 0.000425
-power_tree: 0.002030
-rail_ampacity: 0.000424
-testpoints: 0.000345
-design_rules: 0.000966
-part_rules: 0.000801
-bom_values: 0.000857
-footprint_pads: 0.003329
-pin_completeness: 0.000578
-spice: 0.089430
-pcb: 0.019096
-pcb_input_loading_and_netlist_validation: 1.131859
-pcb_build_model_with_internal_checks: 1.228906
-pcb_layout_squeeze: 372.290804
-pcb_render: 0.013245
-placement_requirements: 0.001504
-pcb_drc: 1.644020
-pcb_geometry: 0.051068
-testpoint_map: 0.000288
-decoupling_report: 0.001334
-assembly: 0.130073
-ratsnest_images: 0.224120
-thermal: 0.014583
-copper_debt: 0.036620
-order_files: 0.002878
-fab_profile: 0.016525
-stage_movement: 0.000003
-xdc: 1.487535
-power_sequence: 0.001146
-floorplan: 0.000461
-model3d: 3.425300
-render3d: 26.326730
-gallery: 0.000698
-si: 0.000984
-i2c_bus_map: 0.000570
-module_pin_map: 1.561611
-connector_pinout: 0.000603
-bom_ratings: 0.000638
-manifest: 0.026240
-golden: 0.786455
-contract_coverage_lint: 0.001148
-fallbacks: 0.000601
-ledger_import: 0.001145
-quantize_census: 0.000775
-source_audit: 203.067435
-pipeline_doc: 0.001065
-MEASURED SCOPE TOTAL (not process wall): 642.380834
+pipeline_setup_and_other: 0.007155
+inputs: 0.006254
+authoring_audit: 10.127791
+authoring_guard_reporting_and_recheck: 0.001472
+input_factory_generation_and_ir_conversion: 0.279777
+input_circuit_validation: 0.005150
+input_publication: 0.007568
+board_definition: 0.061812
+subsystem_structure: 0.203490
+carrier_structure: 0.006927
+sheet_prepare_other: 0.003026
+sheet_electrical_validation: 0.001482
+sheet_place_route_with_internal_checks: 0.045317
+sheet_cc_validation: 0.003823
+sheet_emit_and_publish: 0.023515
+sheet_visual_validation: 0.007935
+sheet_parallel_checks_and_render_wall: 13.801611
+symbol_law: 0.000362
+link: 0.001690
+constraints: 0.000799
+diagram: 0.001211
+board_schematic: 4.037940
+bom_footprints: 0.000575
+power_tree: 0.002284
+rail_ampacity: 0.000283
+testpoints: 0.000413
+design_rules: 0.001277
+part_rules: 0.001108
+bom_values: 0.001117
+footprint_pads: 0.005645
+pin_completeness: 0.000696
+spice: 0.149737
+pcb: 0.018761
+pcb_input_loading_and_netlist_validation: 1.151585
+pcb_build_model_with_internal_checks: 1.226390
+pcb_layout_squeeze: 372.786577
+pcb_render: 0.013303
+placement_requirements: 0.001841
+pcb_drc: 1.841636
+pcb_geometry: 0.051841
+testpoint_map: 0.000330
+decoupling_report: 0.001195
+assembly: 0.127394
+ratsnest_images: 0.223222
+thermal: 0.014315
+copper_debt: 0.037381
+order_files: 0.003483
+fab_profile: 0.016558
+stage_movement: 0.000002
+xdc: 1.496257
+power_sequence: 0.001190
+floorplan: 0.000474
+model3d: 6.691807
+render3d: 27.259270
+gallery: 0.000716
+si: 0.000866
+i2c_bus_map: 0.000598
+module_pin_map: 1.470071
+connector_pinout: 0.000707
+bom_ratings: 0.000674
+manifest: 0.026429
+golden: 0.786258
+contract_coverage_lint: 0.000932
+fallbacks: 0.000708
+ledger_import: 0.001207
+quantize_census: 0.000721
+source_audit: 205.249180
+pipeline_doc: 0.001551
+MEASURED SCOPE TOTAL (not process wall): 649.304679
 BOARD: PASS (12 sheets)

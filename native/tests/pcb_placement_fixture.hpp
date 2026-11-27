@@ -123,6 +123,7 @@ inline Fixture load(const std::filesystem::path &root, const std::string &projec
     floor.project.name = string(config, "name");
     floor.project.file_stem = "Zynq_Carrier";
     use_repository_part_facts(floor.project);
+    frozen_inlet_facing(floor.project.connectors);
     floor.project.wired_sheets = strings(field(placement, "wired_sheets"));
     floor.project.pilot_prox_sheets = strings(field(placement, "pilot_prox_sheets"));
     auto off = point(field(placement, "module_offset"));

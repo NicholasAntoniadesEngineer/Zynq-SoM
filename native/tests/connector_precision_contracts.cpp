@@ -85,7 +85,7 @@ void rotations(std::ostream& output,const ConnectorFacts& connectors){
 void show(const QuantizationCounts& counts){std::cout<<'{';bool first=true;for(const auto& [k,n]:counts){if(!first)std::cout<<',';first=false;std::cout<<std::quoted(k)<<':'<<n;}std::cout<<'}';}
 void boards(const std::filesystem::path& root,bool capture){
     using namespace placement_fixture;
-    std::ostringstream output;output<<std::setprecision(17);rotations(output,load_connector_facts(root/"parts"));
+    std::ostringstream output;output<<std::setprecision(17);rotations(output,snapshot_connector_facts());
     const auto historical=read(root/"native/tests/data/connector_precision/legacy_output.txt");
     const auto board_boundary=historical.find("BOARD devkit_mini\n");
     require(board_boundary!=std::string::npos&&output.str()==historical.substr(0,board_boundary),

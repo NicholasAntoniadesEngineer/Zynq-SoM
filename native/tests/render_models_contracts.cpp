@@ -97,13 +97,10 @@ void pure(const JsonNode& fixture,const fs::path& repo,const fs::path& scratch) 
     rejects([]{ model3d_obj_to_wrl("v nan 1 2"); },"invalid model3d number");
     rejects([]{ model3d_obj_to_wrl("v 0 0 0\nusemtl a\nf 2"); },"index out of range");
     const auto expected=field(fixture,"repository"); const auto r=check_model3d(repo/"parts",repo/"carrier");
-    require(r.ok==field(field(expected,"fields"),"ok").bool_value,"repository gate verdict: "+r.report()); const auto reviewed=[&](std::string text) {
-        const std::string recorded="XT60PW-M",outline="HX_PZ2.54-3x8P_ZZ";
-        const std::string stray="model 18.1x15.5 mm vs footprint body 0.5x7.2 mm (ratio 36.19,2.15 outside [0.5,2.0])";
-        const std::string body="model 20.3x2.5 mm vs footprint body 21.0x7.6 mm (ratio 0.97,0.33 outside [0.5,2.0])";
-        const auto name=text.find(recorded); require(name!=text.npos&&text.find(recorded,name+1)==text.npos,"reviewed recorded misfit named once");
-        text.replace(name,recorded.size(),outline);
-        const auto detail=text.find(stray); if(detail!=text.npos)text.replace(detail,stray.size(),body);
+    require(r.ok==field(field(expected,"fields"),"ok").bool_value,"repository gate verdict: "+r.report());
+    const auto reviewed=[&](std::string text) {
+        const std::string tally="; 1 MISFIT: [XT60PW-M]",section="\n\nMISFIT (1) — model resolves but does NOT match the footprint body (LAW):\n  XT60PW-M: model 18.1x15.5 mm vs footprint body 0.5x7.2 mm (ratio 36.19,2.15 outside [0.5,2.0])";
+        for (const auto& recorded:{tally,section}) if (const auto at=text.find(recorded);at!=text.npos) text.erase(at,recorded.size());
         return text;
     };
     require(r.line()==reviewed(str(expected,"line")),"repository line exact: "+r.line()); require(r.report()==reviewed(str(expected,"report")),"repository report exact: "+r.report());
@@ -121,6 +118,16 @@ void pure(const JsonNode& fixture,const fs::path& repo,const fs::path& scratch) 
     footprint("(scale (xyz 20 20 1))"); mutated=check_model3d(scratch/"parts",scratch); require(mutated.ok&&mutated.misfit.size()==1,"fit remains soft");
     write(model,"not a model"); mutated=check_model3d(scratch/"parts",scratch); require(!mutated.ok&&mutated.invalid.size()==1,"unmeasurable geometry hard failure"); require(mutated.report().find("INVALID (1)")!=std::string::npos,"unmeasurable geometry reported");
     write(mod,base); mutated=check_model3d(scratch/"parts",scratch); require(!mutated.ok&&mutated.missing.size()==1,"missing clause hard failure");
+    {
+        const std::string inlet="XT60PW-M",seated="(xyz 0 0 180)",turned="(xyz 0 0 0)";
+        const auto home=scratch/"turned/parts"/inlet; fs::create_directories(home);
+        auto text=read(repo/"parts"/inlet/(inlet+".kicad_mod")); const auto at=text.rfind(seated);
+        require(at!=text.npos,"inlet model clause carries its half turn"); text.replace(at,seated.size(),turned);
+        const auto path=text.find("${KIPRJMOD}/.."); require(path!=text.npos,"inlet model path is project relative"); text.replace(path,std::string("${KIPRJMOD}/..").size(),"${KIPRJMOD}");
+        write(home/(inlet+".kicad_mod"),text); write(home/(inlet+".wrl"),read(repo/"parts"/inlet/(inlet+".wrl")));
+        const auto half=check_model3d(scratch/"turned/parts",scratch/"turned");
+        require(!half.ok&&half.unseated.count(inlet)==1,"a model turned half way round against its drilled pads is a hard failure: "+half.report());
+    }
     write(mod,"(footprint P (model \"relative.wrl\"))"); mutated=check_model3d(scratch/"parts",scratch); require(!mutated.ok&&mutated.broken.size()==1,"relative path hard failure");
     std::cout<<"288 historical geometry inputs with corrected 45-degree oracle, OBJ bytes, 70 real footprints, 154 asset hashes and mutations pass\n";
 }
