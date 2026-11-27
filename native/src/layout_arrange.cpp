@@ -8,6 +8,7 @@
 #include <chrono>
 #include <cmath>
 #include <map>
+#include <numeric>
 #include <optional>
 
 namespace schgen::layout {
@@ -522,10 +523,9 @@ LayReport lay_out(Kernel& kernel) {
         const std::size_t limit = anywhere || tied ? tries.size() : std::min(tries.size(), static_cast<std::size_t>(constants::lay_tries.value));
         for (std::size_t attempt = 0; attempt < limit; ++attempt) {
             const std::vector<Move> moves = moves_of(block, options[tries[attempt].option], tries[attempt].by);
-            std::size_t seated = 0;
-            while (seated < moves.size() && kernel.seat(moves[seated].part, moves[seated].pose)) ++seated;
-            if (seated == moves.size() && (!accept || accept())) return true;
-            for (std::size_t undo = 0; undo < seated; ++undo) kernel.park(moves[undo].part);
+            if (!kernel.seat_together(moves)) continue;
+            if (!accept || accept()) return true;
+            for (const Move& move : moves) kernel.park(move.part);
         }
         return false;
     };
@@ -580,105 +580,74 @@ LayReport lay_out(Kernel& kernel) {
         want.y = want.y * (1 - share) + share * static_cast<double>(hull.y0 + hull.y1) / 2;
         return want;
     };
-    std::map<std::size_t, std::string> early_cause;
-    std::vector<std::size_t> first;
-    for (std::size_t round = 0; round < static_cast<std::size_t>(constants::lay_rounds.value); ++round) {
-        report.seated = 0;
-        report.returned = 0;
-        report.unseated.clear();
-        std::vector<char> done(clusters.size(), 0);
-        std::vector<std::size_t> waiting;
-        const auto early = [&] {
-            for (const std::size_t index : first) {
-                if (!kernel.parked(clusters[index].members.front())) continue;
-                const Want want = want_of(index);
-                if (want.pull > 0 && seat_near(index, want, false)) ++report.seated;
-            }
-        };
-        for (const std::size_t index : first) {
-            done[index] = 1;
-            const Want want = want_of(index);
-            if (want.pull > 0 && seat_near(index, want, true)) ++report.seated;
-        }
-        early();
-        const auto put_back = [&](std::size_t index) {
-            const Block& block = blocks[index];
-            std::size_t back = 0;
-            while (back < block.members.size() && kernel.seat(block.members[back], block.base[back])) ++back;
-            if (back == block.members.size()) return true;
-            for (std::size_t undo = 0; undo < back; ++undo) kernel.park(block.members[undo]);
-            return false;
-        };
-        const std::function<bool(std::size_t)> followed = [&](std::size_t index) {
-            std::vector<std::size_t> placed_now;
-            for (std::size_t follower = 0; follower < clusters.size(); ++follower) {
-                if (leader[follower] != static_cast<int>(index) || !kernel.parked(clusters[follower].members.front())) continue;
-                if (seat_near(follower, want_of(follower), false, [&] { return followed(follower); })) {
-                    placed_now.push_back(follower);
-                    continue;
-                }
-                for (const std::size_t undo : placed_now)
-                    for (const std::size_t part : clusters[undo].members)
-                        if (!kernel.parked(part)) kernel.park(part);
-                return false;
-            }
-            report.seated += placed_now.size();
-            return true;
-        };
-        for (const std::size_t index : order) {
-            if (done[index] || !kernel.parked(clusters[index].members.front())) continue;
-            Want want = want_of(index);
-            if (want.pull == 0) want = fallback_of(sheets[sheet_of[index]], index);
-            else want = gathered(index, want);
-            if (seat_near(index, want, false, [&] { return followed(index); })) {
-                ++report.seated;
-                early();
-            } else if (put_back(index)) {
-                ++report.returned;
-            } else {
-                waiting.push_back(index);
-                if (!early_cause.count(index)) {
-                    const std::size_t part = blocks[index].members.front();
-                    const auto refusal = kernel.seat_rejection(part, blocks[index].base.front());
-                    early_cause[index] = refusal ? std::string(breach_name(refusal->kind)) + " against " +
-                                                       (refusal->other < problem.parts.size() ? problem.parts[refusal->other].reference : std::string("the board"))
-                                                 : std::string("free where it stood");
-                }
-            }
-        }
-        for (const std::size_t index : first)
-            if (kernel.parked(clusters[index].members.front())) waiting.push_back(index);
-        std::vector<std::size_t> failed;
-        for (const std::size_t index : waiting) {
-            const Want wanted = want_of(index);
-            if (seat_near(index, wanted, true) || seat_near(index, gathered(index, Want{wanted.x, wanted.y, wanted.pull}), true) ||
-                seat_near(index, fallback_of(sheets[sheet_of[index]], index), true)) {
-                ++report.seated;
+    const auto put_back = [&](std::size_t index) {
+        const Block& block = blocks[index];
+        std::vector<Move> moves;
+        for (std::size_t member = 0; member < block.members.size(); ++member) moves.push_back({block.members[member], block.base[member]});
+        return kernel.seat_together(moves);
+    };
+    const auto waits = [&](std::size_t index) { return kernel.parked(clusters[index].members.front()); };
+    const std::function<bool(std::size_t)> followed = [&](std::size_t index) {
+        std::vector<std::size_t> placed_now;
+        for (std::size_t follower = 0; follower < clusters.size(); ++follower) {
+            if (leader[follower] != static_cast<int>(index) || sheet_of[follower] != sheet_of[index] || !waits(follower)) continue;
+            if (seat_near(follower, want_of(follower), false, [&] { return followed(follower); })) {
+                placed_now.push_back(follower);
                 continue;
             }
-            failed.push_back(index);
-            std::string why;
-            for (std::size_t member = 0; member < blocks[index].members.size() && why.empty(); ++member) {
-                const std::size_t part = blocks[index].members[member];
-                if (const auto refusal = kernel.seat_rejection(part, blocks[index].base[member]))
-                    why = std::string(" (where it stood: ") + breach_name(refusal->kind) + " " + problem.parts[part].reference + " against " +
-                          (refusal->other < problem.parts.size() ? problem.parts[refusal->other].reference : std::string("the board")) + ")";
-                else if (!kernel.seat(part, blocks[index].base[member]))
-                    why = " (seat refused)";
-            }
-            for (const std::size_t part : blocks[index].members)
-                if (!kernel.parked(part)) kernel.park(part);
-            report.unseated.push_back(clusters[index].name + why + (early_cause.count(index) ? "; when first tried: " + early_cause[index] : std::string()));
+            for (const std::size_t undo : placed_now)
+                for (const std::size_t part : clusters[undo].members)
+                    if (!kernel.parked(part)) kernel.park(part);
+            return false;
         }
-        ++report.rounds;
-        if (failed.empty()) break;
-        const std::size_t known = first.size();
-        for (const std::size_t index : failed)
-            if (std::find(first.begin(), first.end(), index) == first.end()) first.push_back(index);
-        if (first.size() == known || round + 1 == static_cast<std::size_t>(constants::lay_rounds.value)) break;
-        for (const Cluster& cluster : clusters)
-            for (const std::size_t part : cluster.members)
-                if (!kernel.parked(part)) kernel.park(part);
+        return true;
+    };
+    const auto seat_by_plan = [&](std::size_t index) {
+        Want want = want_of(index);
+        if (want.pull == 0) want = fallback_of(sheets[sheet_of[index]], index);
+        else want = gathered(index, want);
+        if (seat_near(index, want, false, [&] { return followed(index); })) return true;
+        return seat_near(index, want, true, [&] { return followed(index); });
+    };
+    const Snapshot lifted = kernel.snapshot();
+    std::vector<std::size_t> turn(sheets.size());
+    std::iota(turn.begin(), turn.end(), std::size_t{0});
+    for (std::size_t round = 0; round < static_cast<std::size_t>(constants::lay_rounds.value); ++round) {
+    kernel.restore(lifted);
+    report.unseated.clear();
+    std::vector<std::size_t> failed;
+    for (const std::size_t sheet : turn) {
+        const Snapshot before = kernel.snapshot();
+        bool whole = true;
+        for (const bool tied_first : {true, false})
+            for (const std::size_t index : order) {
+                if (!whole || sheet_of[index] != sheet || !waits(index) || (leader[index] == held) != tied_first) continue;
+                if (!seat_by_plan(index)) whole = false;
+            }
+        if (whole) continue;
+        kernel.restore(before);
+        bool back = true;
+        for (const std::size_t index : sheets[sheet].clusters)
+            if (waits(index) && !put_back(index)) back = false;
+        if (back) continue;
+        kernel.restore(before);
+        report.unseated.push_back(sheets[sheet].name + " (no place by plan and its own place is taken)");
+        failed.push_back(sheet);
+    }
+    report.rounds = round + 1;
+    if (failed.empty()) break;
+    std::vector<std::size_t> next = failed;
+    for (const std::size_t sheet : turn)
+        if (std::find(failed.begin(), failed.end(), sheet) == failed.end()) next.push_back(sheet);
+    if (next == turn) break;
+    turn = std::move(next);
+    }
+    for (std::size_t index = 0; index < clusters.size(); ++index) {
+        if (waits(index)) continue;
+        const Pose& now = kernel.placement()[clusters[index].members.front()];
+        const Pose& was = blocks[index].base.front();
+        if (now.at == was.at && now.turn == was.turn && now.face == was.face) ++report.returned;
+        else ++report.seated;
     }
     report.routed_after = kernel.routed_length();
     report.pulled_after = kernel.pulled_length();

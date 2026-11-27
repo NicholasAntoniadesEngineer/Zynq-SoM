@@ -1059,6 +1059,8 @@ StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model
         return squeeze_best(kernel, settings);
     };
     if (inputs.floorplan.project.draw) {
+        result.lay = lay_out(kernel);
+        seat_taps(kernel, settings);
         result.draw = draw_in(kernel);
         seat_taps(kernel, settings);
     }
@@ -1184,6 +1186,13 @@ StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model
          << result.order.moved_back << " parts ahead of one were moved back\n";
     text << "TALL PARTS: " << result.cleared << " clusters moved to give parts taller than the module's underside "
          << constants::tall_module_clearance.value << " mm from the module\n";
+    if (result.lay) {
+        text << "BOARD PLAN: " << result.lay->seated << " of " << result.lay->clusters << " clusters seated by plan, " << result.lay->returned << " left where they stood, "
+             << result.lay->unseated.size() << " without a seat, in " << result.lay->rounds << " passes; " << (result.lay->taken ? "taken" : "not taken") << "; airwire "
+             << to_mm(result.lay->routed_before) << " to " << to_mm(result.lay->routed_after) << " mm, weighted by net kind " << to_mm(result.lay->pulled_before) << " to "
+             << to_mm(result.lay->pulled_after) << "\n";
+        for (const std::string& name : result.lay->unseated) text << "  no seat: " << name << "\n";
+    }
     if (result.draw)
         text << "CLUSTERS DRAWN TOGETHER: " << result.draw->moved << " moves of " << result.draw->clusters << " clusters in " << result.draw->rounds
              << " passes; airwire " << to_mm(result.draw->routed_before) << " to " << to_mm(result.draw->routed_after) << " mm, weighted by net kind "

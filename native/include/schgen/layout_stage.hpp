@@ -61,6 +61,7 @@ struct StageResult {
     BalanceReport balance;
     ArrangeReport arrange;
     std::optional<DrawReport> draw;
+    std::optional<LayReport> lay;
     bool balanced = false;
     double plain_area = 0, balanced_area = 0;
     std::size_t rear_before = 0, rear_after = 0, faced = 0, unfaced = 0, cleared = 0;

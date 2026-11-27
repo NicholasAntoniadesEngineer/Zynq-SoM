@@ -76,6 +76,7 @@ public:
     std::size_t parked_count() const;
     std::optional<Violation> seat_rejection(std::size_t part, const Pose& pose) const;
     bool seat(std::size_t part, const Pose& pose);
+    bool seat_together(const std::vector<Move>& moves);
     bool release(std::size_t part);
     void restore(const Snapshot& snapshot);
     const std::vector<Box>& reserves() const { return reserve_boxes_; }
