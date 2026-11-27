@@ -1,4 +1,4 @@
-CONVERGENCE: 5 breaches of staged rules (connector spacing, plug paths, face pairs, protection orders) handed over by the placer; 5 repair steps kept of 29 tried; 0 left
+CONVERGENCE: 5 breaches of staged rules (connector spacing, plug paths, face pairs, protection orders) handed over by the placer; 62 repair steps kept of 86 tried; 0 left
 level | rule | subject | action | breaches before>after | kept
 0 | owner of U18001 | U18001 -> R18002 | reseat at the pin on its face | 5>5 | no
 1 | owner of U18001 | U18001 -> R18002 | reseat after moving small parts aside | 5>5 | no
@@ -29,6 +29,63 @@ level | rule | subject | action | breaches before>after | kept
 1 | owner of U18004 | U18004 -> R18014 | seat every part owned by R18014 again by rule, face-bound parts first | 2>2 | no
 2 | owner of U18004 | U18004 -> R18014 | move R18014 and its face-tied set to the other face | 2>1 | yes
 1 | protection order | U16002 -> J16001 | seat the protection part first and move the parts nearer than it back | 1>0 | yes
+2 | test point on +3V3_AUX | TP1001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on AUX_I2C_SCL | TP1002 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on AUX_I2C_SDA | TP1003 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +2V5_VADJ | TP11001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +5V_HDMI_TX | TP14001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on ZYNQ_HDMI_TX_SCL | TP14002 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on ZYNQ_HDMI_TX_SDA | TP14003 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +5V_LCD | TP15001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on LCD_CTP_SDA | TP15002 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on LCD_CTP_SCL | TP15003 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on SDIO_CMD | TP16001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on SDIO_CLK | TP16002 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +VBUS_IN | TP17001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +VIN | TP17002 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +3V3_PMODX | TP19001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +5V | TP20001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +3V3 | TP20002 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +1V8 | TP20003 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +5V_SOM | TP22001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on ZYNQ_PS_UART0_TXD | TP27001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on ZYNQ_PS_UART0_RXD | TP27002 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +3V3_DBG | TP28001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on DBG_UART_TXD | TP28002 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on DBG_UART_RXD | TP28003 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +5V_DBG | TP29001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on VBUS_OUT_EN | TP32001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +5V_MOTOR_IO | TP36001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on EN_5V0 | TP4001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on EN_3V3 | TP4002 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on EN_1V8 | TP4003 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on EN_HDMI_TX | TP5001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on EN_HDMI_RX | TP5002 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on EN_LCD | TP5003 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on EN_CAM | TP5004 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on EN_SD | TP5005 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on EN_USB | TP5006 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on EN_PMOD | TP5007 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on EN_USER_LED | TP5008 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on EN_LCD_BL | TP5009 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on EN_HDMI_TX_5V | TP5010 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on EN_LCD_5V | TP5011 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +3V3_HDMI_TX | TP6001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +3V3_HDMI_RX | TP6002 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +3V3_LCD | TP6003 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +3V3_CAM | TP6004 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +3V3_SD | TP6005 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +5V_USB | TP6006 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +3V3_PMOD | TP6007 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +3V3_USER_LED | TP6008 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +5V_HDMI_TX | TP6009 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +5V_LCD | TP6010 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +3V3_SC | TP7001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on STM32_I2C2_SDA | TP7002 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on STM32_I2C2_SCL | TP7003 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on CAM_SCL | TP8001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on CAM_SDA | TP8002 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on CAM_EN | TP8003 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
 ILLEGAL handed over: (0)
 ILLEGAL after connector separation: (0)
 ILLEGAL after repair: (0)

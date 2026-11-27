@@ -2,7 +2,7 @@
   "artifacts": [
     {
       "path": "Zynq_Motor_Carrier.kicad_pcb",
-      "sha256": "74c6393668a387e1e8ed8248bcbcb09d2292b27246947facdce6839f19690d64"
+      "sha256": "5266b2b9e9eb591106dea0d7d2ea2c037748f73a8b91b6ac477b144fff104b42"
     },
     {
       "path": "Zynq_Motor_Carrier.kicad_pro",
@@ -22,7 +22,7 @@
     },
     {
       "path": "docs/RATSNEST.svg",
-      "sha256": "edeb20c6f3b34a940a965db23870e54d696407e3c9fc18b13b7426870a605828"
+      "sha256": "4c68b42a9da9f39ac48c87869741613ffa35e5c9893b2fe9c8fc7f6f8303d93a"
     },
     {
       "path": "docs/block_diagram.svg",
@@ -50,7 +50,7 @@
     },
     {
       "path": "manufacturing/Zynq_Motor_Carrier_cpl.csv",
-      "sha256": "d8fd02e9e05922feaa2cacda7510792ee0e15a23fd4cf8ed6cf8e22c97e60656"
+      "sha256": "58cf45f1a86b79bf2bb2fbf63dc57911e4a6d78ec1c9086a66babf6ba0d32def"
     },
     {
       "path": "manufacturing/Zynq_Motor_Carrier_pcb.kicad_dru",
@@ -67,6 +67,10 @@
     {
       "path": "manufacturing/layout_constraints.kicad_dru",
       "sha256": "7359f7b44e12caa09a30dac97aeb9e2d9c622269affb1317dc7469186b8b6578"
+    },
+    {
+      "path": "reports/assembly.txt",
+      "sha256": "b6b40c1c7cf539ac6179ed0c224238a1fee3e9edd16c86570720822579014e8d"
     },
     {
       "path": "reports/assembly_parts.txt",
@@ -94,7 +98,7 @@
     },
     {
       "path": "reports/build_ledger.txt",
-      "sha256": "701dfd268045232165eee60bcfe73aaced10d2eb5c39adced0106560791d1a9d"
+      "sha256": "1c92cfa03361963a3cc59ed125b81d65c368eab6a629ee1d844b1ae435411c72"
     },
     {
       "path": "reports/carrier_structure.txt",
@@ -114,7 +118,7 @@
     },
     {
       "path": "reports/connector_spacing.txt",
-      "sha256": "7d8b1d1aadcc315029ac34a6303f8e440fdce61596e8d5b151c7eefd9cb2eb6c"
+      "sha256": "ebb5ee82f4a82721a39af1a1a6426b13880a5020e8492f8669e3c3b0452b2afd"
     },
     {
       "path": "reports/contract_coverage.txt",
@@ -126,15 +130,19 @@
     },
     {
       "path": "reports/convergence.txt",
-      "sha256": "47fb1f3bb88b00da1ebee47ee68b7107bd079fdaed0ab9a89658e5cb9803b91b"
+      "sha256": "f7c45562150b07997d1f54347eb07d1b0b1ade0a439784de806cec2356455475"
     },
     {
       "path": "reports/copper_debt.txt",
-      "sha256": "560cddf5853d6433d9a56197cfb56860955fea7eaa53562b953009b0cccce1a5"
+      "sha256": "2b628481aafcac7ecedf07845229109fd4bd428c02000825bdab0ec47dcfa6a2"
     },
     {
       "path": "reports/decoupling.txt",
-      "sha256": "9e7eb7557337e0b45db76c2a4e8b992df45e115d146a271649b24fac306dbe77"
+      "sha256": "1dd7b6289d9fd4fb2a6a6021582b9a6a7983999eb1fcbcf5a9171e296e69977d"
+    },
+    {
+      "path": "reports/decoupling_report.txt",
+      "sha256": "6b4fdf52c72961abcaf6262f7487cb208589420a3e7a57ad0d511c009aa919a9"
     },
     {
       "path": "reports/design_rules.txt",
@@ -154,11 +162,15 @@
     },
     {
       "path": "reports/fanout.txt",
-      "sha256": "03e4c404cd571f2d2b467f07eb9556e61d5778cd7d3c5e7d9e07f2271060f272"
+      "sha256": "20e705a68a92f5dbbc4f2987c13eaf92e630b1a902c92a44a95ca0ac9cd53a32"
+    },
+    {
+      "path": "reports/floorplan.txt",
+      "sha256": "0532582744a2fc0cc41a726b313300c9baf61e0e17c9e1b546c4adddffc2b4f0"
     },
     {
       "path": "reports/floorplan_composition.txt",
-      "sha256": "ba01bc0781afca1bdce49dc3fc7783c7ed5dd4caa0bafcc565355611a84fee40"
+      "sha256": "26dff7194fac88c09cfa3d1aa1f4baf2d02684c1a70d5ef74ebab295588183fb"
     },
     {
       "path": "reports/footprint_pads.txt",
@@ -166,7 +178,7 @@
     },
     {
       "path": "reports/gates.txt",
-      "sha256": "e384e23f41bc4ff2aa0d5272352cbe3cdd0a17958fa977a6297361744d253e72"
+      "sha256": "38bde370a46109bd044065d69e24d3d91e317d36bc2fceefdf9c2d5e75385751"
     },
     {
       "path": "reports/golden.txt",
@@ -186,7 +198,11 @@
     },
     {
       "path": "reports/layout_squeeze.txt",
-      "sha256": "ddfe0cfaea250f0fd5c691005c3bda06ec05ebc59dba110742a44a34382f98f8"
+      "sha256": "622b5825dfc7df79497d8aae434250665759c6695a5bd2f9fab8e4dd4478bb3b"
+    },
+    {
+      "path": "reports/ledger_import.txt",
+      "sha256": "2cf81820e6d8ddc327f3a2448563a3937d9149304a08f31c50b7758d0f6b5d6a"
     },
     {
       "path": "reports/link_report.txt",
@@ -213,12 +229,20 @@
       "sha256": "7ec0140dd8cf95d65c2547c57c202fa8bc0b1fc640dcd9fcbc327ccfb324ee9e"
     },
     {
+      "path": "reports/pcb.txt",
+      "sha256": "0c446089b3352f3e944df81cf707013e8a2154013404932c1b49e88047a971f7"
+    },
+    {
       "path": "reports/pcb_drc.txt",
       "sha256": "96c77bd64513edc3f23d5a26cbaf9e67f78061bf7a16b52eb3e844d0294733e8"
     },
     {
       "path": "reports/pcb_emission.txt",
       "sha256": "339d66e512e0f00fbd4b75783d9fb91bd5fc8d308a1d66aebf52472206c064f9"
+    },
+    {
+      "path": "reports/pcb_geometry.txt",
+      "sha256": "04f71316abf4e5cea65fc6e2a89c65a3b7158e3144d7342714a604f3b5a9a0d8"
     },
     {
       "path": "reports/pin_completeness.txt",
@@ -230,15 +254,15 @@
     },
     {
       "path": "reports/placement_flow.txt",
-      "sha256": "c36022a20d3f0efc8b11a76f4aedd3cbbb95e6e2b5a472faab8c7110270912c2"
+      "sha256": "ecfbf9f1d41fb5cd63c5bd509e49e34bb00d42badd5d9fb871e21c6192463471"
     },
     {
       "path": "reports/placement_integrity.txt",
-      "sha256": "efb09f09a7e16b68b354e46197c7423b24d9382f83e6131348ad49884d982a73"
+      "sha256": "bf5a55920d4eb0d0d0e1b86ccc59fa768065d6e28d9f1ac3958ab3dafc69af13"
     },
     {
       "path": "reports/placement_mech.txt",
-      "sha256": "6eed52748912ddb3c310be735896c4d85c74d724be8b6ebf9fdba303ae241c23"
+      "sha256": "d06a5301a7381b0186f1bebdc74103f8c3af97313739a891e4d5b418eea345d8"
     },
     {
       "path": "reports/placement_requirements.txt",
@@ -250,7 +274,7 @@
     },
     {
       "path": "reports/plug_path.txt",
-      "sha256": "984241165e9dd736093c4ca525aa88d256cdcad7faf4dbe2fb6179c7aaff14d7"
+      "sha256": "0dbe54000838a9e6a5c53477832444351440469c123df15ddd421f792a899aef"
     },
     {
       "path": "reports/power_tree.txt",
@@ -266,11 +290,19 @@
     },
     {
       "path": "reports/ratsnest.txt",
-      "sha256": "c4f59cf04a487585c493dac63bd6cd558b92453a9752d1d8c6c4a570e1534c96"
+      "sha256": "d1c21b1aab831040f960d4e4e438c9b837ebcf4f6e226bbe6cfeaecd96a0ef1c"
+    },
+    {
+      "path": "reports/ratsnest_images.txt",
+      "sha256": "a7e165477516f9a379891b36b1955fee96ce38f36cd18be616a591b129bf9035"
     },
     {
       "path": "reports/refdes_silk.txt",
       "sha256": "65295f38ebf91888258e177deb4d8dff870018dfdf4c05d311afee21c49cd973"
+    },
+    {
+      "path": "reports/render3d.txt",
+      "sha256": "ca73489122a9a403dc4aee83070ef4472145c90c572ae31b9984180fe57f7656"
     },
     {
       "path": "reports/return_path.txt",
@@ -282,11 +314,19 @@
     },
     {
       "path": "reports/search.txt",
-      "sha256": "e010c658cfe01108eb89ac0ed4ffefacbe69b1db9dbe10391af849e7bfd0accb"
+      "sha256": "3a1522a77abd961fd4e68829454a096bda36bad5659331e3b885e4d979c0bb0e"
+    },
+    {
+      "path": "reports/si.txt",
+      "sha256": "61f76a297a8e6c72d804b151aa8632be66a208d839bba0e4bbdebc875b5ce2ea"
     },
     {
       "path": "reports/spice.txt",
       "sha256": "2152bb0b092e7a4efba88dbf417f80dafeb106ec5df9a86a4271577375487508"
+    },
+    {
+      "path": "reports/stage_movement.txt",
+      "sha256": "4499ac2aa25c97d829f3c8b26f62d9570e9b17a50a5d3123af56405847d7c2c4"
     },
     {
       "path": "reports/subsystem_structure.txt",
@@ -297,8 +337,16 @@
       "sha256": "c47907c81fd19f001978c4a4442e3eccec03e58bce7f8f4e6a1aa3751b9462da"
     },
     {
+      "path": "reports/test_point_stubs.txt",
+      "sha256": "56620258771370f75c70c94900b2ea8123cce4f28140d08f8f206abffa57dcb9"
+    },
+    {
       "path": "reports/test_points.txt",
-      "sha256": "be35d55f0400809d3f700e6e00dff3fefc59559575506d3ac8d79f0fa1a7aae0"
+      "sha256": "71b2477ff17d7ec19cb2d28db08e3327a62ef841b23321bd439bb5b4b56676c9"
+    },
+    {
+      "path": "reports/testpoint_map.txt",
+      "sha256": "47f0f749e5bd64079199835834dcaab61e8a43d23128509f92d120f0877c2f8e"
     },
     {
       "path": "reports/testpoints.txt",

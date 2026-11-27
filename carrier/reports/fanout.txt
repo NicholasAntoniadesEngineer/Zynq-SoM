@@ -5,8 +5,8 @@ FAN-OUT CLEARANCE GATE (D13, report-first ratchet): PASS
   OFFENDERS (starved, worst slack first):
     (none)
   (tightest PASSING subjects:)
-    ok      U4003     bringup_en         5pin clr=1.502 need=1.50 slack=+0.002
-    ok      U5004     bringup_en_modules   5pin clr=1.505 need=1.50 slack=+0.005
-    ok      J36001    motor_pwm         24pin clr=2.008 need=2.00 slack=+0.008
-    ok      J9002     debug_boot        10pin clr=1.509 need=1.50 slack=+0.009
-    ok      U27001    uart_bridge       25pin clr=2.011 need=2.00 slack=+0.011
+    ok      J23001    rj45_connector    13pin clr=2.000 need=2.00 slack=+0.000
+    ok      U4002     bringup_en         5pin clr=1.500 need=1.50 slack=+0.000
+    ok      U20003    power              5pin clr=1.500 need=1.50 slack=+0.000
+    ok      J11001    fmc               40pin clr=2.000 need=2.00 slack=+0.000
+    ok      SW7002    bringup_rails     16pin clr=2.003 need=2.00 slack=+0.003

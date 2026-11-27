@@ -1,21 +1,21 @@
-LAW-5 RATSNEST GATE: PASS (board 112.25 x 92.5 mm)
+LAW-5 RATSNEST GATE: PASS (board 111.5 x 94.25 mm)
   off-board parts: 0
   dispersed subsystems: 0 (threshold 9x)
-  cross-subsystem airwire: 5160.8 mm (advisory reference 4891 mm, OVER; 243 edges; 5160.8/9665.8 mm = 53.4% of total)
+  cross-subsystem airwire: 5676.5 mm (advisory reference 4921 mm, OVER; 232 edges; 5676.5/9820.9 mm = 57.8% of total)
   per-subsystem clusters (n, bbox mm, dispersion):
-    bringup_en             n=15  bbox_area=     873 disp=  8.8
-    power                  n=51  bbox_area=    3158 disp=  6.7
-    board_control          n=32  bbox_area=    2324 disp=  6.1
-    can_bus                n=11  bbox_area=    1384 disp=  6.0
-    vbat_supply            n=35  bbox_area=    3736 disp=  5.7
-    power_som              n=20  bbox_area=    1006 disp=  4.9
-    debug_boot             n=11  bbox_area=    1485 disp=  3.9
-    esc_io                 n=41  bbox_area=    2815 disp=  3.9
-    esc_power              n=48  bbox_area=    6652 disp=  3.5
-    pd_input               n=14  bbox_area=     869 disp=  3.3
-    uart_bridge            n=10  bbox_area=     207 disp=  2.8
-    power_mon              n=10  bbox_area=     344 disp=  2.8
-    ethernet               n=11  bbox_area=     561 disp=  1.6
-    microsd                n=15  bbox_area=     551 disp=  1.4
-    usb_uart_connector     n=5   bbox_area=     155 disp=  1.2
-    rj45_connector         n=3   bbox_area=     342 disp=  1.0
+    uart_bridge            n=10  bbox_area=    2568 disp= 35.0
+    board_control          n=32  bbox_area=    3324 disp=  8.8
+    power_mon              n=10  bbox_area=     999 disp=  8.2
+    debug_boot             n=11  bbox_area=    2641 disp=  7.0
+    bringup_en             n=15  bbox_area=     675 disp=  6.8
+    power_som              n=20  bbox_area=    1125 disp=  5.5
+    power                  n=51  bbox_area=    2538 disp=  5.4
+    can_bus                n=11  bbox_area=    1138 disp=  5.0
+    esc_io                 n=41  bbox_area=    3090 disp=  4.2
+    vbat_supply            n=35  bbox_area=    1849 disp=  2.8
+    microsd                n=15  bbox_area=     970 disp=  2.5
+    pd_input               n=14  bbox_area=     607 disp=  2.3
+    esc_power              n=48  bbox_area=    3344 disp=  1.8
+    ethernet               n=11  bbox_area=     540 disp=  1.6
+    usb_uart_connector     n=5   bbox_area=     156 disp=  1.2
+    rj45_connector         n=3   bbox_area=     346 disp=  1.0

@@ -1,12 +1,12 @@
-LAW-5 RATSNEST GATE: PASS (board 82.75 x 58.75 mm)
+LAW-5 RATSNEST GATE: PASS (board 67.5 x 86.5 mm)
   off-board parts: 0
   dispersed subsystems: 0 (threshold 9x)
-  cross-subsystem airwire: 1247.2 mm (advisory reference 1464 mm, OK; 100 edges; 1247.2/2684.7 mm = 46.5% of total)
+  cross-subsystem airwire: 1223.9 mm (advisory reference 1605 mm, OK; 101 edges; 1223.9/2702.7 mm = 45.3% of total)
   per-subsystem clusters (n, bbox mm, dispersion):
-    power                  n=54  bbox_area=    3074 disp=  6.2
-    pd_input               n=14  bbox_area=     662 disp=  2.5
-    power_mon              n=13  bbox_area=     329 disp=  2.3
-    uart_bridge            n=10  bbox_area=     158 disp=  2.2
-    power_som              n=20  bbox_area=     419 disp=  2.0
-    debug_boot             n=13  bbox_area=     643 disp=  1.6
-    usb_uart_connector     n=5   bbox_area=     155 disp=  1.2
+    debug_boot             n=13  bbox_area=    2540 disp=  6.5
+    pd_input               n=14  bbox_area=    1511 disp=  5.8
+    uart_bridge            n=10  bbox_area=     364 disp=  5.0
+    power_mon              n=13  bbox_area=     622 disp=  4.4
+    power                  n=54  bbox_area=    1410 disp=  2.9
+    power_som              n=20  bbox_area=     443 disp=  2.2
+    usb_uart_connector     n=5   bbox_area=     183 disp=  1.4
