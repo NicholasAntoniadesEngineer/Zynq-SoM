@@ -132,6 +132,7 @@ PcbCheckModel local_model(const Context& ctx, const Geometry& g, const std::stri
     model.board_w = shape.w; model.board_h = shape.h;
     model.net_numbers = trusted.net_numbers;
     model.connectors = ctx.in.floorplan.project.connectors;
+    model.plug_paths = ctx.in.floorplan.project.plug_paths;
     model.isolation = ctx.in.floorplan.project.isolation;
     for (const auto& [name, row] : floorplan_sheet_edges(ctx.in.floorplan)) {
         (void)row;

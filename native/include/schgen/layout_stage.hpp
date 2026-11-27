@@ -31,6 +31,14 @@ struct Rebalance {
     BalanceReport balance;
     double before = 0, after = 0;
     bool kept = false;
+    BalanceScope scope = BalanceScope::mirrored;
+};
+
+struct BalanceTrial {
+    BalanceScope scope = BalanceScope::mirrored;
+    BalanceReport balance;
+    double area = 0;
+    bool squeezed = false, kept = false;
 };
 
 struct SpreadReport {
@@ -42,6 +50,8 @@ struct SpreadReport {
 struct StageResult {
     std::optional<ConstructReport> construct;
     std::vector<Rebalance> rebalances;
+    std::vector<BalanceTrial> trials;
+    std::vector<std::pair<double, std::string>> left_on_top;
     PcbModel model;
     AttractReport attract, reseat;
     OrderReport order;

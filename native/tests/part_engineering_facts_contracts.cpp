@@ -77,7 +77,7 @@ std::filesystem::path write_facts(const std::filesystem::path& scratch, const st
     std::filesystem::create_directories(scratch / fixture::part);
     const auto file = scratch / "facts.json";
     std::ofstream out(file, std::ios::binary);
-    out << "{\"schema\": \"schgen.part_facts/5\", \"classes\": {\"Device:R\": \"resistor\"}, \"connectors\": {}, \"stated_heights\": {}";
+    out << "{\"schema\": \"schgen.part_facts/6\", \"classes\": {\"Device:R\": \"resistor\"}, \"connectors\": {}, \"plug_paths\": {}, \"stated_heights\": {}";
     for (const std::string& name : fixture::sections) {
         if (name == section && leave_out) continue;
         out << ", \"" << name << "\": " << (name == section ? body : std::string("{}"));

@@ -1,8 +1,11 @@
 #include "schgen/board_inputs.hpp"
 #include "schgen/authoring.hpp"
+#include "schgen/footprint_courtyard.hpp"
+#include "schgen/sexpr.hpp"
 #include "historical_input_contracts.hpp"
 #include "direct_enable_reference.hpp"
 #include <algorithm>
+#include <set>
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
@@ -117,6 +120,56 @@ std::string zero_court_line(const std::string& point) {
     return "\t(fp_line\n\t\t(start " + point + ")\n\t\t(end " + point +
         ")\n\t\t(stroke\n\t\t\t(width 0.05)\n\t\t\t(type solid)\n\t\t)\n\t\t(layer \"F.CrtYd\")\n\t)\n";
 }
+std::vector<std::string> footprint_blocks(const std::string& text) {
+    std::vector<std::string> blocks;
+    std::string block;
+    bool inside = false;
+    std::size_t at = 0;
+    while (at < text.size()) {
+        const std::size_t end = text.find('\n', at);
+        const std::string line = text.substr(at, end == std::string::npos ? std::string::npos : end - at + 1);
+        at = end == std::string::npos ? text.size() : end + 1;
+        if (!inside && line == "\t(fp_line\n") inside = true;
+        if (inside) {
+            block += line;
+            if (line == "\t)\n") {
+                blocks.push_back(block);
+                block.clear();
+                inside = false;
+            }
+        } else {
+            blocks.push_back(line);
+        }
+    }
+    require(!inside, "footprint line block is closed");
+    return blocks;
+}
+
+const std::string court_layer = "\t\t(layer \"F.CrtYd\")\n";
+
+std::string without_court_lines(const std::string& text) {
+    std::string out;
+    for (const auto& block : footprint_blocks(text))
+        if (block.rfind("\t(fp_line\n", 0) != 0 || block.find(court_layer) == std::string::npos) out += block;
+    return out;
+}
+
+std::string court_lines_as_body(const std::string& text) {
+    std::string out;
+    for (auto block : footprint_blocks(text)) {
+        const auto layer = block.find(court_layer);
+        if (block.rfind("\t(fp_line\n", 0) == 0 && layer != std::string::npos) {
+            block.replace(layer, court_layer.size(), "\t\t(layer \"F.Fab\")\n");
+            const std::string thin = "\t\t\t(width 0.05)\n";
+            const auto width = block.find(thin);
+            require(width != std::string::npos, "historical courtyard stroke");
+            block.replace(width, thin.size(), "\t\t\t(width 0.1)\n");
+        }
+        out += block;
+    }
+    return out;
+}
+
 std::string current_footprint_reference(const std::string& id, std::string frozen) {
     if (id == hdmi_id) {
         for (const auto* point : {"-6.1 -3.5838", "-6.1 -3.5838", "6.1 -2.5868", "7.5 -3.5838"}) {
@@ -155,7 +208,7 @@ std::string current_footprint_reference(const std::string& id, std::string froze
 }
 void footprint_mutations(const std::string& live, const std::string& frozen) {
     const auto expected = current_footprint_reference(rtc_id, frozen);
-    require(live == expected && live != frozen, "reviewed RV-3028 correction must be present");
+    require(without_court_lines(live) == court_lines_as_body(expected) && live != frozen, "reviewed RV-3028 correction must be present");
     for (const auto* point : {"1.6 -0.75", "-1.6 -0.75", "-1.6 0.75"}) {
         auto changed = live;
         changed.insert(changed.find("\t(fp_line"), zero_court_line(point));
@@ -223,10 +276,20 @@ int main(int argc, char** argv) {
                     input.floorplan.som.h == field(field(expected,"som"),"h").number_value, "live SoM outline");
             std::size_t corrected_footprints = 0;
             std::size_t retired_footprints = 0;
+            std::set<std::string> regenerated;
             for (const auto& [id, key] : field(expected,"footprint_of").object_value) {
                 const auto live = input.floorplan.footprint_of.find(id);
                 // d2a1ec20 removed the sole SOD-123 user, power_som D5.
                 // Only this reviewed retirement may be absent from the oracle.
+                if (id == "ZX-SH1.0-4PWT:ZX-SH1.0-4PWT") {
+                    for (const auto& sheet : input.floorplan.sheets)
+                        for (const auto& part : sheet.parts)
+                            require(part.footprint != id, "side-entry wire connector still requested");
+                    require(live == input.floorplan.footprint_of.end(), "side-entry wire connector land pattern still loaded");
+                    require(input.floorplan.footprint_of.count("ZX-SH1.0-4PLT:ZX-SH1.0-4PLT"),
+                            "the top-entry wire connector replaces it");
+                    continue;
+                }
                 if (id == "Diode_SMD:D_SOD-123") {
                     for (const auto& sheet : input.floorplan.sheets)
                         for (const auto& part : sheet.parts)
@@ -252,11 +315,17 @@ int main(int argc, char** argv) {
                     require(bytes != frozen, "the clamp diode land pattern was imported again from its stocked part");
                     continue;
                 }
-                require(bytes == current_footprint_reference(id, frozen),
-                    "independent exact footprint " + id);
+                const std::string reference = current_footprint_reference(id, frozen);
+                if (bytes != reference) {
+                    require(without_court_lines(bytes) == court_lines_as_body(reference),
+                        "regenerated footprint keeps every byte but its outline " + id);
+                    require(!schgen::courtyard::defect(schgen::sexpr_loads(bytes)), "regenerated courtyard encloses body and pads " + id);
+                    regenerated.insert(id);
+                }
                 if (id == rtc_id) { ++corrected_footprints; footprint_mutations(bytes, frozen); }
             }
             require(retired_footprints == 2, "exact reviewed footprint retirement scope");
+            std::cout << project << ": " << regenerated.size() << " footprints carry a regenerated outline\n";
             require(corrected_footprints == (std::string(project) == "carrier" ? 1u : 0u),
                 "exact reviewed footprint correction scope");
             for (const auto& [id, value] : field(expected,"courtyard_dims").object_value) {
@@ -268,8 +337,20 @@ int main(int argc, char** argv) {
                               << " x " << input.floorplan.courtyard_dims.at("Mylibrary").second << "\n";
                     continue;
                 }
+                if (id == "ZX-SH1.0-4PWT") {
+                    require(!input.floorplan.courtyard_dims.count(id) && input.floorplan.courtyard_dims.count("ZX-SH1.0-4PLT"),
+                            "the top-entry wire connector's courtyard replaces the side-entry dossier");
+                    continue;
+                }
                 const auto dims = input.floorplan.courtyard_dims.find(id);
                 require(dims != input.floorplan.courtyard_dims.end(), "courtyard dossier " + id);
+                if (regenerated.count(id + ":" + id)) {
+                    const double wide = value.array_value.at(0).number_value, deep = value.array_value.at(1).number_value;
+                    require(dims->second.first >= wide && dims->second.second >= deep &&
+                            (dims->second.first > wide || dims->second.second > deep),
+                            "a regenerated courtyard encloses the outline it replaced " + id);
+                    continue;
+                }
                 if (id + ":" + id == clamp_id) {
                     require(dims->second.first != value.array_value.at(0).number_value ||
                             dims->second.second != value.array_value.at(1).number_value,

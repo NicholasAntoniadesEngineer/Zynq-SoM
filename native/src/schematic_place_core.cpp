@@ -394,7 +394,7 @@ void Engine::_extract_float_chains() {
         if (floating.count(s.b)) legs.at(s.b).push_back({s.ref, s.a, kind_of(s.a)});
     }
     float_chains.clear();
-    std::set<std::string> seen;
+    std::set<std::string> seen, unmatched;
     for (const auto& f : floating) {
         if (seen.count(f) || legs.at(f).empty()) continue;
         std::set<std::string> component{f};
@@ -407,9 +407,12 @@ void Engine::_extract_float_chains() {
         seen.insert(component.begin(), component.end());
         if (component.size() == 1 && net(f).net_class == "port" && legs.at(f).size() == 1
             && legs.at(f).front().kind == "pin") continue;
-        float_chains.push_back(_linearise(component, legs));
+        try { float_chains.push_back(_linearise(component, legs)); }
+        catch (const UnmatchedTopology&) {
+            for (const auto& n : component) for (const auto& leg : legs.at(n)) unmatched.insert(leg.ref);
+        }
     }
-    std::set<std::string> used;
+    std::set<std::string> used = unmatched;
     for (const auto& chain : float_chains) {
         for (const auto& leg : chain->legs) used.insert(leg.ref);
         for (const auto& entry : chain->hangs) used.insert(entry.second.begin(), entry.second.end());
@@ -473,7 +476,7 @@ ChainPtr Engine::_linearise(const std::set<std::string>& component, const FloatL
     }
     for (const auto& n : component) for (const auto& leg : legs.at(n)) {
         if (used.count(leg.ref)) continue;
-        if (leg.kind != "gnd") throw SchematicPlaceError(leg.ref + ": unsupported extra leg on floating net "
+        if (leg.kind != "gnd") throw UnmatchedTopology(leg.ref + ": unsupported extra leg on floating net "
                                                          + py_quote(n) + " (" + leg.kind + ")");
         chain->hangs[n].push_back(leg.ref); used.insert(leg.ref);
     }
@@ -509,7 +512,7 @@ ChainPtr Engine::_linearise_port_strap(const std::set<std::string>& component,
         + py_quote(cur) + " — dangling internal net");
     for (const auto& n : component) for (const auto& leg : legs.at(n)) {
         if (used.count(leg.ref)) continue;
-        if (leg.kind != "gnd") throw SchematicPlaceError(leg.ref + ": unsupported extra leg on floating net "
+        if (leg.kind != "gnd") throw UnmatchedTopology(leg.ref + ": unsupported extra leg on floating net "
                                                          + py_quote(n) + " (" + leg.kind + ")");
         chain->hangs[n].push_back(leg.ref); used.insert(leg.ref);
     }

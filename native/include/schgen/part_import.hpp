@@ -1,6 +1,7 @@
 #pragma once
 
 #include "schgen/catalog.hpp"
+#include "schgen/footprint_courtyard.hpp"
 #include "schgen/json.hpp"
 #include "schgen/process.hpp"
 #include "schgen/sexpr.hpp"
@@ -67,13 +68,17 @@ PartFootprint part_convert_footprint(const JsonNode& result, const std::string& 
                                     const PartImportInfo& info,
                                     const std::vector<std::string>& model_files = {},
                                     const std::optional<CatalogPin>& ep = std::nullopt);
+struct PartImportPolicy {
+    std::optional<courtyard::RuleTable> courts;
+};
 std::string part_metadata_json(const CatalogPart& part);
 std::string part_model_uuid(const JsonNode& result);
 PartImportPlan prepare_part_import(const std::string& response_json,
                                    const std::string& lcsc = {},
                                    const std::string& requested_name = {},
                                    const std::vector<std::string>& existing_models = {},
-                                   const std::vector<PartImportFile>& downloaded_models = {});
+                                   const std::vector<PartImportFile>& downloaded_models = {},
+                                   const PartImportPolicy& policy = {});
 
 struct PartHttpRequest {
     std::string url;

@@ -261,7 +261,16 @@ void boundaries(const std::filesystem::path& reference_path,const std::string& e
     const auto source=scratch.path/"input.json";
     write_atomic_file(source.string(),{input.begin(),input.end()});
     PartImportRequest offline{lcsc,name,scratch.path/"parts",source};
+    const std::string classes="{\"schema\":\"schgen.courtyard_classes/1\",\"source\":\"fixture\",\"parts\":{\""+name+"\":{\"kind\":\"general\"}}}";
+    bool unclassed=false;
+    try{(void)prepare_part_import_request(offline,forbidden);}catch(const courtyard::CourtyardError&){unclassed=true;}
+    require(unclassed,"an import without a courtyard class file is refused");
+    std::filesystem::create_directories(offline.parts_root);
+    write_atomic_file((offline.parts_root/courtyard::rule_file).string(),{classes.begin(),classes.end()});
     const auto plan=prepare_part_import_request(offline,forbidden);
+    require(!courtyard::defect(sexpr_loads(file(plan,name+".kicad_mod"))),"an imported footprint has a courtyard that encloses its pads");
+    require(courtyard::defect(sexpr_loads(file(prepare_part_import(input,lcsc,name),name+".kicad_mod"))).has_value(),
+        "the recorded provider conversion keeps the provider outline as its courtyard");
     require(calls==0,"offline replay must never use transport");
     const auto output=publish_part_import(plan,offline.parts_root);
     for(const auto& generated:plan.files)exact(read(output/generated.name),generated.bytes,"published bytes changed");
@@ -279,6 +288,8 @@ void boundaries(const std::filesystem::path& reference_path,const std::string& e
             "import help must succeed without reading inputs");
         require(!std::filesystem::exists(cli_root),"help published files");
     }
+    std::filesystem::create_directories(cli_root);
+    write_atomic_file((cli_root/courtyard::rule_file).string(),{classes.begin(),classes.end()});
     std::vector<std::string> command{executable,"part-import","--parts-root",cli_root.string(),"--from-json",source.string()};
     auto result=run_process(command);
     require(result.exit_code==0,"standalone offline importer failed: "+result.stderr_text);

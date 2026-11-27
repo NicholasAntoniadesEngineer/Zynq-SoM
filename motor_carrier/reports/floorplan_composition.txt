@@ -1,36 +1,41 @@
-FLOORPLAN COMPOSITION (T1): 4 hard / 2 soft terms; hard RED 0, soft RED 0 (advisory)
-  hard margins (mm): measured 4, unresolved 0, sum 137.73, min 20.0 (informational)
+FLOORPLAN COMPOSITION (T1): 4 hard / 2 soft terms; hard RED 0, soft RED 1 (advisory)
+  hard margins (mm): measured 4, unresolved 0, sum 188.74, min 20.0 (informational)
   hard margins (degrees): measured 0, unresolved 0, sum 0.0, min unavailable (informational)
   hard terms:
-    HARD far_min ethernet->power: 51.42 vs 10.00 (margin +41.42) ok [judgment:10.0 — buck switching node vs Ethernet media/magnetics analog line side]
-    HARD far_min power->ethernet.line_side: 51.42 vs 10.00 (margin +41.42) ok [judgment:10.0 — buck switching node vs Ethernet MDI/magnetics analog line side; datasheet silent on inter-subsystem spacing (SNVSBD5D covers intra-stage only)]
+    HARD far_min ethernet->power: 77.01 vs 10.00 (margin +67.01) ok [judgment:10.0 — buck switching node vs Ethernet media/magnetics analog line side]
+    HARD far_min power->ethernet.line_side: 77.01 vs 10.00 (margin +67.01) ok [judgment:10.0 — buck switching node vs Ethernet MDI/magnetics analog line side; datasheet silent on inter-subsystem spacing (SNVSBD5D covers intra-stage only)]
     HARD near_max ethernet->rj45_connector: 0.00 vs 20.00 (margin +20.00) ok [Pulse v7 p.1 <=25mm part-to-part|judgment:20.0 edge-gap proxy (D11)]
-    HARD near_max uart_bridge->usb_uart_connector: 5.12 vs 40.00 (margin +34.88) ok [judgment:10.0 (D11 edge-gap) — CP2102N's USB DP/DM pair terminates at the UART USB-C; measured 365mm of cross-board airwire (avg 122mm) with the block anchored mid-board and a STALE floorplan near-intent pointing at rj45_connector]
+    HARD near_max uart_bridge->usb_uart_connector: 5.28 vs 40.00 (margin +34.72) ok [judgment:10.0 (D11 edge-gap) — CP2102N's USB DP/DM pair terminates at the UART USB-C; measured 365mm of cross-board airwire (avg 122mm) with the block anchored mid-board and a STALE floorplan near-intent pointing at rj45_connector]
   soft terms (advisory ledger — repair triggers, never gates):
-    soft facing power->power_som: 72.36 vs 90.00 (margin +17.64) ok [ADVISORY centroid preference: Reviewed 2026-10-18: all-component centroid direction changes when unrelated test points move; it is a placement preference, not a hardware limit. SNVSBD5D Rev. D section 11.1 requires local loop/layout and power-path quality, not a 90-degree subsystem-centroid cutoff. See native/benchmarks/2026-10-18-facing-centroid-review.json; routing and parasitics remain unverified.] dot=+31.50
-    soft flow_hop power->power_som: 15.74 vs 102.57 (margin +86.83) ok [ADVISORY board-size-derived flow preference [placement/v2]]
+    soft facing power->power_som: 171.95 vs 90.00 (margin -81.95) RED [ADVISORY centroid preference: Reviewed 2026-10-18: all-component centroid direction changes when unrelated test points move; it is a placement preference, not a hardware limit. SNVSBD5D Rev. D section 11.1 requires local loop/layout and power-path quality, not a 90-degree subsystem-centroid cutoff. See native/benchmarks/2026-10-18-facing-centroid-review.json; routing and parasitics remain unverified.] dot=-137.15
+    soft flow_hop power->power_som: 16.16 vs 102.92 (margin +86.76) ok [ADVISORY board-size-derived flow preference [placement/v2]]
   n/a terms (endpoint subsystem not instantiated by this project — project-scoped resolution):
     n/a flow_hop usb_pd->power [ADVISORY board-size-derived flow preference [placement/v2]]
-  T2 escape corridors (D13 never-close): 6 loaded, 17 UNMANAGED part intrusion(s), 0 T2-coexistence-managed
-    UNMANAGED INTRUSION C12003 (power_mon) in escape:J2:S
-    UNMANAGED INTRUSION C15001 (som_decoupling) in escape:J1:S
-    UNMANAGED INTRUSION C15003 (som_decoupling) in escape:J1:S
-    UNMANAGED INTRUSION C15005 (som_decoupling) in escape:J1:S
+  T2 escape corridors (D13 never-close): 6 loaded, 20 UNMANAGED part intrusion(s), 0 T2-coexistence-managed
+    UNMANAGED INTRUSION C1003 (board_control) in escape:J1:N
+    UNMANAGED INTRUSION C15003 (som_decoupling) in escape:J1:N
+    UNMANAGED INTRUSION C15004 (som_decoupling) in escape:J1:S
+    UNMANAGED INTRUSION C15006 (som_decoupling) in escape:J1:S
+    UNMANAGED INTRUSION C15007 (som_decoupling) in escape:J2:S
+    UNMANAGED INTRUSION C15008 (som_decoupling) in escape:J2:N
     UNMANAGED INTRUSION C15009 (som_decoupling) in escape:J3:S
     UNMANAGED INTRUSION C15010 (som_decoupling) in escape:J3:N
     UNMANAGED INTRUSION C15011 (som_decoupling) in escape:J2:N
-    UNMANAGED INTRUSION C15012 (som_decoupling) in escape:J2:N
-    UNMANAGED INTRUSION C15013 (som_decoupling) in escape:J1:N
+    UNMANAGED INTRUSION C15012 (som_decoupling) in escape:J2:S
+    UNMANAGED INTRUSION C15013 (som_decoupling) in escape:J1:S
     UNMANAGED INTRUSION C15014 (som_decoupling) in escape:J1:S
     UNMANAGED INTRUSION C15015 (som_decoupling) in escape:J1:N
     UNMANAGED INTRUSION C15016 (som_decoupling) in escape:J1:N
     UNMANAGED INTRUSION C15018 (som_decoupling) in escape:J1:N
-    UNMANAGED INTRUSION R19003 (uart_bridge) in escape:J3:N
-    UNMANAGED INTRUSION RS12001 (power_mon) in escape:J2:S
-    UNMANAGED INTRUSION RS12002 (power_mon) in escape:J2:S
-    UNMANAGED INTRUSION RS12003 (power_mon) in escape:J2:S
+    UNMANAGED INTRUSION R1008 (board_control) in escape:J3:N
+    UNMANAGED INTRUSION R1010 (board_control) in escape:J1:N
+    UNMANAGED INTRUSION R1011 (board_control) in escape:J3:N
+    UNMANAGED INTRUSION R2006 (bringup_en) in escape:J1:N
+    UNMANAGED INTRUSION U1002 (board_control) in escape:J1:N
   D13 channel hotspots (>= 6 cross-airwires; corridor = 2 + 0.2/net mm):
-    board_control | bringup_en: 9 airwires (66.6 mm) -> corridor >= 3.8 mm
-    ethernet | rj45_connector: 9 airwires (157.1 mm) -> corridor >= 3.8 mm
-    bringup_en | power: 8 airwires (113.2 mm) -> corridor >= 3.6 mm
-    power | power_mon: 8 airwires (69.7 mm) -> corridor >= 3.6 mm
+    board_control | esc_power: 12 airwires (156.5 mm) -> corridor >= 4.4 mm
+    ethernet | rj45_connector: 8 airwires (247.1 mm) -> corridor >= 3.6 mm
+    bringup_en | som_decoupling: 6 airwires (22.8 mm) -> corridor >= 3.2 mm
+    can_bus | esc_io: 6 airwires (63.3 mm) -> corridor >= 3.2 mm
+    debug_boot | uart_bridge: 6 airwires (18.1 mm) -> corridor >= 3.2 mm
+    power | power_mon: 6 airwires (163.4 mm) -> corridor >= 3.2 mm

@@ -9,6 +9,7 @@ Parts Engine::buck(const std::string &ic, const std::vector<std::string> &hf,
                    const std::map<std::string, std::string> &pins) {
     if (hf.size() != 2)
         throw PcbZoneInfeasible("buck stage " + ic + ": two hot-loop caps required");
+    const Landing landing(landed, {ic});
     for (int scale = 0; scale < 20; ++scale) {
         double pad = scale * .25, clr = clear + .2 + pad;
         auto anchor = part(ic);

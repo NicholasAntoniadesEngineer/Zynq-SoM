@@ -1,0 +1,47 @@
+LAYOUT DENSITY: board level 10 of 1 to 10; 0 subsystems state their own level
+  a lower level only adds a gap between courtyards on the same face; every other rule keeps its limit
+  two parts of different subsystems keep the larger of their two gaps; two fixed parts keep none
+SUBSYSTEMS (level, gap added, parts, pairs limited by another rule, smallest gap measured where the full gap applies):
+    board_control: level 10 (board level), 0 mm, 33 parts, 0 limited pairs
+    bringup_en: level 10 (board level), 0 mm, 15 parts, 0 limited pairs
+    can_bus: level 10 (board level), 0 mm, 11 parts, 0 limited pairs
+    debug_boot: level 10 (board level), 0 mm, 11 parts, 0 limited pairs
+    esc_io: level 10 (board level), 0 mm, 41 parts, 0 limited pairs
+    esc_power: level 10 (board level), 0 mm, 48 parts, 0 limited pairs
+    ethernet: level 10 (board level), 0 mm, 11 parts, 0 limited pairs
+    mechanical: level 10 (board level), 0 mm, 9 parts, 0 limited pairs
+    microsd: level 10 (board level), 0 mm, 15 parts, 0 limited pairs
+    pd_input: level 10 (board level), 0 mm, 14 parts, 0 limited pairs
+    power: level 10 (board level), 0 mm, 51 parts, 0 limited pairs
+    power_mon: level 10 (board level), 0 mm, 10 parts, 0 limited pairs
+    power_som: level 10 (board level), 0 mm, 20 parts, 0 limited pairs
+    rj45_connector: level 10 (board level), 0 mm, 3 parts, 0 limited pairs
+    som_decoupling: level 10 (board level), 0 mm, 18 parts, 0 limited pairs
+    som_j1: level 10 (board level), 0 mm, 1 parts, 0 limited pairs
+    som_j2: level 10 (board level), 0 mm, 1 parts, 0 limited pairs
+    som_j3: level 10 (board level), 0 mm, 1 parts, 0 limited pairs
+    uart_bridge: level 10 (board level), 0 mm, 10 parts, 0 limited pairs
+    usb_uart_connector: level 10 (board level), 0 mm, 5 parts, 0 limited pairs
+    vbat_supply: level 10 (board level), 0 mm, 35 parts, 0 limited pairs
+GAPS NOT KEPT: 0
+TABLE (level: gap added between courtyards on one face):
+    10: 0 mm  (the densest level and the stated default: courtyards may touch and nothing is added. PCB Libraries, Footprint Expert Guideline edition 1.8 (2026-11-09), section 10.0: 'In the average case, courtyards can be bumped next to each other')
+    9: 0.25 mm
+    8: 0.5 mm  (gap gained when two neighbours each go from the nominal (0.25 mm) to the most (0.50 mm) courtyard excess of IPC-7351, same sources as density_step)
+    7: 0.75 mm
+    6: 1 mm  (clearance given to a ball-grid package for inspection and rework heat in PCB Libraries, Footprint Expert Guideline edition 1.8, section 10.0, and the smallest gap JLCPCB accepts from a no-lead package to any other part (jlcpcb.com/help/article/minimum-spacing-for-smd-components, read 2026-11-23))
+    5: 1.25 mm
+    4: 1.5 mm
+    3: 1.75 mm
+    2: 2 mm  (smallest gap JLCPCB accepts between two ball-grid packages (same page) and the upper end of the 1 to 2 mm allowed around parts soldered with an iron (applied-ee.github.io ee-notebook, design for assembly, read 2026-11-23))
+    1: 2.25 mm
+  rule: gap = (10 - level) x 0.25 mm
+  constant density_dense = 10 level [policy]: the densest level and the stated default: courtyards may touch and nothing is added. PCB Libraries, Footprint Expert Guideline edition 1.8 (2026-11-09), section 10.0: 'In the average case, courtyards can be bumped next to each other'
+  constant density_sparse = 1 level [policy]: the sparsest level the setting accepts; the scale is the one to ten the integrator asked for on 2026-11-22
+  constant density_step = 0.25 mm [standard]: courtyard gap added for each level below the densest: one nominal courtyard excess of IPC-7351 density level B. Read 2026-11-23 from the IPC-7351 lead table reproduced in PCB Libraries, Footprint Expert Guideline edition 1.8 (courtyard excess 0.50 most, 0.25 nominal, 0.10 least) and from T. Hausherr, PCB Libraries forum topics 1905 and 3372; the IPC standard itself was not opened. It is also one pitch of the relocation search
+  constant most_excess = 0.5 mm [standard]: gap gained when two neighbours each go from the nominal (0.25 mm) to the most (0.50 mm) courtyard excess of IPC-7351, same sources as density_step
+  constant inspect_gap = 1 mm [standard]: clearance given to a ball-grid package for inspection and rework heat in PCB Libraries, Footprint Expert Guideline edition 1.8, section 10.0, and the smallest gap JLCPCB accepts from a no-lead package to any other part (jlcpcb.com/help/article/minimum-spacing-for-smd-components, read 2026-11-23)
+  constant iron_gap = 2 mm [standard]: smallest gap JLCPCB accepts between two ball-grid packages (same page) and the upper end of the 1 to 2 mm allowed around parts soldered with an iron (applied-ee.github.io ee-notebook, design for assembly, read 2026-11-23)
+  status: the figures come from the pages named above, opened on 2026-11-23; the IPC-7351 and IPC-7352 texts were not opened, so the table is proposed for review
+PAIRS WHERE ANOTHER RULE LIMITS THE GAP: 0 in 0 rules (the rule wins: parts it binds together keep no added gap, and a distance limit between subsystems caps the gap at that limit)
+

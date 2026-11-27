@@ -549,14 +549,13 @@ void Engine::_fan_side(const std::string& ref, const std::string& side, const st
         Line line;
         line.net = n->name; line.pin_pt = run.front().point; line.net_class = n->net_class; line.pin_etype = run.front().pin->etype;
         if (comb && (!pulls.empty() || !hangs.empty())) { pulls.clear(); hangs.clear(); line.force_label = true; }
+        for (std::size_t extra = 1; extra < pulls.size(); ++extra) _defer({pulls[extra].first});
+        for (std::size_t extra = 1; extra < hangs.size(); ++extra) _defer({hangs[extra]});
         if (!pulls.empty() && !hangs.empty()) {
-            require(pulls.size() <= 1 && hangs.size() <= 1, "net " + n->name + ": multi-element divider — extend the engine");
             line.attach_div = {pulls.front().first, hangs.front()}; pull.erase(n->name); hang.erase(n->name);
         } else if (!pulls.empty()) {
-            require(pulls.size() <= 1, "net " + n->name + ": multiple pull-ups — extend the engine");
             line.attach = pulls.front().first; line.attach_kind = "pull"; pull.erase(n->name);
         } else if (!hangs.empty()) {
-            require(hangs.size() <= 1, "net " + n->name + ": multiple filter caps — extend the engine");
             line.attach = hangs.front(); line.attach_kind = "hang"; hang.erase(n->name);
         } else if (!comb) line.chain = _side_pin_chain(n->name, ref);
         if (n->net_class == "signal" && n->pins.size() == 1) line.force_label = true;
@@ -658,7 +657,10 @@ void Engine::_fan_side(const std::string& ref, const std::string& side, const st
         }
         const bool is_labeled = labeled(line);
         Point tap{lx, py};
-        if (line.attach || line.attach_div || line.chain) {
+        bool hung = line.attach || line.attach_div || line.chain;
+        if (hung) {
+            const double plain_lx = lx;
+            const auto saved = _checkpoint();
             const auto [left, right] = line.chain ? _chain_band(*line.chain, sign) : _attach_band(line);
             const double depth = line.chain
                 ? static_cast<double>(line.chain->legs.size()) * PASSIVE_SPAN + RAIL_SYMBOL_SPAN + sp.hang_stub : 12 * U;
@@ -672,16 +674,23 @@ void Engine::_fan_side(const std::string& ref, const std::string& side, const st
             }
             tap = {tx, py};
             if (is_labeled) lx = tx + sign * sp.label_tap_gap;
+            for (const auto& [a, b] : _escape_run_legs(line.net, px, py, tap.first)) pl.plan(line.net, {a, b});
+            if (line.attach_div) _divider(line, tap);
+            else if (line.attach) _attach_column(line, tap, rank_y, hang_sign > 0);
+            else _attach_chain(line, tap, rank_y, hang_sign > 0, sign);
+            if (_fault_since(saved.mark)) {
+                _rollback(saved);
+                _defer(attachments(line));
+                if (line.chain) for (const auto& leg : line.chain->legs) _defer({leg.ref});
+                hung = false; lx = plain_lx; tap = {lx, py};
+            }
         }
-        for (const auto& [a, b] : _escape_run_legs(line.net, px, py, tap.first)) pl.plan(line.net, {a, b});
-        if (line.attach_div) _divider(line, tap);
-        else if (line.attach) _attach_column(line, tap, rank_y, hang_sign > 0);
-        else if (line.chain) _attach_chain(line, tap, rank_y, hang_sign > 0, sign);
+        if (!hung) for (const auto& [a, b] : _escape_run_legs(line.net, px, py, tap.first)) pl.plan(line.net, {a, b});
         if (!is_labeled) {
             const auto leg = line.net_class == "signal" ? _series_of(line.net) : std::nullopt;
             if (leg) {
                 const auto& inline_part = part(leg->ref);
-                const double clear = sp.refine && (line.attach || line.attach_div || line.chain)
+                const double clear = sp.refine && hung
                     ? gceil(std::max(text_wh(inline_part.ref).first, text_wh(inline_part.value).first)) : 0.0;
                 previous_box = _series_inline(*leg, line.net, tap, sign, previous_box, clear).second;
             }
@@ -802,9 +811,9 @@ void Engine::_cell(const std::string& ref, double ax, double ay, Handled& handle
                 else rails.push_back({n->name, {pt}});
                 continue;
             }
-            if (pin_stacks.contains(n->name)) { const auto chain = take(pin_stacks, n->name); _stack_from_pin(*chain, pt, side); continue; }
+            if (pin_stacks.contains(n->name)) { const auto chain = take(pin_stacks, n->name); _stack_or_defer(*chain, pt, side); continue; }
             if (n->net_class == "port") { ports.push_back(item); continue; }
-            if (const auto local = _local_drop_chain(n->name, ref)) { _stack_from_pin(*local, pt, side); continue; }
+            if (const auto local = _local_drop_chain(n->name, ref)) { _stack_or_defer(*local, pt, side); continue; }
             if (n->net_class == "signal") { _signal_islet_drop(n->name, pt, side); continue; }
             throw SchematicPlaceError(ref + "." + number + " (" + n->name + ") on the " + side + " edge: no engine pattern applies");
         }
@@ -822,6 +831,7 @@ void Engine::_cell(const std::string& ref, double ax, double ay, Handled& handle
             row = gceil(row + 4 * U);
         }
     }
+    _graft_pending();
     if (defer_texts) _deferred_texts.emplace_back(placed.part_index, placed.body);
     else _part_texts(placed.part_index, placed.body);
 }
@@ -961,13 +971,17 @@ void Engine::_build_trunk(Trunk& trunk) {
         }
     };
     for (const auto& chain : trunk.chains) if (!port_tail(chain)) draw_chain(chain);
+    bool deferred = false;
     for (const auto& ref : take(hang, trunk.net)) {
         const auto ext = _extent();
         const double right = gceil(_band_edge(ty - 2 * U, ty + 10 * U, 1, reach(1)) + 4 * U);
         const double left = gfloor(_band_edge(ty - 2 * U, ty + 10 * U, -1, reach(-1)) - 4 * U);
         const double grow_r = std::max(0.0, right + 2 * U - ext.x1), grow_l = std::max(0.0, ext.x0 - (left - 2 * U));
-        const double x = grow_l < grow_r ? left : right; nodes.push_back(x);
+        const double x = grow_l < grow_r ? left : right;
+        const auto saved = _checkpoint();
         const auto [pt, far] = _vertical_2pin(ref, x, ty, trunk.net, true); power(far, pt.first, pt.second);
+        if (_fault_since(saved.mark)) { _rollback(saved); _defer({ref}); deferred = true; }
+        else nodes.push_back(x);
     }
     for (const auto& chain : trunk.chains) if (port_tail(chain)) draw_chain(chain);
     std::set<double> unique;
@@ -978,6 +992,7 @@ void Engine::_build_trunk(Trunk& trunk) {
         if (!nodes.empty()) llabel(trunk.net, nodes.front(), ty, 0);
         return;
     }
+    if (deferred && nodes.size() < 2) return;
     require(nodes.size() >= 2, "trunk " + trunk.net + ": fewer than 2 taps after build");
     if (_needs_flag(trunk.net)) {
         std::size_t widest = 1;

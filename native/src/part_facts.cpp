@@ -19,7 +19,7 @@
 namespace schgen {
 namespace {
 
-const char* const facts_schema = "schgen.part_facts/5";
+const char* const facts_schema = "schgen.part_facts/6";
 const char* const vrml_extension = ".wrl";
 const char* const step_extension = ".step";
 const std::string_view vrml_points = "point";
@@ -655,8 +655,46 @@ std::map<std::string, Fact> pinned_section_from(const JsonNode& root, const std:
     return out;
 }
 
+bool lateral_face(const std::string& face) {
+    return face.size() == face_length && face_signs.find(face.front()) != std::string_view::npos &&
+           face_axes.find(face.back()) != std::string_view::npos && face.back() != face_axes.back();
+}
+
+std::pair<int, int> face_vector(const std::string& face) {
+    const int sign = face.front() == face_signs.front() ? 1 : -1;
+    if (face.back() == face_axes.back()) return {0, 0};
+    return face.back() == face_axes.front() ? std::pair<int, int>{sign, 0} : std::pair<int, int>{0, sign};
+}
+
+PlugPathFact plug_path_from(const JsonNode& entry, const std::string& where) {
+    reject_unknown_keys(entry, {"entry", "depth", "width", "clear_height"}, where);
+    PlugPathFact fact;
+    const JsonNode& side = object_required(entry, "entry", where);
+    const std::string side_where = where + " entry";
+    reject_unknown_keys(side, {"face", "cite"}, side_where);
+    fact.face = text_required(side, "face", side_where);
+    if (!lateral_face(fact.face))
+        refuse(side_where + ": face must be one of +X, -X, +Y, -Y, the side of the part's own footprint that the plug or cell enters from");
+    fact.face_cite = text_required(side, "cite", side_where);
+    const auto length = [&](const std::string& key, bool positive, std::string& cite) {
+        const JsonNode& node = object_required(entry, key, where);
+        const std::string at = where + " " + key;
+        reject_unknown_keys(node, {"mm", "cite"}, at);
+        cite = text_required(node, "cite", at);
+        return number_of(node, "mm", at, positive);
+    };
+    fact.depth_mm = length("depth", true, fact.depth_cite);
+    fact.clear_height_mm = length("clear_height", false, fact.clear_height_cite);
+    if (object_field(entry, "width")) {
+        std::string cite;
+        fact.width_mm = length("width", true, cite);
+        fact.width_cite = cite;
+    }
+    return fact;
+}
+
 ConnectorFacts connectors_from(const JsonNode& section, const std::map<std::string, PartClass>& classes,
-                               const std::string& file) {
+                               const PlugPathFacts& paths, const std::string& file) {
     ConnectorFacts out;
     for (const auto& [name, entry] : section.object_value) {
         const std::string where = file + " connectors " + name;
@@ -677,6 +715,12 @@ ConnectorFacts connectors_from(const JsonNode& section, const std::map<std::stri
         fact.pair_label = text_of(entry, "pair_label", where);
         if (fact.edge_pinned && !fact.description) refuse(where + ": an edge-pinned connector needs a description");
         if (fact.edge_pinned && fact.mating_face.back() == face_axes.back()) refuse(where + ": a connector mated from above (+Z) cannot be edge-pinned");
+        const auto path = paths.find(name);
+        if (!fact.edge_pinned && fact.mating_face.back() != face_axes.back() && path == paths.end())
+            refuse(where + ": a connector mated from the side must be edge-pinned or state a plug path in plug_paths; "
+                           "its plug cannot reach it from inside the board unless that path is kept clear");
+        if (path != paths.end() && path->second.face != fact.mating_face)
+            refuse(where + ": its plug path enters from " + path->second.face + " but its mating_face is " + fact.mating_face);
         fact.handling = require_string(entry, "handling", false, where);
         const auto& handling = connector_handling_classes();
         if (std::find(handling.begin(), handling.end(), fact.handling) == handling.end())
@@ -737,11 +781,9 @@ const ConnectorFact& connector_fact_of(const ConnectorFacts& facts, const std::s
     return *fact;
 }
 
-std::pair<int, int> mating_face_vector(const ConnectorFact& fact) {
-    const int sign = fact.mating_face.front() == face_signs.front() ? 1 : -1;
-    if (fact.mating_face.back() == face_axes.back()) return {0, 0};
-    return fact.mating_face.back() == face_axes.front() ? std::pair<int, int>{sign, 0} : std::pair<int, int>{0, sign};
-}
+std::pair<int, int> mating_face_vector(const ConnectorFact& fact) { return face_vector(fact.mating_face); }
+
+std::pair<int, int> plug_path_vector(const PlugPathFact& fact) { return face_vector(fact.face); }
 
 ConnectorFacts load_connector_facts(const std::filesystem::path& parts_directory) {
     return load_part_facts(parts_directory / facts_file_name).connectors;
@@ -750,7 +792,7 @@ ConnectorFacts load_connector_facts(const std::filesystem::path& parts_directory
 PartFacts load_part_facts(const std::filesystem::path& file) {
     if (!std::filesystem::is_regular_file(file)) refuse("the part facts file is missing: " + file.string());
     const JsonNode root = parse_json_file(file.string());
-    reject_unknown_keys(root, {"schema", "classes", "stated_heights", "connectors", "thermal", "thermal_copper", "ep_vias", "isolation", "regulators", "zeners", "reference_pins", "control_grid", "model_overrides", "footprint_aliases", "lands", "electrical_spacing", "i2c_devices", "i2c_bridges"}, file.string());
+    reject_unknown_keys(root, {"schema", "classes", "stated_heights", "connectors", "plug_paths", "thermal", "thermal_copper", "ep_vias", "isolation", "regulators", "zeners", "reference_pins", "control_grid", "model_overrides", "footprint_aliases", "lands", "electrical_spacing", "i2c_devices", "i2c_bridges"}, file.string());
     if (require_string(root, "schema", false, "part facts") != facts_schema)
         refuse(file.string() + " schema must be " + facts_schema);
     PartFacts facts;
@@ -779,7 +821,8 @@ PartFacts load_part_facts(const std::filesystem::path& file) {
     }
     const JsonNode* connectors = object_field(root, "connectors");
     if (!connectors || connectors->kind != JsonKind::Object) refuse(file.string() + " needs an object named connectors");
-    facts.connectors = connectors_from(*connectors, facts.classes, file.string());
+    facts.plug_paths = section_from<PlugPathFact>(root, file, "plug_paths", true, plug_path_from);
+    facts.connectors = connectors_from(*connectors, facts.classes, facts.plug_paths, file.string());
     facts.thermal = section_from<ThermalFact>(root, file, "thermal", true, thermal_from);
     facts.thermal_copper = section_from<ThermalCopperFact>(root, file, "thermal_copper", true, thermal_copper_from);
     facts.ep_vias = section_from<EpViaFact>(root, file, "ep_vias", true, ep_via_from);

@@ -1,0 +1,224 @@
+{
+  "schema": "schgen.courtyard_classes/1",
+  "source": "KiCad Library Convention F5.3, Courtyard layer requirements (https://klc.kicad.org/footprint/f5/f5.3/, source https://gitlab.com/kicad/libraries/klc/-/blob/master/content/footprint/F5/F5.3.adoc, revision 3.0.60 of 2026-01-30, read 2026-11-26). The courtyard is the smallest rectangle giving the class clearance around the combined body and land pattern: general 0.25 mm (0.15 mm when the body is smaller than 1.5 mm), connector 0.5 mm, canned_capacitor 0.5 mm, crystal 0.5 mm, grid_array 1.0 mm. The figures live in native/include/schgen/footprint_courtyard.hpp; this file states which class each part is.",
+  "parts": {
+    "0456040.DR": {
+      "kind": "general"
+    },
+    "0603WAF1001T5E": {
+      "kind": "general"
+    },
+    "0603WAF1002T5E": {
+      "kind": "general"
+    },
+    "0603WAF1502T5E": {
+      "kind": "general"
+    },
+    "0603WAF2702T5E": {
+      "kind": "general"
+    },
+    "1C208000BC0R": {
+      "kind": "crystal"
+    },
+    "24AA025E48T-I_OT": {
+      "kind": "general"
+    },
+    "4D03WGJ0330T5E": {
+      "kind": "general"
+    },
+    "878311420": {
+      "kind": "connector"
+    },
+    "AFC07-S40FCA-00": {
+      "kind": "connector"
+    },
+    "AO3400A": {
+      "kind": "general"
+    },
+    "AP2112K-1.8TRG1": {
+      "kind": "general"
+    },
+    "AP2112K-3.3TRG1": {
+      "kind": "general"
+    },
+    "CC0603KRX7R9BB104": {
+      "kind": "general"
+    },
+    "CH347T": {
+      "kind": "general"
+    },
+    "CP2102N-A02-GQFN24R": {
+      "kind": "general"
+    },
+    "DF40C-100DP-0.4V_51": {
+      "kind": "connector"
+    },
+    "DF40C-100DS-0.4V_51": {
+      "kind": "connector"
+    },
+    "DS1024-2x6R2": {
+      "kind": "connector"
+    },
+    "DSHP04TSGER": {
+      "kind": "general"
+    },
+    "DSHP08TSGER": {
+      "kind": "general"
+    },
+    "FUSB302BMPX": {
+      "kind": "general"
+    },
+    "HDMI-019S": {
+      "kind": "connector"
+    },
+    "HX5008NLT": {
+      "kind": "general"
+    },
+    "HX_JN1.27-2x5_TP_H4.9": {
+      "kind": "connector"
+    },
+    "HX_PZ2.54-3x8P_ZZ": {
+      "kind": "connector"
+    },
+    "INA237AIDGSR": {
+      "kind": "general"
+    },
+    "INA3221AIRGVR": {
+      "kind": "general"
+    },
+    "IPT007N06N": {
+      "kind": "general"
+    },
+    "KH-5224-8P8C-D": {
+      "kind": "connector"
+    },
+    "KH-CR1220-2": {
+      "kind": "general"
+    },
+    "LM61460AANRJRR": {
+      "kind": "general"
+    },
+    "LM74930QRGERQ1": {
+      "kind": "general"
+    },
+    "M24C02-WMN6TP": {
+      "kind": "general"
+    },
+    "MPQ4423HGQ-Z": {
+      "kind": "general",
+      "body_mm": [
+        3.0,
+        3.0
+      ],
+      "body_source": "The provider payload draws no body outline for this part. Monolithic Power Systems lists the MPQ4423H in a QFN-8 (3mmx3mm) package (https://www.monolithicpower.com/en/mpq4423h.html, read 2026-11-26); the provider package name QFN-8_L3.0-W3.0-P0.65 and its silk frame at +/-1.5 mm agree."
+    },
+    "NUP2105LT1G": {
+      "kind": "general"
+    },
+    "PCA9306DCUR": {
+      "kind": "general"
+    },
+    "RLM12FTCMR010": {
+      "kind": "general"
+    },
+    "RLM12FTCMR020": {
+      "kind": "general"
+    },
+    "RLM25FEGMR50M": {
+      "kind": "general"
+    },
+    "RV-3028-C7-32.768kHz-1ppm-TA-QC": {
+      "kind": "general"
+    },
+    "RVT1C101M0605_100UF_16V": {
+      "kind": "canned_capacitor"
+    },
+    "RVT1H471M1213": {
+      "kind": "canned_capacitor"
+    },
+    "SFW15R-1STE1LF": {
+      "kind": "connector"
+    },
+    "SMBJ28A": {
+      "kind": "general"
+    },
+    "SN74HCT245PWR": {
+      "kind": "general"
+    },
+    "SN74LVC125ADR": {
+      "kind": "general"
+    },
+    "SWPA4030S100MT": {
+      "kind": "general"
+    },
+    "SWPA8040S100MT": {
+      "kind": "general"
+    },
+    "SY6280AAC": {
+      "kind": "general"
+    },
+    "SY7201ABC": {
+      "kind": "general"
+    },
+    "TCA9535PWR": {
+      "kind": "general"
+    },
+    "TCAN1042HGVDR": {
+      "kind": "general"
+    },
+    "TF-01A": {
+      "kind": "connector"
+    },
+    "TLV75725PDYDR": {
+      "kind": "general"
+    },
+    "TPD12S016PWR": {
+      "kind": "general"
+    },
+    "TPD4E02B04DQAR": {
+      "kind": "general"
+    },
+    "TPD4E05U06DQAR": {
+      "kind": "general"
+    },
+    "TPD4E1U06DBVR": {
+      "kind": "general"
+    },
+    "TPD6E001RSER": {
+      "kind": "general"
+    },
+    "TPS2051CDBVR": {
+      "kind": "general"
+    },
+    "TPS26631PWPR": {
+      "kind": "general"
+    },
+    "TPS3823-33DBVR": {
+      "kind": "general"
+    },
+    "TPS54302DDCR": {
+      "kind": "general"
+    },
+    "TS-1187A-B-A-B": {
+      "kind": "general"
+    },
+    "TXS02612RTWR": {
+      "kind": "general"
+    },
+    "TYPE-C-31-M-12": {
+      "kind": "connector"
+    },
+    "USBLC6-2SC6": {
+      "kind": "general"
+    },
+    "XT60PW-M": {
+      "kind": "connector"
+    },
+    "ZX-SH1.0-4PLT": {
+      "kind": "connector"
+    },
+    "ZX-SH1.0-4PWT": {
+      "kind": "connector"
+    }
+  }
+}

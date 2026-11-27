@@ -75,6 +75,18 @@ struct ConnectorFact {
 
 using ConnectorFacts = std::map<std::string, ConnectorFact>;
 
+struct PlugPathFact {
+    std::string face, face_cite;
+    double depth_mm = 0;
+    std::string depth_cite;
+    std::optional<double> width_mm;
+    std::optional<std::string> width_cite;
+    double clear_height_mm = 0;
+    std::string clear_height_cite;
+};
+
+using PlugPathFacts = std::map<std::string, PlugPathFact>;
+
 struct ThermalPourFact {
     double rth_ja = 0;
     std::string cite, evidence;
@@ -238,6 +250,7 @@ struct PartFacts {
     std::map<std::string, PartClass> classes;
     std::map<std::string, PartHeight> stated_heights;
     ConnectorFacts connectors;
+    PlugPathFacts plug_paths;
     ThermalFacts thermal;
     ThermalCopperFacts thermal_copper;
     EpViaFacts ep_vias;
@@ -265,6 +278,7 @@ bool presents_on_top(PartClass part_class);
 const ConnectorFact* connector_fact(const ConnectorFacts& facts, const std::string& name);
 const ConnectorFact& connector_fact_of(const ConnectorFacts& facts, const std::string& name);
 std::pair<int, int> mating_face_vector(const ConnectorFact& fact);
+std::pair<int, int> plug_path_vector(const PlugPathFact& fact);
 ConnectorFacts load_connector_facts(const std::filesystem::path& parts_directory);
 
 PartFacts load_part_facts(const std::filesystem::path& file);

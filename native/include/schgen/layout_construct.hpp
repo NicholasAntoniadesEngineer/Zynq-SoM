@@ -24,18 +24,23 @@ inline constexpr NamedConstant construct_nodes{"construct_nodes", 512, "seats", 
     "seats examined in one such search before the owner's parts are reported as not fitting"};
 inline constexpr NamedConstant construct_rounds{"construct_rounds", 3, "passes", "policy",
     "passes that seat again a part left on the other face after its owner moved; the count of such parts falls each pass or the pass changes nothing"};
+inline constexpr NamedConstant construct_sweep{"construct_sweep", 1e6, "nm", "policy",
+    "step between the seats tried for an unowned part and its owned parts together; finer steps repeat the same arrangement"};
+inline constexpr NamedConstant construct_trials{"construct_trials", 48, "seats", "policy",
+    "places tried for an unowned part with its owned parts seated one by one; past these it goes back beside its first seat"};
 inline constexpr std::array construct_registry{construct_reach, construct_evictions, construct_window, construct_branches,
-                                               construct_spacing, construct_nodes, construct_rounds};
+                                               construct_spacing, construct_nodes, construct_rounds, construct_sweep, construct_trials};
 }
 
 struct ConstructReport {
-    std::size_t taken = 0, seated = 0, returned = 0, searched = 0;
-    std::vector<std::string> unseated;
+    std::size_t taken = 0, seated = 0, returned = 0, searched = 0, roots = 0, arranged = 0, trials = 0;
+    std::vector<std::string> unseated, kept;
     std::vector<std::string> causes;
     Nm length_before = 0, length_after = 0;
 };
 
-ConstructReport construct_owned(Kernel& kernel, Nm pitch, Nm reach);
+ConstructReport construct_owned(Kernel& kernel, Nm pitch, Nm reach, bool arrange, const std::vector<char>* only = nullptr);
+std::vector<char> owned_under(const Problem& problem, std::size_t owner);
 std::string construct_summary(const ConstructReport& report);
 
 }

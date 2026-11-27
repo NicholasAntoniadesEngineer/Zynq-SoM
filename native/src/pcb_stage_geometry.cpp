@@ -1,3 +1,4 @@
+#include "schgen/footprint_courtyard.hpp"
 #include "pcb_stage_internal.hpp"
 #include "schgen/precision_ops.hpp"
 #include "native_audit_quantize_internal.hpp"
@@ -174,8 +175,12 @@ Part Engine::part(const std::string &ref, double rot, double x, double y) const 
 }
 Box4 Engine::body(const Part &p) const {
     auto b = in.bbox_of.find(p.ref);
-    return offset_turned_box(b == in.bbox_of.end() ? footprint_bbox(p.mod->document, 3) : b->second,
-                             p.rot, p.x, p.y);
+    const Box4 court = b == in.bbox_of.end() ? footprint_bbox(p.mod->document, 3) : b->second;
+    const auto added = landed.count(p.ref) ? courtyard::derived_clearance(p.mod->document) : std::nullopt;
+    if (!added)
+        return offset_turned_box(court, p.rot, p.x, p.y);
+    const double inset = std::min(*added, clear);
+    return offset_turned_box({court.x0 + inset, court.y0 + inset, court.x1 - inset, court.y1 - inset}, p.rot, p.x, p.y);
 }
 std::vector<Box4> Engine::bodies(const Parts &parts) const {
     std::vector<Box4> v;

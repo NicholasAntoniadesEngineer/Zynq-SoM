@@ -1,4 +1,4 @@
-PASS native authoring source purity: 19 units, 363 bodies, 23470 references, 0 findings
+PASS native authoring source purity: 19 units, 365 bodies, 23546 references, 0 findings
 compiler: Apple clang version 21.0.0 (clang-2100.3.34.2)
 native context: actual callback targets/owner verified
 capability: native/include/schgen/authoring.hpp::schgen::AuthoringContext::part | std::function<schgen::CatalogPart (const std::string &)> -> native/src/catalog.cpp::schgen::lookup_part_catalog | schgen::CatalogPart (const std::string &)

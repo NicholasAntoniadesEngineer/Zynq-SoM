@@ -58,7 +58,8 @@ std::string part_model_uuid(const JsonNode& result) {
 }
 
 PartImportPlan prepare_part_import(const std::string& response_json,const std::string& lcsc,const std::string& requested_name,
-                                   const std::vector<std::string>& existing_models,const std::vector<PartImportFile>& downloaded_models) {
+                                   const std::vector<std::string>& existing_models,const std::vector<PartImportFile>& downloaded_models,
+                                   const PartImportPolicy& policy) {
     JsonNode payload;
     try {payload=parse_json_text(response_json,"EasyEDA CAD");}
     catch(const std::exception& e) {throw PartImportError(e.what());}
@@ -84,7 +85,8 @@ PartImportPlan prepare_part_import(const std::string& response_json,const std::s
     }
     const auto metadata=part_metadata_json(p);
     const auto symbol=part_generate_symbol(p.safe_name,p.pins,info);
-    const auto footprint=part_convert_footprint(result,p.safe_name,info,p.models_3d,ep);
+    auto footprint=part_convert_footprint(result,p.safe_name,info,p.models_3d,ep);
+    if(policy.courts)footprint.tree=courtyard::enclosed(footprint.tree,courtyard::court_edges(footprint.tree),policy.courts->at(p.safe_name),p.safe_name);
     plan.files.push_back({p.safe_name+".kicad_sym",sexpr_dumps(symbol)+"\n"});
     plan.files.push_back({p.safe_name+".kicad_mod",sexpr_dumps(footprint.tree)+"\n"});
     plan.files.push_back({"part.json",metadata});

@@ -89,6 +89,7 @@ const char* breach_name(Breach breach) {
     case Breach::under_inductor: return "under_inductor";
     case Breach::via_field: return "via_field";
     case Breach::spacing: return "spacing";
+    case Breach::plug_path: return "plug_path";
     }
     return "unknown";
 }
@@ -119,6 +120,14 @@ Kernel::Kernel(const Problem& problem, Placement placement)
         members_[problem_.parts[part].group].push_back(part);
         if (problem_.parts[part].connector) connectors_.push_back(part);
         if (!problem_.parts[part].via_sites.empty()) via_owners_.push_back(part);
+        if (const auto& plug = problem_.parts[part].plug) {
+            if (plug->depth <= 0 || plug->width < 0 || plug->clear_height < 0)
+                throw LayoutError("layout: " + problem_.parts[part].reference + " states a plug path without a depth, or with a negative width or height");
+            for (const Point mouth : {plug->mouth, plug->rear_mouth})
+                if ((mouth.x == 0) == (mouth.y == 0) || mouth.x * mouth.x + mouth.y * mouth.y != 1)
+                    throw LayoutError("layout: " + problem_.parts[part].reference + " states a plug path that does not enter along one axis");
+            plug_owners_.push_back(part);
+        }
     }
     const Constraints& rules = problem_.constraints;
     pad_rules_.resize(placement_.size());
@@ -437,6 +446,7 @@ Kernel::Shape Kernel::shape_of(std::size_t part, const Pose& pose) const {
     const Variant& variant = problem_.footprints[problem_.parts[part].footprint].on(pose.face);
     Shape shape;
     shape.gate = placed(variant.gate_box, pose.at, pose.turn);
+    shape.body = placed(variant.body_box, pose.at, pose.turn);
     shape.bound = shape.gate;
     const std::array<Point, edge_count> sides{Point{0, -1}, Point{0, 1}, Point{-1, 0}, Point{1, 0}};
     const auto& escape = problem_.parts[part].escape_on(pose.face);
@@ -449,7 +459,7 @@ Kernel::Shape Kernel::shape_of(std::size_t part, const Pose& pose) const {
     for (const auto& disc : variant.court_discs) shape.discs.push_back(placed(disc, pose.at, pose.turn));
     const auto& nets = problem_.parts[part].pad_nets;
     for (std::size_t pad = 0; pad < variant.pads.size(); ++pad) {
-        const Box box = placed(variant.pads[pad].box, pose.at, pose.turn);
+        const Box box = placed(variant.pads[pad].copper(), pose.at, pose.turn);
         shape.lands.push_back({box, nets[pad], variant.pads[pad].through,
                                {placed(variant.pads[pad].centre, pose.at, pose.turn), variant.pads[pad].radius},
                                variant.pads[pad].drill});
@@ -459,6 +469,10 @@ Kernel::Shape Kernel::shape_of(std::size_t part, const Pose& pose) const {
     if (variant.pad_hull) {
         shape.pads = placed(*variant.pad_hull, pose.at, pose.turn);
         shape.bound = united(shape.bound, *shape.pads);
+    }
+    if (const auto& plug = problem_.parts[part].plug) {
+        const Point out = turned(plug->mouth_on(pose.face), pose.turn);
+        shape.plug = path_ahead(shape.gate, static_cast<int>(out.x), static_cast<int>(out.y), plug->depth, plug->width);
     }
     return shape;
 }
@@ -694,11 +708,11 @@ std::optional<Breach> Kernel::pair_breach(std::size_t first, const Shape& first_
         return Breach::spacing;
     const Part& a = problem_.parts[first];
     const Part& b = problem_.parts[second];
-    if (a.fanout_subject && crowds(b, a) && !gap_at_least(first_shape.gate, second_shape.gate, a.fanout_need) &&
-        beside_escape(first_shape.escape, first_shape.gate, second_shape.gate, guard))
+    if (a.fanout_subject && crowds(b, a) && !gap_at_least(first_shape.body, second_shape.body, a.fanout_need) &&
+        beside_escape(first_shape.escape, first_shape.body, second_shape.body, guard))
         return Breach::fanout;
-    if (b.fanout_subject && crowds(a, b) && !gap_at_least(first_shape.gate, second_shape.gate, b.fanout_need) &&
-        beside_escape(second_shape.escape, second_shape.gate, first_shape.gate, guard))
+    if (b.fanout_subject && crowds(a, b) && !gap_at_least(first_shape.body, second_shape.body, b.fanout_need) &&
+        beside_escape(second_shape.escape, second_shape.body, first_shape.body, guard))
         return Breach::fanout;
     return std::nullopt;
 }
@@ -916,6 +930,14 @@ bool Kernel::connectors_met(std::size_t part, const Shape& shape, const Pose& po
     return gap >= (first_boot && second_boot ? rules.overmold_gap : rules.boot_gap) + guard;
 }
 
+bool Kernel::plug_blocked(std::size_t owner, const Box& path, Face face, std::size_t other, const Shape& other_shape,
+                          Face other_face, Nm guard) const {
+    if (face != other_face) return false;
+    const std::optional<Nm>& height = problem_.parts[other].height;
+    if (height && *height <= problem_.parts[owner].plug->clear_height) return false;
+    return overlaps(grown(path, guard), other_shape.gate);
+}
+
 template <typename Sink>
 bool Kernel::geometry_breaches(std::size_t part, const Shape& shape, const Pose& pose, Nm guard, bool owned,
                                Sink&& sink) const {
@@ -963,6 +985,23 @@ bool Kernel::rule_breaches(std::size_t part, const Shape& shape, const Pose& pos
         for (const std::size_t owner : via_owners_)
             if (owner != part && !absent_[owner] && via_blocked(owner, placement_[owner], shape) &&
                 sink(Violation{Breach::via_field, part, owner}))
+                return true;
+    if (shape.plug) {
+        const bool leaves = item.edge && item.edge->mouth_on(pose.face) == item.plug->mouth_on(pose.face);
+        if (!leaves && !inside(*shape.plug, board_.outline()) && sink(Violation{Breach::plug_path, part, part})) return true;
+        if (board_.module_body && pose.face == Face::top && overlaps(grown(*shape.plug, guard), *board_.module_body) &&
+            sink(Violation{Breach::plug_path, part, part}))
+            return true;
+        for (const std::size_t peer : neighbours(*shape.plug, part))
+            if (plug_blocked(part, *shape.plug, pose.face, peer, shapes_[peer], placement_[peer].face, guard) &&
+                sink(Violation{Breach::plug_path, part, peer}))
+                return true;
+    }
+    if (!owned)
+        for (const std::size_t owner : plug_owners_)
+            if (owner != part && !absent_[owner] &&
+                plug_blocked(owner, *shapes_[owner].plug, placement_[owner].face, part, shape, pose.face, guard) &&
+                sink(Violation{Breach::plug_path, part, owner}))
                 return true;
     if (item.connector)
         for (const std::size_t peer : connectors_) {

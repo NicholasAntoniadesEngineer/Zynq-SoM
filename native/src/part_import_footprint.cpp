@@ -180,7 +180,7 @@ PartFootprint part_convert_footprint(const JsonNode& result,const std::string& n
     const Context ctx{number(field(head,"x")),number(field(head,"y"))};
     const bool smd=truth(field(result,"SMT")) && get(pkg,"title").find("-TH_")==std::string::npos;
     PartFootprint out;const auto& p=info.part;
-    auto fp=list({sym("footprint"),str(name),list({sym("version"),num(20260206)}),list({sym("generator"),str("schgen_part_gen")}),
+    auto fp=list({sym("footprint"),str(name),list({sym("version"),num(20260206)}),list({sym("generator"),str(courtyard::part_generator)}),
         list({sym("generator_version"),str("1.0")}),list({sym("layer"),str("F.Cu")}),
         list({sym("descr"),str(get(cp,"package")+" — "+p.description+" (EasyEDA/LCSC "+p.lcsc+", faithful conversion)")}),
         list({sym("tags"),str(join(info.tags," "))})});

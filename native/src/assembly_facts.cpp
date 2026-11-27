@@ -130,13 +130,15 @@ AssemblyFacts parse_assembly_facts(const JsonNode& document, const std::string& 
     for (const auto& [name, node] : need(document, "needs", JsonKind::Object, file, "").object_value) {
         const std::string where = "needs." + name;
         if (node.kind != JsonKind::Object) refuse(file, where, "must be an object");
-        reject_unknown_keys(node, {"item", "satisfied_by"}, file + " " + where);
+        reject_unknown_keys(node, {"item", "satisfied_by", "owner_fits"}, file + " " + where);
         AssemblyNeed row;
         row.item = name_of(node, "item", file, where);
         for (const JsonNode& code : need(node, "satisfied_by", JsonKind::Array, file, where).array_value) {
             if (code.kind != JsonKind::String || !code_ok(code.string_value)) refuse(file, where, "satisfied_by holds a value that is not an LCSC code");
             row.satisfied_by.push_back(code.string_value);
         }
+        const JsonNode& fitted = need(node, "owner_fits", JsonKind::String, file, where);
+        row.owner_fits = fitted.string_value;
         facts.needs.emplace(part_class_named(name), row);
     }
     for (const auto& [code, node] : need(document, "parts", JsonKind::Object, file, "").object_value) {
@@ -172,7 +174,7 @@ std::string assembly_facts_text(const AssemblyFacts& facts) {
     for (const auto& [name, row] : needs) {
         out += std::string(first_need ? "\n" : ",\n") + in2 + quoted(name) + ": {\"item\": " + quoted(row->item) + ", \"satisfied_by\": [";
         for (std::size_t index = 0; index < row->satisfied_by.size(); ++index) out += (index ? ", " : "") + quoted(row->satisfied_by[index]);
-        out += "]}";
+        out += "], \"owner_fits\": " + quoted(row->owner_fits) + "}";
         first_need = false;
     }
     out += std::string(first_need ? "" : "\n" + in1) + "},\n" + in1 + "\"parts\": {";

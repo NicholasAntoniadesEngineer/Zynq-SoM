@@ -21,10 +21,12 @@ struct PadShape {
     bool through = false;
     Nm radius = 0;
     Nm drill = 0;
+    std::optional<Box> land = std::nullopt;
+    Box copper() const { return land ? *land : box; }
 };
 
 struct Variant {
-    Box gate_box;
+    Box gate_box, body_box;
     std::vector<Box> court_boxes;
     std::vector<Disc> court_discs;
     std::vector<PadShape> pads;
@@ -36,6 +38,12 @@ struct Variant {
 struct EdgeRule {
     Point mouth, rear_mouth;
     Nm reach = 0, seat = 0;
+    Point mouth_on(Face face) const { return face == Face::top ? mouth : rear_mouth; }
+};
+
+struct PlugRule {
+    Point mouth, rear_mouth;
+    Nm depth = 0, width = 0, clear_height = 0;
     Point mouth_on(Face face) const { return face == Face::top ? mouth : rear_mouth; }
 };
 
@@ -72,6 +80,7 @@ struct Part {
     bool field_source = false, field_sensitive = false;
     std::optional<EdgeRule> edge;
     std::optional<CornerRule> corner;
+    std::optional<PlugRule> plug = std::nullopt;
     std::vector<Point> via_sites = {};
     Face via_face = Face::top;
     Nm spacing = 0;
@@ -232,6 +241,7 @@ inline bool counts_as_crowder(const Part& crowder, const Part& subject) {
 Point corner_site(const Board& board, const CornerRule& rule);
 std::optional<bool> mirrors_across_x(const Footprint& footprint);
 Box gate_at(const Problem& problem, std::size_t part, const Pose& pose);
+Box body_at(const Problem& problem, std::size_t part, const Pose& pose);
 Box pour_box(const PourRule& rule, const Pose& owner, const Board& board);
 bool pair_faced(const Problem& problem, const Board& board, std::size_t owner, const Pose& owner_pose,
                 std::size_t member, const Pose& member_pose, bool or_under);

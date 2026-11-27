@@ -155,6 +155,7 @@ inline Box4 box(const JsonNode &n) {
 }
 inline JsonNode box_json(Box4 b) { return ja({j(b.x0), j(b.y0), j(b.x1), j(b.y1)}); }
 Box4 courtyard(const PcbFootprintInst &);
+Box4 body_box(const PcbFootprintInst &);
 Sexpr embed(const PcbFootprintInst &, const PcbEmitPolicy &, const Uid &);
 bool interface_label_part(const PcbFootprintInst &, const PcbEmitPolicy &);
 struct ThermalNodes {

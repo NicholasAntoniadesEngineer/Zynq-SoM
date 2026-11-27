@@ -96,6 +96,7 @@ void loader(const std::filesystem::path& root) {
     const auto parse = [](const std::string& body) { return parse_assembly_facts(parse_json_text(body), "assembly_facts.json"); };
     rejects([&] { parse(replaced(text, "\"parts\"", "\"surprise\": 1, \"parts\"")); }, "surprise", "unknown key");
     rejects([&] { parse(replaced(text, "schgen.assembly_facts/1", "schgen.assembly_facts/2")); }, "unknown schema", "schema");
+    rejects([&] { parse(replaced(text, ", \"owner_fits\": ", ", \"surprise_fits\": ")); }, "surprise_fits", "a need without its owner decision field");
     rejects([&] { parse(replaced(text, "\"test_point\"", "\"widget\"")); }, "widget", "unknown class");
     rejects([&] { parse(replaced(text, "\"parts\": {", "\"parts\": {\"X1\": {}, ")); }, "not an LCSC code", "bad code");
     rejects([&] { parse(replaced(text, "\"read_utc\"", "\"read\"")); }, "read", "missing time stamp");
@@ -151,8 +152,12 @@ void board(const std::filesystem::path& root, const std::string& project) {
     placed.placed.insert("ZZ99999");
     require(failing(check_assembly_parts(scene.sheets, placed, facts, part_facts, builds), "BOM lacks"), project + " mutation: a placed part the BOM lacks");
     auto with_need = facts;
-    with_need.needs[PartClass::resistor] = {"shunt for the test", {}};
+    with_need.needs[PartClass::resistor] = {"shunt for the test", {}, {}};
     require(failing(check_assembly_parts(scene.sheets, files, with_need, part_facts, builds), "not a placed BOM part"), project + " mutation: a loose item the board needs");
+    with_need.needs[PartClass::resistor].owner_fits = "decision recorded for the test";
+    const auto decided = check_assembly_parts(scene.sheets, files, with_need, part_facts, builds);
+    require(!failing(decided, "not a placed BOM part") && decided.report().find("NOT FITTED BY THE ASSEMBLER, by decision: shunt for the test") != std::string::npos &&
+            decided.report().find("decision recorded for the test") != std::string::npos, project + ": an item the owner fits by recorded decision is stated, not failed");
 }
 }
 

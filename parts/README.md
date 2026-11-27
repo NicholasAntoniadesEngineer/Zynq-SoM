@@ -58,7 +58,7 @@ native/bin/schgen catalog-compile parts native/catalog.bin
 
 ## Part facts (`part_facts.json`)
 
-`parts/part_facts.json` (`schema: schgen.part_facts/5`) is the one reviewed,
+`parts/part_facts.json` (`schema: schgen.part_facts/6`) is the one reviewed,
 hand-kept file in this folder. It holds what the generator cannot know:
 
 - `classes` — the class of every schematic symbol the boards may place, keyed
@@ -87,6 +87,17 @@ hand-kept file in this folder. It holds what the generator cannot know:
   edge-pinned; the floorplan edge table), `numbered_label` (silk label stem,
   numbered across the board) and `pair_label` (name of a two-part IN/OUT pair
   in the assembly notes).
+- `plug_paths` — keyed by part number (the name of the part's folder), one
+  entry per part that a plug, card or cell enters from the side, connector or
+  not: `entry` (`face`: `+X`, `-X`, `+Y` or `-Y`, the side of the footprint at
+  rotation 0 that the thing arrives over), `depth` (how far in front of that
+  side the path runs), the optional `width` (across the mouth; the width of
+  the courtyard when left out) and `clear_height` (a part on the same face no
+  taller than this may stand in the path). Every one is an object with `mm`
+  (`face` for the entry) and its own `cite`. The layout keeps the path on the
+  board and free of taller parts, and the `plug_path` board gate reports each
+  path with its measured clearance. A `connector` whose `mating_face` is
+  lateral must be edge-pinned or have an entry here on the same face.
 - `stated_heights` — the height above the board face, in millimetres, of every
   footprint that names no 3D model, keyed by footprint id, each with its
   `basis` and the date it was `reviewed`.
@@ -194,11 +205,25 @@ add its symbol to `classes`.
   loader would reject.
 
 - **Footprint (`.kicad_mod`)** — a faithful conversion of the EasyEDA land:
-  pad positions, shapes, drills, slots, and silk/fab/courtyard graphics are
+  pad positions, shapes, drills, slots, and silk/fab graphics are
   converted exactly; only decorative lead/paste fills are dropped. A large SMD
   pad (>= 2.0 mm on both sides — exposed/thermal pads, connector tabs) gets
   copper + mask plus a windowed paste grid instead of one full aperture, so it
   does not float or squeeze out under reflow (IPC-7525 paste-volume control).
+- **Courtyard** — EasyEDA's component outline covers the body only, so it is
+  drawn on `F.Fab` as the body outline (0.10 mm line) and the courtyard on
+  `F.CrtYd` is derived: the smallest rectangle around body and pads plus the
+  clearance of the part's class, on a 0.01 mm grid with a 0.05 mm line
+  (KiCad Library Convention F5.3). Each part's class is stated in
+  `parts/courtyard_classes.json`: `general` 0.25 mm (0.15 mm for a body under
+  1.5 mm), `connector`, `canned_capacitor` and `crystal` 0.5 mm, `grid_array`
+  1.0 mm. An import refuses a part that has no class there, and a part whose
+  provider payload draws no body outline needs a `body_mm` with its source.
+  `native/bin/schgen part-courtyard --parts-root parts` checks every stored
+  footprint against this rule and fails when one is stale; `--write` rewrites
+  the courtyard graphics and nothing else. `--footprint FILE` judges any
+  footprint. A board build refuses a footprint that has pads but no courtyard,
+  or whose courtyard does not enclose its pads, and names it.
 
 - **3D model (`.step` + `.wrl`)** — downloaded from EasyEDA when hosted. The
   footprint references the `.wrl` for the KiCad viewer and carries the `.step`

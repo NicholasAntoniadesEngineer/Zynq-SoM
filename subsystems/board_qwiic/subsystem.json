@@ -6,7 +6,7 @@
   "placement": {"region": "board", "silk_label": "QWIIC", "far_guard_mm": null, "escape_basis": null, "escape_escalates": false, "reserves_edge": false},
   "checks": {"dividers": [], "divider_sources": [], "iset_window_ma": null, "iset_basis": null},
   "parts": [
-    {"ref": "J1", "part": "ZX-SH1.0-4PWT"},
+    {"ref": "J1", "part": "ZX-SH1.0-4PLT"},
     {"ref": "U1", "part": "USBLC6-2SC6"},
     {
       "ref": "C1",

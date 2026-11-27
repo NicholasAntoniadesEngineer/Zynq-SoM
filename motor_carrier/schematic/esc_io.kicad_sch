@@ -3986,7 +3986,7 @@
 			)
 		)
 		(symbol
-			"ZX-SH1.0-4PWT:ZX-SH1.0-4PWT"
+			"ZX-SH1.0-4PLT:ZX-SH1.0-4PLT"
 			(pin_names
 				(offset 0.508)
 				(hide yes)
@@ -4006,7 +4006,7 @@
 			)
 			(property
 				"Value"
-				"ZX-SH1.0-4PWT"
+				"ZX-SH1.0-4PLT"
 				(at 0 -8.89 0)
 				(effects
 					(font
@@ -4016,7 +4016,7 @@
 			)
 			(property
 				"Footprint"
-				"ZX-SH1.0-4PWT:ZX-SH1.0-4PWT"
+				"ZX-SH1.0-4PLT:ZX-SH1.0-4PLT"
 				(at 0 0 0)
 				(effects
 					(font
@@ -4027,7 +4027,7 @@
 			)
 			(property
 				"Datasheet"
-				"https://www.lcsc.com/datasheet/C7430446.pdf"
+				"https://www.lcsc.com/datasheet/C7430453.pdf"
 				(at 0 0 0)
 				(effects
 					(font
@@ -4038,7 +4038,7 @@
 			)
 			(property
 				"Description"
-				"ZX-SH1.0-4PWT (CONN-SMD_4P-P1.00_MEGASTAR_ZX-SH1.0-4PWT)"
+				"ZX-SH1.0-4PLT (CONN-SMD_4P-P1.00_ZX-SH1.0-4PLN)"
 				(at 0 0 0)
 				(effects
 					(font
@@ -4049,7 +4049,7 @@
 			)
 			(property
 				"LCSC"
-				"C7430446"
+				"C7430453"
 				(at 0 0 0)
 				(effects
 					(font
@@ -4059,7 +4059,7 @@
 				)
 			)
 			(symbol
-				"ZX-SH1.0-4PWT_0_1"
+				"ZX-SH1.0-4PLT_0_1"
 				(rectangle
 					(start -2.54 5.08)
 					(end 2.54 -5.08)
@@ -4073,14 +4073,14 @@
 				)
 			)
 			(symbol
-				"ZX-SH1.0-4PWT_1_1"
+				"ZX-SH1.0-4PLT_1_1"
 				(pin
 					passive
 					line
 					(at -5.08 2.54 0)
 					(length 2.54)
 					(name
-						"6"
+						"1"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -4088,7 +4088,7 @@
 						)
 					)
 					(number
-						"6"
+						"1"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -4102,7 +4102,7 @@
 					(at -5.08 0 0)
 					(length 2.54)
 					(name
-						"5"
+						"2"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -4110,7 +4110,7 @@
 						)
 					)
 					(number
-						"5"
+						"2"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -4124,7 +4124,7 @@
 					(at -5.08 -2.54 0)
 					(length 2.54)
 					(name
-						"4"
+						"3"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -4132,7 +4132,7 @@
 						)
 					)
 					(number
-						"4"
+						"3"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -4146,7 +4146,7 @@
 					(at 5.08 2.54 180)
 					(length 2.54)
 					(name
-						"3"
+						"4"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -4154,7 +4154,7 @@
 						)
 					)
 					(number
-						"3"
+						"4"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -4168,7 +4168,7 @@
 					(at 5.08 0 180)
 					(length 2.54)
 					(name
-						"2"
+						"5"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -4176,7 +4176,7 @@
 						)
 					)
 					(number
-						"2"
+						"5"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -4190,7 +4190,7 @@
 					(at 5.08 -2.54 180)
 					(length 2.54)
 					(name
-						"1"
+						"6"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -4198,7 +4198,7 @@
 						)
 					)
 					(number
-						"1"
+						"6"
 						(effects
 							(font
 								(size 1.27 1.27)
@@ -9699,8 +9699,8 @@
 		)
 	)
 	(symbol
-		(lib_id "ZX-SH1.0-4PWT:ZX-SH1.0-4PWT")
-		(at 227.33 175.26 180)
+		(lib_id "ZX-SH1.0-4PLT:ZX-SH1.0-4PLT")
+		(at 227.33 175.26 0)
 		(unit 1)
 		(exclude_from_sim no)
 		(in_bom yes)
@@ -9719,7 +9719,7 @@
 		)
 		(property
 			"Value"
-			"ZX-SH1.0-4PWT"
+			"ZX-SH1.0-4PLT"
 			(at 219.71 182.37 0)
 			(effects
 				(font
@@ -9729,7 +9729,7 @@
 		)
 		(property
 			"Footprint"
-			"ZX-SH1.0-4PWT:ZX-SH1.0-4PWT"
+			"ZX-SH1.0-4PLT:ZX-SH1.0-4PLT"
 			(at 227.33 175.26 0)
 			(effects
 				(font
@@ -9751,7 +9751,7 @@
 		)
 		(property
 			"LCSC"
-			"C7430446"
+			"C7430453"
 			(at 227.33 175.26 0)
 			(effects
 				(font
@@ -9761,27 +9761,27 @@
 			)
 		)
 		(pin
-			"6"
+			"1"
 			(uuid "d9eb825a-328c-5750-9d04-bb9c21150f81")
 		)
 		(pin
-			"5"
+			"2"
 			(uuid "3a817106-cd75-5a82-9722-9f6b8b8b7ddc")
 		)
 		(pin
-			"4"
+			"3"
 			(uuid "8f4db582-d8c4-5fe5-bdd3-b0d8e3d2e032")
 		)
 		(pin
-			"3"
+			"4"
 			(uuid "f363ad44-dfbe-557d-8e47-36954d08ab57")
 		)
 		(pin
-			"2"
+			"5"
 			(uuid "5caa6c7b-f220-5875-820a-9485452a9853")
 		)
 		(pin
-			"1"
+			"6"
 			(uuid "a25de8ff-edd0-568a-92ff-09daabeee6d2")
 		)
 		(instances

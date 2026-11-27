@@ -298,6 +298,7 @@ Parts Engine::proximity_cluster(const std::string &anchor) {
     auto a = part(anchor);
     if (demands.empty())
         return {a};
+    const Landing landing(landed, {anchor});
     const auto ib = pads(a);
     auto icb = body(a);
     for (int scale = 0; scale < 20; ++scale) {
@@ -355,6 +356,13 @@ Parts Engine::solve_contract() {
         }
     if (members.empty())
         throw PcbZoneInfeasible("contract graph: no resolvable proximity members");
+    std::set<std::string> anchors;
+    for (const auto &[member, rows] : att) {
+        (void)member;
+        for (const auto &row : rows)
+            anchors.insert(row.ref);
+    }
+    const Landing landing(landed, anchors);
     std::map<std::string, std::set<std::string>> adj, deps;
     for (const auto &m : members) {
         for (const auto &a : att[m]) {

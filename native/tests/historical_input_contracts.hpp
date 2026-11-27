@@ -134,7 +134,42 @@ inline void restore_clamp(schgen::CircuitSheetIr& live, const std::string& ref) 
     for (auto& field : part.fields) if (field.key == "LCSC") field.value = "C42440491";
     part.pin_names = {{"A", {"2"}}, {"K", {"1"}}};
 }
+inline void restore_wire_connector(schgen::CircuitSheetIr& live, const std::string& ref) {
+    auto& part = unique_part(live, ref);
+    require(part.lib_id == "ZX-SH1.0-4PLT:ZX-SH1.0-4PLT" && part.value == "ZX-SH1.0-4PLT" &&
+            part.footprint == "ZX-SH1.0-4PLT:ZX-SH1.0-4PLT" && lcsc_code(part) == "C7430453" && part.pin_names.size() == 6,
+            "reviewed top-entry wire connector identity " + live.name + "." + ref);
+    part.lib_id = part.footprint = "ZX-SH1.0-4PWT:ZX-SH1.0-4PWT";
+    part.value = "ZX-SH1.0-4PWT";
+    for (auto& field : part.fields) if (field.key == "LCSC") field.value = "C7430446";
+    std::reverse(part.pin_names.begin(), part.pin_names.end());
+}
+inline void drop_backup_selector(schgen::CircuitSheetIr& live) {
+    const auto& header = unique_part(live, "J1");
+    const auto& pull = unique_part(live, "R3");
+    require(header.lib_id == "Connector_Generic:Conn_01x03" && lcsc_code(header) == "C49257" && pull.lib_id == "Device:R" &&
+            pull.value == "10k" && lcsc_code(pull) == "C25804", "reviewed backup selector identity");
+    drop_pin(live, "GND", "R3", "2");
+    const auto pins_of = [&](const std::string& name) {
+        require(std::count_if(live.nets.begin(), live.nets.end(), [&](const auto& n) { return n.name == name; }) == 1,
+                "unique reviewed backup net " + name);
+        auto& net = *std::find_if(live.nets.begin(), live.nets.end(), [&](const auto& n) { return n.name == name; });
+        std::vector<std::string> pins;
+        for (const auto& pin : net.pins) pins.push_back(pin.ref + "." + pin.pin);
+        return std::make_pair(&net, pins);
+    };
+    require(pins_of("RTC_BAT_PULLDOWN").second == std::vector<std::string>{"J1.1", "R3.1"} &&
+            pins_of("V_RTC_CELL").second == std::vector<std::string>{"BT1.1", "J1.3"} &&
+            pins_of("V_RTC_BAT").second == std::vector<std::string>{"U2.6", "J1.2"}, "reviewed backup selector nets");
+    pins_of("V_RTC_BAT").first->pins = {{"U2", "6"}, {"BT1", "1"}};
+    live.nets.erase(std::remove_if(live.nets.begin(), live.nets.end(), [](const auto& n) {
+        return n.name == "RTC_BAT_PULLDOWN" || n.name == "V_RTC_CELL"; }), live.nets.end());
+    live.parts.erase(std::remove_if(live.parts.begin(), live.parts.end(), [](const auto& p) { return p.ref == "J1" || p.ref == "R3"; }),
+                     live.parts.end());
+}
 inline schgen::CircuitSheetIr project_reviewed_circuit(schgen::CircuitSheetIr live, const std::string& project_name) {
+    if (project_name == "carrier" && live.name == "board_qwiic") restore_wire_connector(live, "J1");
+    if (project_name == "carrier" && live.name == "board_services") drop_backup_selector(live);
     if (project_name == "carrier" && live.name == "fmc") drop_code(live, "J1", "C50980");
     if (project_name == "carrier" && live.name == "usb_jtag") restore_code(live, "C327125", "C162205", 2);
     if (live.name == "power_som") restore_value(live, "R14", "47k5", "47.5k");

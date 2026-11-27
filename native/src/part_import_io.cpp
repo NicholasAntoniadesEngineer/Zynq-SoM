@@ -204,14 +204,15 @@ std::vector<std::string> publish_part_models(const PartModelDownload& models,con
 PartImportPlan prepare_part_import_request(const PartImportRequest& request,const PartTransport& transport) {
     const auto bytes=request.from_json?read_file(*request.from_json):fetch_part_cad(request.lcsc,transport);
     // Validate all core CAD before optional downloads. No partial files on conversion errors.
-    auto plan=prepare_part_import(bytes,request.lcsc,request.name);
+    PartImportPolicy policy;policy.courts=courtyard::load_rules(request.parts_root/courtyard::rule_file);
+    auto plan=prepare_part_import(bytes,request.lcsc,request.name,{},{},policy);
     const auto existing=existing_part_models(request.parts_root,plan.part.safe_name);
     PartModelDownload downloads;
     if(!request.from_json) {
         const auto payload=parse_json_text(bytes);const auto* wrapped=object_field(payload,"result");
         downloads=fetch_part_models(part_model_uuid(wrapped?*wrapped:payload),plan.part.safe_name,transport);
     }
-    plan=prepare_part_import(bytes,request.lcsc,request.name,existing,downloads.files);
+    plan=prepare_part_import(bytes,request.lcsc,request.name,existing,downloads.files,policy);
     plan.diagnostics.insert(plan.diagnostics.end(),downloads.diagnostics.begin(),downloads.diagnostics.end());return plan;
 }
 

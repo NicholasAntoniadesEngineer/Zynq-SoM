@@ -28,7 +28,7 @@
 namespace schgen::layout {
 namespace {
 
-inline constexpr std::size_t first_field = 1, second_field = 2, form_field = 3;
+inline constexpr std::size_t first_field = 1, second_field = 2, form_field = 3, turn_field = 3;
 const char* const foreign_group = "\x01layout-foreign-group";
 
 const SexprList* as_list(const Sexpr& node) { return std::get_if<SexprList>(&node.v); }
@@ -107,12 +107,62 @@ std::vector<std::string> pad_forms(const PcbCheckFootprint& footprint) {
     return forms;
 }
 
+void primitive_extent(const SexprList& node, double& reach_x, double& reach_y, double& low_x, double& low_y, bool& found) {
+    if (node.size() > second_field && as_text(node.front()) == "xy") {
+        const double x = number_at(node, first_field, "primitive point"), y = number_at(node, second_field, "primitive point");
+        reach_x = found ? std::max(reach_x, x) : x;
+        reach_y = found ? std::max(reach_y, y) : y;
+        low_x = found ? std::min(low_x, x) : x;
+        low_y = found ? std::min(low_y, y) : y;
+        found = true;
+        return;
+    }
+    for (const auto& item : node)
+        if (const auto* list = as_list(item)) primitive_extent(*list, reach_x, reach_y, low_x, low_y, found);
+}
+
+std::vector<std::optional<Box>> pad_lands(const PcbCheckFootprint& footprint) {
+    std::vector<std::optional<Box>> lands;
+    for (const auto& node : *as_list(footprint.document)) {
+        const auto* item = as_list(node);
+        if (!item || item->empty() || as_text(item->front()) != "pad") continue;
+        lands.emplace_back();
+        const auto* primitives = child(*item, "primitives");
+        const auto* at = child(*item, "at");
+        if (!primitives || !at) continue;
+        double high_x = 0, high_y = 0, low_x = 0, low_y = 0, stroke = 0;
+        bool found = false;
+        primitive_extent(*primitives, high_x, high_y, low_x, low_y, found);
+        if (!found) continue;
+        for (const auto& shape : *primitives)
+            if (const auto* list = as_list(shape))
+                if (const auto* width = child(*list, "width")) stroke = std::max(stroke, number_at(*width, first_field, "primitive width"));
+        const double x = number_at(*at, first_field, "pad position"), y = number_at(*at, second_field, "pad position");
+        const bool turned_pad = at->size() > turn_field && number_at(*at, turn_field, "pad rotation") != 0.0;
+        if (turned_pad) {
+            const double reach = std::max(std::hypot(low_x, low_y), std::max(std::hypot(low_x, high_y),
+                                          std::max(std::hypot(high_x, low_y), std::hypot(high_x, high_y))));
+            low_x = low_y = -reach;
+            high_x = high_y = reach;
+        }
+        const double margin = stroke / 2;
+        lands.back() = Box{-ceil_nm(-(x + low_x - margin)), -ceil_nm(-(y + low_y - margin)), ceil_nm(x + high_x + margin),
+                           ceil_nm(y + high_y + margin)};
+    }
+    if (lands.size() != footprint.pads.size())
+        throw LayoutError("layout: pad list of " + footprint.source + " disagrees with its document");
+    return lands;
+}
+
 Variant read_variant(const PcbCheckFootprint& footprint) {
     if (!footprint.bbox) throw LayoutError("layout: footprint has no courtyard extent: " + footprint.source);
     Variant variant;
     variant.gate_box = box_nm(footprint.bbox->x0, footprint.bbox->y0, footprint.bbox->x1, footprint.bbox->y1);
+    if (!footprint.body) throw LayoutError("layout: footprint has no body or pad extent: " + footprint.source);
+    variant.body_box = box_nm(footprint.body->x0, footprint.body->y0, footprint.body->x1, footprint.body->y1);
     read_courtyard(footprint, variant);
     const auto forms = pad_forms(footprint);
+    const auto lands = pad_lands(footprint);
     const auto drilled = scan_mod_pads(footprint.document);
     if (drilled.size() != footprint.pads.size())
         throw LayoutError("layout: drill list of " + footprint.source + " disagrees with its pad list");
@@ -127,7 +177,8 @@ Variant read_variant(const PcbCheckFootprint& footprint) {
         pad.through = type == "thru_hole" || type == "np_thru_hole";
         pad.drill = ceil_nm(std::get<6>(drilled[variant.pads.size()]));
         if (forms[variant.pads.size()] == "circle") pad.radius = ceil_nm(std::max(width, height) / 2);
-        variant.pad_hull = variant.pad_hull ? united(*variant.pad_hull, pad.box) : pad.box;
+        if (const auto& land = lands[variant.pads.size()]) pad.land = united(pad.box, *land);
+        variant.pad_hull = variant.pad_hull ? united(*variant.pad_hull, pad.copper()) : pad.copper();
         variant.pads.push_back(std::move(pad));
     }
     index_names(variant);
@@ -458,6 +509,26 @@ void mark_connectors(const PcbModel& model, const AdapterOptions& options, const
     rules.boot_gap = to_nm(constants::boot_gap.value);
 }
 
+void mark_plug_paths(const PcbModel& model, const Placement& placement, Problem& problem) {
+    for (std::size_t index = 0; index < problem.parts.size(); ++index) {
+        const PcbCheckInstance& instance = model.insts[index];
+        const PlugPathFact* fact = part_fact_for(model.plug_paths, instance.value, instance.footprint);
+        if (!fact) continue;
+        Part& part = problem.parts[index];
+        const auto face = plug_path_vector(*fact);
+        const auto world = turn_point(face.first, instance.mirror ? -face.second : face.second, instance.rotation);
+        const Point out{static_cast<Nm>(std::lround(world.first)), static_cast<Nm>(std::lround(world.second))};
+        const auto back = static_cast<Turn>((turn_count - static_cast<int>(placement[index].turn)) % turn_count);
+        const Point here = turned(out, back);
+        const Footprint& footprint = problem.footprints[part.footprint];
+        const auto across_x = footprint.flippable ? mirrors_across_x(footprint) : std::nullopt;
+        const Point there = !across_x ? here : *across_x ? Point{-here.x, here.y} : Point{here.x, -here.y};
+        const bool top = placement[index].face == Face::top;
+        part.plug = PlugRule{top ? here : there, top ? there : here, to_nm(fact->depth_mm),
+                             fact->width_mm ? to_nm(*fact->width_mm) : Nm{0}, to_nm(fact->clear_height_mm)};
+    }
+}
+
 std::array<bool, edge_count> escape_flags(const Variant& variant, const Part& part, const Problem& problem) {
     std::vector<PcbEscapePad> pads;
     for (std::size_t name = 0; name < variant.names.size(); ++name) {
@@ -473,7 +544,7 @@ std::array<bool, edge_count> escape_flags(const Variant& variant, const Part& pa
         pads.push_back({Box4{to_mm(box.x0), to_mm(box.y0), to_mm(box.x1), to_mm(box.y1)},
                         connected && !(through && plane)});
     }
-    const Box& gate = variant.gate_box;
+    const Box& gate = variant.body_box;
     const PcbEscapeSides sides = pcb_escape_sides(
         Box4{to_mm(gate.x0), to_mm(gate.y0), to_mm(gate.x1), to_mm(gate.y1)}, pads, constants::escape_tie.value);
     return {sides.north, sides.south, sides.west, sides.east};
@@ -713,6 +784,7 @@ ModelBinding bind_model(const PcbModel& model, const PcbEmitPolicy& policy, cons
     problem.rules.compare_guard = static_cast<Nm>(constants::compare_guard.value);
     problem.rules.group_guard = static_cast<Nm>(constants::group_guard.value);
     mark_connectors(model, options, binding.placement, problem);
+    mark_plug_paths(model, binding.placement, problem);
     reserve_thermal_fields(model, policy, binding.placement, problem);
     claim_via_fields(model, policy, binding.placement, problem);
     if (gates) translate_gates(model, *gates, problem);
@@ -817,7 +889,7 @@ std::string GateVerdict::text() const {
     const auto word = [](bool pass) { return pass ? "pass" : "FAIL"; };
     return std::string("fanout=") + word(fanout) + " mechanical=" + word(mechanical) + " on_board=" +
            word(on_board) + " grouped=" + word(grouped) + " contracts=" + word(contracts) + " spacing=" +
-           word(spacing) + " integrity=" + word(integrity);
+           word(spacing) + " integrity=" + word(integrity) + " plug_paths=" + word(plug_paths);
 }
 
 GateVerdict judge_model(const PcbPlacementInput& inputs, const PcbModel& model) {
@@ -828,7 +900,7 @@ GateVerdict judge_model(const PcbPlacementInput& inputs, const PcbModel& model) 
     const bool placed_spacing = spacing.ok_as_placed();
     return {check_fanout(input, 0).ok, check_placement_mech(input).ok, ratsnest.off_board.empty(),
             ratsnest.dispersed.empty(), check_pcb_placement_gates(inputs, model).ok(),
-            spacing.ok, integrity.ok, integrity.placement_ok, placed_spacing};
+            spacing.ok, integrity.ok, integrity.placement_ok, placed_spacing, check_plug_paths(input, model.som_keepout).ok};
 }
 
 PcbModel model_with(const PcbModel& base, const ModelBinding& binding, const Placement& placement) {

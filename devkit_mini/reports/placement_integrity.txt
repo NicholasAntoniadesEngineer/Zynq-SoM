@@ -1,58 +1,56 @@
 PLACEMENT INTEGRITY GATE: PASS
   mechanical/module-mating: checked 300, findings 0 [GATE]
   mechanical/land-spacing: checked 16677, findings 0 [GATE]
-  mechanical/module-clearance: checked 59, findings 0 [GATE]
-  mechanical/module-escape-corridor: checked 294, findings 0 [GATE]
-  mechanical/tall-part-beside-module: checked 68, findings 0 [MEASURED]
+  mechanical/module-clearance: checked 46, findings 0 [GATE]
+  mechanical/module-escape-corridor: checked 333, findings 0 [GATE]
+  mechanical/tall-part-beside-module: checked 55, findings 0 [MEASURED]
   high_speed/controlled-net-needs-ground: checked 4, findings 0 [GATE]
   high_speed/termination-distance-report: checked 1, findings 0 [MEASURED]
   power/regulator-loop-one-face: checked 3, findings 0 [GATE]
   power/regulator-over-ground: checked 6, findings 0 [GATE]
-  power/input-capacitor-nearest: checked 6, findings 0 [MEASURED]
+  power/input-capacitor-nearest: checked 6, findings 1 [MEASURED]
   power/nothing-sensitive-under-inductor: checked 69, findings 0 [GATE]
   protection/protect-first-after-connector: checked 3, findings 0 [GATE]
   decoupling/bypass-on-pin-face-or-under: checked 31, findings 0 [GATE]
   sensing/sense-distance-report: checked 8, findings 0 [MEASURED]
   timing/timing-parts-on-crystal-face: checked 0, findings 0 [GATE]
+    FOUND input-capacitor-nearest: U6004 (power_som) input pin VIN2 (pad 12): the nearest authored part is C6023 (power_som) at 0.539677 mm, nearer than its input capacitor C6025 at 1.17527 mm
     NOTE module-mating: J10003 mates module J3: worst pad error 1.58882e-14 mm over 100 pins, mate-to-receptacle row inset 0.185 mm (the module's own land patterns; self-alignment 0.33 mm)
     NOTE module-mating: J8001 mates module J1: worst pad error 7.94411e-15 mm over 100 pins, mate-to-receptacle row inset 0.185 mm (the module's own land patterns; self-alignment 0.33 mm)
     NOTE module-mating: J9002 mates module J2: worst pad error 1.58882e-14 mm over 100 pins, mate-to-receptacle row inset 0.185 mm (the module's own land patterns; self-alignment 0.33 mm)
     NOTE land-spacing: J10003 (DF40C-100DP-0.4V_51): land gap 0.17 mm below its net-class clearance 0.2 mm; fabricator minimum 0.09 mm; B2 15-30 V (voltage unknown, highest board voltage used); required 0.1 mm; PASS: Hirose DF40 catalogue (2013.11) p.10, DF40C-xxDP header recommended PCB layout: pad 0.23+-0.02 on pitch 0.4+-0.02, end pads 0.35+-0.02
     NOTE land-spacing: J8001 (DF40C-100DP-0.4V_51): land gap 0.17 mm below its net-class clearance 0.2 mm; fabricator minimum 0.09 mm; B2 15-30 V (voltage unknown, highest board voltage used); required 0.1 mm; PASS: Hirose DF40 catalogue (2013.11) p.10, DF40C-xxDP header recommended PCB layout: pad 0.23+-0.02 on pitch 0.4+-0.02, end pads 0.35+-0.02
     NOTE land-spacing: J9002 (DF40C-100DP-0.4V_51): land gap 0.17 mm below its net-class clearance 0.2 mm; fabricator minimum 0.09 mm; B2 15-30 V (voltage unknown, highest board voltage used); required 0.1 mm; PASS: Hirose DF40 catalogue (2013.11) p.10, DF40C-xxDP header recommended PCB layout: pad 0.23+-0.02 on pitch 0.4+-0.02, end pads 0.35+-0.02
-    NOTE tall-part-beside-module: SW1002 (debug_boot) RESET is 1.54991 mm tall, 0.049908 mm above the module underside at 1.5 mm, and 3.03 mm from the module body (switch; highest point of the 3D model ${KIPRJMOD}/../parts/TS-1187A-B-A-B/TS-1187A-B-A-B.wrl)
-    NOTE tall-part-beside-module: U12001 (usb_uart_connector) USBLC6-2SC6 is 1.64897 mm tall, 0.148968 mm above the module underside at 1.5 mm, and 3.06779 mm from the module body (diode; highest point of the 3D model ${KIPRJMOD}/../parts/USBLC6-2SC6/USBLC6-2SC6.wrl)
-    NOTE tall-part-beside-module: J1001 (debug_boot) 878311420 is 5.89991 mm tall, 4.39991 mm above the module underside at 1.5 mm, and 3.094 mm from the module body (header; highest point of the 3D model ${KIPRJMOD}/../parts/878311420/878311420.wrl)
-    NOTE tall-part-beside-module: U3002 (pd_input) USBLC6-2SC6 is 1.64897 mm tall, 0.148968 mm above the module underside at 1.5 mm, and 3.1659 mm from the module body (diode; highest point of the 3D model ${KIPRJMOD}/../parts/USBLC6-2SC6/USBLC6-2SC6.wrl)
-    NOTE tall-part-beside-module: J1002 (debug_boot) HX_JN1.27-2x5 is 5.19989 mm tall, 3.69989 mm above the module underside at 1.5 mm, and 3.244 mm from the module body (header; highest point of the 3D model ${KIPRJMOD}/../parts/HX_JN1.27-2x5_TP_H4.9/HX_JN1.27-2x5_TP_H4.9.wrl)
-    NOTE tall-part-beside-module: L6003 (power_som) 10uH is 4.21005 mm tall, 2.71005 mm above the module underside at 1.5 mm, and 3.8 mm from the module body (inductor; highest point of the 3D model ${KIPRJMOD}/../parts/SWPA8040S100MT/SWPA8040S100MT.wrl)
-    NOTE tall-part-beside-module: SW1001 (debug_boot) DIP-4 is 2.35001 mm tall, 0.850008 mm above the module underside at 1.5 mm, and 3.8 mm from the module body (switch; highest point of the 3D model ${KIPRJMOD}/../parts/DSHP04TSGER/DSHP04TSGER.wrl)
-    NOTE tall-part-beside-module: D3001 (pd_input) SMBJ22A is 2.15 mm tall, 0.65 mm above the module underside at 1.5 mm, and 6.5018 mm from the module body (diode; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Diode_SMD.3dshapes/D_SMB.step)
-    NOTE tall-part-beside-module: C6016 (power_som) 10u is 1.6 mm tall, 0.1 mm above the module underside at 1.5 mm, and 7.8999 mm from the module body (capacitor; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_1206_3216Metric.step)
-    NOTE tall-part-beside-module: J3001 (pd_input) TYPE-C-31-M-12 is 3.25108 mm tall, 1.75108 mm above the module underside at 1.5 mm, and 8.1019 mm from the module body (connector; highest point of the 3D model ${KIPRJMOD}/../parts/TYPE-C-31-M-12/TYPE-C-31-M-12.wrl)
-    NOTE tall-part-beside-module: J12001 (usb_uart_connector) TYPE-C-31-M-12 is 3.25108 mm tall, 1.75108 mm above the module underside at 1.5 mm, and 8.6019 mm from the module body (connector; highest point of the 3D model ${KIPRJMOD}/../parts/TYPE-C-31-M-12/TYPE-C-31-M-12.wrl)
-    NOTE tall-part-beside-module: C6015 (power_som) 10u is 1.6 mm tall, 0.1 mm above the module underside at 1.5 mm, and 10.1501 mm from the module body (capacitor; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_1206_3216Metric.step)
-    NOTE tall-part-beside-module: C3002 (pd_input) 10u is 2.5 mm tall, 1 mm above the module underside at 1.5 mm, and 11.75 mm from the module body (capacitor; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_1210_3225Metric.step)
-    NOTE termination-distance-report: R4007 (power) is 0.725 mm from Q4001.1; the reach of a series part is 4 mm
+    NOTE tall-part-beside-module: J1001 (debug_boot) 878311420 is 5.89991 mm tall, 4.39991 mm above the module underside at 1.5 mm, and 3.03 mm from the module body (header; highest point of the 3D model ${KIPRJMOD}/../parts/878311420/878311420.wrl)
+    NOTE tall-part-beside-module: U12001 (usb_uart_connector) USBLC6-2SC6 is 1.64897 mm tall, 0.148968 mm above the module underside at 1.5 mm, and 3.0618 mm from the module body (diode; highest point of the 3D model ${KIPRJMOD}/../parts/USBLC6-2SC6/USBLC6-2SC6.wrl)
+    NOTE tall-part-beside-module: U3002 (pd_input) USBLC6-2SC6 is 1.64897 mm tall, 0.148968 mm above the module underside at 1.5 mm, and 3.1609 mm from the module body (diode; highest point of the 3D model ${KIPRJMOD}/../parts/USBLC6-2SC6/USBLC6-2SC6.wrl)
+    NOTE tall-part-beside-module: D3001 (pd_input) SMBJ22A is 2.15 mm tall, 0.65 mm above the module underside at 1.5 mm, and 3.2267 mm from the module body (diode; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Diode_SMD.3dshapes/D_SMB.step)
+    NOTE tall-part-beside-module: SW1002 (debug_boot) RESET is 1.54991 mm tall, 0.049908 mm above the module underside at 1.5 mm, and 4.1 mm from the module body (switch; highest point of the 3D model ${KIPRJMOD}/../parts/TS-1187A-B-A-B/TS-1187A-B-A-B.wrl)
+    NOTE tall-part-beside-module: C3002 (pd_input) 10u is 2.5 mm tall, 1 mm above the module underside at 1.5 mm, and 4.2202 mm from the module body (capacitor; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_1210_3225Metric.step)
+    NOTE tall-part-beside-module: J1002 (debug_boot) HX_JN1.27-2x5 is 5.19989 mm tall, 3.69989 mm above the module underside at 1.5 mm, and 4.38 mm from the module body (header; highest point of the 3D model ${KIPRJMOD}/../parts/HX_JN1.27-2x5_TP_H4.9/HX_JN1.27-2x5_TP_H4.9.wrl)
+    NOTE tall-part-beside-module: SW1001 (debug_boot) DIP-4 is 2.35001 mm tall, 0.850008 mm above the module underside at 1.5 mm, and 7.01 mm from the module body (switch; highest point of the 3D model ${KIPRJMOD}/../parts/DSHP04TSGER/DSHP04TSGER.wrl)
+    NOTE tall-part-beside-module: J12001 (usb_uart_connector) TYPE-C-31-M-12 is 3.25108 mm tall, 1.75108 mm above the module underside at 1.5 mm, and 7.8459 mm from the module body (connector; highest point of the 3D model ${KIPRJMOD}/../parts/TYPE-C-31-M-12/TYPE-C-31-M-12.wrl)
+    NOTE tall-part-beside-module: J3001 (pd_input) TYPE-C-31-M-12 is 3.25108 mm tall, 1.75108 mm above the module underside at 1.5 mm, and 8.0959 mm from the module body (connector; highest point of the 3D model ${KIPRJMOD}/../parts/TYPE-C-31-M-12/TYPE-C-31-M-12.wrl)
+    NOTE termination-distance-report: R4007 (power) is 1.81371 mm from Q4001.1; the reach of a series part is 4 mm
     NOTE input-capacitor-nearest: U4001 (power) VIN2 (pad 12): input capacitor C4025 at 0.955001 mm
     NOTE input-capacitor-nearest: U4001 (power) VIN1 (pad 8): input capacitor C4001 at 0.955001 mm
     NOTE input-capacitor-nearest: U4002 (power) VIN2 (pad 12): input capacitor C4029 at 0.955001 mm
     NOTE input-capacitor-nearest: U4002 (power) VIN1 (pad 8): input capacitor C4007 at 0.955001 mm
-    NOTE input-capacitor-nearest: U6004 (power_som) VIN2 (pad 12): input capacitor C6025 at 0.275001 mm
-    NOTE input-capacitor-nearest: U6004 (power_som) VIN1 (pad 8): input capacitor C6014 at 0.425736 mm
-    NOTE nothing-sensitive-under-inductor: inductor L4001 (power): nearest sense or timing part is RS5002 (power_mon), 20.4125 mm centre to centre
-    NOTE nothing-sensitive-under-inductor: inductor L4002 (power): nearest sense or timing part is R11003 (uart_bridge), 19.5742 mm centre to centre
-    NOTE nothing-sensitive-under-inductor: inductor L6003 (power_som): nearest sense or timing part is R11003 (uart_bridge), 6.92119 mm centre to centre
-    NOTE protect-first-after-connector: D3001 (pd_input) is 8.6 mm from J3001.A4B9 on net +VBUS_IN
-    NOTE protect-first-after-connector: U3002 (pd_input) is 2.37376 mm from J3001.A6 on net /pd_input/PD_USB_DP_CONN
-    NOTE protect-first-after-connector: U12001 (usb_uart_connector) is 4.57195 mm from J12001.A6 on net /usb_uart_connector/USB_UART_DP_CONN
-    NOTE bypass-on-pin-face-or-under: bypass distance to the served pin over 31 capacitors: least 0.09 mm, median 0.592997 mm, greatest 2.18016 mm; 1 beyond the 2 mm bypass reach; 16 on the pin's face, 15 directly under
-    NOTE sense-distance-report: R11002 (uart_bridge) is 4.70891 mm from U11001.8 (same face)
-    NOTE sense-distance-report: R11003 (uart_bridge) is 4.47144 mm from U11001.8 (same face)
-    NOTE sense-distance-report: R3003 (pd_input) is 2.3535 mm from U3001.8 (same face)
-    NOTE sense-distance-report: R3004 (pd_input) is 2.3535 mm from U3001.8 (same face)
-    NOTE sense-distance-report: RS5002 (power_mon) is 2.106 mm from U5001.15 (opposite face)
-    NOTE sense-distance-report: RS5003 (power_mon) is 0.887785 mm from U5001.2 (opposite face)
-    NOTE sense-distance-report: RS5001 (power_mon) is 0.693038 mm from U5001.12 (opposite face)
-    NOTE sense-distance-report: RS5004 (power_mon) is 0.193039 mm from U5002.12 (opposite face)
+    NOTE input-capacitor-nearest: U6004 (power_som) VIN2 (pad 12): input capacitor C6025 at 1.17527 mm
+    NOTE input-capacitor-nearest: U6004 (power_som) VIN1 (pad 8): input capacitor C6014 at 0.525001 mm
+    NOTE nothing-sensitive-under-inductor: inductor L4001 (power): nearest sense or timing part is R3003 (pd_input), 18.0638 mm centre to centre
+    NOTE nothing-sensitive-under-inductor: inductor L4002 (power): nearest sense or timing part is R3004 (pd_input), 7.64257 mm centre to centre
+    NOTE nothing-sensitive-under-inductor: inductor L6003 (power_som): nearest sense or timing part is RS5003 (power_mon), 15.6948 mm centre to centre
+    NOTE protect-first-after-connector: D3001 (pd_input) is 4.80746 mm from J3001.A4B9 on net +VBUS_IN
+    NOTE protect-first-after-connector: U3002 (pd_input) is 2.28305 mm from J3001.A6 on net /pd_input/PD_USB_DP_CONN
+    NOTE protect-first-after-connector: U12001 (usb_uart_connector) is 4.13407 mm from J12001.A6 on net /usb_uart_connector/USB_UART_DP_CONN
+    NOTE bypass-on-pin-face-or-under: bypass distance to the served pin over 31 capacitors: least 0 mm, median 0.675001 mm, greatest 2.945 mm; 1 beyond the 2 mm bypass reach; 16 on the pin's face, 15 directly under
+    NOTE sense-distance-report: RS5002 (power_mon) is 4.39581 mm from U5001.15 (opposite face)
+    NOTE sense-distance-report: RS5001 (power_mon) is 4.35761 mm from U5001.12 (opposite face)
+    NOTE sense-distance-report: R11003 (uart_bridge) is 3.88701 mm from U11001.8 (same face)
+    NOTE sense-distance-report: R11002 (uart_bridge) is 2.65308 mm from U11001.8 (same face)
+    NOTE sense-distance-report: R3003 (pd_input) is 2.1035 mm from U3001.8 (same face)
+    NOTE sense-distance-report: R3004 (pd_input) is 2.1035 mm from U3001.8 (same face)
+    NOTE sense-distance-report: RS5003 (power_mon) is 1.87087 mm from U5001.2 (opposite face)
+    NOTE sense-distance-report: RS5004 (power_mon) is 1.63831 mm from U5002.12 (same face)
 

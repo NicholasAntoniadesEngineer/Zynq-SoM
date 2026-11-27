@@ -1,9 +1,16 @@
 #pragma once
+#include "schgen/named_constant.hpp"
+#include <array>
 #include "schgen/pcb_escape.hpp"
 #include "schgen/pcb_stage_templates.hpp"
 #include "schgen/pcb_owned_groups_adapter.hpp"
 
 namespace schgen {
+namespace placement_constants {
+inline constexpr NamedConstant edge_replan_rounds{"edge_replan_rounds", 4, "rebuilds", "policy",
+    "full model rebuilds after a selected-edge mismatch, one per board side: each rebuild fixes the edges the packer chose, so a spill can move a block at most once per side before the assignment repeats"};
+inline constexpr std::array placement_registry{edge_replan_rounds};
+}
 // A packed spill needs a new edge-conditioned zone solve, not a connector-only
 // translation. The retry specification preserves non-edge policy verbatim.
 FloorplanSpec pcb_edge_replan_spec(const FloorplanSpec&, const FloorplanPlan&);

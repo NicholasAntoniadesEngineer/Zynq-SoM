@@ -34,6 +34,14 @@ constexpr Box post_floor{35 * unit / 2, 35 * unit / 2, 45 * unit / 2, 45 * unit 
 constexpr Nm east_floor = 109 * unit / 4, west_floor = 37 * unit / 2;
 constexpr Point hole_floor{97 * unit / 4, 3 * unit};
 constexpr double loose_limit = 1e9;
+constexpr Point balance_wall_site{5 * unit, 15 * unit};
+constexpr Nm stub_half = 3 * unit / 2;
+constexpr Nm shaft_width = 7 * unit, shaft_height = 50 * unit, roof_half = 3 * unit, roof_reach = 19 * unit / 2;
+constexpr Nm strip_reach = 10 * unit;
+constexpr Point mark_site{24 * unit, 15 * unit};
+constexpr Point beside_site{24 * unit, 15 * unit};
+constexpr double pour_reach = 5.0;
+constexpr Point roof_site{7 * unit / 2, 79 * unit / 2}, shaft_site{7 * unit / 2, 15 * unit};
 }
 
 void require(bool condition, const std::string& what) {
@@ -43,6 +51,7 @@ void require(bool condition, const std::string& what) {
 Variant block(Nm half_x, Nm half_y) {
     Variant variant;
     variant.gate_box = {-half_x, -half_y, half_x, half_y};
+    variant.body_box = {-half_x, -half_y, half_x, half_y};
     variant.court_boxes.push_back(variant.gate_box);
     const Box pad{-fixture::pad_half, -fixture::pad_half, fixture::pad_half, fixture::pad_half};
     variant.pads.push_back({"1", {0, 0}, pad, false, 0});
@@ -54,6 +63,7 @@ Variant block(Nm half_x, Nm half_y) {
 Variant round(Nm radius) {
     Variant variant;
     variant.gate_box = {-radius, -radius, radius, radius};
+    variant.body_box = {-radius, -radius, radius, radius};
     variant.court_discs.push_back({{0, 0}, radius});
     return variant;
 }
@@ -284,6 +294,140 @@ void squeeze_packs_a_bundle_against_a_wall() {
     require(kernel.board().outline() == best.after.outline(), "the kernel holds the kept outline");
 }
 
+void balance_names_what_holds_a_cluster() {
+    Scene scene(fixture::board_width, fixture::board_height);
+    const std::size_t held = scene.add("HELD", block(fixture::cap_half, fixture::cap_half), fixture::cap_site, false, true);
+    const std::size_t holder =
+        scene.add("HOLDER", block(fixture::plug_half, fixture::plug_half), fixture::owner_site, false, true);
+    scene.problem.parts[holder].top_only = true;
+    scene.problem.constraints.face_pairs.push_back({holder, held, "pairing"});
+    Kernel kernel(scene.problem, scene.placement);
+    const BalanceReport report = balance_faces(kernel, fixture::seat_pitch, fixture::seat_reach, BalanceScope::anywhere);
+    require(report.flipped == 0 && report.kept_on_top.size() == 1 && kernel.placement()[held].face == Face::top,
+            "a part tied to the face of a top-only part stays on top");
+    const std::string& why = report.kept_on_top.front().second;
+    require(why.rfind("HELD:", 0) == 0 && why.find("top-only HOLDER") != std::string::npos &&
+            why.find("pairing (HELD to HOLDER)") != std::string::npos,
+            "the report names the part left on top, the part that holds it and the rule between them");
+}
+
+void balance_swaps_a_cluster_with_the_part_under_it() {
+    Scene scene(fixture::board_width, fixture::board_height);
+    scene.add("WALL", block(fixture::wall_half, fixture::wall_reach), fixture::balance_wall_site, true);
+    const std::size_t owner =
+        scene.add("OWNER", block(fixture::plug_half, fixture::plug_half), fixture::owner_site, false, true);
+    const std::size_t under = scene.add("UNDER", block(fixture::cap_half, fixture::cap_half), fixture::owner_site, false, true);
+    scene.placement[under].face = Face::bottom;
+    scene.problem.constraints.pad_gaps.push_back({owner, under, {}, fixture::pad_half, Sense::at_most, "hold"});
+    Kernel kernel(scene.problem, scene.placement);
+    require(kernel.violations().empty(), "the stacked pair starts legal");
+    const BalanceReport narrow = balance_faces(kernel, fixture::seat_pitch, fixture::seat_reach, BalanceScope::mirrored);
+    require(narrow.flipped == 0 && kernel.placement() == scene.placement && narrow.kept_on_top.size() == 1 &&
+            narrow.kept_on_top.front().second.find("OWNER: no mirrored seat within reach") == 0 &&
+            narrow.kept_on_top.front().second.find("UNDER on the rear") != std::string::npos,
+            "the mirrored-only balance leaves a stacked pair alone and names the part under it");
+    const BalanceReport report = balance_faces(kernel, fixture::seat_pitch, fixture::seat_reach, BalanceScope::anywhere);
+    require(report.flipped == 1 && report.parts == 1 && report.risen == 1, "the owner goes down and the part under it comes up");
+    require(kernel.placement()[owner].face == Face::bottom && kernel.placement()[under].face == Face::top &&
+            kernel.placement()[owner].at == kernel.placement()[under].at,
+            "the pair changes faces as one and stays stacked");
+    require(report.top_after < report.top_before && kernel.violations().empty(), "the top face is emptier and every rule holds");
+    kernel.verify();
+}
+
+void balance_seats_a_cluster_beside_a_blocked_mirror() {
+    Scene scene(fixture::board_width, fixture::board_height);
+    scene.add("WALL", block(fixture::wall_half, fixture::wall_reach), fixture::balance_wall_site, true);
+    const std::size_t mover =
+        scene.add("MOVER", block(fixture::plug_half, fixture::plug_half), fixture::owner_site, false, true);
+    const std::size_t post = scene.add("POST", block(fixture::stub_half, fixture::stub_half), fixture::owner_site, true);
+    scene.placement[post].face = Face::bottom;
+    Kernel kernel(scene.problem, scene.placement);
+    require(kernel.violations().empty(), "the part over a fixed rear part starts legal");
+    require(balance_faces(kernel, fixture::seat_pitch, fixture::seat_reach, BalanceScope::mirrored).flipped == 0 &&
+            kernel.placement() == scene.placement, "the mirrored-only balance finds no seat within its reach");
+    const BalanceReport report = balance_faces(kernel, fixture::seat_pitch, fixture::seat_reach, BalanceScope::anywhere);
+    const Pose& seat = kernel.placement()[mover];
+    require(report.flipped == 1 && report.shifted == 1 && seat.face == Face::bottom, "the part takes a rear seat beside the fixed part");
+    require(squared(seat.at.x - fixture::owner_site.x) + squared(seat.at.y - fixture::owner_site.y) > squared(fixture::seat_reach),
+            "the seat lies beyond the reach of the mirrored-in-place search");
+    require(kernel.violations().empty(), "the shifted seat keeps every rule");
+    kernel.verify();
+}
+
+void balance_exchanges_faces_with_a_stranger_underneath() {
+    Scene scene(fixture::shaft_width, fixture::shaft_height);
+    scene.add("ROOF", block(fixture::roof_half, fixture::roof_reach), fixture::roof_site, true);
+    const std::size_t floor = scene.add("FLOOR", block(fixture::cap_half, fixture::roof_reach), fixture::roof_site, true);
+    scene.placement[floor].face = Face::bottom;
+    const std::size_t mover =
+        scene.add("MOVER", block(fixture::roof_half, fixture::roof_half), fixture::shaft_site, false, true);
+    const std::size_t stranger =
+        scene.add("STRANGER", block(fixture::pad_half, fixture::strip_reach), fixture::shaft_site, false, true);
+    scene.placement[stranger].face = Face::bottom;
+    Kernel kernel(scene.problem, scene.placement);
+    require(kernel.violations().empty(), "the shaft starts legal");
+    const BalanceReport report = balance_faces(kernel, fixture::seat_pitch, fixture::seat_reach, BalanceScope::anywhere);
+    require(report.flipped == 1 && report.exchanged == 1 && report.parts == 1 && report.risen == 1,
+            "with no free rear seat the part changes faces with the part under it");
+    require(kernel.placement()[mover].face == Face::bottom && kernel.placement()[stranger].face == Face::top,
+            "the larger part ends on the rear and the smaller on top");
+    require(kernel.violations().empty(), "the exchange keeps every rule");
+    kernel.verify();
+}
+
+void balance_releases_a_face_bound_part_from_a_field() {
+    Scene scene(fixture::board_width, fixture::board_height);
+    scene.add("WALL", block(fixture::wall_half, fixture::wall_reach), fixture::balance_wall_site, true);
+    const std::size_t owner =
+        scene.add("OWNER", block(fixture::plug_half, fixture::plug_half), fixture::owner_site, false, true);
+    const std::size_t mark = scene.add("MARK", block(fixture::cap_half, fixture::cap_half), fixture::mark_site, false, true);
+    scene.problem.parts[mark].top_only = true;
+    const PourRule rule{owner, {-fixture::pour_reach, -fixture::pour_reach, fixture::pour_reach, fixture::pour_reach}, 0.0, false};
+    scene.problem.reserves.push_back(
+        {pour_box(rule, scene.placement[owner], scene.problem.board), {owner, mark}, "pour", true, true, rule});
+    Kernel kernel(scene.problem, scene.placement);
+    require(kernel.violations().empty() && !kernel.movable_alone(mark), "the top-only part starts inside the field as its member");
+    const BalanceReport report = balance_faces(kernel, fixture::seat_pitch, fixture::seat_reach, BalanceScope::anywhere);
+    require(report.flipped == 1 && report.released == 1 && kernel.placement()[owner].face == Face::bottom,
+            "the field and its owner go to the rear once the top-only part is released from it");
+    require(kernel.placement()[mark] == scene.placement[mark] && kernel.movable_alone(mark),
+            "the top-only part stays where it was, no longer a member of the field");
+    require(kernel.reserves().front() == pour_box(rule, kernel.placement()[owner], scene.problem.board),
+            "the field follows its owner to the rear");
+    require(kernel.violations().empty(), "the release keeps every rule");
+    kernel.verify();
+    scene.problem.constraints.face_pairs.push_back({owner, mark, "pairing"});
+    Kernel tied(scene.problem, scene.placement);
+    const BalanceReport held = balance_faces(tied, fixture::seat_pitch, fixture::seat_reach, BalanceScope::anywhere);
+    require(held.flipped == 0 && held.released == 0 && tied.placement()[owner].face == Face::top,
+            "a top-only part tied by a face rule is never released and keeps its cluster on top");
+}
+
+void balance_sinks_a_part_that_may_sit_under_its_top_bound_owner() {
+    Scene scene(fixture::board_width, fixture::board_height);
+    scene.add("WALL", block(fixture::wall_half, fixture::wall_reach), fixture::balance_wall_site, true);
+    const std::size_t owner =
+        scene.add("OWNER", block(fixture::roof_half, fixture::roof_half), fixture::owner_site, false, true);
+    scene.problem.parts[owner].top_only = true;
+    const std::size_t guest = scene.add("GUEST", block(fixture::cap_half, fixture::cap_half), fixture::beside_site, false, true);
+    scene.problem.constraints.face_pairs.push_back({owner, guest, "under", true});
+    Kernel kernel(scene.problem, scene.placement);
+    require(kernel.violations().empty(), "the guest starts legal beside its owner");
+    const BalanceReport report = balance_faces(kernel, fixture::seat_pitch, fixture::seat_reach, BalanceScope::anywhere);
+    const Pose& seat = kernel.placement()[guest];
+    require(report.flipped == 1 && seat.face == Face::bottom && kernel.placement()[owner].face == Face::top,
+            "the guest goes to the rear while its top-only owner stays");
+    require(overlaps(gate_at(scene.problem, guest, seat), gate_at(scene.problem, owner, kernel.placement()[owner])),
+            "its rear seat lies under the owner, as the rule between them allows");
+    require(kernel.violations().empty(), "the seat under the owner keeps every rule");
+    scene.problem.constraints.face_pairs.back().or_under = false;
+    Kernel strict(scene.problem, scene.placement);
+    const BalanceReport held = balance_faces(strict, fixture::seat_pitch, fixture::seat_reach, BalanceScope::anywhere);
+    require(held.flipped == 0 && strict.placement()[guest].face == Face::top && held.kept_on_top.size() == 1,
+            "without that allowance the guest stays on its owner's face");
+}
+
 }
 
 int main() {
@@ -297,6 +441,12 @@ int main() {
         squeeze_sinks_a_jammed_part();
         squeeze_stops_at_fixed_parts();
         squeeze_packs_a_bundle_against_a_wall();
+        balance_names_what_holds_a_cluster();
+        balance_swaps_a_cluster_with_the_part_under_it();
+        balance_seats_a_cluster_beside_a_blocked_mirror();
+        balance_exchanges_faces_with_a_stranger_underneath();
+        balance_releases_a_face_bound_part_from_a_field();
+        balance_sinks_a_part_that_may_sit_under_its_top_bound_owner();
         std::cout << "layout squeeze contracts ok\n";
         return 0;
     } catch (const std::exception& error) {

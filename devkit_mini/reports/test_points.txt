@@ -1,23 +1,23 @@
 test_points	order=sheet,ref
 ref	net	sheet	face	x	y
-TP1001	SDIO_CLK	debug_boot	top	54.480	40.150
-TP1002	SDIO_CMD	debug_boot	top	54.480	37.650
-TP1003	VBUS_OUT_EN	debug_boot	top	41.394	5.450
-TP3001	+VBUS_IN	pd_input	top	54.352	32.602
-TP3002	+VIN	pd_input	top	54.352	35.102
-TP4001	+5V	power	top	33.350	13.170
-TP4002	+3V3	power	top	32.100	10.920
-TP4003	+1V8	power	top	23.920	64.650
-TP4004	GND	power	top	18.670	61.900
-TP4005	EN_5V0	power	top	23.670	62.150
-TP4006	EN_3V3	power	top	23.920	67.900
-TP4007	EN_1V8	power	top	21.170	61.900
-TP5001	+3V3_SC	power_mon	top	16.148	66.800
-TP5002	STM32_I2C2_SCL	power_mon	top	25.898	66.300
-TP5003	STM32_I2C2_SDA	power_mon	top	26.148	61.800
-TP6001	+5V_SOM	power_som	top	13.150	10.450
-TP11001	ZYNQ_PS_UART0_TXD	uart_bridge	top	43.600	9.050
-TP11002	ZYNQ_PS_UART0_RXD	uart_bridge	top	43.600	11.550
+TP1001	SDIO_CLK	debug_boot	top	54.290	12.300
+TP1002	SDIO_CMD	debug_boot	top	56.790	12.300
+TP1003	VBUS_OUT_EN	debug_boot	top	48.540	12.300
+TP3001	+VBUS_IN	pd_input	top	13.150	39.753
+TP3002	+VIN	pd_input	top	11.150	38.253
+TP4001	+5V	power	top	13.100	55.920
+TP4002	+3V3	power	top	69.900	50.330
+TP4003	+1V8	power	top	69.830	47.600
+TP4004	GND	power	top	11.330	44.350
+TP4005	EN_5V0	power	top	13.150	53.330
+TP4006	EN_3V3	power	top	11.350	41.670
+TP4007	EN_1V8	power	top	72.080	48.850
+TP5001	+3V3_SC	power_mon	top	69.800	31.930
+TP5002	STM32_I2C2_SCL	power_mon	top	72.300	45.430
+TP5003	STM32_I2C2_SDA	power_mon	top	72.300	31.680
+TP6001	+5V_SOM	power_som	top	68.860	11.800
+TP11001	ZYNQ_PS_UART0_TXD	uart_bridge	top	71.255	43.100
+TP11002	ZYNQ_PS_UART0_RXD	uart_bridge	top	69.755	45.100
 waived	order=net,sheet
 net	sheet	reason
 +1V8_REG	power_mon	reg-side of RS4 — probe across the shunt (the +1V8 TP is the post-shunt/load side)

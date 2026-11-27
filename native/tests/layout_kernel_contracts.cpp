@@ -2,6 +2,7 @@
 #include "schgen/layout_density.hpp"
 #include "schgen/layout_json.hpp"
 #include "schgen/layout_kernel.hpp"
+#include "schgen/layout_stage.hpp"
 
 #include <algorithm>
 #include <iostream>
@@ -53,7 +54,12 @@ constexpr Point fourth_site{14 * unit, 10 * unit};
 constexpr int dense_level = 10, middle_level = 5, sparse_level = 1, below_level = 0, above_level = 11;
 constexpr Nm middle_gap = 5 * unit / 4, sparse_gap = 9 * unit / 4, small_gap = unit / 2;
 constexpr Nm tie_reach = 3 * unit / 2;
+constexpr Nm land_spill = unit / 10;
+constexpr Point shaped_site{113 * unit / 10, 10 * unit};
 constexpr double fraction_level = 5.5;
+constexpr Nm plug_depth = 6 * unit, plug_clear = unit, tall_height = 2 * unit, low_height = unit / 2, narrow_width = unit;
+constexpr Point in_path_site{16 * unit, 20 * unit}, beside_path_site{16 * unit, 108 * unit / 5};
+constexpr Point west_edge_site{6 * unit / 5, 40 * unit}, near_west_site{3 * unit, 20 * unit}, by_module_site{63 * unit, 40 * unit};
 constexpr std::uint64_t walk_seed = 20261111;
 constexpr int walk_steps = 400;
 constexpr Nm walk_range = 4 * unit, walk_grid = unit / 20;
@@ -66,6 +72,7 @@ void require(bool condition, const std::string& what) {
 Variant square_variant(Nm half, int pads, bool through) {
     Variant variant;
     variant.gate_box = {-half, -half, half, half};
+    variant.body_box = {-half, -half, half, half};
     variant.court_boxes.push_back(variant.gate_box);
     for (int pad = 0; pad < pads; ++pad) {
         const Box box{-fixture::pad_half, -fixture::pad_half, fixture::pad_half, fixture::pad_half};
@@ -79,6 +86,7 @@ Variant square_variant(Nm half, int pads, bool through) {
 Variant strip_variant() {
     Variant variant;
     variant.gate_box = {-fixture::strip_reach, -fixture::pad_half, fixture::strip_reach, fixture::pad_half};
+    variant.body_box = {-fixture::strip_reach, -fixture::pad_half, fixture::strip_reach, fixture::pad_half};
     variant.court_boxes.push_back(variant.gate_box);
     for (const Nm x : {-fixture::unit, fixture::unit}) {
         const Box box{x - fixture::strip_pad, -fixture::strip_pad, x + fixture::strip_pad, fixture::strip_pad};
@@ -92,6 +100,7 @@ Variant strip_variant() {
 Variant round_variant(Nm radius) {
     Variant variant;
     variant.gate_box = {-radius, -radius, radius, radius};
+    variant.body_box = {-radius, -radius, radius, radius};
     variant.court_discs.push_back({{0, 0}, radius});
     return variant;
 }
@@ -305,6 +314,38 @@ void pads_keep_copper_clearance() {
     scene.problem.parts.front().pad_nets.assign(scene.problem.parts.front().pad_nets.size(), static_cast<int>(second));
     scene.problem.parts.back().pad_nets.assign(scene.problem.parts.back().pad_nets.size(), static_cast<int>(second));
     require(Kernel(scene.problem, scene.placement).violations().empty(), "same-net pads may touch");
+}
+
+void shaped_pads_keep_their_whole_copper_clear() {
+    Scene scene;
+    scene.problem.rules.copper_clearance = fixture::copper_clearance;
+    const auto pin = scene.footprint("pin", square_variant(fixture::pad_half, fixture::passive_pins, true));
+    Variant shaped = square_variant(fixture::pad_half, fixture::passive_pins, false);
+    for (auto& pad : shaped.pads) pad.land = grown(pad.box, fixture::land_spill);
+    shaped.pad_hull = grown(*shaped.pad_hull, fixture::land_spill);
+    const auto smd = scene.footprint("shaped", shaped);
+    scene.add("J", "one", pin, fixture::first_site);
+    scene.add("Q", "two", smd, fixture::spaced_site, Face::bottom);
+    scene.connect(scene.net("first", Category::signal), 0);
+    scene.connect(scene.net("second", Category::signal), 1);
+    require(has(Kernel(scene.problem, scene.placement).violations(), Breach::copper),
+            "copper drawn beyond a pad's anchor keeps the clearance from a hole on the other face");
+    scene.placement.back().at = fixture::shaped_site;
+    require(Kernel(scene.problem, scene.placement).violations().empty(), "the whole land at the clearance is legal");
+    const std::string exported = document_json(scene.problem, scene.placement);
+    const Document restored = read_document(schgen::parse_json_text(exported));
+    require(document_json(restored.problem, restored.placement) == exported &&
+            restored.problem.footprints.back().top.pads.front().land == shaped.pads.front().land,
+            "the drawn land survives the export");
+    shaped.pad_hull = shaped.pads.front().box;
+    scene.footprint("stray", shaped);
+    bool refused = false;
+    try {
+        Kernel(scene.problem, scene.placement);
+    } catch (const LayoutError&) {
+        refused = true;
+    }
+    require(refused, "a land outside the pad extent of its footprint is refused loudly");
 }
 
 void protection_leads_its_net() {
@@ -693,7 +734,7 @@ void owned_parts_are_seated_by_rule() {
     scene.problem.ownership = {{Tie::none, std::nullopt}, {Tie::authored, 0}, {Tie::authored, 0}};
     Kernel kernel(scene.problem, scene.placement);
     require(kernel.violations().size() == 2, "both owned parts start beyond their ties");
-    const ConstructReport report = construct_owned(kernel, fixture::construct_pitch, fixture::construct_reach);
+    const ConstructReport report = construct_owned(kernel, fixture::construct_pitch, fixture::construct_reach, false);
     require(report.taken == 2 && report.seated == 2 && report.unseated.empty() && report.returned == 0,
             "the constructor seats every owned part");
     require(kernel.parked_count() == 0 && kernel.violations().empty(), "the constructed placement breaks no rule");
@@ -702,10 +743,124 @@ void owned_parts_are_seated_by_rule() {
                 pad_gap_length(scene.problem, second, kernel.placement()) <= second.limit,
             "each part sits within its tie");
     require(report.length_after <= report.length_before, "the constructed placement is no longer in wire");
+    const std::vector<char> under = owned_under(scene.problem, 0);
+    require(under == std::vector<char>{0, 1, 1}, "the parts under an owner are the ones it owns, not the owner");
+    require(owned_under(scene.problem, 1) == std::vector<char>{0, 0, 0}, "an owned part with nothing tied to it has nothing under it");
+    Kernel scoped(scene.problem, scene.placement);
+    const std::vector<char> only{0, 1, 0};
+    const ConstructReport part = construct_owned(scoped, fixture::construct_pitch, fixture::construct_reach, false, &only);
+    require(part.taken == 1 && part.seated == 1 && scoped.placement()[2] == scene.placement[2],
+            "a scoped constructor seats only the parts it is given and leaves the others where they stand");
+    require(pad_gap_length(scene.problem, first, scoped.placement()) <= first.limit, "the scoped part sits within its tie");
+}
+
+void plug_paths_stay_clear() {
+    const auto kinds = [](const Scene& scene) { return Kernel(scene.problem, scene.placement).violations(); };
+    Scene scene;
+    scene.problem.rules.compare_guard = 1;
+    const auto body = scene.footprint("body", square_variant(fixture::body_half, fixture::passive_pins, false));
+    scene.add("BT", "one", body, fixture::subject_site).plug =
+        PlugRule{{-1, 0}, {1, 0}, fixture::plug_depth, 0, fixture::plug_clear};
+    scene.add("J", "two", body, fixture::in_path_site).height = fixture::tall_height;
+    const auto found = kinds(scene);
+    require(found.size() == 1 && found.front().kind == Breach::plug_path && found.front().part == 0 && found.front().other == 1,
+            "a tall part in the path is one breach, named from the part that is entered");
+    scene.problem.parts.back().height = fixture::low_height;
+    require(kinds(scene).empty(), "a part below the clear height may stand in the path");
+    scene.problem.parts.back().height = fixture::plug_clear;
+    require(kinds(scene).empty(), "a part exactly as tall as the clear height may stand in the path");
+    scene.problem.parts.back().height.reset();
+    require(has(kinds(scene), Breach::plug_path), "a part of unknown height blocks the path");
+    scene.placement.back().face = Face::bottom;
+    require(kinds(scene).empty(), "a part on the other face is not in the path");
+    scene.placement.back().face = Face::top;
+    scene.problem.parts.back().height = fixture::tall_height;
+    scene.placement.front().turn = Turn::half;
+    require(kinds(scene).empty(), "the path turns with the part");
+    scene.placement.front().turn = Turn::none;
+    scene.placement.back().at = fixture::beside_path_site;
+    require(has(kinds(scene), Breach::plug_path), "the path is as wide as the body when no width is stated");
+    scene.problem.parts.front().plug->width = fixture::narrow_width;
+    require(kinds(scene).empty(), "a stated width narrows the path about the middle of the body");
+    scene.problem.parts.front().plug->width = 0;
+    scene.placement.back().at = fixture::remote_site;
+    {
+        Kernel kernel(scene.problem, scene.placement);
+        require(kernel.violations().empty(), "the scene is legal with the tall part away");
+        const auto entering = kernel.rejection(1, {fixture::in_path_site, Turn::none, Face::top});
+        require(entering && entering->kind == Breach::plug_path && entering->other == 0, "a tall part may not move into the path");
+        require(!kernel.move(1, {fixture::in_path_site, Turn::none, Face::top}), "the move into the path is refused");
+        require(!kernel.rejection(1, {fixture::in_path_site, Turn::none, Face::bottom}), "it may pass on the other face");
+        const auto leaving = kernel.rejection(0, {fixture::near_west_site, Turn::none, Face::top});
+        require(leaving && leaving->kind == Breach::plug_path && leaving->other == 0, "the path may not run off the board");
+        require(!kernel.rejection(0, {fixture::near_west_site, Turn::half, Face::top}), "turned inward the same seat is legal");
+        kernel.park(1);
+        const auto seating = kernel.seat_rejection(1, {fixture::in_path_site, Turn::none, Face::top});
+        require(seating && seating->kind == Breach::plug_path, "a seat in the path is refused like a move");
+        kernel.park(0);
+        require(kernel.seat(1, {fixture::in_path_site, Turn::none, Face::top}), "with the entered part off the board its path binds nobody");
+        const auto arriving = kernel.seat_rejection(0, {fixture::subject_site, Turn::none, Face::top});
+        require(arriving && arriving->kind == Breach::plug_path && arriving->other == 1,
+                "the entered part may not be seated with its path across a tall part");
+    }
+    {
+        Scene edge;
+        edge.add("J", "one", edge.footprint("jack", square_variant(fixture::body_half, fixture::passive_pins, false)), fixture::west_edge_site);
+        Part& jack = edge.problem.parts.back();
+        jack.plug = PlugRule{{-1, 0}, {1, 0}, fixture::plug_depth, 0, fixture::plug_clear};
+        require(has(kinds(edge), Breach::plug_path), "a path off the board is a breach for a part that is not edge-mounted");
+        jack.connector = true;
+        jack.edge = EdgeRule{{-1, 0}, {1, 0}, fixture::edge_reach, fixture::west_edge_site.x};
+        require(kinds(edge).empty(), "an edge-mounted part with its mouth off the board keeps its path outside");
+    }
+    {
+        Scene module;
+        module.problem.board.module_body = fixture::module_core;
+        module.add("BT", "one", module.footprint("body", square_variant(fixture::body_half, fixture::passive_pins, false)),
+                   fixture::by_module_site)
+            .plug = PlugRule{{-1, 0}, {1, 0}, fixture::plug_depth, 0, fixture::plug_clear};
+        require(has(kinds(module), Breach::plug_path), "the module body blocks a path that runs under it");
+        module.placement.front().turn = Turn::half;
+        require(kinds(module).empty(), "turned away from the module the path is clear");
+    }
+    {
+        Scene bad;
+        bad.add("BT", "one", bad.footprint("body", square_variant(fixture::body_half, fixture::passive_pins, false)), fixture::subject_site).plug =
+            PlugRule{{-1, 0}, {1, 0}, 0, 0, fixture::plug_clear};
+        bool threw = false;
+        try {
+            Kernel kernel(bad.problem, bad.placement);
+        } catch (const LayoutError&) {
+            threw = true;
+        }
+        require(threw, "a plug path without a depth is refused");
+    }
+    require(std::string(breach_name(Breach::plug_path)) == "plug_path", "the breach has a name");
+}
+
+void blocked_plug_paths_are_repaired() {
+    Scene scene;
+    scene.problem.rules.compare_guard = 1;
+    const auto body = scene.footprint("body", square_variant(fixture::body_half, fixture::passive_pins, false));
+    scene.add("BT", "one", body, fixture::subject_site).plug =
+        PlugRule{{-1, 0}, {1, 0}, fixture::plug_depth, 0, fixture::plug_clear};
+    scene.add("J", "two", body, fixture::in_path_site).height = fixture::tall_height;
+    scene.problem.ownership.assign(scene.problem.parts.size(), {Tie::none, std::nullopt});
+    Kernel kernel(scene.problem, scene.placement);
+    require(has(kernel.violations(), Breach::plug_path), "the placement handed over has a blocked path");
+    StageResult result;
+    repair_start(kernel, default_squeeze(), result, [](bool) {});
+    require(kernel.violations().empty(), "the repair clears the path and breaks nothing else");
+    require(result.inherited == 1, "the blocked path is counted among the breaches handed over");
+    require(std::any_of(result.repairs.begin(), result.repairs.end(),
+                        [](const RepairRow& row) { return row.kept && row.rule == "plug path" && row.before == 1 && row.after == 0; }),
+            "the kept step is reported against the plug path");
 }
 
 int main() {
     try {
+        plug_paths_stay_clear();
+        blocked_plug_paths_are_repaired();
         parts_wait_off_the_board();
         owned_parts_are_seated_by_rule();
         courtyards_block_their_face();
@@ -715,6 +870,7 @@ int main() {
     single_part_rules_hold();
         fixed_copper_keeps_its_clearance();
         pads_keep_copper_clearance();
+        shaped_pads_keep_their_whole_copper_clear();
         contract_rules_bind_pads();
         protection_leads_its_net();
         subsystem_rules_bind_groups();

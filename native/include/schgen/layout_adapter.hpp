@@ -105,8 +105,8 @@ PcbModel model_with(const PcbModel& base, const ModelBinding& binding, const Pla
 
 struct GateVerdict {
     bool fanout = false, mechanical = false, on_board = false, grouped = false, contracts = false, spacing = false,
-         integrity = false, integrity_as_placed = false, spacing_as_placed = false;
-    bool ok() const { return fanout && mechanical && on_board && grouped && contracts && spacing && integrity; }
+         integrity = false, integrity_as_placed = false, spacing_as_placed = false, plug_paths = false;
+    bool ok() const { return fanout && mechanical && on_board && grouped && contracts && spacing && integrity && plug_paths; }
     bool ok_as_placed() const {
         return fanout && mechanical && on_board && grouped && contracts && spacing_as_placed && integrity_as_placed;
     }

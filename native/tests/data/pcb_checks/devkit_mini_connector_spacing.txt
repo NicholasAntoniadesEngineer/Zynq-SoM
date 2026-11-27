@@ -1,4 +1,4 @@
 CONNECTOR OVERMOLD SPACING GATE: FAIL (board 100 x 100 mm)
   same-edge overmold connector pairs: 1 (1 too tight)
-    BAD J12001    <-> J3001     envelope+access gap=  2.05mm along x (need >= 5mm)
-    TOO-TIGHT J12001 <-> J3001: plug envelope 2.05mm away lies in the access room of J12001 (user ruling 2026-11-22 (reasonable clearance and no more); 5 mm chosen by the integrator so that neighbouring plug bodies cannot touch; not taken from a standard)
+    BAD J12001    <-> J3001     envelope+access gap=  1.04mm along x (need >= 5mm)
+    TOO-TIGHT J12001 <-> J3001: plug envelope 1.04mm away lies in the access room of J12001 (user ruling 2026-11-22 (reasonable clearance and no more); 5 mm chosen by the integrator so that neighbouring plug bodies cannot touch; not taken from a standard)

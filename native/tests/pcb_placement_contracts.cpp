@@ -568,7 +568,7 @@ void run(const std::filesystem::path &root, const std::string &name, const std::
         // This immutable renderer operand predates interface-only silkscreen.
         // Current generated boards below still use the current project policy.
         fixture_policy.interface_reference_labels_only=false;
-        fixture_policy.silk_to_floor=false;
+        fixture_policy.silk_to_floor=false;fixture_policy.title_inside=false;
         require(render_pcb(expected,fixture_policy).pcb==
                     read(root/"native/tests/data/pcb_emit"/(name+".kicad_pcb")),
                 name+" immutable model still renders exact historical PCB bytes");

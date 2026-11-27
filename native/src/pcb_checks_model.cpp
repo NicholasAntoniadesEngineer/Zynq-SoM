@@ -13,6 +13,7 @@ PcbCheckFootprintPtr pcb_check_footprint(std::string source,std::string bytes,Se
     try{fp->bbox=footprint_bbox(fp->document,3);}catch(const std::runtime_error& e){
         if(std::string(e.what())!="footprint_bbox: no measurable extent")throw;
     }
+    fp->body=footprint_extent(fp->document,FootprintExtent::body,3);
     return fp;
 }
 PcbCheckInput::PcbCheckInput(PcbCheckModel model):model_(std::move(model)){
@@ -20,6 +21,7 @@ PcbCheckInput::PcbCheckInput(PcbCheckModel model):model_(std::move(model)){
         if(!inst.mod){geometry_.push_back(std::nullopt);continue;}
         if(!std::isfinite(inst.x)||!std::isfinite(inst.y)||!std::isfinite(inst.rotation))throw std::runtime_error(inst.ref+": nonfinite placement");
         PcbCheckGeometry geo;if(inst.mod->bbox)geo.courtyard=inst_placed_box(*inst.mod->bbox,inst.x,inst.y,inst.rotation,4);
+        if(inst.mod->body)geo.body=inst_placed_box(*inst.mod->body,inst.x,inst.y,inst.rotation,4);
         std::vector<std::tuple<std::string,double,double,double,double,double>> named,typed;
         for(const auto& [name,type,x,y,r,w,h]:inst.mod->pads){named.emplace_back(name,x,y,r,w,h);typed.emplace_back(type,x,y,r,w,h);}
         auto local=pad_boxes_local(typed,inst.rotation);std::optional<Box4> hull;
@@ -34,6 +36,9 @@ const PcbCheckGeometry& PcbCheckInput::geometry_at(std::size_t index)const{
 }
 Box4 PcbCheckInput::courtyard_at(std::size_t index)const{
     const auto& g=geometry_at(index);if(!g.courtyard)throw std::runtime_error(model_.insts.at(index).ref+": footprint has no measurable extent");return *g.courtyard;
+}
+Box4 PcbCheckInput::body_at(std::size_t index)const{
+    const auto& g=geometry_at(index);if(!g.body)throw std::runtime_error(model_.insts.at(index).ref+": footprint has no body outline and no pads");return *g.body;
 }
 Box4 PcbCheckInput::pad_bbox_at(std::size_t index)const{
     const auto& g=geometry_at(index);if(!g.pad_bbox)throw std::runtime_error(model_.insts.at(index).ref+": footprint has no measurable extent");return *g.pad_bbox;

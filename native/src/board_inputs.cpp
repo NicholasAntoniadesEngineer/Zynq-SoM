@@ -1,4 +1,5 @@
 #include "schgen/board_inputs.hpp"
+#include "schgen/footprint_courtyard.hpp"
 #include "schgen/module_mating.hpp"
 #include "schgen/land_spacing.hpp"
 #include "schgen/manufacturing_checks.hpp"
@@ -95,6 +96,7 @@ PcbPlacementInput load_board_inputs(const ProjectPaths& paths,
         auto found = result.footprints.find(key);
         if (found != result.footprints.end()) return found->second;
         auto parsed = pcb_check_footprint(key, read(file));
+        courtyard::require_sound(parsed->document, key);
         result.footprints.emplace(key, parsed);
         return parsed;
     };
@@ -118,6 +120,7 @@ PcbPlacementInput load_board_inputs(const ProjectPaths& paths,
         }
     }
     floor.project.connectors = facts.connectors;
+    floor.project.plug_paths = facts.plug_paths;
     floor.project.isolation = facts.isolation;
     floor.project.thermal_copper = facts.thermal_copper;
     floor.project.regulators = facts.regulators;

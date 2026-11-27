@@ -13,6 +13,7 @@ struct PcbVerificationResult {
     PlacementMechResult mechanical;
     ConnectorModelResult connector_models;
     ConnectorSpacingResult connector_spacing;
+    PlugPathResult plug_paths;
     RefdesOverlapResult refdes;
     PcbPlacementGatesResult placement;
     PcbFanoutResult fanout;

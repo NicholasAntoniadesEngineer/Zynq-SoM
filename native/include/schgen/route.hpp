@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstdint>
 #include <string>
 #include <tuple>
@@ -24,12 +25,14 @@ public:
                const std::string& what);
     void block_box(double x0, double y0, double x1, double y1, double grid);
     bool free_or(const std::string& net, RouteCell cell) const;
+    bool crosses_box(RouteCell from, RouteCell to, double grid) const;
     std::vector<RouteCell> occupied() const;
     std::vector<std::tuple<int, int, std::string>> owners() const;
 
 private:
     static std::uint64_t pack(int i, int j);
     std::unordered_map<std::uint64_t, std::string> owner_;
+    std::vector<std::array<double, 4>> walls_;
 };
 
 std::vector<RoutePoint> route_bfs_join(

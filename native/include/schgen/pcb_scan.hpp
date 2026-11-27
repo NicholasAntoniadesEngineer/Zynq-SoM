@@ -105,6 +105,9 @@ std::pair<Sexpr, int> hide_undersom_bottom_refs(
 
 Box4 footprint_bbox(const Sexpr& doc, int decimals);
 
+enum class FootprintExtent { outline, court, land, fab, body };
+std::optional<Box4> footprint_extent(const Sexpr& doc, FootprintExtent which, int decimals);
+
 struct SomPad {
     std::string pin;
     double x = 0.0;

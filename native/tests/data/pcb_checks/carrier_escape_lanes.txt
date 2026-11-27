@@ -1,3 +1,4 @@
-ESCAPE-LANE GATE (Tier-2 plan): PASS
+ESCAPE-LANE GATE (Tier-2 plan): FAIL
   lanes: 293  pair records: 40  GENUINE pairs: 15
   lane copper lands with the routing phase (D13 contract); this gate proves the PLAN
+  VIOLATION: content_key STALE — the plan does not match the live interface/footprint/poses

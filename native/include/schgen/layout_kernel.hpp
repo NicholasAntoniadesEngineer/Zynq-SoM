@@ -17,7 +17,7 @@ inline constexpr std::array kernel_registry{hash_cell, key_shift};
 
 enum class Breach : std::uint8_t {
     overlap, off_board, fanout, module_core, bottom_face, dispersion, copper, contract, group_bound,
-    edge_mount, connector_gap, reserved, locked, corner, under_inductor, via_field, spacing
+    edge_mount, connector_gap, reserved, locked, corner, under_inductor, via_field, spacing, plug_path
 };
 
 struct Violation {
@@ -94,13 +94,13 @@ private:
         Nm drill = 0;
     };
     struct Shape {
-        Box gate, bound;
+        Box gate, body, bound;
         std::array<bool, edge_count> escape{};
         std::vector<Land> lands;
         std::vector<Box> named;
         std::vector<Box> courts, holes;
         std::vector<Disc> discs;
-        std::optional<Box> pads;
+        std::optional<Box> pads, plug;
     };
     struct GroupSummary {
         std::optional<Box> hull;
@@ -134,6 +134,8 @@ private:
     bool edge_met(const Part& item, const Shape& shape, const Pose& pose) const;
     bool connectors_met(std::size_t part, const Shape& shape, const Pose& pose, std::size_t other, const Shape& other_shape,
                         Nm guard) const;
+    bool plug_blocked(std::size_t owner, const Box& path, Face face, std::size_t other, const Shape& other_shape,
+                      Face other_face, Nm guard) const;
     template <typename Sink>
     bool geometry_breaches(std::size_t part, const Shape& shape, const Pose& pose, Nm guard, bool owned,
                            Sink&& sink) const;
@@ -168,7 +170,7 @@ private:
     std::map<std::string, std::vector<std::size_t>> groups_, members_;
     std::map<std::string, std::vector<std::size_t>> group_rules_;
     std::vector<std::vector<std::size_t>> pad_rules_, nearest_rules_, face_rules_, order_rules_;
-    std::vector<std::size_t> connectors_, via_owners_;
+    std::vector<std::size_t> connectors_, via_owners_, plug_owners_;
     std::vector<Nm> net_lengths_;
     Nm routed_ = 0, reach_ = 0;
 };

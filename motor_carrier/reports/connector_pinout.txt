@@ -1,23 +1,23 @@
 connector_pins	order=sheet,ref,pin
 sheet	ref	board_ref	part	pin	pin_name	net	net_type	port	route_class	ohm	declared	protect
-board_control	J1	J1001	ZX-SH1.0-4PWT	1	1	GND	ground	-	-	-	-	-
-board_control	J1	J1001	ZX-SH1.0-4PWT	2	2	+5V_FAN	power	-	-	-	-	-
-board_control	J1	J1001	ZX-SH1.0-4PWT	3	3	FAN_TACH_CONN	signal	-	-	-	-	-
-board_control	J1	J1001	ZX-SH1.0-4PWT	4	4	FAN_PWM_OD	signal	-	-	-	-	-
-board_control	J1	J1001	ZX-SH1.0-4PWT	5	5	GND	ground	-	-	-	-	-
-board_control	J1	J1001	ZX-SH1.0-4PWT	6	6	GND	ground	-	-	-	-	-
-can_bus	J1	J3001	ZX-SH1.0-4PWT	1	1	-	-	-	-	-	nc	-
-can_bus	J1	J3001	ZX-SH1.0-4PWT	2	2	CAN_H	signal	-	-	-	-	D3001:NUP2105LT1G
-can_bus	J1	J3001	ZX-SH1.0-4PWT	3	3	CAN_L	signal	-	-	-	-	D3001:NUP2105LT1G
-can_bus	J1	J3001	ZX-SH1.0-4PWT	4	4	GND_MOTOR	ground	-	-	-	-	-
-can_bus	J1	J3001	ZX-SH1.0-4PWT	5	5	GND_MOTOR	ground	-	-	-	-	-
-can_bus	J1	J3001	ZX-SH1.0-4PWT	6	6	GND_MOTOR	ground	-	-	-	-	-
-can_bus	J2	J3002	ZX-SH1.0-4PWT	1	1	-	-	-	-	-	nc	-
-can_bus	J2	J3002	ZX-SH1.0-4PWT	2	2	CAN_H	signal	-	-	-	-	D3001:NUP2105LT1G
-can_bus	J2	J3002	ZX-SH1.0-4PWT	3	3	CAN_L	signal	-	-	-	-	D3001:NUP2105LT1G
-can_bus	J2	J3002	ZX-SH1.0-4PWT	4	4	GND_MOTOR	ground	-	-	-	-	-
-can_bus	J2	J3002	ZX-SH1.0-4PWT	5	5	GND_MOTOR	ground	-	-	-	-	-
-can_bus	J2	J3002	ZX-SH1.0-4PWT	6	6	GND_MOTOR	ground	-	-	-	-	-
+board_control	J1	J1001	ZX-SH1.0-4PLT	1	1	GND	ground	-	-	-	-	-
+board_control	J1	J1001	ZX-SH1.0-4PLT	2	2	+5V_FAN	power	-	-	-	-	-
+board_control	J1	J1001	ZX-SH1.0-4PLT	3	3	FAN_TACH_CONN	signal	-	-	-	-	-
+board_control	J1	J1001	ZX-SH1.0-4PLT	4	4	FAN_PWM_OD	signal	-	-	-	-	-
+board_control	J1	J1001	ZX-SH1.0-4PLT	5	5	GND	ground	-	-	-	-	-
+board_control	J1	J1001	ZX-SH1.0-4PLT	6	6	GND	ground	-	-	-	-	-
+can_bus	J1	J3001	ZX-SH1.0-4PLT	1	1	-	-	-	-	-	nc	-
+can_bus	J1	J3001	ZX-SH1.0-4PLT	2	2	CAN_H	signal	-	-	-	-	D3001:NUP2105LT1G
+can_bus	J1	J3001	ZX-SH1.0-4PLT	3	3	CAN_L	signal	-	-	-	-	D3001:NUP2105LT1G
+can_bus	J1	J3001	ZX-SH1.0-4PLT	4	4	GND_MOTOR	ground	-	-	-	-	-
+can_bus	J1	J3001	ZX-SH1.0-4PLT	5	5	GND_MOTOR	ground	-	-	-	-	-
+can_bus	J1	J3001	ZX-SH1.0-4PLT	6	6	GND_MOTOR	ground	-	-	-	-	-
+can_bus	J2	J3002	ZX-SH1.0-4PLT	1	1	-	-	-	-	-	nc	-
+can_bus	J2	J3002	ZX-SH1.0-4PLT	2	2	CAN_H	signal	-	-	-	-	D3001:NUP2105LT1G
+can_bus	J2	J3002	ZX-SH1.0-4PLT	3	3	CAN_L	signal	-	-	-	-	D3001:NUP2105LT1G
+can_bus	J2	J3002	ZX-SH1.0-4PLT	4	4	GND_MOTOR	ground	-	-	-	-	-
+can_bus	J2	J3002	ZX-SH1.0-4PLT	5	5	GND_MOTOR	ground	-	-	-	-	-
+can_bus	J2	J3002	ZX-SH1.0-4PLT	6	6	GND_MOTOR	ground	-	-	-	-	-
 debug_boot	J1	J4001	878311420	1	1	GND	ground	-	-	-	-	-
 debug_boot	J1	J4001	878311420	2	2	+3V3	power	-	-	-	-	U9002:TPD6E001RSER
 debug_boot	J1	J4001	878311420	3	3	GND	ground	-	-	-	-	-
@@ -66,12 +66,12 @@ esc_io	J1	J5001	HX PZ2.54-3x8P ZZ	21	21	GND_MOTOR	ground	-	-	-	-	-
 esc_io	J1	J5001	HX PZ2.54-3x8P ZZ	22	22	GND_MOTOR	ground	-	-	-	-	-
 esc_io	J1	J5001	HX PZ2.54-3x8P ZZ	23	23	GND_MOTOR	ground	-	-	-	-	-
 esc_io	J1	J5001	HX PZ2.54-3x8P ZZ	24	24	GND_MOTOR	ground	-	-	-	-	-
-esc_io	J2	J5002	ZX-SH1.0-4PWT	1	1	GND_MOTOR	ground	-	-	-	-	-
-esc_io	J2	J5002	ZX-SH1.0-4PWT	2	2	TLM_CONN	signal	-	-	-	-	D5003:SRV05-4
-esc_io	J2	J5002	ZX-SH1.0-4PWT	3	3	-	-	-	-	-	nc	-
-esc_io	J2	J5002	ZX-SH1.0-4PWT	4	4	-	-	-	-	-	nc	-
-esc_io	J2	J5002	ZX-SH1.0-4PWT	5	5	GND_MOTOR	ground	-	-	-	-	-
-esc_io	J2	J5002	ZX-SH1.0-4PWT	6	6	GND_MOTOR	ground	-	-	-	-	-
+esc_io	J2	J5002	ZX-SH1.0-4PLT	1	1	GND_MOTOR	ground	-	-	-	-	-
+esc_io	J2	J5002	ZX-SH1.0-4PLT	2	2	TLM_CONN	signal	-	-	-	-	D5003:SRV05-4
+esc_io	J2	J5002	ZX-SH1.0-4PLT	3	3	-	-	-	-	-	nc	-
+esc_io	J2	J5002	ZX-SH1.0-4PLT	4	4	-	-	-	-	-	nc	-
+esc_io	J2	J5002	ZX-SH1.0-4PLT	5	5	GND_MOTOR	ground	-	-	-	-	-
+esc_io	J2	J5002	ZX-SH1.0-4PLT	6	6	GND_MOTOR	ground	-	-	-	-	-
 esc_power	J1	J6001	XT60PW-M	1	-	GND_MOTOR	ground	-	-	-	-	-
 esc_power	J1	J6001	XT60PW-M	2	+	+VESC_IN	power	-	-	-	-	-
 esc_power	J1	J6001	XT60PW-M	3	3	GND_MOTOR	ground	-	-	-	-	-

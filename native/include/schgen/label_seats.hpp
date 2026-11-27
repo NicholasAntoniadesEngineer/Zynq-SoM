@@ -27,14 +27,18 @@ inline constexpr NamedConstant label_step{"label_step", 0.5e6, "nm", "policy",
     "pitch of the outward and sideways search for a seat"};
 inline constexpr NamedConstant label_reach{"label_reach", 3e6, "nm", "policy",
     "farthest a label may sit from its part's courtyard and still read as that part's"};
-inline constexpr NamedConstant title_indent{"title_indent", 1.0, "mm", "policy",
-    "distance of the module title's left end from the module's left edge"};
+inline constexpr NamedConstant title_indent{"title_indent", 4.0, "mm", "policy",
+    "distance of the module title's left end from the module's left edge, inside the outline and past its corner mark"};
 inline constexpr NamedConstant title_rise{"title_rise", 1.2, "mm", "policy",
-    "distance of the module title's baseline above the module's top edge"};
+    "distance of the module title's top below the module's top edge; the title sits inside the outline, where no top-face part may be placed"};
+inline constexpr NamedConstant recorded_indent{"recorded_indent", 1.0, "mm", "policy",
+    "left end of the module title on boards recorded before the title moved inside the outline"};
+inline constexpr NamedConstant recorded_rise{"recorded_rise", 1.2, "mm", "policy",
+    "baseline of the module title above the outline on those recorded boards"};
 inline constexpr NamedConstant title_height{"title_height", 1.4, "mm", "policy",
     "character height of the module title"};
 inline constexpr std::array label_registry{label_height, label_margin, label_guard, label_inset,
-                                           label_step, label_reach, title_indent, title_rise, title_height};
+                                           label_step, label_reach, title_indent, title_rise, recorded_indent, recorded_rise, title_height};
 }
 
 inline constexpr const char* module_title = "Zynq SoM";
@@ -66,5 +70,6 @@ struct LabelSeating {
 
 layout::Box label_extent(const std::string& reference, double height, bool upright);
 LabelSeating seat_labels(const PcbModel& model, const PcbEmitPolicy& policy);
+layout::Box title_box(const PcbModel& model);
 
 }
