@@ -48,6 +48,19 @@ std::optional<std::string> pair_partner(const std::string& name) {
     return std::nullopt;
 }
 
+bool pair_names(const std::string& first, const std::string& second) {
+    if (first.size() != second.size()) return false;
+    std::size_t differing = first.size();
+    for (std::size_t index = 0; index < first.size(); ++index) {
+        if (first[index] == second[index]) continue;
+        if (differing != first.size()) return false;
+        differing = index;
+    }
+    if (differing == first.size()) return false;
+    const char one = first[differing], other = second[differing];
+    return (one == 'P' && other == 'N') || (one == 'N' && other == 'P') || (one == '+' && other == '-') || (one == '-' && other == '+');
+}
+
 PairResult route_pair(World& world, const SearchSetup& setup, int first, int second, const PairEnds& ends) {
     PairResult result;
     const Board& board = world.board();

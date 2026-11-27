@@ -296,6 +296,8 @@ void pairs_run_coupled() {
     require(run.coupled_length > run.breakout_length, "most of the pair's length is coupled");
     require(pair_partner("USB_D+") == std::optional<std::string>("USB_D-") && pair_partner("CLK_N") == std::optional<std::string>("CLK_P") && !pair_partner("RESET"),
             "pair partners follow the KiCad suffixes");
+    require(pair_names("BUS_DP_OUT", "BUS_DN_OUT") && pair_names("A+", "A-") && !pair_names("BUS_DP_OUT", "BUS_DP_OUT") && !pair_names("NET_P1", "NET_N2") && !pair_names("AP", "AX"),
+            "two nets of a pair class are a pair when their names differ by one P or N, or one plus or minus");
 }
 
 }

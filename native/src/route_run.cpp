@@ -306,17 +306,18 @@ RunReport route_all(World& world, const RunSetup& stated) {
     RunReport report;
     RunSetup setup = stated;
     report.stubs = lay_stubs(world, states, setup.search.lanes);
-    std::map<std::string, std::size_t> by_name;
-    for (std::size_t index = 0; index < states.size(); ++index) by_name[board.nets[static_cast<std::size_t>(states[index].job.net)].name] = index;
     for (std::size_t index = 0; index < states.size(); ++index) {
         State& one = states[index];
         const NetClass& entry = board.rules.classes[board.nets[static_cast<std::size_t>(one.job.net)].net_class];
         if (one.job.plane || one.coupled || entry.pair_width <= 0 || one.job.terminals.size() != 2) continue;
-        const auto partner = pair_partner(board.nets[static_cast<std::size_t>(one.job.net)].name);
-        const auto found = partner ? by_name.find(*partner) : by_name.end();
-        if (found == by_name.end() || found->second < index) continue;
-        State& two = states[found->second];
-        if (two.job.plane || two.job.terminals.size() != 2 || board.nets[static_cast<std::size_t>(two.job.net)].net_class != board.nets[static_cast<std::size_t>(one.job.net)].net_class) continue;
+        std::size_t mate = states.size();
+        for (std::size_t other = index + 1; other < states.size() && mate == states.size(); ++other)
+            if (!states[other].job.plane && !states[other].coupled && states[other].job.terminals.size() == 2 &&
+                board.nets[static_cast<std::size_t>(states[other].job.net)].net_class == board.nets[static_cast<std::size_t>(one.job.net)].net_class &&
+                pair_names(board.nets[static_cast<std::size_t>(one.job.net)].name, board.nets[static_cast<std::size_t>(states[other].job.net)].name))
+                mate = other;
+        if (mate == states.size()) continue;
+        State& two = states[mate];
         ++report.pairs;
         const std::size_t near = length_of(one.job.terminals[0].centre, two.job.terminals[0].centre) <= length_of(one.job.terminals[0].centre, two.job.terminals[1].centre) ? 0 : 1;
         const auto with_stubs = [](const State& state, std::size_t terminal) {

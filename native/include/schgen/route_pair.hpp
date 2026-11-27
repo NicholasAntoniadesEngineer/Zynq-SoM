@@ -27,6 +27,7 @@ struct PairResult {
 };
 
 std::optional<std::string> pair_partner(const std::string& name);
+bool pair_names(const std::string& first, const std::string& second);
 PairResult route_pair(World& world, const SearchSetup& setup, int first, int second, const PairEnds& ends);
 
 }
