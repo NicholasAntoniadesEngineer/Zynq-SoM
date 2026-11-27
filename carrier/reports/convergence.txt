@@ -39,8 +39,8 @@ level | rule | subject | action | breaches before>after | kept
 2 | test point on +5V_LCD | TP15001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
 2 | test point on LCD_CTP_SDA | TP15002 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
 2 | test point on LCD_CTP_SCL | TP15003 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
-2 | test point on SDIO_CMD | TP16001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
-2 | test point on SDIO_CLK | TP16002 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on fast net SDIO_CMD | TP16001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on fast net SDIO_CLK | TP16002 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
 2 | test point on +VBUS_IN | TP17001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
 2 | test point on +VIN | TP17002 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
 2 | test point on +3V3_PMODX | TP19001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
@@ -86,7 +86,7 @@ level | rule | subject | action | breaches before>after | kept
 2 | test point on CAM_SCL | TP8001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
 2 | test point on CAM_SDA | TP8002 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
 2 | test point on CAM_EN | TP8003 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
-ILLEGAL handed over: (0)
-ILLEGAL after connector separation: (0)
+ILLEGAL handed over: contract:J12001/U12004 (1)
+ILLEGAL after connector separation: contract:J12001/U12004 (1)
 ILLEGAL after repair: (0)
 

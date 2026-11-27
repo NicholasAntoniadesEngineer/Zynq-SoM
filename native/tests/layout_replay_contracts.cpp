@@ -29,6 +29,7 @@ using namespace schgen::layout;
 namespace fixture {
 constexpr std::uint64_t walk_seed = 20261111;
 constexpr int sparse_density = 5;
+constexpr double stray_boards = 2;
 const char* const gaps_kept = "GAPS NOT KEPT: 0\n";
 constexpr Nm walk_range = 5000000, walk_grid = 50000;
 constexpr int flip_odds = 4, probe_stride = 25;
@@ -275,6 +276,22 @@ void squeezed_board_passes(const std::string& project, const PcbPlacementInput& 
     require(after < before, project + " squeeze shrinks the board");
     const GateVerdict verdict = judge_model(inputs, stage.model);
     require(verdict.ok(), project + " squeezed board passes its gates: " + verdict.text());
+    const TestPointResult taps = check_test_points(inputs, stage.model, policy, options);
+    require(taps.ok && !taps.rows.empty(), project + " squeezed board keeps every test point on its net: " + taps.summary());
+    std::size_t fast = 0;
+    for (const TestPointRow& row : taps.rows) {
+        const bool quick = options.intent.fast_nets.count(row.net) != 0;
+        require(row.limit == (quick ? constants::fast_tap_reach.value : constants::tap_reach.value),
+                project + " " + row.reference + " carries the limit of its net");
+        if (quick) ++fast;
+    }
+    require(fast > 0, project + " has a test point on a fast net");
+    PcbModel strayed = stage.model;
+    for (auto& instance : strayed.insts)
+        if (instance.ref == taps.rows.front().reference) instance.x += fixture::stray_boards * strayed.board_w;
+    const TestPointResult lost = check_test_points(inputs, strayed, policy, options);
+    require(!lost.ok && !lost.rows.front().met && lost.rows.front().reference == taps.rows.front().reference,
+            project + " test point gate names a test point carried away from its net");
     const auto rendered = render_pcb(stage.model, policy);
     require(thermal_drills(rendered.document) == thermal_drills(render_pcb(model, policy).document),
             project + " squeeze keeps every thermal via");

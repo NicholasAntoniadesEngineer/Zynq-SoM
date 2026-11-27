@@ -1,6 +1,6 @@
 # Assembly order — carrier
 
-Board 154.75 x 103.75 mm. 565 placed parts (212 top / 353 bottom); 5 fiducials are bare-copper marks, excluded from every phase and step.
+Board 164 x 97.5 mm. 565 placed parts (220 top / 345 bottom); 5 fiducials are bare-copper marks, excluded from every phase and step.
 Section A is the staged hand-assembly + bring-up order; section B is the PCBA process order. Every part appears in exactly one phase and exactly one step.
 
 ## A. Incremental bring-up order
@@ -12,7 +12,7 @@ Section A is the staged hand-assembly + bring-up order; section B is the PCBA pr
 | 3 | power | 51 | verify +5V at TP20001; verify +3V3 at TP20002; verify +1V8 at TP20003 |
 | 4 | power_som | 20 | verify +5V_SOM at TP22001 |
 | 5 | fmc | 8 | verify +2V5_VADJ at TP11001 |
-| 6 | SoM interface (som_j1, som_j2, som_j3, uart_bridge) | 13 | — |
+| 6 | SoM interface (som_decoupling, som_j1, som_j2, som_j3) | 21 | — |
 | 7 | SoM module mate | 0 | boot/debug via debug_boot: J9001 (JTAG), J9002 (SWD), SW9001 (BOOT: DFU BSEL BSEL), SW9002 (RST) |
 | 8 | board_aux | 18 | verify +3V3_AUX at TP1001 |
 | 9 | bringup_en | 15 | — |
@@ -26,7 +26,7 @@ Section A is the staged hand-assembly + bring-up order; section B is the PCBA pr
 | 17 | motor_sense | 10 | — |
 | 18 | pmod_expansion | 15 | verify +3V3_PMODX at TP19001 |
 | 19 | rj45_connector | 3 | — |
-| 20 | som_decoupling | 18 | — |
+| 20 | uart_bridge | 10 | — |
 | 21 | usb_jtag_connector | 6 | verify +5V_DBG at TP29001 |
 | 22 | usb_uart_connector | 5 | — |
 | 23 | board_qwiic | 3 | — |
@@ -97,7 +97,7 @@ CHECKPOINT: verify +VIN at TP17002
 
 ![phase 3](../renders/assembly/phase_03_power.png)
 
-51 parts (4 top / 47 bottom)
+51 parts (3 top / 48 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
@@ -161,7 +161,7 @@ CHECKPOINT: verify +1V8 at TP20003
 
 ![phase 4](../renders/assembly/phase_04_power_som.png)
 
-20 parts (17 top / 3 bottom)
+20 parts (1 top / 19 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
@@ -207,27 +207,35 @@ CHECKPOINT: verify +5V_SOM at TP22001
 
 CHECKPOINT: verify +2V5_VADJ at TP11001
 
-### Phase 6 — SoM interface (som_j1, som_j2, som_j3, uart_bridge)
+### Phase 6 — SoM interface (som_decoupling, som_j1, som_j2, som_j3)
 
 ![phase 6](../renders/assembly/phase_06_som_interface.png)
 
-13 parts (3 top / 10 bottom)
+21 parts (3 top / 18 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
-| C27001 | 100n | C_0603_1608Metric | uart_bridge |
-| C27002 | 10u | C_0805_2012Metric | uart_bridge |
-| C27003 | 100n | C_0603_1608Metric | uart_bridge |
-| C27004 | 100n | C_0603_1608Metric | uart_bridge |
+| C35001 | 22u | C_0805_2012Metric | som_decoupling |
+| C35002 | 22u | C_0805_2012Metric | som_decoupling |
+| C35003 | 100n | C_0603_1608Metric | som_decoupling |
+| C35004 | 100n | C_0603_1608Metric | som_decoupling |
+| C35005 | 100n | C_0603_1608Metric | som_decoupling |
+| C35006 | 100n | C_0603_1608Metric | som_decoupling |
+| C35007 | 22u | C_0805_2012Metric | som_decoupling |
+| C35008 | 22u | C_0805_2012Metric | som_decoupling |
+| C35009 | 100n | C_0603_1608Metric | som_decoupling |
+| C35010 | 100n | C_0603_1608Metric | som_decoupling |
+| C35011 | 100n | C_0603_1608Metric | som_decoupling |
+| C35012 | 100n | C_0603_1608Metric | som_decoupling |
+| C35013 | 22u | C_0805_2012Metric | som_decoupling |
+| C35014 | 22u | C_0805_2012Metric | som_decoupling |
+| C35015 | 100n | C_0603_1608Metric | som_decoupling |
+| C35016 | 100n | C_0603_1608Metric | som_decoupling |
+| C35017 | 100n | C_0603_1608Metric | som_decoupling |
+| C35018 | 100n | C_0603_1608Metric | som_decoupling |
 | J24001 | DF40C-100DP-0.4V(51) | HRS_DF40C-100DP-0.4V_51_ | som_j1 |
 | J25002 | DF40C-100DP-0.4V(51) | HRS_DF40C-100DP-0.4V_51_ | som_j2 |
 | J26003 | DF40C-100DP-0.4V(51) | HRS_DF40C-100DP-0.4V_51_ | som_j3 |
-| R27001 | 1k | R_0603_1608Metric | uart_bridge |
-| R27002 | 22k1 | R_0603_1608Metric | uart_bridge |
-| R27003 | 47k5 | R_0603_1608Metric | uart_bridge |
-| TP27001 | ZYNQ_PS_UART0_TXD | TestPoint_Pad_D1.5mm | uart_bridge |
-| TP27002 | ZYNQ_PS_UART0_RXD | TestPoint_Pad_D1.5mm | uart_bridge |
-| U27001 | CP2102N-A02 | CP2102N-A02-GQFN24R | uart_bridge |
 
 ### Phase 7 — SoM module mate
 
@@ -241,7 +249,7 @@ CHECKPOINT: boot/debug via debug_boot: J9001 (JTAG), J9002 (SWD), SW9001 (BOOT: 
 
 ![phase 8](../renders/assembly/phase_08_board_aux.png)
 
-18 parts (2 top / 16 bottom)
+18 parts (4 top / 14 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
@@ -270,7 +278,7 @@ CHECKPOINT: verify +3V3_AUX at TP1001
 
 ![phase 9](../renders/assembly/phase_09_bringup_en.png)
 
-15 parts (4 top / 11 bottom)
+15 parts (2 top / 13 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
@@ -294,7 +302,7 @@ CHECKPOINT: verify +3V3_AUX at TP1001
 
 ![phase 10](../renders/assembly/phase_10_bringup_en_modules.png)
 
-54 parts (14 top / 40 bottom)
+54 parts (12 top / 42 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
@@ -357,7 +365,7 @@ CHECKPOINT: verify +3V3_AUX at TP1001
 
 ![phase 11](../renders/assembly/phase_11_bringup_modules.png)
 
-71 parts (22 top / 49 bottom)
+71 parts (23 top / 48 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
@@ -497,7 +505,7 @@ CHECKPOINT: verify +3V3_USER_LED at TP6008
 
 ![phase 14](../renders/assembly/phase_14_ethernet.png)
 
-11 parts (1 top / 10 bottom)
+11 parts (10 top / 1 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
@@ -517,7 +525,7 @@ CHECKPOINT: verify +3V3_USER_LED at TP6008
 
 ![phase 15](../renders/assembly/phase_15_hdmi_rx_term.png)
 
-10 parts (0 top / 10 bottom)
+10 parts (10 top / 0 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
@@ -536,7 +544,7 @@ CHECKPOINT: verify +3V3_USER_LED at TP6008
 
 ![phase 16](../renders/assembly/phase_16_motor_pwm.png)
 
-13 parts (4 top / 9 bottom)
+13 parts (8 top / 5 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
@@ -613,32 +621,24 @@ CHECKPOINT: verify +3V3_PMODX at TP19001
 | R23001 | 330R | R_0603_1608Metric | rj45_connector |
 | R23002 | 330R | R_0603_1608Metric | rj45_connector |
 
-### Phase 20 — som_decoupling
+### Phase 20 — uart_bridge
 
-![phase 20](../renders/assembly/phase_20_som_decoupling.png)
+![phase 20](../renders/assembly/phase_20_uart_bridge.png)
 
-18 parts (0 top / 18 bottom)
+10 parts (0 top / 10 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
-| C35001 | 22u | C_0805_2012Metric | som_decoupling |
-| C35002 | 22u | C_0805_2012Metric | som_decoupling |
-| C35003 | 100n | C_0603_1608Metric | som_decoupling |
-| C35004 | 100n | C_0603_1608Metric | som_decoupling |
-| C35005 | 100n | C_0603_1608Metric | som_decoupling |
-| C35006 | 100n | C_0603_1608Metric | som_decoupling |
-| C35007 | 22u | C_0805_2012Metric | som_decoupling |
-| C35008 | 22u | C_0805_2012Metric | som_decoupling |
-| C35009 | 100n | C_0603_1608Metric | som_decoupling |
-| C35010 | 100n | C_0603_1608Metric | som_decoupling |
-| C35011 | 100n | C_0603_1608Metric | som_decoupling |
-| C35012 | 100n | C_0603_1608Metric | som_decoupling |
-| C35013 | 22u | C_0805_2012Metric | som_decoupling |
-| C35014 | 22u | C_0805_2012Metric | som_decoupling |
-| C35015 | 100n | C_0603_1608Metric | som_decoupling |
-| C35016 | 100n | C_0603_1608Metric | som_decoupling |
-| C35017 | 100n | C_0603_1608Metric | som_decoupling |
-| C35018 | 100n | C_0603_1608Metric | som_decoupling |
+| C27001 | 100n | C_0603_1608Metric | uart_bridge |
+| C27002 | 10u | C_0805_2012Metric | uart_bridge |
+| C27003 | 100n | C_0603_1608Metric | uart_bridge |
+| C27004 | 100n | C_0603_1608Metric | uart_bridge |
+| R27001 | 1k | R_0603_1608Metric | uart_bridge |
+| R27002 | 22k1 | R_0603_1608Metric | uart_bridge |
+| R27003 | 47k5 | R_0603_1608Metric | uart_bridge |
+| TP27001 | ZYNQ_PS_UART0_TXD | TestPoint_Pad_D1.5mm | uart_bridge |
+| TP27002 | ZYNQ_PS_UART0_RXD | TestPoint_Pad_D1.5mm | uart_bridge |
+| U27001 | CP2102N-A02 | CP2102N-A02-GQFN24R | uart_bridge |
 
 ### Phase 21 — usb_jtag_connector
 
@@ -687,7 +687,7 @@ CHECKPOINT: verify +5V_DBG at TP29001
 
 ![phase 24](../renders/assembly/phase_24_board_services.png)
 
-11 parts (2 top / 9 bottom)
+11 parts (3 top / 8 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
@@ -707,7 +707,7 @@ CHECKPOINT: verify +5V_DBG at TP29001
 
 ![phase 25](../renders/assembly/phase_25_camera.png)
 
-13 parts (7 top / 6 bottom)
+13 parts (10 top / 3 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
@@ -769,7 +769,7 @@ CHECKPOINT: verify +5V_DBG at TP29001
 
 ![phase 28](../renders/assembly/phase_28_lcd.png)
 
-21 parts (9 top / 12 bottom)
+21 parts (8 top / 13 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
@@ -950,48 +950,45 @@ CHECKPOINT: verify +3V3_DBG at TP28001
 
 ![step 1](../renders/assembly/step_1_bottom_smd.png)
 
-353 parts (0 top / 353 bottom)
+345 parts (0 top / 345 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
 | C1001 | 10u | C_0805_2012Metric | board_aux |
-| C1002 | 100n | C_0603_1608Metric | board_aux |
 | C1003 | 10u | C_0805_2012Metric | board_aux |
-| C1004 | 100n | C_0603_1608Metric | board_aux |
 | C1005 | 100p | C_0603_1608Metric | board_aux |
 | C3001 | 100n | C_0603_1608Metric | board_services |
 | C3002 | 100n | C_0603_1608Metric | board_services |
 | C3003 | 100n | C_0603_1608Metric | board_services |
-| C4002 | 100n | C_0603_1608Metric | bringup_en |
-| C5001 | 100n | C_0603_1608Metric | bringup_en_modules |
+| C4003 | 100n | C_0603_1608Metric | bringup_en |
+| C5002 | 100n | C_0603_1608Metric | bringup_en_modules |
+| C5003 | 100n | C_0603_1608Metric | bringup_en_modules |
+| C5004 | 100n | C_0603_1608Metric | bringup_en_modules |
 | C5006 | 100n | C_0603_1608Metric | bringup_en_modules |
-| C5011 | 100n | C_0603_1608Metric | bringup_en_modules |
+| C5008 | 100n | C_0603_1608Metric | bringup_en_modules |
+| C5009 | 100n | C_0603_1608Metric | bringup_en_modules |
 | C6001 | 10u | C_0805_2012Metric | bringup_modules |
+| C6002 | 100n | C_0603_1608Metric | bringup_modules |
 | C6003 | 10u | C_0805_2012Metric | bringup_modules |
-| C6004 | 10u | C_0805_2012Metric | bringup_modules |
 | C6005 | 10u | C_0805_2012Metric | bringup_modules |
 | C6006 | 100n | C_0603_1608Metric | bringup_modules |
+| C6007 | 10u | C_0805_2012Metric | bringup_modules |
+| C6008 | 100n | C_0603_1608Metric | bringup_modules |
 | C6011 | 10u | C_0805_2012Metric | bringup_modules |
 | C6012 | 10u | C_0805_2012Metric | bringup_modules |
+| C6013 | 10u | C_0805_2012Metric | bringup_modules |
+| C6014 | 100n | C_0603_1608Metric | bringup_modules |
 | C6015 | 10u | C_0805_2012Metric | bringup_modules |
 | C6016 | 10u | C_0805_2012Metric | bringup_modules |
-| C6017 | 10u | C_0805_2012Metric | bringup_modules |
-| C6018 | 10u | C_0805_2012Metric | bringup_modules |
 | C7001 | 100n | C_0603_1608Metric | bringup_rails |
 | C7002 | 100n | C_0603_1608Metric | bringup_rails |
 | C7003 | 100n | C_0603_1608Metric | bringup_rails |
-| C10001 | 1n | C_1206_3225Metric | ethernet |
-| C10002 | 1n | C_1206_3225Metric | ethernet |
-| C10003 | 1n | C_1206_3225Metric | ethernet |
-| C10004 | 1n | C_1206_3225Metric | ethernet |
-| C10005 | 1n | C_1206_3225Metric | ethernet |
+| C10006 | 100n | C_0603_1608Metric | ethernet |
 | C11001 | 10u | C_0805_2012Metric | fmc |
 | C11002 | 100n | C_0603_1608Metric | fmc |
 | C11003 | 1u | C_0603_1608Metric | fmc |
 | C11004 | 10u | C_0805_2012Metric | fmc |
 | C11005 | 100n | C_0603_1608Metric | fmc |
-| C13001 | 100n | C_0603_1608Metric | hdmi_rx_term |
-| C13002 | 1u | C_0603_1608Metric | hdmi_rx_term |
 | C15001 | 10u | C_0805_2012Metric | lcd |
 | C15002 | 2.2u | C_0805_2012Metric | lcd |
 | C15005 | 1u | C_0603_1608Metric | lcd |
@@ -1033,6 +1030,16 @@ CHECKPOINT: verify +3V3_DBG at TP28001
 | C21001 | 100n | C_0603_1608Metric | power_mon |
 | C21002 | 100n | C_0603_1608Metric | power_mon |
 | C21003 | 10u | C_0805_2012Metric | power_mon |
+| C22014 | 100n | C_0603_1608Metric | power_som |
+| C22015 | 10u | C_1206_3216Metric | power_som |
+| C22016 | 10u | C_1206_3216Metric | power_som |
+| C22017 | 100n | C_0603_1608Metric | power_som |
+| C22018 | 22u | C_0805_2012Metric | power_som |
+| C22019 | 22u | C_0805_2012Metric | power_som |
+| C22021 | 22p | C_0603_1608Metric | power_som |
+| C22022 | 1u | C_0603_1608Metric | power_som |
+| C22023 | 1u | C_0603_1608Metric | power_som |
+| C22025 | 100n | C_0603_1608Metric | power_som |
 | C27001 | 100n | C_0603_1608Metric | uart_bridge |
 | C27002 | 10u | C_0805_2012Metric | uart_bridge |
 | C27003 | 100n | C_0603_1608Metric | uart_bridge |
@@ -1063,7 +1070,6 @@ CHECKPOINT: verify +3V3_DBG at TP28001
 | C35016 | 100n | C_0603_1608Metric | som_decoupling |
 | C35017 | 100n | C_0603_1608Metric | som_decoupling |
 | C35018 | 100n | C_0603_1608Metric | som_decoupling |
-| C36001 | 100n | C_0603_1608Metric | motor_pwm |
 | C36002 | 10u | C_0805_2012Metric | motor_pwm |
 | C36003 | 10u | C_0805_2012Metric | motor_pwm |
 | C37004 | 470uF/35V | CP_Elec_10x10.5 | motor_sense |
@@ -1071,6 +1077,7 @@ CHECKPOINT: verify +3V3_DBG at TP28001
 | L15001 | 10uH | SWPA4030S100MT | lcd |
 | L20001 | 10uH | SWPA8040S100MT | power |
 | L20002 | 10uH | SWPA8040S100MT | power |
+| L22003 | 10uH | SWPA8040S100MT | power_som |
 | Q20001 | AO3400A | SOT-23 | power |
 | R1001 | 13k | R_0603_1608Metric | board_aux |
 | R1002 | 100k | R_0603_1608Metric | board_aux |
@@ -1081,6 +1088,8 @@ CHECKPOINT: verify +3V3_DBG at TP28001
 | R3001 | 10k | R_0603_1608Metric | board_services |
 | R3002 | 1k | R_0603_1608Metric | board_services |
 | R3003 | 10k | R_0603_1608Metric | board_services |
+| R4001 | 100k | R_0603_1608Metric | bringup_en |
+| R4002 | 100k | R_0603_1608Metric | bringup_en |
 | R4003 | 100k | R_0603_1608Metric | bringup_en |
 | R4004 | 100k | R_0603_1608Metric | bringup_en |
 | R4005 | 100k | R_0603_1608Metric | bringup_en |
@@ -1097,7 +1106,10 @@ CHECKPOINT: verify +3V3_DBG at TP28001
 | R5010 | 100k | R_0603_1608Metric | bringup_en_modules |
 | R5011 | 100k | R_0603_1608Metric | bringup_en_modules |
 | R5012 | 100k | R_0603_1608Metric | bringup_en_modules |
+| R5013 | 100k | R_0603_1608Metric | bringup_en_modules |
 | R5014 | 100k | R_0603_1608Metric | bringup_en_modules |
+| R5015 | 100k | R_0603_1608Metric | bringup_en_modules |
+| R5016 | 100k | R_0603_1608Metric | bringup_en_modules |
 | R5017 | 100k | R_0603_1608Metric | bringup_en_modules |
 | R5020 | 100k | R_0603_1608Metric | bringup_en_modules |
 | R5021 | 100k | R_0603_1608Metric | bringup_en_modules |
@@ -1131,27 +1143,12 @@ CHECKPOINT: verify +3V3_DBG at TP28001
 | R7007 | 10k | R_0603_1608Metric | bringup_rails |
 | R7008 | 10k | R_0603_1608Metric | bringup_rails |
 | R7009 | 10k | R_0603_1608Metric | bringup_rails |
-| R8001 | 100R | R_0603_1608Metric | camera |
-| R8002 | 100R | R_0603_1608Metric | camera |
-| R8003 | 100R | R_0603_1608Metric | camera |
 | R9001 | 4k7 | R_0603_1608Metric | debug_boot |
 | R9002 | 4k7 | R_0603_1608Metric | debug_boot |
 | R9003 | 100R | R_0603_1608Metric | debug_boot |
 | R9004 | 10k | R_0603_1608Metric | debug_boot |
 | R9005 | 10k | R_0603_1608Metric | debug_boot |
 | R9006 | 10k | R_0603_1608Metric | debug_boot |
-| R10001 | 75R | R_0603_1608Metric | ethernet |
-| R10002 | 75R | R_0603_1608Metric | ethernet |
-| R10003 | 75R | R_0603_1608Metric | ethernet |
-| R10004 | 75R | R_0603_1608Metric | ethernet |
-| R13001 | 49.9R | R_0603_1608Metric | hdmi_rx_term |
-| R13002 | 49.9R | R_0603_1608Metric | hdmi_rx_term |
-| R13003 | 49.9R | R_0603_1608Metric | hdmi_rx_term |
-| R13004 | 49.9R | R_0603_1608Metric | hdmi_rx_term |
-| R13005 | 49.9R | R_0603_1608Metric | hdmi_rx_term |
-| R13006 | 49.9R | R_0603_1608Metric | hdmi_rx_term |
-| R13007 | 49.9R | R_0603_1608Metric | hdmi_rx_term |
-| R13008 | 49.9R | R_0603_1608Metric | hdmi_rx_term |
 | R15001 | 1.5R | R_0603_1608Metric | lcd |
 | R15004 | 100k | R_0603_1608Metric | lcd |
 | R15007 | 22R | R_0603_1608Metric | lcd |
@@ -1182,11 +1179,16 @@ CHECKPOINT: verify +3V3_DBG at TP28001
 | R20010 | 22k | R_0603_1608Metric | power |
 | R20011 | 10R | R_0603_1608Metric | power |
 | R20012 | 1k | R_0603_1608Metric | power |
+| R20013 | 10R | R_0603_1608Metric | power |
 | R20014 | 22k | R_0603_1608Metric | power |
 | R20015 | 1k | R_0603_1608Metric | power |
 | R21001 | 10k | R_0603_1608Metric | power_mon |
+| R22014 | 47k5 | R_0603_1608Metric | power_som |
+| R22015 | 13k | R_0603_1608Metric | power_som |
 | R22016 | 1k | R_0603_1608Metric | power_som |
 | R22017 | 10R | R_0603_1608Metric | power_som |
+| R22018 | 22k | R_0603_1608Metric | power_som |
+| R22019 | 1k | R_0603_1608Metric | power_som |
 | R23001 | 330R | R_0603_1608Metric | rj45_connector |
 | R23002 | 330R | R_0603_1608Metric | rj45_connector |
 | R27001 | 1k | R_0603_1608Metric | uart_bridge |
@@ -1203,15 +1205,11 @@ CHECKPOINT: verify +3V3_DBG at TP28001
 | R33006 | 10k | R_0603_1608Metric | user_io |
 | R33007 | 10k | R_0603_1608Metric | user_io |
 | R33008 | 10k | R_0603_1608Metric | user_io |
-| R36001 | 10k | R_0603_1608Metric | motor_pwm |
 | R36002 | 13k | R_0603_1608Metric | motor_pwm |
-| RN36001 | 4D03WGJ0330T5E | 4D03WGJ0330T5E | motor_pwm |
-| RN36002 | 4D03WGJ0330T5E | 4D03WGJ0330T5E | motor_pwm |
 | RS21001 | 10mR | RLM12FTCMR010 | power_mon |
 | RS21002 | 10mR | RLM12FTCMR010 | power_mon |
 | RS21003 | 10mR | RLM12FTCMR010 | power_mon |
 | RS21004 | 20mR | RLM12FTCMR020 | power_mon |
-| T10001 | HX5008NLT | HX5008NLT | ethernet |
 | TP1001 | +3V3_AUX | TestPoint_Pad_D1.5mm | board_aux |
 | TP1002 | AUX_I2C_SCL | TestPoint_Pad_D1.5mm | board_aux |
 | TP1003 | AUX_I2C_SDA | TestPoint_Pad_D1.5mm | board_aux |
@@ -1222,6 +1220,7 @@ CHECKPOINT: verify +3V3_DBG at TP28001
 | TP5002 | EN_HDMI_RX | TestPoint_Pad_D1.5mm | bringup_en_modules |
 | TP5003 | EN_LCD | TestPoint_Pad_D1.5mm | bringup_en_modules |
 | TP5004 | EN_CAM | TestPoint_Pad_D1.5mm | bringup_en_modules |
+| TP5005 | EN_SD | TestPoint_Pad_D1.5mm | bringup_en_modules |
 | TP5006 | EN_USB | TestPoint_Pad_D1.5mm | bringup_en_modules |
 | TP5007 | EN_PMOD | TestPoint_Pad_D1.5mm | bringup_en_modules |
 | TP5008 | EN_USER_LED | TestPoint_Pad_D1.5mm | bringup_en_modules |
@@ -1248,6 +1247,7 @@ CHECKPOINT: verify +3V3_DBG at TP28001
 | TP14001 | +5V_HDMI_TX | TestPoint_Pad_D1.5mm | hdmi_tx |
 | TP14002 | ZYNQ_HDMI_TX_SCL | TestPoint_Pad_D1.5mm | hdmi_tx |
 | TP14003 | ZYNQ_HDMI_TX_SDA | TestPoint_Pad_D1.5mm | hdmi_tx |
+| TP15001 | +5V_LCD | TestPoint_Pad_D1.5mm | lcd |
 | TP15002 | LCD_CTP_SDA | TestPoint_Pad_D1.5mm | lcd |
 | TP15003 | LCD_CTP_SCL | TestPoint_Pad_D1.5mm | lcd |
 | TP16001 | SDIO_CMD | TestPoint_Pad_D1.5mm | microsd |
@@ -1267,31 +1267,23 @@ CHECKPOINT: verify +3V3_DBG at TP28001
 | TP28003 | DBG_UART_RXD | TestPoint_Pad_D1.5mm | usb_jtag |
 | TP29001 | +5V_DBG | TestPoint_Pad_D1.5mm | usb_jtag_connector |
 | TP32001 | VBUS_OUT_EN | TestPoint_Pad_D1.5mm | usbc_otg |
+| TP36001 | +5V_MOTOR_IO | TestPoint_Pad_D1.5mm | motor_pwm |
 | U1001 | SY6280AAC | SY6280AAC | board_aux |
 | U1002 | PCA9306DCUR | PCA9306DCUR | board_aux |
 | U3001 | 24AA025E48T-I/OT | 24AA025E48T-I_OT | board_services |
 | U3002 | RV-3028-C7-32.768kHz-1ppm-TA-QC | RV-3028-C7-32.768kHz-1ppm-TA-QC | board_services |
-| U3003 | TPS3823-33DBVR | TPS3823-33DBVR | board_services |
 | U4001 | SN74LVC1G08 | SOT-23-5 | bringup_en |
 | U4002 | SN74LVC1G08 | SOT-23-5 | bringup_en |
 | U4003 | SN74LVC1G08 | SOT-23-5 | bringup_en |
 | U5001 | SN74LVC1G08 | SOT-23-5 | bringup_en_modules |
-| U5002 | SN74LVC1G08 | SOT-23-5 | bringup_en_modules |
-| U5003 | SN74LVC1G08 | SOT-23-5 | bringup_en_modules |
-| U5004 | SN74LVC1G08 | SOT-23-5 | bringup_en_modules |
 | U5005 | SN74LVC1G08 | SOT-23-5 | bringup_en_modules |
 | U5006 | SN74LVC1G08 | SOT-23-5 | bringup_en_modules |
 | U5007 | SN74LVC1G08 | SOT-23-5 | bringup_en_modules |
-| U5008 | SN74LVC1G08 | SOT-23-5 | bringup_en_modules |
-| U5009 | SN74LVC1G08 | SOT-23-5 | bringup_en_modules |
 | U5010 | SN74LVC1G08 | SOT-23-5 | bringup_en_modules |
 | U5011 | SN74LVC1G08 | SOT-23-5 | bringup_en_modules |
-| U6001 | SY6280AAC | SY6280AAC | bringup_modules |
-| U6003 | SY6280AAC | SY6280AAC | bringup_modules |
-| U6004 | SY6280AAC | SY6280AAC | bringup_modules |
+| U6002 | SY6280AAC | SY6280AAC | bringup_modules |
 | U6005 | SY6280AAC | SY6280AAC | bringup_modules |
-| U6006 | SY6280AAC | SY6280AAC | bringup_modules |
-| U6007 | SY6280AAC | SY6280AAC | bringup_modules |
+| U6009 | SY6280AAC | SY6280AAC | bringup_modules |
 | U6010 | SY6280AAC | SY6280AAC | bringup_modules |
 | U11001 | TLV75725PDYDR | TLV75725PDYDR | fmc |
 | U15001 | SY7201ABC | SY7201ABC | lcd |
@@ -1301,50 +1293,53 @@ CHECKPOINT: verify +3V3_DBG at TP28001
 | U20003 | AP2112K-1.8 | SOT-23-5 | power |
 | U21001 | INA3221AIRGVR | INA3221AIRGVR | power_mon |
 | U21002 | INA3221AIRGVR | INA3221AIRGVR | power_mon |
+| U22004 | LM61460AANRJRR | LM61460AANRJRR | power_som |
 | U27001 | CP2102N-A02 | CP2102N-A02-GQFN24R | uart_bridge |
 | U28002 | SN74LVC125ADR | SN74LVC125ADR | usb_jtag |
 | U28004 | AP2112K-3.3TRG1 | AP2112K-3.3TRG1 | usb_jtag |
 | U32001 | TPS2051CDBVR | TPS2051CDBVR | usbc_otg |
-| U36001 | SN74HCT245PWR | SN74HCT245PWR | motor_pwm |
 | U36003 | SY6280AAC | SY6280AAC | motor_pwm |
 
 NOTES: diode polarity (D15001): cathode per silkscreen
 NOTES: electrolytic polarity (C37004): positive mark per silkscreen
-NOTES: pin-1 orientation (41 parts, U/Q refs): dot per silkscreen
+NOTES: pin-1 orientation (32 parts, U/Q refs): dot per silkscreen
 
 ### Step 2 — Top-side SMD (paste + reflow)
 
 ![step 2](../renders/assembly/step_2_top_smd.png)
 
-184 parts (184 top / 0 bottom)
+192 parts (192 top / 0 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
 | BT3001 | KH-CR1220-2 | KH-CR1220-2 | board_services |
+| C1002 | 100n | C_0603_1608Metric | board_aux |
+| C1004 | 100n | C_0603_1608Metric | board_aux |
 | C2001 | 100n | C_0603_1608Metric | board_qwiic |
 | C4001 | 100n | C_0603_1608Metric | bringup_en |
-| C4003 | 100n | C_0603_1608Metric | bringup_en |
-| C5002 | 100n | C_0603_1608Metric | bringup_en_modules |
-| C5003 | 100n | C_0603_1608Metric | bringup_en_modules |
-| C5004 | 100n | C_0603_1608Metric | bringup_en_modules |
+| C4002 | 100n | C_0603_1608Metric | bringup_en |
+| C5001 | 100n | C_0603_1608Metric | bringup_en_modules |
 | C5005 | 100n | C_0603_1608Metric | bringup_en_modules |
 | C5007 | 100n | C_0603_1608Metric | bringup_en_modules |
-| C5008 | 100n | C_0603_1608Metric | bringup_en_modules |
-| C5009 | 100n | C_0603_1608Metric | bringup_en_modules |
 | C5010 | 100n | C_0603_1608Metric | bringup_en_modules |
-| C6002 | 100n | C_0603_1608Metric | bringup_modules |
-| C6007 | 10u | C_0805_2012Metric | bringup_modules |
-| C6008 | 100n | C_0603_1608Metric | bringup_modules |
+| C5011 | 100n | C_0603_1608Metric | bringup_en_modules |
+| C6004 | 10u | C_0805_2012Metric | bringup_modules |
 | C6009 | 10u | C_0805_2012Metric | bringup_modules |
 | C6010 | 100n | C_0603_1608Metric | bringup_modules |
-| C6013 | 10u | C_0805_2012Metric | bringup_modules |
-| C6014 | 100n | C_0603_1608Metric | bringup_modules |
+| C6017 | 10u | C_0805_2012Metric | bringup_modules |
+| C6018 | 10u | C_0805_2012Metric | bringup_modules |
 | C6019 | 10u | C_0805_2012Metric | bringup_modules |
 | C6020 | 100n | C_0603_1608Metric | bringup_modules |
 | C8001 | 100n | C_0603_1608Metric | camera |
 | C8002 | 10u | C_0805_2012Metric | camera |
-| C10006 | 100n | C_0603_1608Metric | ethernet |
+| C10001 | 1n | C_1206_3225Metric | ethernet |
+| C10002 | 1n | C_1206_3225Metric | ethernet |
+| C10003 | 1n | C_1206_3225Metric | ethernet |
+| C10004 | 1n | C_1206_3225Metric | ethernet |
+| C10005 | 1n | C_1206_3225Metric | ethernet |
 | C12001 | 100n | C_0603_1608Metric | hdmi_rx |
+| C13001 | 100n | C_0603_1608Metric | hdmi_rx_term |
+| C13002 | 1u | C_0603_1608Metric | hdmi_rx_term |
 | C14001 | 100n | C_0603_1608Metric | hdmi_tx |
 | C14002 | 100n | C_0603_1608Metric | hdmi_tx |
 | C14003 | 100n | C_0603_1608Metric | hdmi_tx |
@@ -1358,16 +1353,6 @@ NOTES: pin-1 orientation (41 parts, U/Q refs): dot per silkscreen
 | C17001 | 100n | C_0603_1608Metric | pd_input |
 | C17002 | 10u | C_1210_3225Metric | pd_input |
 | C17003 | 47n | C_0603_1608Metric | pd_input |
-| C22014 | 100n | C_0603_1608Metric | power_som |
-| C22015 | 10u | C_1206_3216Metric | power_som |
-| C22016 | 10u | C_1206_3216Metric | power_som |
-| C22017 | 100n | C_0603_1608Metric | power_som |
-| C22018 | 22u | C_0805_2012Metric | power_som |
-| C22019 | 22u | C_0805_2012Metric | power_som |
-| C22021 | 22p | C_0603_1608Metric | power_som |
-| C22022 | 1u | C_0603_1608Metric | power_som |
-| C22023 | 1u | C_0603_1608Metric | power_som |
-| C22025 | 100n | C_0603_1608Metric | power_som |
 | C28004 | 100n | C_0603_1608Metric | usb_jtag |
 | C28005 | 16p | C_0603_1608Metric | usb_jtag |
 | C28006 | 16p | C_0603_1608Metric | usb_jtag |
@@ -1378,6 +1363,7 @@ NOTES: pin-1 orientation (41 parts, U/Q refs): dot per silkscreen
 | C30004 | 200p | C_0603_1608Metric | usb_pd |
 | C30005 | 200p | C_0603_1608Metric | usb_pd |
 | C31001 | 10u | C_0805_2012Metric | usb_uart_connector |
+| C36001 | 100n | C_0603_1608Metric | motor_pwm |
 | C37001 | 100n | C_0603_1608Metric | motor_sense |
 | C37002 | 100n | C_0603_1608Metric | motor_sense |
 | C37003 | 10u | C_0805_2012Metric | motor_sense |
@@ -1405,20 +1391,29 @@ NOTES: pin-1 orientation (41 parts, U/Q refs): dot per silkscreen
 | D36001 | SRV05-4 | SOT-23-6 | motor_pwm |
 | D36002 | SRV05-4 | SOT-23-6 | motor_pwm |
 | D37001 | SMBJ28A | SMBJ28A | motor_sense |
-| L22003 | 10uH | SWPA8040S100MT | power_som |
-| R4001 | 100k | R_0603_1608Metric | bringup_en |
-| R4002 | 100k | R_0603_1608Metric | bringup_en |
-| R5013 | 100k | R_0603_1608Metric | bringup_en_modules |
-| R5015 | 100k | R_0603_1608Metric | bringup_en_modules |
-| R5016 | 100k | R_0603_1608Metric | bringup_en_modules |
 | R5018 | 100k | R_0603_1608Metric | bringup_en_modules |
 | R5019 | 100k | R_0603_1608Metric | bringup_en_modules |
+| R8001 | 100R | R_0603_1608Metric | camera |
+| R8002 | 100R | R_0603_1608Metric | camera |
+| R8003 | 100R | R_0603_1608Metric | camera |
 | R8004 | 4k7 | R_0603_1608Metric | camera |
 | R8005 | 4k7 | R_0603_1608Metric | camera |
+| R10001 | 75R | R_0603_1608Metric | ethernet |
+| R10002 | 75R | R_0603_1608Metric | ethernet |
+| R10003 | 75R | R_0603_1608Metric | ethernet |
+| R10004 | 75R | R_0603_1608Metric | ethernet |
 | R12001 | 1k | R_0603_1608Metric | hdmi_rx |
 | R12002 | 27k | R_0603_1608Metric | hdmi_rx |
 | R12003 | 10k | R_0603_1608Metric | hdmi_rx |
 | R12004 | 15k | R_0603_1608Metric | hdmi_rx |
+| R13001 | 49.9R | R_0603_1608Metric | hdmi_rx_term |
+| R13002 | 49.9R | R_0603_1608Metric | hdmi_rx_term |
+| R13003 | 49.9R | R_0603_1608Metric | hdmi_rx_term |
+| R13004 | 49.9R | R_0603_1608Metric | hdmi_rx_term |
+| R13005 | 49.9R | R_0603_1608Metric | hdmi_rx_term |
+| R13006 | 49.9R | R_0603_1608Metric | hdmi_rx_term |
+| R13007 | 49.9R | R_0603_1608Metric | hdmi_rx_term |
+| R13008 | 49.9R | R_0603_1608Metric | hdmi_rx_term |
 | R14001 | 10k | R_0603_1608Metric | hdmi_tx |
 | R14002 | 10k | R_0603_1608Metric | hdmi_tx |
 | R15002 | 4k7 | R_0603_1608Metric | lcd |
@@ -1439,11 +1434,6 @@ NOTES: pin-1 orientation (41 parts, U/Q refs): dot per silkscreen
 | R18006 | 200R | R_0603_1608Metric | pmod |
 | R18010 | 200R | R_0603_1608Metric | pmod |
 | R18014 | 200R | R_0603_1608Metric | pmod |
-| R20013 | 10R | R_0603_1608Metric | power |
-| R22014 | 47k5 | R_0603_1608Metric | power_som |
-| R22015 | 13k | R_0603_1608Metric | power_som |
-| R22018 | 22k | R_0603_1608Metric | power_som |
-| R22019 | 1k | R_0603_1608Metric | power_som |
 | R28001 | 10k | R_0603_1608Metric | usb_jtag |
 | R28002 | 10k | R_0603_1608Metric | usb_jtag |
 | R28003 | 10k | R_0603_1608Metric | usb_jtag |
@@ -1454,7 +1444,10 @@ NOTES: pin-1 orientation (41 parts, U/Q refs): dot per silkscreen
 | R32001 | 56k | R_0603_1608Metric | usbc_otg |
 | R32002 | 56k | R_0603_1608Metric | usbc_otg |
 | R32004 | 1k | R_0603_1608Metric | usbc_otg |
+| R36001 | 10k | R_0603_1608Metric | motor_pwm |
 | R37001 | 10k | R_0603_1608Metric | motor_sense |
+| RN36001 | 4D03WGJ0330T5E | 4D03WGJ0330T5E | motor_pwm |
+| RN36002 | 4D03WGJ0330T5E | 4D03WGJ0330T5E | motor_pwm |
 | RS37001 | 10mR | RLM12FTCMR010 | motor_sense |
 | SW1001 | DSHP04TSGER | DSHP04TSGER | board_aux |
 | SW7001 | DSHP04TSGER | DSHP04TSGER | bringup_rails |
@@ -1470,13 +1463,20 @@ NOTES: pin-1 orientation (41 parts, U/Q refs): dot per silkscreen
 | SW33002 | USER | TS-1187A-B-A-B | user_io |
 | SW33003 | USER | TS-1187A-B-A-B | user_io |
 | SW33004 | USER | TS-1187A-B-A-B | user_io |
-| TP5005 | EN_SD | TestPoint_Pad_D1.5mm | bringup_en_modules |
-| TP15001 | +5V_LCD | TestPoint_Pad_D1.5mm | lcd |
-| TP36001 | +5V_MOTOR_IO | TestPoint_Pad_D1.5mm | motor_pwm |
+| T10001 | HX5008NLT | HX5008NLT | ethernet |
 | U2001 | USBLC6-2SC6 | USBLC6-2SC6 | board_qwiic |
-| U6002 | SY6280AAC | SY6280AAC | bringup_modules |
+| U3003 | TPS3823-33DBVR | TPS3823-33DBVR | board_services |
+| U5002 | SN74LVC1G08 | SOT-23-5 | bringup_en_modules |
+| U5003 | SN74LVC1G08 | SOT-23-5 | bringup_en_modules |
+| U5004 | SN74LVC1G08 | SOT-23-5 | bringup_en_modules |
+| U5008 | SN74LVC1G08 | SOT-23-5 | bringup_en_modules |
+| U5009 | SN74LVC1G08 | SOT-23-5 | bringup_en_modules |
+| U6001 | SY6280AAC | SY6280AAC | bringup_modules |
+| U6003 | SY6280AAC | SY6280AAC | bringup_modules |
+| U6004 | SY6280AAC | SY6280AAC | bringup_modules |
+| U6006 | SY6280AAC | SY6280AAC | bringup_modules |
+| U6007 | SY6280AAC | SY6280AAC | bringup_modules |
 | U6008 | SY6280AAC | SY6280AAC | bringup_modules |
-| U6009 | SY6280AAC | SY6280AAC | bringup_modules |
 | U7001 | TCA9535PWR | TCA9535PWR | bringup_rails |
 | U8001 | TPD4E02B04DQAR | TPD4E02B04DQAR | camera |
 | U8002 | TPD4E02B04DQAR | TPD4E02B04DQAR | camera |
@@ -1496,17 +1496,17 @@ NOTES: pin-1 orientation (41 parts, U/Q refs): dot per silkscreen
 | U18004 | TPD4E1U06 | TPD4E1U06DBVR | pmod |
 | U19002 | TPD4E1U06 | TPD4E1U06DBVR | pmod_expansion |
 | U19003 | TPD4E1U06 | TPD4E1U06DBVR | pmod_expansion |
-| U22004 | LM61460AANRJRR | LM61460AANRJRR | power_som |
 | U28001 | CH347T | CH347T | usb_jtag |
 | U29001 | USBLC6-2SC6 | USBLC6-2SC6 | usb_jtag_connector |
 | U30001 | FUSB302BMPX | WQFN-14-1EP_2.5x2.5mm_P0.5mm_EP1.45x1.45mm | usb_pd |
 | U31001 | USBLC6-2SC6 | USBLC6-2SC6 | usb_uart_connector |
 | U32002 | USBLC6-2SC6 | USBLC6-2SC6 | usbc_otg |
+| U36001 | SN74HCT245PWR | SN74HCT245PWR | motor_pwm |
 | U37002 | INA3221AIRGVR | INA3221AIRGVR | motor_sense |
 | Y28001 | 8MHz | 1C208000BC0R | usb_jtag |
 
 NOTES: diode polarity (24 parts, D refs): cathode per silkscreen
-NOTES: pin-1 orientation (30 parts, U/Q refs): dot per silkscreen
+NOTES: pin-1 orientation (39 parts, U/Q refs): dot per silkscreen
 
 ### Step 3 — Through-hole (short-to-tall)
 
@@ -1552,19 +1552,19 @@ No parts in this step on this board.
 | J37003 | XT60PW-M | XT60PW-M | motor_sense | THT |
 
 NOTES: J2001 ZX-SH1.0-4PLT (QWIIC): mates from above
-NOTES: J8001 SFW15R-1STE1LF (CAM): mating face toward the S board edge
-NOTES: J12001 HDMI-019S (HDMI RX): mating face toward the N board edge
+NOTES: J8001 SFW15R-1STE1LF (CAM): mating face toward the W board edge
+NOTES: J12001 HDMI-019S (HDMI RX): mating face toward the S board edge
 NOTES: J14001 HDMI-019S (HDMI TX): mating face toward the S board edge
-NOTES: J15001 AFC07-S40FCA-00 (LCD): mating face toward the W board edge
-NOTES: J16001 TF-01A (microSD): mating face toward the E board edge
+NOTES: J15001 AFC07-S40FCA-00 (LCD): mating face toward the N board edge
+NOTES: J16001 TF-01A (microSD): mating face toward the S board edge
 NOTES: J17001 TYPE-C-31-M-12 (PWR): mating face toward the W board edge
 NOTES: J18001 DS1024-2x6R2 (PMOD): mating face toward the N board edge
 NOTES: J18002 DS1024-2x6R2 (PMOD): mating face toward the N board edge
-NOTES: J19001 DS1024-2x6R2 (PMOD): mating face toward the N board edge
+NOTES: J19001 DS1024-2x6R2 (PMOD): mating face toward the W board edge
 NOTES: J23001 KH-5224-8P8C-D (ETH): mates from above
-NOTES: J29001 TYPE-C-31-M-12 (JTAG): mating face toward the W board edge
-NOTES: J31001 TYPE-C-31-M-12 (UART): mating face toward the S board edge
-NOTES: J32002 TYPE-C-31-M-12 (USB OTG): mating face toward the S board edge
+NOTES: J29001 TYPE-C-31-M-12 (JTAG): mating face toward the N board edge
+NOTES: J31001 TYPE-C-31-M-12 (UART): mating face toward the E board edge
+NOTES: J32002 TYPE-C-31-M-12 (USB OTG): mating face toward the N board edge
 NOTES: J37002 XT60PW-M (ESC PWR IN): mating face toward the S board edge
 NOTES: J37003 XT60PW-M (ESC PWR OUT): mating face toward the S board edge
 NOTES: XT60 pair: J37002 (ESC PWR IN) / J37003 (ESC PWR OUT) — IN/OUT per silkscreen label

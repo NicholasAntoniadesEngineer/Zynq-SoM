@@ -1,10 +1,11 @@
-CONVERGENCE: 12 breaches of staged rules (connector spacing, plug paths, face pairs, protection orders) handed over by the placer; 52 repair steps kept of 59 tried; 0 left
+CONVERGENCE: 12 breaches of staged rules (connector spacing, plug paths, face pairs, protection orders) handed over by the placer; 53 repair steps kept of 60 tried; 0 left
 level | rule | subject | action | breaches before>after | kept
-0 | connector access and envelope | J3001 / J3002 | slide J3002 along its edge | 3>1 | yes
-0 | connector access and envelope | J6001 / J6002 | slide J6002 along its edge; 178 off_board board; 75 overlap C6003; 48 module_core board; 35 overlap C6002 | 1>1 | no
-0 | connector access and envelope | J6001 / J6002 | slide J6001 along its edge; 178 off_board board; 111 overlap C6003; 26 overlap F6001; 21 overlap C6001 | 1>1 | no
-1 | connector access and envelope | J6001 / J6002 | slide J6002 with the parts tied to it; 178 off_board J6002/board; 58 edge_mount J6002/board; 48 module_core J6002/board; 35 overlap J6002/C6002 | 1>1 | no
-1 | connector access and envelope | J6001 / J6002 | slide J6001 with the parts tied to it; 178 off_board J6001/board; 111 overlap J6001/C6003; 24 overlap J6001/SW3001; 21 overlap J6001/C6001 | 1>1 | no
+0 | connector access and envelope | J1001 / J14001 | slide J14001 along its edge | 3>2 | yes
+0 | connector access and envelope | J3001 / J3002 | slide J3002 along its edge | 2>1 | yes
+0 | connector access and envelope | J6001 / J6002 | slide J6002 along its edge; 178 off_board board; 70 overlap C6004; 32 reserved board; 24 overlap D6001 | 1>1 | no
+0 | connector access and envelope | J6001 / J6002 | slide J6001 along its edge; 178 off_board board; 82 overlap D6004; 48 module_core board; 25 overlap Q6001 | 1>1 | no
+1 | connector access and envelope | J6001 / J6002 | slide J6002 with the parts tied to it; 178 off_board J6002/board; 93 overlap J6002/D6001; 32 reserved J6002/board; 20 edge_mount J6002/board | 1>1 | no
+1 | connector access and envelope | J6001 / J6002 | slide J6001 with the parts tied to it; 178 off_board J6001/board; 82 overlap J6001/D6004; 48 module_core J6001/board; 25 overlap J6001/Q6001 | 1>1 | no
 4 | connector access and envelope | J6001 / J6002 | open the board between them and shift everything beyond the gap | 1>0 | yes
 0 | owner of C13014 | C13014 -> U13004 | reseat at the pin on its face | 9>8 | yes
 0 | owner of C13022 | C13022 -> U13004 | reseat at the pin on its face | 8>7 | yes
@@ -57,9 +58,9 @@ level | rule | subject | action | breaches before>after | kept
 2 | test point on ESC_PWR_EN | TP6008 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
 2 | test point on /esc_power/PROT_IMON | TP6009 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
 2 | test point on /esc_power/VSENSE_DIV | TP6010 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
-2 | test point on SDIO_CMD | TP9001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
-2 | test point on SDIO_CLK | TP9002 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
-ILLEGAL handed over: under_inductor:L13003/R13014 under_inductor:L13003/R13015 under_inductor:L13003/R13019 connector_gap:J3001/J3002 connector_gap:J3002/J5002 connector_gap:J6001/J6002 (6)
-ILLEGAL after connector separation: under_inductor:L13003/R13014 under_inductor:L13003/R13015 under_inductor:L13003/R13019 (3)
+2 | test point on fast net SDIO_CMD | TP9001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on fast net SDIO_CLK | TP9002 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+ILLEGAL handed over: under_inductor:C21012/L21001 under_inductor:L13003/R13014 under_inductor:L13003/R13015 under_inductor:L13003/R13019 under_inductor:L21001/R21002 under_inductor:L21001/R21003 under_inductor:L21001/R21008 under_inductor:L21001/R21010 connector_gap:J1001/J14001 connector_gap:J3001/J3002 connector_gap:J6001/J6002 (11)
+ILLEGAL after connector separation: under_inductor:C21012/L21001 under_inductor:L13003/R13014 under_inductor:L13003/R13015 under_inductor:L13003/R13019 under_inductor:L21001/R21002 under_inductor:L21001/R21003 under_inductor:L21001/R21008 under_inductor:L21001/R21010 (8)
 ILLEGAL after repair: (0)
 

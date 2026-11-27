@@ -16,6 +16,7 @@ std::vector<PairSignalSpec> parse_signal_specs(const JsonNode&);
 std::vector<PairSignalSpec> load_signal_specs(const std::filesystem::path&);
 const DifferentialGeometry* differential_geometry(int impedance);
 std::string port_net_class(const CircuitPortIr&);
+bool port_fast(const CircuitPortIr&);
 bool needs_signal_specs(const std::vector<ProjectCircuit>&);
 struct LayoutConstraints {
     std::string dru, csv;

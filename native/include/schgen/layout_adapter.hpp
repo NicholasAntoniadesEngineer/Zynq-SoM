@@ -44,6 +44,8 @@ inline constexpr NamedConstant owner_reach{"owner_reach", 3.0, "mm", "policy",
     "preferred distance from an owned two-pin part to the pin it serves; a soft preference, never a hard rule"};
 inline constexpr NamedConstant tap_reach{"tap_reach", 3.0, "mm", "policy",
     "longest stub or detour a test point may add to its net, measured to the nearest other pad of the net or through the test point between two of its pads; user ruling 2026-11-27 (3 mm for every net, so that test points are not antennas)"};
+inline constexpr NamedConstant fast_tap_reach{"fast_tap_reach", 1.0, "mm", "policy",
+    "longest stub or detour a test point may add to a net whose port kind is a differential pair or a clocked bus; user ruling 2026-11-27 asked for less than the 3 mm of other nets without a figure, and 1 mm is chosen as less than the 1.5 mm test pad itself, so the pad has to sit on the path"};
 inline constexpr NamedConstant hole_inset{"hole_inset", 5.0, "mm", "policy",
     "distance of a corner mounting hole from both edges of its corner, before the fixed-part grid"};
 inline constexpr NamedConstant mark_inset{"mark_inset", 9.0, "mm", "policy",
@@ -56,7 +58,7 @@ inline constexpr NamedConstant escape_tie{"escape_tie", 2e-3, "mm", "policy",
     "tie width when choosing a pad's nearest courtyard side; twice the gate's, so the kernel never rings fewer sides"};
 inline constexpr NamedConstant area_guard{"area_guard", 1e-6, "mm2", "policy",
     "slack demanded of a module-core overlap so the mechanical gate's floating-point area cannot disagree at the limit"};
-inline constexpr std::array adapter_registry{module_clearance, module_stack_height, tall_module_clearance, fanout_floor, relief_reach, edge_reach, owner_reach, tap_reach,
+inline constexpr std::array adapter_registry{module_clearance, module_stack_height, tall_module_clearance, fanout_floor, relief_reach, edge_reach, owner_reach, tap_reach, fast_tap_reach,
                                              connector_overlap, band_share, overmold_gap, boot_gap,
                                              compare_guard, group_guard, hole_inset, mark_inset, area_guard,
                                              escape_tie, hold_slack, tether_slack, bypass_reach, reservoir_reach,
@@ -74,6 +76,7 @@ struct AuthoredIntent {
     std::vector<ServiceInput> services;
     std::vector<std::string> released;
     std::map<std::string, std::map<std::string, std::string>> pin_names;
+    std::set<std::string> fast_nets;
 };
 
 struct AdapterOptions {
