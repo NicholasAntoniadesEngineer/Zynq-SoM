@@ -1,16 +1,16 @@
-PLACEMENT-FLOW GATE: PASS (3 external contract(s); board_area=10179mm^2, flow_budget=102.6mm)
+PLACEMENT-FLOW GATE: PASS (3 external contract(s); board_area=10383mm^2, flow_budget=102.9mm)
   fails: flow=0/1 facing=0/1 far=0/2 near_max=0/2
   unresolved: 0
   n/a (subsystem not in this project): 1
     flow usb_pd->power: n/a — usb_pd not a subsystem of this project
   violations: 0
   advisory preferences (not hardware qualification): 2
-    ADVISORY facing power->power_som: preference satisfied (angle=72.4deg; not hardware qualification) [Reviewed 2026-10-18: all-component centroid direction changes when unrelated test points move; it is a placement preference, not a hardware limit. SNVSBD5D Rev. D section 11.1 requires local loop/layout and power-path quality, not a 90-degree subsystem-centroid cutoff. See native/benchmarks/2026-10-18-facing-centroid-review.json; routing and parasitics remain unverified.]
-    ADVISORY flow power->power_som: 15.74mm / 102.6mm heuristic reference; preference satisfied; not a trace-length or hardware limit
+    ADVISORY facing power->power_som: preference NOT satisfied (angle=172.0deg; not hardware qualification) [Reviewed 2026-10-18: all-component centroid direction changes when unrelated test points move; it is a placement preference, not a hardware limit. SNVSBD5D Rev. D section 11.1 requires local loop/layout and power-path quality, not a 90-degree subsystem-centroid cutoff. See native/benchmarks/2026-10-18-facing-centroid-review.json; routing and parasitics remain unverified.]
+    ADVISORY flow power->power_som: 16.16mm / 102.9mm heuristic reference; preference satisfied; not a trace-length or hardware limit
   detail: 6
-    facing power->power_som: dot=+31.50 angle=72.4deg (output@(121.6542, 118.9801) zone@(122.0472, 125.5745) down@(136.7366, 119.9223))
-    far ethernet vs power: 51.42mm / >= 10mm
-    far power vs ethernet.line_side: 51.42mm / >= 10mm
-    flow power->power_som: 15.74mm / 102.6mm budget
+    facing power->power_som: dot=-137.15 angle=172.0deg (output@(128.8782, 110.78) zone@(128.4212, 119.3382) down@(129.8265, 135.4385))
+    far ethernet vs power: 77.01mm / >= 10mm
+    far power vs ethernet.line_side: 77.01mm / >= 10mm
+    flow power->power_som: 16.16mm / 102.9mm budget
     near_max ethernet to rj45_connector: 0.00mm gap / <= 20mm
-    near_max uart_bridge to usb_uart_connector: 5.12mm gap / <= 40mm
+    near_max uart_bridge to usb_uart_connector: 5.28mm gap / <= 40mm

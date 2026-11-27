@@ -106,7 +106,6 @@ void project(const fs::path& root,const fs::path& scratch,const std::string& nam
             require(pos!=std::string::npos&&current_expected.find(before,pos+before.size())==std::string::npos,"unique stocked-part preimage: "+before);
             current_expected.replace(pos,before.size(),after);
         };
-        swap_once("\"lines\": 105","\"lines\": 104");
         swap_once("\"missing\": [\n      \"fmc:J1\"\n    ]","\"missing\": []");
     }
     if(name=="devkit_mini") {
@@ -115,12 +114,12 @@ void project(const fs::path& root,const fs::path& scratch,const std::string& nam
         require(pos!=std::string::npos&&current_expected.find(before,pos+before.size())==std::string::npos,"unique feedback-resistor BOM-line preimage");
         current_expected.replace(pos,before.size(),after);
     }
-    const std::string reviewed_parts=name=="carrier"?"\"parts\": 499":"\"parts\": 133",current_parts=name=="carrier"?"\"parts\": 501":"\"parts\": 134";
+    const std::string reviewed_parts=name=="carrier"?"\"parts\": 499":"\"parts\": 133",current_parts=name=="carrier"?"\"parts\": 503":"\"parts\": 134";
     const auto parts_pos=current_expected.find(reviewed_parts);
     require(parts_pos!=std::string::npos&&current_expected.find(reviewed_parts,parts_pos+reviewed_parts.size())==std::string::npos,"unique reviewed part-count preimage");
     current_expected.replace(parts_pos,reviewed_parts.size(),current_parts);
     const auto current_manifest=render_manufacturing_manifest(in,legacy);write(output/"manifest.json",current_manifest);
-    require(current_manifest==current_expected,"current manifest differs beyond reviewed reference-filter BOM group");
+    require(current_manifest==current_expected,"current manifest differs beyond the reviewed BOM groups and the backup selector parts");
     std::cout<<name<<": SI and live-analysis manifest exact\n";
     const auto images=render_assembly_images(m,plan);const auto expected=parse_json_file((fixture/"images.json").string()).array_value;check_images(images,expected,output,name);
     std::cout<<name<<": "<<images.size()<<" assembly PNGs exact\n";

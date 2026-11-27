@@ -1,5 +1,5 @@
 CONTRACT COVERAGE LINT — every wired-sheet part in >=1 contract structure or explicitly free
-CONTRACT COVERAGE LINT (advisory): 37 sheets, 563 parts — 276 structured / 0 free / 287 UNGATED
+CONTRACT COVERAGE LINT (advisory): 37 sheets, 565 parts — 276 structured / 0 free / 289 UNGATED
 
 board_aux            parts= 18  structured=  0  free= 0  UNGATED= 18  (no contract)
     UNGATED C1     -> C1001    10u                    nets: +3V3, GND
@@ -21,13 +21,15 @@ board_aux            parts= 18  structured=  0  free= 0  UNGATED= 18  (no contra
     UNGATED U1     -> U1001    SY6280AAC              nets: +3V3, +3V3_AUX, BS_ISET_AUX, EN_AUX, GND
     UNGATED U2     -> U1002    PCA9306DCUR            nets: +3V3_AUX, +3V3_SC, AUX_I2C_SCL, AUX_I2C_SDA, AUX_ISO_REF, GND (+2 more)
 board_qwiic          parts=  3  structured=  3  free= 0  UNGATED=  0
-board_services       parts=  9  structured=  0  free= 0  UNGATED=  9  (no contract)
-    UNGATED BT1    -> BT3001   KH-CR1220-2            nets: GND, V_RTC_BAT
+board_services       parts= 11  structured=  0  free= 0  UNGATED= 11  (no contract)
+    UNGATED BT1    -> BT3001   KH-CR1220-2            nets: GND, V_RTC_CELL
     UNGATED C1     -> C3001    100n                   nets: +3V3_AUX, GND
     UNGATED C2     -> C3002    100n                   nets: +3V3_AUX, GND
     UNGATED C3     -> C3003    100n                   nets: +3V3_AUX, GND
+    UNGATED J1     -> J3001    Header_1x03_2.54mm     nets: RTC_BAT_PULLDOWN, V_RTC_BAT, V_RTC_CELL
     UNGATED R1     -> R3001    10k                    nets: +3V3_AUX, RTC_INT_N
     UNGATED R2     -> R3002    1k                     nets: WATCHDOG_KICK, WDI_AUX
+    UNGATED R3     -> R3003    10k                    nets: GND, RTC_BAT_PULLDOWN
     UNGATED U1     -> U3001    24AA025E48T-I/OT       nets: +3V3_AUX, AUX_I2C_SCL, AUX_I2C_SDA, GND
     UNGATED U2     -> U3002    RV-3028-C7-32.768kHz-1ppm-TA-QC nets: +3V3_AUX, AUX_I2C_SCL, AUX_I2C_SDA, GND, RTC_INT_N, V_RTC_BAT
     UNGATED U3     -> U3003    TPS3823-33DBVR         nets: +3V3_AUX, GND, WATCHDOG_RST_N, WDI_AUX

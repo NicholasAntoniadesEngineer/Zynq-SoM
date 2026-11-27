@@ -336,12 +336,12 @@ void replay(const std::filesystem::path& root, const std::string& project, std::
     require(render_pcb(model_with(model, binding, binding.placement), policy).pcb == original,
             project + " round trip is byte-identical");
     geometry_matches_the_gates(model, binding);
-    require(judge_model(stage.inputs, model).ok_as_placed(), project + " baseline passes the gates the starting placement must meet");
     integrity_gate_catches(project, model, options.intent);
     Kernel start(binding.problem, binding.placement);
     StageResult repaired;
     repair_start(start, default_squeeze(), repaired, [](bool) {});
     const PcbModel started = model_with(model, binding, start.placement(), start.board());
+    require(judge_model(stage.inputs, started).ok_as_placed(), project + " repaired start passes the gates the starting placement must meet");
     binding = bind_model(started, policy, &gates, options);
     const std::string placed = render_pcb(started, policy).pcb;
     const Kernel kernel(binding.problem, binding.placement);

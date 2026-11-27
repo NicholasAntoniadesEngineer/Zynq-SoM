@@ -114,8 +114,8 @@ int main(int argc, char** argv) {
             };
             identity("board_aux:C1","10u","Capacitor_SMD:C_0805_2012Metric","C15850");
             identity("board_aux:C5","100p","Capacitor_SMD:C_0603_1608Metric","C14858");
-            require(real.rows.size()==schgen::generate_bom(historical).rows.size(),
-                    "the reviewed filter adds one BOM group and the single feedback-resistor spelling merges one");
+            require(real.rows.size()==schgen::generate_bom(historical).rows.size()+1,
+                    "the backup selector header adds one BOM group; its pull-down joins an existing group");
             for(const auto* ref:{"C1","C5"}){
                 auto changed=sheets;bool rejected=false;
                 for(auto& sheet:changed)if(sheet.name=="board_aux")for(auto& p:sheet.parts)

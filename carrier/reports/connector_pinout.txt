@@ -1,11 +1,11 @@
 connector_pins	order=sheet,ref,pin
 sheet	ref	board_ref	part	pin	pin_name	net	net_type	port	route_class	ohm	declared	protect
-board_qwiic	J1	J2001	ZX-SH1.0-4PWT	1	1	GND	ground	-	-	-	-	-
-board_qwiic	J1	J2001	ZX-SH1.0-4PWT	2	2	+3V3_AUX	power	-	-	-	-	-
-board_qwiic	J1	J2001	ZX-SH1.0-4PWT	3	3	QWIIC_SDA	signal	-	-	-	-	U2001:USBLC6-2SC6
-board_qwiic	J1	J2001	ZX-SH1.0-4PWT	4	4	QWIIC_SCL	signal	-	-	-	-	U2001:USBLC6-2SC6
-board_qwiic	J1	J2001	ZX-SH1.0-4PWT	5	5	GND	ground	-	-	-	-	-
-board_qwiic	J1	J2001	ZX-SH1.0-4PWT	6	6	GND	ground	-	-	-	-	-
+board_qwiic	J1	J2001	ZX-SH1.0-4PLT	1	1	GND	ground	-	-	-	-	-
+board_qwiic	J1	J2001	ZX-SH1.0-4PLT	2	2	+3V3_AUX	power	-	-	-	-	-
+board_qwiic	J1	J2001	ZX-SH1.0-4PLT	3	3	QWIIC_SDA	signal	-	-	-	-	U2001:USBLC6-2SC6
+board_qwiic	J1	J2001	ZX-SH1.0-4PLT	4	4	QWIIC_SCL	signal	-	-	-	-	U2001:USBLC6-2SC6
+board_qwiic	J1	J2001	ZX-SH1.0-4PLT	5	5	GND	ground	-	-	-	-	-
+board_qwiic	J1	J2001	ZX-SH1.0-4PLT	6	6	GND	ground	-	-	-	-	-
 camera	J1	J8001	SFW15R-1STE1LF	1	1	GND	ground	-	-	-	-	-
 camera	J1	J8001	SFW15R-1STE1LF	2	2	CAM_D0_N	port	diff_pair	DP100_DIFF	100	-	U8001:TPD4E02B04DQAR
 camera	J1	J8001	SFW15R-1STE1LF	3	3	CAM_D0_P	port	diff_pair	DP100_DIFF	100	-	U8001:TPD4E02B04DQAR

@@ -16,7 +16,7 @@ FAB PROFILE GATE  (JLCPCB standard 6-layer (1oz))
   min silk text height          1.0000 mm    1.0000 mm   PASS
   min silk stroke               0.1500 mm    0.1500 mm   PASS
 
-  segments 15, vias 35, drilled holes 217
+  segments 15, vias 35, drilled holes 220
   (.kicad_pro min_via_annular_width DRC floor: 0.0500 mm — permissive rule, not what the board emits)
 
   VERDICT: PASS — every demanded feature is at or above the fab floor

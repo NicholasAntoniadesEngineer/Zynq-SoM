@@ -74,7 +74,7 @@ TYPE-C-31-M-12,"pd_input:J1,usb_uart_connector:J1",TYPE-C-31-M-12:TYPE-C-31-M-12
 USBLC6-2SC6,"pd_input:U2,usb_uart_connector:U1",USBLC6-2SC6:USBLC6-2SC6,C7519
 USER,board_control:SW2,TS-1187A-B-A-B:TS-1187A-B-A-B,C318884
 XT60PW-M,"esc_power:J1,esc_power:J2",XT60PW-M:XT60PW-M,C98732
-ZX-SH1.0-4PWT,"board_control:J1,can_bus:J1,can_bus:J2,esc_io:J2",ZX-SH1.0-4PWT:ZX-SH1.0-4PWT,C7430446
+ZX-SH1.0-4PLT,"board_control:J1,can_bus:J1,can_bus:J2,esc_io:J2",ZX-SH1.0-4PLT:ZX-SH1.0-4PLT,C7430453
 blue,esc_io:D4,LED_SMD:LED_0603_1608Metric,C2288
 green,board_control:D1,LED_SMD:LED_0603_1608Metric,C12624
 red,"board_control:D2,esc_power:D4,power:D1,power:D2,power:D3,power_som:D4,vbat_supply:D1",LED_SMD:LED_0603_1608Metric,C2286

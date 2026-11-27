@@ -1,9 +1,9 @@
 ASSEMBLY PARTS
-  101 BOM lines, 101 codes, facts rows read from 2026-11-22T16:59:01Z
-  FAIL: the finished board needs a cell for the battery holder, which is not a placed BOM part (needed by board_services:BT1)
+  102 BOM lines, 102 codes, facts rows read from 2026-11-22T16:59:01Z
+  NOT FITTED BY THE ASSEMBLER, by decision: cell for the battery holder for board_services:BT1: user ruling 2026-11-23: the board ships with the CR1220 holder empty, so no lithium cell is shipped; the owner fits a cell if clock backup is wanted
   ADVISORY: out of stock today: 3 lines
   ADVISORY:   C3019759 RV-3028-C7-32.768kHz-1ppm-TA-QC: need 5 (1 per board x 5 boards), JLCPCB stock 0
   ADVISORY:   C7666 SN74LVC1G08: need 70 (14 per board x 5 boards), JLCPCB stock 2
   ADVISORY:   C2866319 TPS26631PWPR: need 5 (1 per board x 5 boards), JLCPCB stock 0
-ASSEMBLY PARTS: FAIL
+ASSEMBLY PARTS: PASS
 
