@@ -1,4 +1,4 @@
-SEARCH motor_carrier: PASS; mode quick; seeds 0 1 2 3 4 5 6 7; screened 8 distinct (8 passed S1-S2); laid out 4; correct 3; threads 4
+SEARCH motor_carrier: PASS; mode quick; seeds 0 1 2 3 4 5 6 7; screened 8 distinct (8 passed S1-S2); laid out 4; correct 4; threads 4
 axes searched: A1 edge assignment of derived edge sheets, A7 arrangement finalists skipped, A8 base squeeze edge order; seed 0 takes every first candidate; a seed whose edge assignment repeats an earlier one reuses that placement
   constant splitmix_gamma = 11400714819323198485: SplitMix64 increment (Steele, Lea, Flood 2014, the golden-ratio odd constant)
   constant splitmix_first = 13787848793156543929: SplitMix64 first finaliser multiplier (Stafford variant 13)
@@ -11,18 +11,14 @@ axes searched: A1 edge assignment of derived edge sheets, A7 arrangement finalis
   constant axis_orders = 8: search axis A8, the base edge order the squeeze rotates and reverses
   constant plan_skips = 4: most arrangement finalists a seed skips: one per board side
 seed | reuses | edge choices | plan skip | order | reached | outline mm | correct | airwire mm | first finding
-0 | - | first | 0 | 0 | S3 | 122.25 x 96.25 | yes | 10404.158800 | -
-1 | - | esc_power#1,pd_input#1,usb_uart_connector#2 | 1 | 23 | S3 | - | no | - | layout: test points lost their net when other parts moved and have no seat within the stub limit
+0 | - | first | 0 | 0 | S3 | 124.75 x 95.75 | yes | 10694.595300 | -
+1 | - | esc_power#1,pd_input#1,usb_uart_connector#2 | 1 | 23 | S3 | 103.75 x 103 | yes | 10139.583400 | -
 2 | - | esc_power#3,usb_uart_connector#2 | 0 | 0 | S2 | - | no | - | -
-3 | - | microsd#1,usb_uart_connector#1 | 1 | 0 | S3 | 111.5 x 94.25 | yes | 11054.644900 | -
+3 | - | microsd#1,usb_uart_connector#1 | 1 | 0 | S3 | 112 x 94.5 | yes | 10535.454400 | -
 4 | - | esc_power#3,microsd#1,pd_input#3,usb_uart_connector#3 | 1 | 17 | S2 | - | no | - | -
 5 | - | microsd#3,usb_uart_connector#2 | 1 | 4 | S2 | - | no | - | -
 6 | - | esc_power#2,microsd#1,usb_uart_connector#3 | 2 | 22 | S2 | - | no | - | -
-7 | - | microsd#2,pd_input#3 | 3 | 22 | S3 | 105.25 x 101.75 | yes | 10392.254000 | -
-DETAIL seed 1:
-layout: test points lost their net when other parts moved and have no seat within the stub limit
-  TP19001: move the test point to a pad of its net or onto the path between two; 163696 seats tried: 72168 module_core board; 16816 reserved board; 14160 stub board; 6000 group_bound board; 4840 copper board; 4808 overlap L13003; 2536 overlap U12001; 2468 overlap SW3001; 2204 overlap C15013; 2124 overlap Q1001; 2032 overlap C15001; 1760 overlap RS12001;
-REPLAY seed 1: schgen layout-check reports/failed_seed_1.layout.json
-CHOSEN seed 3 by objective among the first batch laid out
-SWEEP: pass rate 3/4; area best 10508.9 median 10709.2 worst 11766.6 mm2; spread 0.0190613; FRAGILE against pass rate 0.8 and spread 0.05 (integrator's decision 2026-11-21; revisit after the first sweeps on three boards)
+7 | - | microsd#2,pd_input#3 | 3 | 22 | S3 | 104.5 x 100.5 | yes | 10392.291200 | -
+CHOSEN seed 7 by objective among the first batch laid out
+SWEEP: pass rate 4/4; area best 10502.2 median 10584 worst 11944.8 mm2; spread 0.00778405; HANDLED against pass rate 0.8 and spread 0.05 (integrator's decision 2026-11-21; revisit after the first sweeps on three boards)
 

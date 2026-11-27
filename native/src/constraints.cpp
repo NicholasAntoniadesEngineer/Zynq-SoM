@@ -87,6 +87,9 @@ std::string port_net_class(const CircuitPortIr& p) {
     }
     return "Default";
 }
+bool port_fast(const CircuitPortIr& p) {
+    return p.kind == "usb_hs_pair" || p.kind == "tmds_pair" || p.kind == "diff_pair" || p.kind == "sd_bus";
+}
 bool needs_signal_specs(const std::vector<ProjectCircuit>& sheets) {
     for (const auto& sheet : sheets) for (const auto& net : sheet.circuit.nets)
         if (net.net_class == "port" && !circuit_port_type(sheet.circuit,net.name).pair_with.empty()) return true;

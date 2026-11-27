@@ -5,6 +5,7 @@
 
 #include "pcb_checks_internal.hpp"
 #include "pcb_placement_gates_internal.hpp"
+#include "schgen/constraints.hpp"
 #include "schgen/mirror.hpp"
 #include "schgen/pack.hpp"
 #include "schgen/pcb_escape.hpp"
@@ -791,8 +792,11 @@ ModelBinding bind_model(const PcbModel& model, const PcbEmitPolicy& policy, cons
         for (std::size_t pad = 0; pad < problem.parts[part].pad_nets.size(); ++pad) {
             const int net = problem.parts[part].pad_nets[pad];
             if (net == no_net || problem.nets[static_cast<std::size_t>(net)].category == Category::plane) continue;
-            problem.constraints.taps.push_back({part, pad, net, to_nm(constants::tap_reach.value),
-                                                "test point on " + problem.nets[static_cast<std::size_t>(net)].name});
+            const std::string& name = problem.nets[static_cast<std::size_t>(net)].name;
+            const bool fast = options.intent.fast_nets.count(name) != 0;
+            problem.constraints.taps.push_back(
+                {part, pad, net, to_nm(fast ? constants::fast_tap_reach.value : constants::tap_reach.value),
+                 (fast ? "test point on fast net " : "test point on ") + name});
         }
     }
     reserve_thermal_fields(model, policy, binding.placement, problem);
@@ -843,6 +847,9 @@ AuthoredIntent authored_intent(const PcbPlacementInput& inputs) {
     std::map<std::string, std::int64_t> bands;
     for (const auto& [sheet, band] : inputs.floorplan.sheet_index) bands.emplace(sheet, band);
     AuthoredIntent intent;
+    for (const auto& sheet : inputs.floorplan.sheets)
+        for (const auto& net : sheet.nets)
+            if (net.net_class == "port" && port_fast(circuit_port_type(sheet, net.name))) intent.fast_nets.insert(net.name);
     for (const auto& sheet : inputs.floorplan.sheets) {
         if (sheet.layout.serves.empty() && sheet.layout.free.empty()) continue;
         const auto band = bands.find(sheet.name);
