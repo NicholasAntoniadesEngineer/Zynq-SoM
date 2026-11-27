@@ -1,6 +1,8 @@
 #include "schgen/route_board.hpp"
 #include "schgen/route_check.hpp"
+#include "schgen/route_run.hpp"
 
+#include <algorithm>
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -15,6 +17,7 @@ constexpr Nm track_width = unit / 5, clearance = 3 * unit / 20, pad_half = unit 
 constexpr Nm via_pad = 9 * unit / 20, via_drill = unit / 5;
 constexpr Nm edge = 3 * unit / 10, hole_clear = unit / 5, hole_space = 9 * unit / 20;
 constexpr Box outline{0, 0, 40 * unit, 30 * unit};
+constexpr Nm wall_inset = unit;
 constexpr std::size_t six = 6, twelve = 12, thirteen = 13, plane_layer = 1;
 constexpr int first_net = 0, second_net = 1, ground = 2;
 constexpr Point left{5 * unit, 10 * unit}, right{25 * unit, 10 * unit};
@@ -164,6 +167,33 @@ void verifier_finds_every_fault() {
                             track(single, ground, 0, ground_left, ground_right)}).ok(), "a one-layer board routes its ground as a track");
 }
 
+void router_joins_a_board() {
+    using namespace fixture;
+    for (const std::size_t layers : {std::size_t{2}, six}) {
+        Board board = board_of(layers);
+        board.fixed.push_back(pad(second_net, {15 * unit, 6 * unit}, "C.2"));
+        board.fixed.push_back({ItemKind::keepout, no_net, 0, 0, rectangle({14 * unit, 8 * unit, 16 * unit, 9 * unit}), 0, "fence"});
+        if (layers == 2) {
+            board.nets.pop_back();
+            board.fixed.erase(std::remove_if(board.fixed.begin(), board.fixed.end(), [](const Item& item) { return item.net == ground; }), board.fixed.end());
+        }
+        World world(board);
+        const RunReport run = route_all(world, RunSetup{});
+        const CheckReport judged = verify(board, world.routed());
+        require(run.complete() && judged.ok(), std::to_string(layers) + " layers: every connection made and the verifier agrees: " + run.summary(board) + judged.summary());
+        require(run.vias >= 2, std::to_string(layers) + " layers: a net that must cross another changes layer");
+    }
+    Board walled = board_of(1);
+    walled.nets.pop_back();
+    walled.fixed = {pad(first_net, {wall_inset, outline.y1 / 2}, "A.1"), pad(first_net, {outline.x1 - wall_inset, outline.y1 / 2}, "B.1"),
+                    pad(second_net, {outline.x1 / 2, wall_inset}, "A.2"), pad(second_net, {outline.x1 / 2, outline.y1 - wall_inset}, "B.2")};
+    World world(walled);
+    const RunReport run = route_all(world, RunSetup{});
+    const CheckReport judged = verify(walled, world.routed());
+    require(!run.complete() && judged.shorts.empty() && judged.clearances.empty() && judged.opens.size() == 1,
+            "one layer cannot cross: the router reports the open net and leaves no short: " + run.summary(walled) + judged.summary());
+}
+
 }
 
 int main() {
@@ -172,6 +202,7 @@ int main() {
         layer_counts_are_input();
         world_judges_and_undoes();
         verifier_finds_every_fault();
+        router_joins_a_board();
         std::cout << "route contracts: " << checks << " checks passed\n";
         return 0;
     } catch (const std::exception& error) {

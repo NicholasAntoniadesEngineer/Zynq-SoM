@@ -1,0 +1,52 @@
+#pragma once
+
+#include "schgen/route_board.hpp"
+
+#include <optional>
+#include <vector>
+
+namespace schgen::route {
+
+namespace constants {
+inline constexpr NamedConstant lattice_pitch{"lattice_pitch", 50000, "nm", "policy",
+    "spacing of the points a track may turn at; a divisor of the 0.4 mm connector pitch and half the least fabricator track, so every pad row has points on it"};
+inline constexpr NamedConstant turn_length{"turn_length", 200000, "nm", "policy",
+    "track length a path will add to save one 45 degree turn"};
+inline constexpr NamedConstant via_length{"via_length", 2500000, "nm", "policy",
+    "track length a path will add to save one via; a via costs a drilled hole on every layer and breaks the return path"};
+inline constexpr NamedConstant search_margin{"search_margin", 3000000, "nm", "policy",
+    "distance beyond the two ends within which the first search for a connection looks"};
+inline constexpr NamedConstant search_growth{"search_growth", 3, "ratio", "policy",
+    "factor by which the search area grows after a search that found no path inside it"};
+inline constexpr NamedConstant search_budget{"search_budget", 400000, "points", "policy",
+    "lattice points one search may open before it reports no path; a count, so results never depend on the clock"};
+inline constexpr NamedConstant search_greed{"search_greed", 1.5, "ratio", "policy",
+    "weight of the remaining-distance estimate against the cost so far; above one the search heads for the goal and opens far fewer points, at the price of a path up to that factor longer than the best"};
+inline constexpr std::array route_search_registry{lattice_pitch, turn_length, via_length, search_margin, search_growth, search_budget, search_greed};
+}
+
+struct SearchSetup {
+    Nm pitch = static_cast<Nm>(constants::lattice_pitch.value);
+    Nm turn = static_cast<Nm>(constants::turn_length.value);
+    Nm via = static_cast<Nm>(constants::via_length.value);
+    Nm margin = static_cast<Nm>(constants::search_margin.value);
+    std::size_t budget = static_cast<std::size_t>(constants::search_budget.value);
+};
+
+struct Path {
+    std::vector<Item> items;
+    double length = 0;
+    std::size_t vias = 0;
+};
+
+struct SearchResult {
+    std::optional<Path> path;
+    std::vector<std::size_t> blockers;
+    std::size_t opened = 0;
+    bool exhausted = false;
+};
+
+SearchResult find_path(const World& world, const SearchSetup& setup, int net, const std::vector<std::size_t>& sources, const std::vector<std::size_t>& goals);
+SearchResult find_plane_drop(const World& world, const SearchSetup& setup, int net, const std::vector<std::size_t>& sources);
+
+}
