@@ -1,4 +1,5 @@
 #include "schgen/route_board.hpp"
+#include "schgen/route_bridge.hpp"
 #include "schgen/route_check.hpp"
 #include "schgen/route_run.hpp"
 
@@ -194,6 +195,83 @@ void router_joins_a_board() {
             "one layer cannot cross: the router reports the open net and leaves no short: " + run.summary(walled) + judged.summary());
 }
 
+const char* const sample_board = R"board((kicad_pcb
+	(version 20241229)
+	(layers
+		(0 "F.Cu" signal)
+		(1 "In1.Cu" power)
+		(2 "In2.Cu" signal)
+		(31 "B.Cu" signal)
+		(25 "Edge.Cuts" user)
+	)
+	(net 0 "")
+	(net 1 "GND")
+	(net 2 "LINK")
+	(net 3 "RAIL")
+	(gr_rect (start 0 0) (end 30 20) (layer "Edge.Cuts"))
+	(footprint "sample:two"
+		(layer "F.Cu")
+		(at 5 10 90)
+		(property "Reference" "U1")
+		(pad "1" smd rect (at 0 -1 90) (size 0.6 0.4) (layers "F.Cu") (net 2 "LINK"))
+		(pad "2" smd roundrect (at 0 1 90) (size 0.6 0.4) (layers "F.Cu") (roundrect_rratio 0.25) (net 1 "GND"))
+		(pad "3" thru_hole circle (at 2 0 90) (size 1.2 1.2) (drill 0.6) (layers "*.Cu") (net 3 "RAIL"))
+	)
+	(footprint "sample:two"
+		(layer "B.Cu")
+		(at 25 10)
+		(property "Reference" "U2")
+		(pad "1" smd rect (at 0 -1) (size 0.6 0.4) (layers "B.Cu") (net 2 "LINK"))
+		(pad "2" smd oval (at 0 1) (size 0.8 0.4) (layers "B.Cu") (net 1 "GND"))
+		(pad "3" thru_hole circle (at 2 0) (size 1.2 1.2) (drill 0.6) (layers "*.Cu") (net 3 "RAIL"))
+		(pad "" np_thru_hole circle (at -3 0) (size 1 1) (drill 1) (layers "*.Cu"))
+	)
+	(zone (net 1) (net_name "GND") (layer "In1.Cu") (polygon (pts (xy 0 0) (xy 30 0) (xy 30 20) (xy 0 20))))
+	(zone (net 0) (net_name "") (layers "F.Cu") (name "fence") (keepout (tracks not_allowed) (vias allowed)) (polygon (pts (xy 14 0) (xy 16 0) (xy 16 12) (xy 14 12))))
+)
+)board";
+
+const char* const sample_project = R"project({
+ "board": {"design_settings": {"rules": {"min_copper_edge_clearance": 0.3, "min_hole_clearance": 0.2, "min_hole_to_hole": 0.45, "min_track_width": 0.09}}},
+ "net_settings": {
+  "classes": [
+   {"name": "WIDE", "clearance": 0.2, "track_width": 0.4, "via_diameter": 0.6, "via_drill": 0.3},
+   {"name": "Default", "clearance": 0.15, "track_width": 0.2, "via_diameter": 0.6, "via_drill": 0.3}
+  ],
+  "netclass_patterns": [{"netclass": "WIDE", "pattern": "RAIL"}]
+ }
+})project";
+
+void board_file_is_the_input() {
+    using namespace fixture;
+    ReadNotes notes;
+    const Board board = board_from_pcb(schgen::sexpr_loads(sample_board), schgen::parse_json_text(sample_project), &notes);
+    require(board.rules.layers.size() == 4 && notes.planes == 1 && board.rules.layers[1].kind == LayerKind::plane, "four copper layers are read and the inner zone makes its layer a plane");
+    require(board.rules.classes.front().name == "Default" && board.rules.classes.size() == 2 && board.nets.size() == 3, "classes and nets come from the two files");
+    require(board.rules.classes[board.nets[2].net_class].name == "WIDE" && board.rules.classes[board.nets[1].net_class].name == "Default", "a net takes the class its pattern names");
+    require(notes.pads == 7 && notes.keepouts == 1 && notes.footprints == 2, "pads, footprints and track keep-outs are counted");
+    const auto pad_named = [&](const std::string& owner) {
+        for (const Item& item : board.fixed)
+            if (item.owner == owner) return item;
+        throw std::runtime_error("route contract failed: no pad " + owner);
+    };
+    const Box turned_pad = pad_named("U1.1").shape.bound();
+    require(turned_pad.x0 == 4 * unit - unit / 5 && turned_pad.x1 == 4 * unit + unit / 5 && turned_pad.y0 == 10 * unit - 3 * unit / 10 && turned_pad.y1 == 10 * unit + 3 * unit / 10,
+            "a pad of a footprint turned a quarter is where KiCad puts it");
+    require(pad_named("U2.1").first == 3 && pad_named("U1.3").first == 0 && pad_named("U1.3").last == 3 && pad_named("U1.3").drill == 3 * unit / 5,
+            "a rear pad is on the last layer and a drilled pad on all of them");
+    World world(board);
+    const RunReport run = route_all(world, RunSetup{});
+    const CheckReport judged = verify(board, world.routed());
+    require(run.complete() && judged.ok(), "the sample board routes completely: " + run.summary(board) + judged.summary());
+    const std::string routed = with_copper(sample_board, board, world.routed());
+    const Board again = board_from_pcb(schgen::sexpr_loads(routed), schgen::parse_json_text(sample_project));
+    require(again.fixed.size() == board.fixed.size() + world.routed().size(), "the copper written into the board file is read back");
+    const CheckReport kept = verify(again, {});
+    require(kept.ok(), "the board file with its copper needs nothing more: " + kept.summary());
+    refuses([&] { board_from_pcb(schgen::sexpr_loads("(kicad_pcb (net 1 \"A\"))"), schgen::parse_json_text(sample_project)); }, "a board file without layers is refused");
+}
+
 }
 
 int main() {
@@ -203,6 +281,7 @@ int main() {
         world_judges_and_undoes();
         verifier_finds_every_fault();
         router_joins_a_board();
+        board_file_is_the_input();
         std::cout << "route contracts: " << checks << " checks passed\n";
         return 0;
     } catch (const std::exception& error) {
