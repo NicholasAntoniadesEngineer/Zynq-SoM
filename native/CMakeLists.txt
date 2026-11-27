@@ -81,6 +81,7 @@ target_sources(schgen_core PRIVATE src/regression_cli.cpp)
 target_sources(schgen_core PRIVATE src/measure_board.cpp src/measure_metrics.cpp src/measure_report.cpp src/measure_cli.cpp)
 target_sources(schgen_core PRIVATE src/json_text.cpp src/layout_geometry.cpp src/layout_problem.cpp src/layout_kernel.cpp
     src/layout_adapter.cpp src/layout_json.cpp src/layout_cli.cpp src/layout_squeeze.cpp src/layout_arrange.cpp src/layout_stage.cpp
+    src/route_geometry.cpp src/route_board.cpp src/route_check.cpp src/route_search.cpp src/route_run.cpp src/route_bridge.cpp src/route_pcb.cpp
     src/layout_sink.cpp src/layout_construct.cpp src/layout_density.cpp src/placement_integrity.cpp src/label_seats.cpp
     src/placement_report.cpp src/testpoint_map.cpp src/decoupling_report.cpp src/i2c_inventory.cpp src/module_pin_map.cpp src/connector_pinout.cpp src/rated_bom.cpp)
 set(SCHGEN_RULE_SOURCES
@@ -228,6 +229,10 @@ if(BUILD_TESTING)
     target_link_libraries(schgen_layout_geometry_contracts PRIVATE schgen_core)
     target_compile_options(schgen_layout_geometry_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
     add_test(NAME native_layout_geometry_contracts COMMAND schgen_layout_geometry_contracts)
+    add_executable(schgen_route_contracts tests/route_contracts.cpp)
+    target_link_libraries(schgen_route_contracts PRIVATE schgen_core)
+    target_compile_options(schgen_route_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
+    add_test(NAME native_route_contracts COMMAND schgen_route_contracts)
     add_executable(schgen_layout_kernel_contracts tests/layout_kernel_contracts.cpp)
     target_link_libraries(schgen_layout_kernel_contracts PRIVATE schgen_core)
     target_compile_options(schgen_layout_kernel_contracts PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
