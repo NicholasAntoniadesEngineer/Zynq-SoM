@@ -28,7 +28,9 @@ inline constexpr NamedConstant lane_length{"lane_length", 3000000, "nm", "policy
     "length of the lane kept in front of a crowded pin's exit stub, in which other nets pay to run; long enough for the pin's own track to leave the row and reach a via site"};
 inline constexpr NamedConstant lane_weight{"lane_weight", 4, "ratio", "policy",
     "extra cost, in step lengths, of each step another net takes inside a pin's lane; a track crosses a lane when it must and does not run along a row of them"};
-inline constexpr std::array route_search_registry{lattice_pitch, turn_length, via_length, search_margin, search_growth, search_budget, search_greed, neck_reach, lane_length, lane_weight};
+inline constexpr NamedConstant cross_length{"cross_length", 2500000, "nm", "policy",
+    "track length a probing search will add to avoid one lattice step inside another routed net's copper; a track crossing costs about ten such steps, so the probe crosses as few nets as it can"};
+inline constexpr std::array route_search_registry{lattice_pitch, turn_length, via_length, search_margin, search_growth, search_budget, search_greed, neck_reach, lane_length, lane_weight, cross_length};
 }
 
 struct Lane {
@@ -46,6 +48,7 @@ struct SearchSetup {
     Nm neck = static_cast<Nm>(constants::neck_reach.value);
     bool narrowest = false;
     std::vector<Lane> lanes;
+    std::size_t soft_from = 0;
 };
 
 struct Path {
@@ -57,7 +60,7 @@ struct Path {
 
 struct SearchResult {
     std::optional<Path> path;
-    std::vector<std::size_t> blockers;
+    std::vector<std::size_t> blockers, crossed;
     std::size_t opened = 0;
     bool exhausted = false;
 };

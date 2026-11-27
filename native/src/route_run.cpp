@@ -112,6 +112,7 @@ void note_walls(const World& world, const std::vector<std::size_t>& blockers, st
 void route_state(World& world, const RunSetup& setup, State& state, std::size_t fixed, std::size_t& opened) {
     const Job& job = state.job;
     std::map<int, std::size_t> tally;
+    std::vector<int> crossers;
     state.outcome.net = job.net;
     state.outcome.failure.clear();
     if (job.plane) {
@@ -180,7 +181,19 @@ void route_state(World& world, const RunSetup& setup, State& state, std::size_t 
             if (added.empty() && (!found.path || !commit(world, *found.path, added))) {
                 state.outcome.failure += (state.outcome.failure.empty() ? "" : "; ") + std::string(found.exhausted ? "search budget spent" : "no path") + " to " +
                                          world.item(job.terminals[pick].items.front()).owner;
-                note_walls(world, walled ? wall : found.blockers, fixed, job.net, tally);
+                SearchSetup through = setup.search;
+                through.soft_from = fixed;
+                through.narrowest = true;
+                const SearchResult probed = find_path(world, through, job.net, tree, ends);
+                opened += probed.opened;
+                if (probed.path && !probed.crossed.empty()) {
+                    for (const std::size_t id : probed.crossed)
+                        if (world.present(id) && world.item(id).net != job.net &&
+                            std::find(crossers.begin(), crossers.end(), world.item(id).net) == crossers.end())
+                            crossers.push_back(world.item(id).net);
+                } else {
+                    note_walls(world, walled ? wall : found.blockers, fixed, job.net, tally);
+                }
                 continue;
             }
             ++state.outcome.joined;
@@ -197,8 +210,9 @@ void route_state(World& world, const RunSetup& setup, State& state, std::size_t 
     std::vector<std::pair<std::size_t, int>> ranked;
     for (const auto& [net, count] : tally) ranked.emplace_back(count, net);
     std::sort(ranked.begin(), ranked.end(), [](const auto& a, const auto& b) { return a.first != b.first ? a.first > b.first : a.second < b.second; });
-    state.walls.clear();
-    for (const auto& entry : ranked) state.walls.push_back(entry.second);
+    state.walls = crossers;
+    for (const auto& entry : ranked)
+        if (std::find(state.walls.begin(), state.walls.end(), entry.second) == state.walls.end()) state.walls.push_back(entry.second);
 }
 
 std::size_t lay_stubs(World& world, std::vector<State>& states, std::vector<Lane>& lanes) {

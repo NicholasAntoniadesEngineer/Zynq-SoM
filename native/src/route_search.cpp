@@ -60,6 +60,7 @@ public:
             for (Nm column = lane.box.x0 / lane_cell; column <= lane.box.x1 / lane_cell; ++column)
                 for (Nm row = lane.box.y0 / lane_cell; row <= lane.box.y1 / lane_cell; ++row) lanes_[cell_key({column, row, lane.layer})].push_back(index);
         }
+        cross_ = static_cast<Nm>(constants::cross_length.value) * straight / setup.pitch;
         turn_ = setup.turn * straight / setup.pitch;
         via_ = setup.via * straight / setup.pitch;
     }
@@ -145,11 +146,21 @@ public:
                 const std::vector<std::size_t> found = world_.conflicts(probe);
                 free = found.empty();
                 for (const std::size_t id : found) blockers_.insert(id);
+                if (!free && soft(found)) {
+                    free = true;
+                    soft_[key] = found;
+                }
             }
         }
         legal_.emplace(key, free);
         return free;
     }
+
+    bool soft(const std::vector<std::size_t>& found) const {
+        return setup_.soft_from != 0 && std::all_of(found.begin(), found.end(), [&](std::size_t id) { return id >= setup_.soft_from; });
+    }
+
+    std::int64_t crossing(const Cell& cell) const { return soft_.count(cell_key(cell)) ? cross_ : 0; }
 
     bool via_fits(const Cell& cell) {
         const Key key = cell_key({cell.column, cell.row, 0});
@@ -161,6 +172,10 @@ public:
             const std::vector<std::size_t> found = world_.conflicts(probe);
             free = found.empty();
             for (const std::size_t id : found) blockers_.insert(id);
+            if (!free && soft(found)) {
+                free = true;
+                soft_drill_[key] = found;
+            }
         }
         drill_.emplace(key, free);
         return free;
@@ -215,25 +230,34 @@ public:
                 }
                 const Cell cell{here.cell.column + step_x[heading], here.cell.row + step_y[heading], here.cell.layer};
                 if (!goal(cell) && !open_cell(cell)) continue;
-                relax(cell, heading, here.cost + (heading % 2 == 0 ? straight : diagonal) + bend * turn_ + toll(cell));
+                relax(cell, heading, here.cost + (heading % 2 == 0 ? straight : diagonal) + bend * turn_ + toll(cell) + crossing(cell));
             }
             if (drop || here.cell.layer < low || here.cell.layer > high || !via_fits(here.cell)) continue;
             for (std::size_t layer = low; layer <= high; ++layer) {
                 if (layer == here.cell.layer || board_.rules.layers[layer].kind == LayerKind::plane) continue;
                 const Cell cell{here.cell.column, here.cell.row, layer};
                 if (!goal(cell) && !open_cell(cell)) continue;
-                relax(cell, undirected, here.cost + via_);
+                relax(cell, undirected, here.cost + via_ + crossing(cell) + (soft_drill_.count(cell_key({cell.column, cell.row, 0})) ? cross_ : 0));
             }
         }
         return std::nullopt;
     }
 
-    Path trace(Key end, bool drop) const {
+    Path trace(Key end, bool drop) {
         Path path;
         std::vector<const Visit*> chain;
         for (Key key = end;; key = visits_.at(key).parent) {
             chain.push_back(&visits_.at(key));
             if (visits_.at(key).start) break;
+        }
+        for (const Visit* visit : chain) {
+            for (const auto* held : {&soft_, &soft_drill_}) {
+                const auto found = held->find(held == &soft_ ? cell_key(visit->cell) : cell_key({visit->cell.column, visit->cell.row, 0}));
+                if (found == held->end()) continue;
+                if (held == &soft_drill_ && visit->heading != undirected) continue;
+                for (const std::size_t id : found->second)
+                    if (std::find(crossed_.begin(), crossed_.end(), id) == crossed_.end()) crossed_.push_back(id);
+            }
         }
         std::reverse(chain.begin(), chain.end());
         std::size_t from = 0;
@@ -272,6 +296,8 @@ public:
         legal_.clear();
         drill_.clear();
         visits_.clear();
+        soft_.clear();
+        soft_drill_.clear();
     }
 
     SearchResult result(std::optional<Path> path) const {
@@ -279,6 +305,7 @@ public:
         out.path = std::move(path);
         out.blockers.assign(blockers_.begin(), blockers_.end());
         std::sort(out.blockers.begin(), out.blockers.end());
+        out.crossed = crossed_;
         out.opened = opened_;
         out.exhausted = exhausted_;
         return out;
@@ -294,10 +321,11 @@ private:
     const Board& board_;
     Nm half_ = 0, sag_ = 0;
     std::vector<std::pair<Box, Nm>> necks_;
-    std::int64_t turn_ = 0, via_ = 0, greed_ = 0;
+    std::int64_t turn_ = 0, via_ = 0, greed_ = 0, cross_ = 0;
     Box window_;
     std::unordered_map<Key, bool> legal_, drill_;
-    std::unordered_map<Key, std::vector<std::size_t>> lanes_;
+    std::unordered_map<Key, std::vector<std::size_t>> lanes_, soft_, soft_drill_;
+    std::vector<std::size_t> crossed_;
     std::unordered_map<Key, Visit> visits_;
     std::unordered_set<std::size_t> blockers_;
     std::size_t opened_ = 0;
@@ -357,7 +385,7 @@ SearchResult search(const World& world, const SearchSetup& setup, int net, const
 
 SearchResult checked(const World& world, const SearchSetup& setup, int net, const std::vector<std::size_t>& sources, const std::vector<std::size_t>& goals, bool drop) {
     SearchResult exact = search(world, setup, net, sources, goals, drop, false);
-    if (!exact.path) return exact;
+    if (!exact.path || setup.soft_from != 0) return exact;
     const bool sound = std::none_of(exact.path->items.begin(), exact.path->items.end(), [&](const Item& item) { return world.conflict(item).has_value(); });
     if (sound) return exact;
     SearchResult guarded = search(world, setup, net, sources, goals, drop, true);
