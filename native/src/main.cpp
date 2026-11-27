@@ -13,6 +13,7 @@
 #include "schgen/geometry_cli.hpp"
 #include "schgen/measure.hpp"
 #include "schgen/layout_cli.hpp"
+#include "schgen/route_bridge.hpp"
 #include "schgen/rules.hpp"
 #include "schgen/part_import.hpp"
 #include "schgen/footprint_courtyard.hpp"
@@ -90,6 +91,7 @@ int main(int argc, char** argv) {
         }
         if (const auto status = schgen::run_measure_command(argc, argv)) return *status;
         if (const auto status = schgen::run_layout_command(argc, argv)) return *status;
+        if (const auto status = schgen::route::run_route_command(argc, argv)) return *status;
         if (const auto status = schgen::rules::run_rules_command(argc, argv)) return *status;
         if (const auto status = schgen::run_part_import_command(argc, argv)) return *status;
         if (const auto status = schgen::courtyard::run_part_courtyard_command(argc, argv)) return *status;
