@@ -1058,6 +1058,10 @@ StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model
         if (!why.empty()) throw LayoutError("layout: test points lost their net when other parts moved and have no seat within the stub limit" + why);
         return squeeze_best(kernel, settings);
     };
+    if (inputs.floorplan.project.draw) {
+        result.draw = draw_in(kernel);
+        seat_taps(kernel, settings);
+    }
     if (inputs.floorplan.project.arrange) result.arrange = arrange(kernel, settings, [&] { seat_taps(kernel, settings); });
     const Snapshot seated = kernel.snapshot();
     SqueezeReport plain = squeeze_seated();
@@ -1180,6 +1184,10 @@ StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model
          << result.order.moved_back << " parts ahead of one were moved back\n";
     text << "TALL PARTS: " << result.cleared << " clusters moved to give parts taller than the module's underside "
          << constants::tall_module_clearance.value << " mm from the module\n";
+    if (result.draw)
+        text << "CLUSTERS DRAWN TOGETHER: " << result.draw->moved << " moves of " << result.draw->clusters << " clusters in " << result.draw->rounds
+             << " passes; airwire " << to_mm(result.draw->routed_before) << " to " << to_mm(result.draw->routed_after) << " mm, weighted by net kind "
+             << to_mm(result.draw->pulled_before) << " to " << to_mm(result.draw->pulled_after) << "\n";
     text << "CLUSTER ARRANGEMENT: " << result.arrange.clusters << " tied clusters; parts and module span "
          << to_mm(result.arrange.before.width()) << " x " << to_mm(result.arrange.before.height())
          << " mm as placed; squeezes to " << result.arrange.unarranged << " mm2 without rearranging\n";

@@ -115,7 +115,7 @@ int export_problem(int argc, char** argv) {
 std::optional<int> run_layout_command(int argc, char** argv) {
     if (argc < 2) return std::nullopt;
     const std::string command = argv[1];
-    if (command != "layout-export" && command != "layout-check" && command != "layout-construct" && command != "layout-arrange" && command != "layout-repair" && command != "layout-plan" && command != "layout-draw") return std::nullopt;
+    if (command != "layout-export" && command != "layout-check" && command != "layout-construct" && command != "layout-arrange" && command != "layout-repair" && command != "layout-plan" && command != "layout-draw" && command != "layout-lay") return std::nullopt;
     if (std::any_of(argv + 2, argv + argc, [](const char* value) {
             return std::string(value) == "--help" || std::string(value) == "-h";
         })) {
@@ -127,6 +127,26 @@ std::optional<int> run_layout_command(int argc, char** argv) {
     const auto document = layout::read_document(parse_json_file(argv[2]));
     if (command == "layout-plan") {
         std::cout << layout::plan_figures(document.problem, document.placement).summary();
+        return 0;
+    }
+    if (command == "layout-lay") {
+        const layout::Problem dense = layout::without_density(document.problem);
+        layout::Kernel kernel(dense, document.placement);
+        layout::StageResult repaired;
+        layout::repair_start(kernel, layout::default_squeeze(), repaired, [](bool) {});
+        const std::size_t before = kernel.violations().size();
+        std::cout << "before\n" << layout::plan_figures(dense, kernel.placement()).summary().substr(0, 330) << "\n";
+        const layout::LayReport laid = layout::lay_out(kernel);
+        std::cout << "laid: " << laid.seated << " of " << laid.clusters << " clusters seated by plan, " << laid.returned << " put back, " << laid.unseated.size()
+                  << " without a seat; " << (laid.taken ? "taken" : "not taken") << "; airwire " << layout::to_mm(laid.routed_before) << " to "
+                  << layout::to_mm(laid.routed_after) << " mm; weighted " << layout::to_mm(laid.pulled_before) << " to " << layout::to_mm(laid.pulled_after)
+                  << "; violations " << before << " before, " << kernel.violations().size() << " after\n";
+        std::cout << "  test points left for their own seater: " << laid.deferred << "\n";
+        for (const auto& name : laid.unseated) std::cout << "  no seat: " << name << "\n";
+        const layout::DrawReport drawn = layout::draw_in(kernel);
+        std::cout << "drawn: " << drawn.moved << " moves; weighted " << layout::to_mm(drawn.pulled_before) << " to " << layout::to_mm(drawn.pulled_after)
+                  << "; violations " << kernel.violations().size() << "\n";
+        std::cout << "after\n" << layout::plan_figures(dense, kernel.placement()).summary() << "\n";
         return 0;
     }
     if (command == "layout-draw") {

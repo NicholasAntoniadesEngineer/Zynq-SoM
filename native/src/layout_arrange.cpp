@@ -1,8 +1,10 @@
 #include "schgen/layout_arrange.hpp"
 
+#include "schgen/layout_construct.hpp"
 #include "schgen/layout_sink.hpp"
 
 #include <algorithm>
+#include <functional>
 #include <chrono>
 #include <cmath>
 #include <map>
@@ -389,6 +391,300 @@ std::string extent_holders(const Kernel& kernel) {
         text += std::string(index ? ", " : "") + side_name(sides[index]) + " " +
                 (names[index].empty() ? "the module" : names[index]);
     return text;
+}
+
+LayReport lay_out(Kernel& kernel) {
+    LayReport report;
+    const Problem& problem = kernel.problem();
+    const Snapshot start = kernel.snapshot();
+    std::vector<Cluster> clusters;
+    for (Cluster& cluster : clusters_of(kernel)) {
+        if (!std::all_of(cluster.members.begin(), cluster.members.end(), [&](std::size_t part) { return kernel.releasable(part); })) continue;
+        if (std::all_of(cluster.members.begin(), cluster.members.end(),
+                        [&](std::size_t part) { return problem.parts[part].part_class == PartClass::test_point; })) {
+            for (const std::size_t part : cluster.members) kernel.park(part);
+            report.deferred += cluster.members.size();
+            continue;
+        }
+        clusters.push_back(std::move(cluster));
+    }
+    report.routed_before = kernel.routed_length();
+    report.pulled_before = kernel.pulled_length();
+    report.clusters = clusters.size();
+    if (clusters.empty()) {
+        kernel.restore(start);
+        return report;
+    }
+    std::vector<Block> blocks;
+    std::vector<int> cluster_of(problem.parts.size(), -1);
+    for (std::size_t index = 0; index < clusters.size(); ++index) {
+        blocks.push_back(as_placed(kernel, clusters[index].members));
+        for (const std::size_t part : clusters[index].members) cluster_of[part] = static_cast<int>(index);
+    }
+    struct Sheet {
+        std::string name;
+        std::vector<std::size_t> clusters;
+        double pull = 0;
+    };
+    std::vector<Sheet> sheets;
+    std::map<std::string, std::size_t> sheet_index;
+    for (std::size_t index = 0; index < clusters.size(); ++index) {
+        const auto found = sheet_index.emplace(clusters[index].sheet, sheets.size());
+        if (found.second) sheets.push_back({clusters[index].sheet, {}, 0});
+        sheets[found.first->second].clusters.push_back(index);
+    }
+    for (const Net& net : problem.nets) {
+        if (net.category == Category::plane) continue;
+        const bool anchored = std::any_of(net.pins.begin(), net.pins.end(), [&](const Pin& pin) { return cluster_of[pin.part] < 0; });
+        if (!anchored) continue;
+        std::vector<std::size_t> touched;
+        for (const Pin& pin : net.pins)
+            if (cluster_of[pin.part] >= 0) touched.push_back(sheet_index.at(clusters[static_cast<std::size_t>(cluster_of[pin.part])].sheet));
+        std::sort(touched.begin(), touched.end());
+        touched.erase(std::unique(touched.begin(), touched.end()), touched.end());
+        for (const std::size_t sheet : touched) sheets[sheet].pull += net.pull;
+    }
+    std::stable_sort(sheets.begin(), sheets.end(), [](const Sheet& a, const Sheet& b) { return a.pull != b.pull ? a.pull > b.pull : a.name < b.name; });
+    for (const Cluster& cluster : clusters)
+        for (const std::size_t part : cluster.members) kernel.park(part);
+    struct Want {
+        double x = 0, y = 0, pull = 0;
+    };
+    const auto want_of = [&](std::size_t index) {
+        Want want;
+        for (const Net& net : problem.nets) {
+            if (net.category == Category::plane) continue;
+            bool touches = false;
+            std::size_t present = 0;
+            for (const Pin& pin : net.pins) {
+                if (cluster_of[pin.part] == static_cast<int>(index)) touches = true;
+                else if (!kernel.parked(pin.part)) ++present;
+            }
+            if (!touches || present == 0) continue;
+            for (const Pin& pin : net.pins) {
+                if (cluster_of[pin.part] == static_cast<int>(index) || kernel.parked(pin.part)) continue;
+                const Pose& pose = kernel.placement()[pin.part];
+                const Point at = placed(problem.footprints[problem.parts[pin.part].footprint].on(pose.face).pads[pin.pad].centre, pose.at, pose.turn);
+                const double share = static_cast<double>(net.pull) / static_cast<double>(present);
+                want.x += share * static_cast<double>(at.x);
+                want.y += share * static_cast<double>(at.y);
+                want.pull += share;
+            }
+        }
+        if (want.pull > 0) {
+            want.x /= want.pull;
+            want.y /= want.pull;
+        }
+        return want;
+    };
+    const Box outline = kernel.board().outline();
+    const std::optional<Box> body = kernel.board().module_body;
+    const Nm coarse = static_cast<Nm>(constants::arrange_pitch.value);
+    std::vector<std::optional<std::size_t>> tied_to(clusters.size());
+    const auto seat_near = [&](std::size_t index, Want want, bool anywhere, const std::function<bool()>& accept = {}) {
+        const Block& block = blocks[index];
+        const bool tied = tied_to[index] && !kernel.parked(*tied_to[index]);
+        const Nm pitch = tied ? static_cast<Nm>(constants::search_pitch.value) : coarse;
+        const Nm reach = static_cast<Nm>(constants::construct_reach.value);
+        if (tied) {
+            const Point at = kernel.placement()[*tied_to[index]].at;
+            want = {static_cast<double>(at.x), static_cast<double>(at.y), want.pull};
+        }
+        const std::vector<Option> options = options_of(kernel, block, pitch);
+        struct Try {
+            double away = 0;
+            std::size_t option = 0;
+            Point by;
+        };
+        std::vector<Try> tries;
+        for (std::size_t choice = 0; choice < options.size(); ++choice) {
+            const Option& option = options[choice];
+            const Nm first_x = (outline.x0 - option.swept.x0) / pitch, last_x = (outline.x1 - option.swept.x1) / pitch;
+            const Nm first_y = (outline.y0 - option.swept.y0) / pitch, last_y = (outline.y1 - option.swept.y1) / pitch;
+            for (Nm column = first_x; column <= last_x; ++column)
+                for (Nm row = first_y; row <= last_y; ++row) {
+                    const Point by{column * pitch, row * pitch};
+                    const Box swept = shifted(option.swept, by);
+                    if (!inside(swept, outline)) continue;
+                    if (tied && !anywhere &&
+                        std::hypot(static_cast<double>(swept.x0 + swept.x1) / 2 - want.x, static_cast<double>(swept.y0 + swept.y1) / 2 - want.y) > static_cast<double>(reach))
+                        continue;
+                    if (body && std::any_of(option.top_boxes.begin(), option.top_boxes.end(), [&](const Box& box) { return overlaps(shifted(box, by), *body); }))
+                        continue;
+                    tries.push_back({std::hypot(static_cast<double>(swept.x0 + swept.x1) / 2 - want.x, static_cast<double>(swept.y0 + swept.y1) / 2 - want.y), choice, by});
+                }
+        }
+        std::sort(tries.begin(), tries.end(), [](const Try& a, const Try& b) {
+            if (a.away != b.away) return a.away < b.away;
+            if (a.option != b.option) return a.option < b.option;
+            return a.by.x != b.by.x ? a.by.x < b.by.x : a.by.y < b.by.y;
+        });
+        const std::size_t limit = anywhere || tied ? tries.size() : std::min(tries.size(), static_cast<std::size_t>(constants::lay_tries.value));
+        for (std::size_t attempt = 0; attempt < limit; ++attempt) {
+            const std::vector<Move> moves = moves_of(block, options[tries[attempt].option], tries[attempt].by);
+            std::size_t seated = 0;
+            while (seated < moves.size() && kernel.seat(moves[seated].part, moves[seated].pose)) ++seated;
+            if (seated == moves.size() && (!accept || accept())) return true;
+            for (std::size_t undo = 0; undo < seated; ++undo) kernel.park(moves[undo].part);
+        }
+        return false;
+    };
+    const auto fallback_of = [&](const Sheet& sheet, std::size_t index) {
+        const Box home = body ? *body : outline;
+        Want want{static_cast<double>(home.x0 + home.x1) / 2, static_cast<double>(home.y0 + home.y1) / 2, 0};
+        for (const std::size_t mate : sheet.clusters)
+            if (mate != index && !kernel.parked(clusters[mate].members.front())) {
+                const Box hull = hull_of(kernel, clusters[mate].members);
+                return Want{static_cast<double>(hull.x0 + hull.x1) / 2, static_cast<double>(hull.y0 + hull.y1) / 2, 0};
+            }
+        return want;
+    };
+    constexpr int untied = -2, held = -1;
+    std::vector<int> leader(clusters.size(), untied);
+    const auto tie = [&](std::size_t anchor, std::size_t member) {
+        const int mine = cluster_of[member];
+        if (mine < 0 || cluster_of[anchor] == mine || leader[static_cast<std::size_t>(mine)] != untied) return;
+        leader[static_cast<std::size_t>(mine)] = cluster_of[anchor] < 0 ? held : cluster_of[anchor];
+        tied_to[static_cast<std::size_t>(mine)] = anchor;
+    };
+    for (const PadGap& rule : problem.constraints.pad_gaps) tie(rule.anchor, rule.member);
+    for (const PadGap& rule : problem.constraints.soft_gaps) tie(rule.anchor, rule.member);
+    for (const NearestGap& rule : problem.constraints.nearest_gaps)
+        for (const std::size_t member : rule.members) tie(rule.anchor, member);
+    for (const NetOrder& rule : problem.constraints.net_orders) tie(rule.anchor, rule.lead);
+    std::vector<std::size_t> order, sheet_of(clusters.size(), 0);
+    std::vector<char> listed(clusters.size(), 0);
+    const std::function<void(std::size_t)> list = [&](std::size_t index) {
+        if (listed[index]) return;
+        listed[index] = 1;
+        order.push_back(index);
+        for (std::size_t follower = 0; follower < clusters.size(); ++follower)
+            if (leader[follower] == static_cast<int>(index)) list(follower);
+    };
+    for (std::size_t sheet = 0; sheet < sheets.size(); ++sheet)
+        for (const std::size_t index : sheets[sheet].clusters) sheet_of[index] = sheet;
+    for (const Sheet& sheet : sheets)
+        for (const std::size_t index : sheet.clusters)
+            if (leader[index] == held) list(index);
+    for (const Sheet& sheet : sheets)
+        for (const std::size_t index : sheet.clusters) list(index);
+    const auto gathered = [&](std::size_t index, Want want) {
+        std::vector<std::size_t> mates;
+        for (const std::size_t mate : sheets[sheet_of[index]].clusters)
+            if (mate != index && !kernel.parked(clusters[mate].members.front()))
+                mates.insert(mates.end(), clusters[mate].members.begin(), clusters[mate].members.end());
+        if (mates.empty()) return want;
+        const Box hull = hull_of(kernel, mates);
+        const double share = constants::lay_gather.value;
+        want.x = want.x * (1 - share) + share * static_cast<double>(hull.x0 + hull.x1) / 2;
+        want.y = want.y * (1 - share) + share * static_cast<double>(hull.y0 + hull.y1) / 2;
+        return want;
+    };
+    std::map<std::size_t, std::string> early_cause;
+    std::vector<std::size_t> first;
+    for (std::size_t round = 0; round < static_cast<std::size_t>(constants::lay_rounds.value); ++round) {
+        report.seated = 0;
+        report.returned = 0;
+        report.unseated.clear();
+        std::vector<char> done(clusters.size(), 0);
+        std::vector<std::size_t> waiting;
+        const auto early = [&] {
+            for (const std::size_t index : first) {
+                if (!kernel.parked(clusters[index].members.front())) continue;
+                const Want want = want_of(index);
+                if (want.pull > 0 && seat_near(index, want, false)) ++report.seated;
+            }
+        };
+        for (const std::size_t index : first) {
+            done[index] = 1;
+            const Want want = want_of(index);
+            if (want.pull > 0 && seat_near(index, want, true)) ++report.seated;
+        }
+        early();
+        const auto put_back = [&](std::size_t index) {
+            const Block& block = blocks[index];
+            std::size_t back = 0;
+            while (back < block.members.size() && kernel.seat(block.members[back], block.base[back])) ++back;
+            if (back == block.members.size()) return true;
+            for (std::size_t undo = 0; undo < back; ++undo) kernel.park(block.members[undo]);
+            return false;
+        };
+        const std::function<bool(std::size_t)> followed = [&](std::size_t index) {
+            std::vector<std::size_t> placed_now;
+            for (std::size_t follower = 0; follower < clusters.size(); ++follower) {
+                if (leader[follower] != static_cast<int>(index) || !kernel.parked(clusters[follower].members.front())) continue;
+                if (seat_near(follower, want_of(follower), false, [&] { return followed(follower); })) {
+                    placed_now.push_back(follower);
+                    continue;
+                }
+                for (const std::size_t undo : placed_now)
+                    for (const std::size_t part : clusters[undo].members)
+                        if (!kernel.parked(part)) kernel.park(part);
+                return false;
+            }
+            report.seated += placed_now.size();
+            return true;
+        };
+        for (const std::size_t index : order) {
+            if (done[index] || !kernel.parked(clusters[index].members.front())) continue;
+            Want want = want_of(index);
+            if (want.pull == 0) want = fallback_of(sheets[sheet_of[index]], index);
+            else want = gathered(index, want);
+            if (seat_near(index, want, false, [&] { return followed(index); })) {
+                ++report.seated;
+                early();
+            } else if (put_back(index)) {
+                ++report.returned;
+            } else {
+                waiting.push_back(index);
+                if (!early_cause.count(index)) {
+                    const std::size_t part = blocks[index].members.front();
+                    const auto refusal = kernel.seat_rejection(part, blocks[index].base.front());
+                    early_cause[index] = refusal ? std::string(breach_name(refusal->kind)) + " against " +
+                                                       (refusal->other < problem.parts.size() ? problem.parts[refusal->other].reference : std::string("the board"))
+                                                 : std::string("free where it stood");
+                }
+            }
+        }
+        for (const std::size_t index : first)
+            if (kernel.parked(clusters[index].members.front())) waiting.push_back(index);
+        std::vector<std::size_t> failed;
+        for (const std::size_t index : waiting) {
+            const Want wanted = want_of(index);
+            if (seat_near(index, wanted, true) || seat_near(index, gathered(index, Want{wanted.x, wanted.y, wanted.pull}), true) ||
+                seat_near(index, fallback_of(sheets[sheet_of[index]], index), true)) {
+                ++report.seated;
+                continue;
+            }
+            failed.push_back(index);
+            std::string why;
+            for (std::size_t member = 0; member < blocks[index].members.size() && why.empty(); ++member) {
+                const std::size_t part = blocks[index].members[member];
+                if (const auto refusal = kernel.seat_rejection(part, blocks[index].base[member]))
+                    why = std::string(" (where it stood: ") + breach_name(refusal->kind) + " " + problem.parts[part].reference + " against " +
+                          (refusal->other < problem.parts.size() ? problem.parts[refusal->other].reference : std::string("the board")) + ")";
+                else if (!kernel.seat(part, blocks[index].base[member]))
+                    why = " (seat refused)";
+            }
+            for (const std::size_t part : blocks[index].members)
+                if (!kernel.parked(part)) kernel.park(part);
+            report.unseated.push_back(clusters[index].name + why + (early_cause.count(index) ? "; when first tried: " + early_cause[index] : std::string()));
+        }
+        ++report.rounds;
+        if (failed.empty()) break;
+        const std::size_t known = first.size();
+        for (const std::size_t index : failed)
+            if (std::find(first.begin(), first.end(), index) == first.end()) first.push_back(index);
+        if (first.size() == known || round + 1 == static_cast<std::size_t>(constants::lay_rounds.value)) break;
+        for (const Cluster& cluster : clusters)
+            for (const std::size_t part : cluster.members)
+                if (!kernel.parked(part)) kernel.park(part);
+    }
+    report.routed_after = kernel.routed_length();
+    report.pulled_after = kernel.pulled_length();
+    report.taken = report.unseated.empty() && report.pulled_after < report.pulled_before;
+    if (!report.taken) kernel.restore(start);
+    return report;
 }
 
 DrawReport draw_in(Kernel& kernel) {
