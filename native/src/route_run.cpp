@@ -101,6 +101,7 @@ struct State {
     NetOutcome outcome;
     std::vector<int> walls;
     std::size_t rips = 0;
+    std::vector<std::vector<std::size_t>> stubs;
 };
 
 void note_walls(const World& world, const std::vector<std::size_t>& blockers, std::size_t fixed, int self, std::map<int, std::size_t>& tally) {
@@ -139,7 +140,9 @@ void route_state(World& world, const RunSetup& setup, State& state, std::size_t 
         state.outcome.vias = 0;
         state.outcome.least_width = 0;
         std::vector<char> joined(job.terminals.size(), 0);
+        const std::vector<std::vector<std::size_t>>& stubbed = state.stubs;
         std::vector<std::size_t> tree = job.terminals.front().items;
+        tree.insert(tree.end(), stubbed.front().begin(), stubbed.front().end());
         std::vector<Point> reached{job.terminals.front().centre};
         joined.front() = 1;
         for (std::size_t link = 0; link + 1 < job.terminals.size(); ++link) {
@@ -156,23 +159,28 @@ void route_state(World& world, const RunSetup& setup, State& state, std::size_t 
                 }
             }
             joined[pick] = 1;
-            SearchResult found = find_path(world, setup.search, job.net, tree, job.terminals[pick].items);
+            SearchSetup probe = setup.search;
+            probe.budget = static_cast<std::size_t>(constants::probe_budget.value);
+            const std::vector<std::size_t>& ends = stubbed[pick].empty() ? job.terminals[pick].items : stubbed[pick];
+            SearchResult found = find_path(world, probe, job.net, ends, tree);
             opened += found.opened;
+            const bool walled = !found.path && !found.exhausted;
+            const std::vector<std::size_t> wall = found.blockers;
+            if (!found.path && !walled) {
+                found = find_path(world, setup.search, job.net, tree, ends);
+                opened += found.opened;
+            }
             std::vector<std::size_t> added;
             if (!found.path || !commit(world, *found.path, added)) {
-                SearchSetup slim = setup.search;
+                SearchSetup slim = walled ? probe : setup.search;
                 slim.narrowest = true;
-                found = find_path(world, slim, job.net, tree, job.terminals[pick].items);
+                found = find_path(world, slim, job.net, walled ? ends : tree, walled ? tree : ends);
                 opened += found.opened;
             }
             if (added.empty() && (!found.path || !commit(world, *found.path, added))) {
                 state.outcome.failure += (state.outcome.failure.empty() ? "" : "; ") + std::string(found.exhausted ? "search budget spent" : "no path") + " to " +
                                          world.item(job.terminals[pick].items.front()).owner;
-                SearchSetup probe = setup.search;
-                probe.budget = static_cast<std::size_t>(constants::probe_budget.value);
-                const SearchResult back = find_path(world, probe, job.net, job.terminals[pick].items, tree);
-                opened += back.opened;
-                note_walls(world, back.blockers, fixed, job.net, tally);
+                note_walls(world, walled ? wall : found.blockers, fixed, job.net, tally);
                 continue;
             }
             ++state.outcome.joined;
@@ -182,6 +190,7 @@ void route_state(World& world, const RunSetup& setup, State& state, std::size_t 
             state.items.insert(state.items.end(), added.begin(), added.end());
             tree.insert(tree.end(), added.begin(), added.end());
             tree.insert(tree.end(), job.terminals[pick].items.begin(), job.terminals[pick].items.end());
+            tree.insert(tree.end(), stubbed[pick].begin(), stubbed[pick].end());
             reached.push_back(job.terminals[pick].centre);
         }
     }
@@ -190,6 +199,63 @@ void route_state(World& world, const RunSetup& setup, State& state, std::size_t 
     std::sort(ranked.begin(), ranked.end(), [](const auto& a, const auto& b) { return a.first != b.first ? a.first > b.first : a.second < b.second; });
     state.walls.clear();
     for (const auto& entry : ranked) state.walls.push_back(entry.second);
+}
+
+std::size_t lay_stubs(World& world, std::vector<State>& states) {
+    const Board& board = world.board();
+    std::map<std::string, std::vector<std::size_t>> parts;
+    for (std::size_t id = 0; id < board.fixed.size(); ++id) {
+        const Item& item = board.fixed[id];
+        if (item.kind == ItemKind::pad && item.first == item.last) parts[item.owner.substr(0, item.owner.find('.'))].push_back(id);
+    }
+    std::map<std::size_t, Item> stub_of;
+    for (const auto& [name, ids] : parts) {
+        if (ids.size() < static_cast<std::size_t>(constants::dense_pins.value)) continue;
+        double middle_x = 0, middle_y = 0;
+        for (const std::size_t id : ids) {
+            middle_x += static_cast<double>(centre_of(board.fixed[id]).x);
+            middle_y += static_cast<double>(centre_of(board.fixed[id]).y);
+        }
+        middle_x /= static_cast<double>(ids.size());
+        middle_y /= static_cast<double>(ids.size());
+        for (const std::size_t id : ids) {
+            const Item& pad = board.fixed[id];
+            if (pad.net == no_net) continue;
+            const Box bound = pad.shape.bound();
+            const Nm wide = bound.x1 - bound.x0, tall = bound.y1 - bound.y0;
+            if (wide == tall) continue;
+            const NetClass& entry = board.rules.classes[board.nets[static_cast<std::size_t>(pad.net)].net_class];
+            const Nm narrow = std::min(wide, tall);
+            bool crowded = false;
+            for (const std::size_t other : ids)
+                if (other != id && !apart(pad.shape, board.fixed[other].shape, entry.track + 2 * entry.clearance)) crowded = true;
+            if (!crowded) continue;
+            const Point centre = centre_of(pad);
+            const bool along_x = wide > tall;
+            const Nm sign = (along_x ? static_cast<double>(centre.x) >= middle_x : static_cast<double>(centre.y) >= middle_y) ? 1 : -1;
+            const Nm reach = std::max(wide, tall) / 2 + board.rules.vias[entry.via].pad + entry.clearance;
+            const Point end = along_x ? Point{centre.x + sign * reach, centre.y} : Point{centre.x, centre.y + sign * reach};
+            for (Nm width = std::min(entry.track, narrow); width >= board.rules.least_track; width -= static_cast<Nm>(constants::stub_step.value)) {
+                const Item stub{ItemKind::track, pad.net, pad.first, pad.first, capsule(centre, end, width / 2), 0, {}, 0};
+                if (world.conflict(stub)) continue;
+                stub_of.emplace(id, stub);
+                break;
+            }
+        }
+    }
+    std::size_t laid = 0;
+    for (State& state : states) {
+        state.stubs.assign(state.job.terminals.size(), {});
+        if (state.job.plane) continue;
+        for (std::size_t index = 0; index < state.job.terminals.size(); ++index)
+            for (const std::size_t id : state.job.terminals[index].items) {
+                const auto found = stub_of.find(id);
+                if (found == stub_of.end() || world.conflict(found->second)) continue;
+                state.stubs[index].push_back(world.add(found->second));
+                ++laid;
+            }
+    }
+    return laid;
 }
 
 void lift(World& world, State& state) {
@@ -201,10 +267,9 @@ void lift(World& world, State& state) {
 }
 
 RunReport route_all(World& world, const RunSetup& setup) {
-    const std::size_t fixed = world.size();
     const Board& board = world.board();
     std::vector<State> states;
-    for (Job& job : jobs_of(world)) states.push_back({std::move(job), {}, {}, {}, {}, 0});
+    for (Job& job : jobs_of(world)) states.push_back({std::move(job), {}, {}, {}, {}, 0, {}});
     std::stable_sort(states.begin(), states.end(), [&](const State& a, const State& b) {
         if (a.job.plane != b.job.plane) return a.job.plane;
         const bool stated_a = board.nets[static_cast<std::size_t>(a.job.net)].net_class != 0, stated_b = board.nets[static_cast<std::size_t>(b.job.net)].net_class != 0;
@@ -213,6 +278,8 @@ RunReport route_all(World& world, const RunSetup& setup) {
         return a.job.net < b.job.net;
     });
     RunReport report;
+    report.stubs = lay_stubs(world, states);
+    const std::size_t fixed = world.size();
     for (State& state : states) route_state(world, setup, state, fixed, report.opened);
     const auto joined_now = [&] {
         std::size_t total = 0;
@@ -272,7 +339,8 @@ RunReport route_all(World& world, const RunSetup& setup) {
 }
 
 std::string RunReport::summary(const Board& board) const {
-    std::string out = "ROUTE: " + std::to_string(joined) + " of " + std::to_string(links) + " connections made (" + std::to_string(first_joined) + " before any net was pulled out, " +
+    std::string out = "ROUTE: " + std::to_string(stubs) + " exit stubs laid at crowded pins first\n";
+    out += std::to_string(joined) + " of " + std::to_string(links) + " connections made (" + std::to_string(first_joined) + " before any net was pulled out, " +
                       std::to_string(ripped) + " nets pulled out and routed again over " + std::to_string(passes) + " rounds); " +
                       std::to_string(static_cast<long long>(std::llround(length / 1e6))) + " mm of track, " + std::to_string(vias) + " vias; " + std::to_string(opened) +
                       " lattice points opened\n  open nets at the start of each round:";

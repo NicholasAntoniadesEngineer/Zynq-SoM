@@ -16,7 +16,11 @@ inline constexpr NamedConstant rip_cap{"rip_cap", 4, "times", "policy",
     "times one net may be pulled out for others before it is left alone, so two nets cannot displace each other for ever"};
 inline constexpr NamedConstant probe_budget{"probe_budget", 30000, "points", "policy",
     "lattice points opened from the blocked end to find what walls it in"};
-inline constexpr std::array route_run_registry{route_passes, rip_nets, rip_cap, probe_budget};
+inline constexpr NamedConstant dense_pins{"dense_pins", 8, "pads", "policy",
+    "pads a part needs before its crowded pins are given exit stubs; smaller parts are reached from any side"};
+inline constexpr NamedConstant stub_step{"stub_step", 10000, "nm", "policy",
+    "step by which an exit stub is narrowed until it clears its neighbours"};
+inline constexpr std::array route_run_registry{route_passes, rip_nets, rip_cap, probe_budget, dense_pins, stub_step};
 }
 
 struct RunSetup {
@@ -34,7 +38,7 @@ struct NetOutcome {
 
 struct RunReport {
     std::vector<NetOutcome> nets;
-    std::size_t links = 0, joined = 0, vias = 0, passes = 0, opened = 0, ripped = 0, first_joined = 0;
+    std::size_t links = 0, joined = 0, vias = 0, passes = 0, opened = 0, ripped = 0, first_joined = 0, stubs = 0;
     double length = 0;
     std::vector<std::size_t> pass_failures;
     bool complete() const { return links == joined; }
