@@ -2,6 +2,7 @@
 
 #include "schgen/layout_squeeze.hpp"
 
+#include <functional>
 #include <string>
 #include <vector>
 
@@ -51,7 +52,7 @@ struct ArrangeReport {
 
 Box held_extent(const Kernel& kernel);
 std::string extent_holders(const Kernel& kernel);
-ArrangeReport arrange(Kernel& kernel, const SqueezeOptions& options);
+ArrangeReport arrange(Kernel& kernel, const SqueezeOptions& options, const std::function<void()>& settle = {});
 bool rehome(Kernel& kernel, const std::vector<std::size_t>& members);
 
 }

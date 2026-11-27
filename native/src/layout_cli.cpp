@@ -1,4 +1,6 @@
 #include "schgen/layout_construct.hpp"
+#include "schgen/layout_stage.hpp"
+#include "schgen/layout_density.hpp"
 #include "schgen/layout_squeeze.hpp"
 #include "schgen/layout_cli.hpp"
 
@@ -27,10 +29,12 @@ const char* const usage =
     "       schgen layout-check FILE\n"
     "       schgen layout-construct FILE\n"
     "       schgen layout-arrange FILE\n"
+    "       schgen layout-repair FILE\n"
     "  layout-export builds the current placed board and writes it as a layout problem.\n"
     "  layout-check replays a layout problem and reports every hard-rule violation.\n"
     "  layout-construct takes every owned part off the board, seats it again by rule and reports the result.\n"
-    "  layout-arrange also takes every free unowned part off the board and places it afresh with its owned parts.\n";
+    "  layout-arrange also takes every free unowned part off the board and places it afresh with its owned parts.\n"
+    "  layout-repair runs only the start repair on the placement as handed over and reports what is left.\n";
 
 struct ExportArguments {
     std::filesystem::path repository = std::filesystem::current_path();
@@ -108,7 +112,7 @@ int export_problem(int argc, char** argv) {
 std::optional<int> run_layout_command(int argc, char** argv) {
     if (argc < 2) return std::nullopt;
     const std::string command = argv[1];
-    if (command != "layout-export" && command != "layout-check" && command != "layout-construct" && command != "layout-arrange") return std::nullopt;
+    if (command != "layout-export" && command != "layout-check" && command != "layout-construct" && command != "layout-arrange" && command != "layout-repair") return std::nullopt;
     if (std::any_of(argv + 2, argv + argc, [](const char* value) {
             return std::string(value) == "--help" || std::string(value) == "-h";
         })) {
@@ -118,8 +122,9 @@ std::optional<int> run_layout_command(int argc, char** argv) {
     if (command == "layout-export") return export_problem(argc, argv);
     if (argc != 3) throw LayoutError(command + ": exactly one problem file is required");
     const auto document = layout::read_document(parse_json_file(argv[2]));
-    if (command == "layout-construct" || command == "layout-arrange") {
-        layout::Kernel kernel(document.problem, document.placement);
+    if (command == "layout-construct" || command == "layout-arrange" || command == "layout-repair") {
+        const layout::Problem dense = layout::without_density(document.problem);
+        layout::Kernel kernel(dense, document.placement);
         const auto off_face = [&] {
             std::size_t count = 0;
             for (const auto& rule : document.problem.constraints.soft_gaps)
@@ -130,11 +135,33 @@ std::optional<int> run_layout_command(int argc, char** argv) {
         };
         const std::size_t faced_before = off_face();
         const std::size_t before = kernel.violations().size();
-        const auto built = layout::construct_owned(kernel, static_cast<layout::Nm>(layout::constants::search_pitch.value),
-                                                   static_cast<layout::Nm>(layout::constants::construct_reach.value), command == "layout-arrange");
-        std::cout << layout::construct_summary(built) << "  violations " << before << " before, " << kernel.violations().size() << " after\n"
-                  << "  owned parts off their owner's face " << faced_before << " before, " << off_face() << " after\n";
-        return built.unseated.empty() ? 0 : 1;
+        if (command != "layout-repair") {
+            const auto built = layout::construct_owned(kernel, static_cast<layout::Nm>(layout::constants::search_pitch.value),
+                                                       static_cast<layout::Nm>(layout::constants::construct_reach.value), command == "layout-arrange");
+            std::cout << layout::construct_summary(built) << "  violations " << before << " before, " << kernel.violations().size() << " after\n"
+                      << "  owned parts off their owner's face " << faced_before << " before, " << off_face() << " after\n";
+            if (!built.unseated.empty()) return 1;
+        }
+        layout::StageResult repaired;
+        try {
+            layout::repair_start(kernel, layout::default_squeeze(), repaired, [](bool) {});
+        } catch (const LayoutError& error) {
+            std::cout << "  repair: " << error.what() << "\n";
+            return 1;
+        }
+        std::cout << "  after repair: violations " << kernel.violations().size() << ", staged rules left " << layout::start_debt(kernel) << "\n";
+        for (const auto& row : repaired.repairs)
+            if (!row.kept) std::cout << "    not kept: " << row.rule << " | " << row.subject << " | " << row.action << "\n";
+        for (const auto& rule : dense.constraints.soft_gaps)
+            if (rule.same_face && !layout::pair_faced(dense, kernel.board(), rule.anchor, kernel.placement()[rule.anchor], rule.member,
+                                                       kernel.placement()[rule.member], rule.or_under))
+                std::cout << "    left: " << dense.parts[rule.member].reference << " is not on the face of " << dense.parts[rule.anchor].reference << " (" << rule.source << ")\n";
+        for (const auto& rule : layout::net_orders_of(dense))
+            if (!layout::net_order_met(dense, rule, kernel.placement(), rule.lead, nullptr))
+                std::cout << "    left: " << dense.parts[rule.lead].reference << " is not the first part after " << dense.parts[rule.anchor].reference << " (" << rule.source << ")\n";
+        for (const auto& violation : kernel.violations())
+            std::cout << "    left: " << layout::breach_name(violation.kind) << " " << document.problem.parts[violation.part].reference << "\n";
+        return kernel.violations().empty() && layout::start_debt(kernel) == 0 ? 0 : 1;
     }
     return report(document.problem, document.placement);
 }

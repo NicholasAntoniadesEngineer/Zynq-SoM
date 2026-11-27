@@ -236,7 +236,15 @@ std::string constraints_json(const Constraints& rules) {
                                      {"limit", integer(rule.limit)},
                                      {"sense", text_value(sense_name(rule.sense))},
                                      {"source", text_value(rule.source)}}));
-    return object({{"pad_gaps", array(pad_gaps)},
+    std::vector<std::string> taps;
+    for (const auto& rule : rules.taps)
+        taps.push_back(object({{"part", integer(static_cast<long long>(rule.part))},
+                               {"pad", integer(static_cast<long long>(rule.pad))},
+                               {"net", integer(rule.net)},
+                               {"limit", integer(rule.limit)},
+                               {"source", text_value(rule.source)}}));
+    return object({{"taps", array(taps)},
+                   {"pad_gaps", array(pad_gaps)},
                    {"soft_gaps", array(soft_gaps)},
                    {"nearest_gaps", array(nearest_gaps)},
                    {"face_pairs", array(face_pairs)},
@@ -250,7 +258,7 @@ std::string constraints_json(const Constraints& rules) {
 }
 
 Constraints constraints_of(const JsonNode& node) {
-    reject_unknown_keys(node, {"pad_gaps", "soft_gaps", "nearest_gaps", "face_pairs", "net_orders", "group_gaps", "spacing_limits", "connectors"},
+    reject_unknown_keys(node, {"taps", "pad_gaps", "soft_gaps", "nearest_gaps", "face_pairs", "net_orders", "group_gaps", "spacing_limits", "connectors"},
                         "layout constraints");
     Constraints rules;
     const auto gap_of = [](const JsonNode& entry) {
@@ -265,6 +273,11 @@ Constraints constraints_of(const JsonNode& node) {
     };
     for (const auto& entry : field(node, "pad_gaps", JsonKind::Array).array_value) rules.pad_gaps.push_back(gap_of(entry));
     for (const auto& entry : field(node, "soft_gaps", JsonKind::Array).array_value) rules.soft_gaps.push_back(gap_of(entry));
+    for (const auto& entry : field(node, "taps", JsonKind::Array).array_value) {
+        reject_unknown_keys(entry, {"part", "pad", "net", "limit", "source"}, "layout test point rule");
+        rules.taps.push_back({index_of(entry, "part"), index_of(entry, "pad"), static_cast<int>(whole(field(entry, "net", JsonKind::Number))),
+                              whole(field(entry, "limit", JsonKind::Number)), text(entry, "source")});
+    }
     for (const auto& entry : field(node, "nearest_gaps", JsonKind::Array).array_value) {
         reject_unknown_keys(entry, {"anchor", "anchor_names", "members", "limit", "same_face", "source"},
                             "layout nearest gap");

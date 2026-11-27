@@ -42,6 +42,8 @@ inline constexpr NamedConstant group_guard{"group_guard", 200.0, "nm", "policy",
     "slack for subsystem distances, which the flow gate rounds to four decimals"};
 inline constexpr NamedConstant owner_reach{"owner_reach", 3.0, "mm", "policy",
     "preferred distance from an owned two-pin part to the pin it serves; a soft preference, never a hard rule"};
+inline constexpr NamedConstant tap_reach{"tap_reach", 3.0, "mm", "policy",
+    "longest stub or detour a test point may add to its net, measured to the nearest other pad of the net or through the test point between two of its pads; user ruling 2026-11-27 (3 mm for every net, so that test points are not antennas)"};
 inline constexpr NamedConstant hole_inset{"hole_inset", 5.0, "mm", "policy",
     "distance of a corner mounting hole from both edges of its corner, before the fixed-part grid"};
 inline constexpr NamedConstant mark_inset{"mark_inset", 9.0, "mm", "policy",
@@ -54,7 +56,7 @@ inline constexpr NamedConstant escape_tie{"escape_tie", 2e-3, "mm", "policy",
     "tie width when choosing a pad's nearest courtyard side; twice the gate's, so the kernel never rings fewer sides"};
 inline constexpr NamedConstant area_guard{"area_guard", 1e-6, "mm2", "policy",
     "slack demanded of a module-core overlap so the mechanical gate's floating-point area cannot disagree at the limit"};
-inline constexpr std::array adapter_registry{module_clearance, module_stack_height, tall_module_clearance, fanout_floor, relief_reach, edge_reach, owner_reach,
+inline constexpr std::array adapter_registry{module_clearance, module_stack_height, tall_module_clearance, fanout_floor, relief_reach, edge_reach, owner_reach, tap_reach,
                                              connector_overlap, band_share, overmold_gap, boot_gap,
                                              compare_guard, group_guard, hole_inset, mark_inset, area_guard,
                                              escape_tie, hold_slack, tether_slack, bypass_reach, reservoir_reach,
@@ -114,5 +116,19 @@ struct GateVerdict {
 };
 
 GateVerdict judge_model(const PcbPlacementInput& inputs, const PcbModel& model);
+
+struct TestPointRow {
+    std::string reference, net, nearest;
+    std::optional<double> stub, detour;
+    double limit = 0, allowance = 0;
+    bool met = true, rear = false;
+};
+struct TestPointResult {
+    bool ok = true;
+    std::vector<TestPointRow> rows;
+    std::string summary() const;
+};
+TestPointResult check_test_points(const PcbPlacementInput& inputs, const PcbModel& model, const PcbEmitPolicy& policy,
+                                  const AdapterOptions& options);
 
 }

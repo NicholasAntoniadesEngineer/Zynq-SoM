@@ -1127,4 +1127,9 @@ AttractReport attract(Kernel& kernel, Nm pitch, Nm reach) {
     return report;
 }
 
+bool takes_seat(Kernel& kernel, std::size_t guest, const Pose& seat, const std::vector<Point>& aside) {
+    std::size_t moved = 0;
+    return evicts(kernel, guest, seat, std::vector<char>(kernel.problem().parts.size(), 0), aside, moved);
+}
+
 }

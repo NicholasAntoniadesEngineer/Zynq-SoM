@@ -237,7 +237,6 @@ PartClass part_class_named(std::string_view name) {
 
 bool presents_on_top(PartClass part_class) {
     switch (part_class) {
-    case PartClass::test_point:
     case PartClass::led:
     case PartClass::control_switch:
     case PartClass::connector:
@@ -256,6 +255,7 @@ bool presents_on_top(PartClass part_class) {
     case PartClass::crystal:
     case PartClass::mounting_hole:
     case PartClass::fiducial:
+    case PartClass::test_point:
         return false;
     }
     refuse("a part class has no face rule");

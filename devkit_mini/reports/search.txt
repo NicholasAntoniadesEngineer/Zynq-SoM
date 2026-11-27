@@ -12,13 +12,13 @@ axes searched: A1 edge assignment of derived edge sheets, A7 arrangement finalis
   constant plan_skips = 4: most arrangement finalists a seed skips: one per board side
 seed | reuses | edge choices | plan skip | order | reached | outline mm | correct | airwire mm | first finding
 0 | - | first | 0 | 0 | S2 | - | no | - | -
-1 | - | pd_input#1 | 1 | 23 | S3 | 69.25 x 78 | yes | 3210.326100 | -
-2 | - | pd_input#3 | 0 | 0 | S3 | 79.25 x 64.25 | yes | 2915.027000 | -
+1 | - | pd_input#1 | 1 | 23 | S3 | 82.75 x 70.75 | yes | 2840.925400 | -
+2 | - | pd_input#3 | 0 | 0 | S3 | 88.75 x 75 | yes | 2785.350500 | -
 3 | - | usb_uart_connector#1 | 1 | 0 | S2 | - | no | - | -
-4 | - | pd_input#3,usb_uart_connector#1 | 1 | 17 | S3 | 82.75 x 58.75 | yes | 2673.711200 | -
+4 | - | pd_input#3,usb_uart_connector#1 | 1 | 17 | S3 | 67.5 x 86.5 | yes | 2611.928500 | -
 5 | - | usb_uart_connector#3 | 1 | 4 | S2 | - | no | - | -
-6 | - | pd_input#2,usb_uart_connector#1 | 2 | 22 | S3 | 75.5 x 70 | yes | 3332.114800 | -
+6 | - | pd_input#2,usb_uart_connector#1 | 2 | 22 | S3 | 76.5 x 83.25 | yes | 2905.773900 | -
 7 | - | usb_uart_connector#2 | 3 | 22 | S2 | - | no | - | -
 CHOSEN seed 4 by objective among the first batch laid out
-SWEEP: pass rate 4/4; area best 4861.56 median 5091.81 worst 5401.5 mm2; spread 0.0473613; HANDLED against pass rate 0.8 and spread 0.05 (integrator's decision 2026-11-21; revisit after the first sweeps on three boards)
+SWEEP: pass rate 4/4; area best 5838.75 median 5854.56 worst 6656.25 mm2; spread 0.0027082; HANDLED against pass rate 0.8 and spread 0.05 (integrator's decision 2026-11-21; revisit after the first sweeps on three boards)
 

@@ -1,4 +1,4 @@
-CONVERGENCE: 12 breaches of staged rules (connector spacing, plug paths, face pairs, protection orders) handed over by the placer; 11 repair steps kept of 26 tried; 0 left
+CONVERGENCE: 12 breaches of staged rules (connector spacing, plug paths, face pairs, protection orders) handed over by the placer; 52 repair steps kept of 59 tried; 0 left
 level | rule | subject | action | breaches before>after | kept
 0 | connector access and envelope | J3001 / J3002 | slide J3002 along its edge | 3>1 | yes
 0 | connector access and envelope | J6001 / J6002 | slide J6002 along its edge; 178 off_board board; 75 overlap C6003; 48 module_core board; 35 overlap C6002 | 1>1 | no
@@ -8,17 +8,9 @@ level | rule | subject | action | breaches before>after | kept
 4 | connector access and envelope | J6001 / J6002 | open the board between them and shift everything beyond the gap | 1>0 | yes
 0 | owner of C13014 | C13014 -> U13004 | reseat at the pin on its face | 9>8 | yes
 0 | owner of C13022 | C13022 -> U13004 | reseat at the pin on its face | 8>7 | yes
-0 | owner of C13025 | C13025 -> U13004 | reseat at the pin on its face | 7>7 | no
-1 | owner of C13025 | C13025 -> U13004 | reseat after moving small parts aside | 7>7 | no
-1 | owner of C13025 | C13025 -> U13004 | reseat in the wide ring | 7>7 | no
-1 | owner of C13025 | C13025 -> U13004 | reseat together with the parts tied to it | 7>7 | no
-1 | owner of C13025 | C13025 -> U13004 | take the seat at the pin and reseat the parts in it by their own rules | 7>6 | yes
+0 | owner of C13025 | C13025 -> U13004 | reseat at the pin on its face | 7>6 | yes
 0 | owner of R13018 | R13018 -> U13004 | reseat at the pin on its face | 6>5 | yes
-0 | owner of R13019 | R13019 -> U13004 | reseat at the pin on its face | 5>5 | no
-1 | owner of R13019 | R13019 -> U13004 | reseat after moving small parts aside | 5>5 | no
-1 | owner of R13019 | R13019 -> U13004 | reseat in the wide ring | 5>5 | no
-1 | owner of R13019 | R13019 -> U13004 | reseat together with the parts tied to it | 5>5 | no
-1 | owner of R13019 | R13019 -> U13004 | take the seat at the pin and reseat the parts in it by their own rules | 5>4 | yes
+0 | owner of R13019 | R13019 -> U13004 | reseat at the pin on its face | 5>4 | yes
 0 | owner of C13018 | C13018 -> L13003 | reseat at the pin on its face | 4>3 | yes
 0 | owner of C13019 | C13019 -> L13003 | reseat at the pin on its face | 3>2 | yes
 0 | owner of D6001 | D6001 -> F6001 | reseat at the pin on its face | 2>2 | no
@@ -26,6 +18,47 @@ level | rule | subject | action | breaches before>after | kept
 1 | owner of D6001 | D6001 -> F6001 | reseat in the wide ring | 2>2 | no
 1 | owner of D6001 | D6001 -> F6001 | reseat together with the parts tied to it | 2>1 | yes
 1 | protection order | U9002 -> J9001 | seat the protection part first and move the parts nearer than it back | 1>0 | yes
+2 | test point on +VBUS_IN | TP10001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +VIN_PD | TP10002 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on /board_control/XP16 | TP1001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on /board_control/XP17 | TP1002 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on STM32_I2C2_SCL | TP1005 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on STM32_I2C2_SDA | TP1006 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +3V3_SC | TP1007 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on SC_INT_N | TP1008 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on PUDC_34 | TP1009 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +5V_FAN | TP1010 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on ESC_PWR_REQ | TP1011 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +5V | TP11001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +3V3 | TP11002 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +1V8 | TP11003 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +5V_SOM | TP13001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on ZYNQ_PS_UART0_TXD | TP19001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on ZYNQ_PS_UART0_RXD | TP19002 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on EN_5V0 | TP2001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on EN_3V3 | TP2002 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on EN_1V8 | TP2003 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +VBAT_SW | TP21001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +VPRE | TP21002 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +VIN | TP21003 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +VBAT_D | TP21004 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on /can_bus/CAN_H | TP3001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on /can_bus/CAN_L | TP3002 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on VBUS_OUT_EN | TP4001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +5V_MOTOR_IO | TP5001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on /esc_io/ESC_BIAS | TP5002 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on /esc_io/OE_BUF_N | TP5003 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +VESC_IN | TP6001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +VESC | TP6002 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on GND_MOTOR | TP6003 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +VESC_F | TP6005 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +VESC_MID | TP6006 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +VESC_P | TP6007 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on ESC_PWR_EN | TP6008 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on /esc_power/PROT_IMON | TP6009 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on /esc_power/VSENSE_DIV | TP6010 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on SDIO_CMD | TP9001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on SDIO_CLK | TP9002 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
 ILLEGAL handed over: under_inductor:L13003/R13014 under_inductor:L13003/R13015 under_inductor:L13003/R13019 connector_gap:J3001/J3002 connector_gap:J3002/J5002 connector_gap:J6001/J6002 (6)
 ILLEGAL after connector separation: under_inductor:L13003/R13014 under_inductor:L13003/R13015 under_inductor:L13003/R13019 (3)
 ILLEGAL after repair: (0)

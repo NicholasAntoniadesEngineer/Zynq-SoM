@@ -31,6 +31,9 @@ constexpr Point edge_site{unit / 5, 40 * unit}, core_site{50 * unit, 40 * unit};
 constexpr Point cluster_first{70 * unit, 10 * unit}, cluster_second{74 * unit, 10 * unit};
 constexpr Point cluster_third{70 * unit, 14 * unit}, cluster_fourth{74 * unit, 14 * unit};
 constexpr Point remote_site{90 * unit, 70 * unit};
+constexpr Nm tap_limit = 3 * unit;
+constexpr Point tap_owner{20 * unit, 60 * unit}, tap_mate{40 * unit, 60 * unit};
+constexpr Point tap_beside{23 * unit, 60 * unit}, tap_between{30 * unit, 61 * unit}, tap_astray{30 * unit, 70 * unit};
 constexpr Point round_first{30 * unit, 60 * unit}, round_second{33 * unit, 63 * unit};
 constexpr Nm round_radius = 2 * unit;
 constexpr Nm copper_clearance = unit / 5, via_radius = 3 * unit / 10;
@@ -754,6 +757,44 @@ void owned_parts_are_seated_by_rule() {
     require(pad_gap_length(scene.problem, first, scoped.placement()) <= first.limit, "the scoped part sits within its tie");
 }
 
+void test_points_stay_on_their_net() {
+    Scene scene;
+    scene.problem.rules.compare_guard = 1;
+    const auto small = scene.footprint("small", square_variant(fixture::pad_half, 1, false));
+    scene.add("U", "one", small, fixture::tap_owner);
+    scene.add("R", "one", small, fixture::tap_mate);
+    scene.add("TP", "two", small, fixture::remote_site).part_class = schgen::PartClass::test_point;
+    const auto net = scene.net("probed", Category::signal);
+    for (std::size_t part = 0; part < scene.problem.parts.size(); ++part) scene.connect(net, part);
+    scene.problem.constraints.taps.push_back({2, 0, static_cast<int>(net), fixture::tap_limit, "test point on probed"});
+    const auto stubs = [&](Point at) {
+        Placement placement = scene.placement;
+        placement[2].at = at;
+        const auto found = Kernel(scene.problem, placement).violations();
+        return std::count_if(found.begin(), found.end(), [](const Violation& item) { return item.kind == Breach::stub; });
+    };
+    require(stubs(fixture::remote_site) == 1, "a test point far from every pad of its net is one stub breach");
+    require(stubs(fixture::tap_beside) == 0, "a test point within its limit of a pad of its net is legal");
+    require(stubs(fixture::tap_between) == 0, "a test point on the path between two pads of its net is legal however far from both");
+    require(stubs(fixture::tap_astray) == 1, "a test point off the path and beyond its limit is a breach");
+    scene.placement[2].at = fixture::tap_beside;
+    Kernel kernel(scene.problem, scene.placement);
+    const auto refused = kernel.rejection(0, {fixture::remote_site, Turn::none, Face::top});
+    require(refused && refused->kind == Breach::stub && refused->other == 2, "a part may not move away from a test point that sits on its pad");
+    const TapFigure figure = kernel.tap_figure(scene.problem.constraints.taps.front());
+    require(figure.met && figure.stub && figure.nearest == 0 && figure.detour, "the figures name the nearest pad and give stub and detour");
+    kernel.park(2);
+    require(kernel.violations().empty() && !kernel.rejection(0, {fixture::remote_site, Turn::none, Face::top}),
+            "a test point off the board breaks no rule and holds no part");
+    scene.problem.nets[net].category = Category::signal;
+    scene.problem.parts[1].part_class = schgen::PartClass::test_point;
+    Placement lone = scene.placement;
+    lone[0].at = fixture::remote_site;
+    const auto alone = Kernel(scene.problem, lone).violations();
+    require(std::count_if(alone.begin(), alone.end(), [](const Violation& item) { return item.kind == Breach::stub; }) == 1,
+            "another test point is not a pad a test point may sit beside");
+}
+
 void plug_paths_stay_clear() {
     const auto kinds = [](const Scene& scene) { return Kernel(scene.problem, scene.placement).violations(); };
     Scene scene;
@@ -859,6 +900,7 @@ void blocked_plug_paths_are_repaired() {
 
 int main() {
     try {
+        test_points_stay_on_their_net();
         plug_paths_stay_clear();
         blocked_plug_paths_are_repaired();
         parts_wait_off_the_board();

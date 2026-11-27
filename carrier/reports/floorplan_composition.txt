@@ -1,52 +1,58 @@
-FLOORPLAN COMPOSITION (T1): 9 hard / 8 soft terms; hard RED 0, soft RED 0 (advisory)
-  hard margins (mm): measured 9, unresolved 0, sum 310.7, min 2.53 (informational)
+FLOORPLAN COMPOSITION (T1): 9 hard / 8 soft terms; hard RED 0, soft RED 1 (advisory)
+  hard margins (mm): measured 9, unresolved 0, sum 345.98, min 0.04 (informational)
   hard margins (degrees): measured 0, unresolved 0, sum 0.0, min unavailable (informational)
   hard terms:
-    HARD far_min ethernet->power: 45.81 vs 10.00 (margin +35.81) ok [judgment:10.0 — buck switching node vs Ethernet media/magnetics analog line side]
-    HARD far_min motor_sense->power: 65.37 vs 10.00 (margin +55.37) ok [judgment:10.0 — SBOS576C 7.4.1 noise coupling: buck switching node vs the current-sense node]
-    HARD far_min motor_sense->power_som: 72.38 vs 10.00 (margin +62.38) ok [judgment:10.0 — SBOS576C 7.4.1 noise coupling: buck switching node vs the current-sense node]
-    HARD far_min power->ethernet.line_side: 45.81 vs 10.00 (margin +35.81) ok [judgment:10.0 — buck switching node vs Ethernet MDI/magnetics analog line side; datasheet silent on inter-subsystem spacing (SNVSBD5D covers intra-stage only)]
-    HARD far_min power_som->ethernet.line_side: 78.80 vs 10.00 (margin +68.80) ok [judgment:10.0 — same rationale as the power pilot]
+    HARD far_min ethernet->power: 57.74 vs 10.00 (margin +47.74) ok [judgment:10.0 — buck switching node vs Ethernet media/magnetics analog line side]
+    HARD far_min motor_sense->power: 75.83 vs 10.00 (margin +65.83) ok [judgment:10.0 — SBOS576C 7.4.1 noise coupling: buck switching node vs the current-sense node]
+    HARD far_min motor_sense->power_som: 67.13 vs 10.00 (margin +57.13) ok [judgment:10.0 — SBOS576C 7.4.1 noise coupling: buck switching node vs the current-sense node]
+    HARD far_min power->ethernet.line_side: 57.74 vs 10.00 (margin +47.74) ok [judgment:10.0 — buck switching node vs Ethernet MDI/magnetics analog line side; datasheet silent on inter-subsystem spacing (SNVSBD5D covers intra-stage only)]
+    HARD far_min power_som->ethernet.line_side: 87.49 vs 10.00 (margin +77.49) ok [judgment:10.0 — same rationale as the power pilot]
     HARD near_max ethernet->rj45_connector: 0.00 vs 20.00 (margin +20.00) ok [Pulse v7 p.1 <=25mm part-to-part|judgment:20.0 edge-gap proxy (D11)]
     HARD near_max hdmi_rx_term->som_j2: 0.00 vs 10.00 (margin +10.00) ok [XAPP460 p.23 (term AT the receiver) — island at the SoM mezzanine bank-33 RX escape|judgment:10.0 edge-gap (D11)]
     HARD near_max motor_sense->motor_pwm: 0.00 vs 20.00 (margin +20.00) ok [judgment:20.0 (D9) — motor telemetry beside the PWM out]
-    HARD near_max uart_bridge->usb_uart_connector: 37.47 vs 40.00 (margin +2.53) ok [judgment:10.0 (D11 edge-gap) — CP2102N's USB DP/DM pair terminates at the UART USB-C; measured 365mm of cross-board airwire (avg 122mm) with the block anchored mid-board and a STALE floorplan near-intent pointing at rj45_connector]
+    HARD near_max uart_bridge->usb_uart_connector: 39.96 vs 40.00 (margin +0.04) ok [judgment:10.0 (D11 edge-gap) — CP2102N's USB DP/DM pair terminates at the UART USB-C; measured 365mm of cross-board airwire (avg 122mm) with the block anchored mid-board and a STALE floorplan near-intent pointing at rj45_connector]
   soft terms (advisory ledger — repair triggers, never gates):
-    soft facing power->power_som: 56.91 vs 90.00 (margin +33.09) ok [ADVISORY centroid preference: Reviewed 2026-10-18: all-component centroid direction changes when unrelated test points move; it is a placement preference, not a hardware limit. SNVSBD5D Rev. D section 11.1 requires local loop/layout and power-path quality, not a 90-degree subsystem-centroid cutoff. See native/benchmarks/2026-10-18-facing-centroid-review.json; routing and parasitics remain unverified.] dot=+395.67
-    soft facing power_som->@som: 89.99 vs 90.00 (margin +0.01) ok [ADVISORY centroid preference: Reviewed 2026-10-18: the all-component centroid angle to the SoM body is a placement preference, not an electrical limit; moving an unrelated test point can reverse it while regulator, output capacitors and load remain fixed. SNVSBD5D Rev. D section 11.1 specifies local loops, feedback, wide/direct power paths and thermal copper, not a 90-degree subsystem-centroid cutoff. See native/benchmarks/2026-10-18-power-som-facing-review.json. Local placement checks remain mandatory; routing, parasitics and thermal performance remain unverified.] dot=+0.05
-    soft flow_hop camera->@som: 44.60 vs 109.86 (margin +65.27) ok [ADVISORY board-size-derived flow preference [placement/v2]]
-    soft flow_hop hdmi_tx->@som: 43.06 vs 109.86 (margin +66.80) ok [ADVISORY board-size-derived flow preference [placement/v2]]
-    soft flow_hop pd_input->usb_pd: 74.88 vs 109.86 (margin +34.99) ok [ADVISORY board-size-derived flow preference [placement/v2]]
-    soft flow_hop power->power_som: 35.79 vs 109.86 (margin +74.08) ok [ADVISORY board-size-derived flow preference [placement/v2]]
-    soft flow_hop power_mon->power_som: 62.02 vs 109.86 (margin +47.84) ok [ADVISORY board-size-derived flow preference [placement/v2]]
-    soft flow_hop usb_pd->power: 17.03 vs 109.86 (margin +92.84) ok [ADVISORY board-size-derived flow preference [placement/v2]]
+    soft facing power->power_som: 90.41 vs 90.00 (margin -0.41) RED [ADVISORY centroid preference: Reviewed 2026-10-18: all-component centroid direction changes when unrelated test points move; it is a placement preference, not a hardware limit. SNVSBD5D Rev. D section 11.1 requires local loop/layout and power-path quality, not a 90-degree subsystem-centroid cutoff. See native/benchmarks/2026-10-18-facing-centroid-review.json; routing and parasitics remain unverified.] dot=-7.30
+    soft facing power_som->@som: 81.67 vs 90.00 (margin +8.33) ok [ADVISORY centroid preference: Reviewed 2026-10-18: the all-component centroid angle to the SoM body is a placement preference, not an electrical limit; moving an unrelated test point can reverse it while regulator, output capacitors and load remain fixed. SNVSBD5D Rev. D section 11.1 specifies local loops, feedback, wide/direct power paths and thermal copper, not a 90-degree subsystem-centroid cutoff. See native/benchmarks/2026-10-18-power-som-facing-review.json. Local placement checks remain mandatory; routing, parasitics and thermal performance remain unverified.] dot=+65.47
+    soft flow_hop camera->@som: 46.74 vs 111.61 (margin +64.87) ok [ADVISORY board-size-derived flow preference [placement/v2]]
+    soft flow_hop hdmi_tx->@som: 43.34 vs 111.61 (margin +68.27) ok [ADVISORY board-size-derived flow preference [placement/v2]]
+    soft flow_hop pd_input->usb_pd: 66.95 vs 111.61 (margin +44.65) ok [ADVISORY board-size-derived flow preference [placement/v2]]
+    soft flow_hop power->power_som: 49.51 vs 111.61 (margin +62.10) ok [ADVISORY board-size-derived flow preference [placement/v2]]
+    soft flow_hop power_mon->power_som: 51.57 vs 111.61 (margin +60.04) ok [ADVISORY board-size-derived flow preference [placement/v2]]
+    soft flow_hop usb_pd->power: 15.99 vs 111.61 (margin +95.61) ok [ADVISORY board-size-derived flow preference [placement/v2]]
   T2 escape corridors (D13 never-close): 6 loaded, 22 UNMANAGED part intrusion(s), 0 T2-coexistence-managed
-    UNMANAGED INTRUSION C13002 (hdmi_rx_term) in escape:J2:S
-    UNMANAGED INTRUSION C35001 (som_decoupling) in escape:J1:S
-    UNMANAGED INTRUSION C35003 (som_decoupling) in escape:J1:S
+    UNMANAGED INTRUSION C13001 (hdmi_rx_term) in escape:J2:S
+    UNMANAGED INTRUSION C35003 (som_decoupling) in escape:J1:N
     UNMANAGED INTRUSION C35004 (som_decoupling) in escape:J1:S
     UNMANAGED INTRUSION C35006 (som_decoupling) in escape:J1:N
     UNMANAGED INTRUSION C35009 (som_decoupling) in escape:J3:N
     UNMANAGED INTRUSION C35010 (som_decoupling) in escape:J3:N
     UNMANAGED INTRUSION C35011 (som_decoupling) in escape:J2:N
-    UNMANAGED INTRUSION C35013 (som_decoupling) in escape:J1:S
+    UNMANAGED INTRUSION C35012 (som_decoupling) in escape:J2:S
     UNMANAGED INTRUSION C35015 (som_decoupling) in escape:J1:N
     UNMANAGED INTRUSION C35016 (som_decoupling) in escape:J1:N
-    UNMANAGED INTRUSION C35018 (som_decoupling) in escape:J1:N
-    UNMANAGED INTRUSION R13005 (hdmi_rx_term) in escape:J2:N
+    UNMANAGED INTRUSION R13005 (hdmi_rx_term) in escape:J2:S
+    UNMANAGED INTRUSION R13006 (hdmi_rx_term) in escape:J2:S
     UNMANAGED INTRUSION R13007 (hdmi_rx_term) in escape:J2:N
     UNMANAGED INTRUSION R15007 (lcd) in escape:J3:N
-    UNMANAGED INTRUSION R20006 (power) in escape:J3:N
-    UNMANAGED INTRUSION R33003 (user_io) in escape:J1:N
+    UNMANAGED INTRUSION R20007 (power) in escape:J3:N
+    UNMANAGED INTRUSION R5011 (bringup_en_modules) in escape:J1:S
     UNMANAGED INTRUSION R7009 (bringup_rails) in escape:J3:N
-    UNMANAGED INTRUSION R8002 (camera) in escape:J3:N
-    UNMANAGED INTRUSION RS21002 (power_mon) in escape:J2:S
-    UNMANAGED INTRUSION RS21004 (power_mon) in escape:J2:S
-    UNMANAGED INTRUSION U3001 (board_services) in escape:J3:N
+    UNMANAGED INTRUSION TP1002 (board_aux) in escape:J3:N
+    UNMANAGED INTRUSION TP1003 (board_aux) in escape:J1:S
+    UNMANAGED INTRUSION TP14002 (hdmi_tx) in escape:J2:S
+    UNMANAGED INTRUSION TP15002 (lcd) in escape:J2:S
+    UNMANAGED INTRUSION TP16001 (microsd) in escape:J3:N
   D13 channel hotspots (>= 6 cross-airwires; corridor = 2 + 0.2/net mm):
-    bringup_en_modules | bringup_rails: 41 airwires (432.0 mm) -> corridor >= 10.2 mm
-    bringup_en_modules | bringup_modules: 18 airwires (281.1 mm) -> corridor >= 5.6 mm
-    ethernet | rj45_connector: 9 airwires (170.6 mm) -> corridor >= 3.8 mm
-    bringup_modules | debug_boot: 6 airwires (27.6 mm) -> corridor >= 3.2 mm
-    bringup_modules | power_som: 6 airwires (16.8 mm) -> corridor >= 3.2 mm
-    bringup_modules | user_io: 6 airwires (32.9 mm) -> corridor >= 3.2 mm
+    bringup_en_modules | bringup_rails: 35 airwires (445.3 mm) -> corridor >= 9.0 mm
+    bringup_en_modules | bringup_modules: 18 airwires (252.6 mm) -> corridor >= 5.6 mm
+    ethernet | rj45_connector: 10 airwires (334.4 mm) -> corridor >= 4.0 mm
+    board_qwiic | fmc: 9 airwires (28.3 mm) -> corridor >= 3.8 mm
+    motor_sense | power_mon: 9 airwires (14.7 mm) -> corridor >= 3.8 mm
+    bringup_modules | power_som: 8 airwires (21.6 mm) -> corridor >= 3.6 mm
+    pmod_expansion | user_io: 8 airwires (17.8 mm) -> corridor >= 3.6 mm
+    bringup_modules | debug_boot: 7 airwires (25.3 mm) -> corridor >= 3.4 mm
+    bringup_rails | power_mon: 7 airwires (51.1 mm) -> corridor >= 3.4 mm
+    bringup_en_modules | lcd: 6 airwires (29.7 mm) -> corridor >= 3.2 mm
+    fmc | power: 6 airwires (21.9 mm) -> corridor >= 3.2 mm
+    pmod_expansion | power: 6 airwires (27.7 mm) -> corridor >= 3.2 mm

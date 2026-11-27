@@ -27,7 +27,7 @@ RatsnestGateResult check_ratsnest(const PcbCheckInput& input, const RatsnestNets
         throw std::invalid_argument("ratsnest: finite positive board dimensions and nonnegative cross budget required");
     res.board_w=m.board_w; res.board_h=m.board_h;
     const double x0=m.origin_x,y0=m.origin_y,x1=x0+m.board_w,y1=y0+m.board_h;
-    std::map<std::string,std::vector<Box4>> by_sheet;
+    std::map<std::string,std::vector<Box4>> by_sheet,held;
     for (std::size_t i=0;i<m.insts.size();++i) {
         const auto& inst=m.insts[i]; const auto p=input.pad_bbox_at(i),c=input.courtyard_at(i);
         if(p.x0<x0-1e-6||p.y0<y0-1e-6||p.x1>x1+1e-6||p.y1>y1+1e-6)
@@ -37,6 +37,7 @@ RatsnestGateResult check_ratsnest(const PcbCheckInput& input, const RatsnestNets
         if(starts(file,"MountingHole")||starts(file,"Fiducial"))continue;
         if(inst.at_module)continue;
         by_sheet[inst.sheet].push_back(c);
+        if(!(is_testpoint_ref(inst.ref)||inst.footprint.find("TestPoint")!=std::string::npos))held[inst.sheet].push_back(c);
     }
     const auto module_sheets=pcb_module_sheets(m);
     for(const auto& [name,boxes]:by_sheet) {
@@ -45,9 +46,14 @@ RatsnestGateResult check_ratsnest(const PcbCheckInput& input, const RatsnestNets
         for(auto b:boxes){hull=united(hull,b);total+=(b.x1-b.x0)*(b.y1-b.y0);}
         const double area=(hull.x1-hull.x0)*(hull.y1-hull.y0),disp=area/(total?total:1);
         res.clusters.emplace_back(name,static_cast<int>(boxes.size()),ratsnest_area_precision1dp(area,counts),ratsnest_dispersion_precision2dp(disp,counts));
-        if(boxes.size()>ratsnest_small_n&&disp>ratsnest_dispersion_max)
-            res.dispersed.push_back(name+": dispersion "+f(disp,1)+"x > "+g(ratsnest_dispersion_max)+"x (bbox "+
-                f(hull.x1-hull.x0,0)+"x"+f(hull.y1-hull.y0,0)+" mm for "+std::to_string(boxes.size())+" parts)");
+        const auto& kept=held[name];
+        if(kept.size()<=static_cast<std::size_t>(ratsnest_small_n))continue;
+        auto bound=kept.front();double sum=0;
+        for(auto b:kept){bound=united(bound,b);sum+=(b.x1-b.x0)*(b.y1-b.y0);}
+        const double spread=(bound.x1-bound.x0)*(bound.y1-bound.y0)/(sum?sum:1);
+        if(spread>ratsnest_dispersion_max)
+            res.dispersed.push_back(name+": dispersion "+f(spread,1)+"x > "+g(ratsnest_dispersion_max)+"x (bbox "+
+                f(bound.x1-bound.x0,0)+"x"+f(bound.y1-bound.y0,0)+" mm for "+std::to_string(kept.size())+(kept.size()==boxes.size()?" parts)":" parts, test points not counted)"));
     }
     std::stable_sort(res.clusters.begin(),res.clusters.end(),[](const auto& a,const auto& b){return std::get<3>(a)>std::get<3>(b);});
     auto nets=supplied_nets?RatsnestNets{}:ratsnest_net_pad_positions(m,counts);const auto& np=supplied_nets?*supplied_nets:nets;

@@ -1,6 +1,6 @@
 # Assembly order — devkit_mini
 
-Board 82.75 x 58.75 mm. 156 placed parts (53 top / 103 bottom); 5 fiducials are bare-copper marks, excluded from every phase and step.
+Board 67.5 x 86.5 mm. 156 placed parts (53 top / 103 bottom); 5 fiducials are bare-copper marks, excluded from every phase and step.
 Section A is the staged hand-assembly + bring-up order; section B is the PCBA process order. Every part appears in exactly one phase and exactly one step.
 
 ## A. Incremental bring-up order
@@ -11,19 +11,18 @@ Section A is the staged hand-assembly + bring-up order; section B is the PCBA pr
 | 2 | power_mon | 13 | — |
 | 3 | power | 54 | verify +5V at TP4001; verify +3V3 at TP4002; verify +1V8 at TP4003 |
 | 4 | power_som | 20 | verify +5V_SOM at TP6001 |
-| 5 | SoM interface (som_j1, som_j2, som_j3) | 3 | — |
+| 5 | SoM interface (som_j1, som_j2, som_j3, uart_bridge) | 13 | — |
 | 6 | SoM module mate | 0 | boot/debug via debug_boot: J1001 (JTAG), J1002 (SWD), SW1001 (BOOT: DFU BSEL BSEL), SW1002 (RST) |
 | 7 | debug_boot | 15 | — |
 | 8 | som_decoupling | 18 | — |
-| 9 | uart_bridge | 10 | — |
-| 10 | usb_uart_connector | 5 | — |
-| 11 | mechanical hardware (mechanical) | 4 | — |
+| 9 | usb_uart_connector | 5 | — |
+| 10 | mechanical hardware (mechanical) | 4 | — |
 
 ### Phase 1 — power entry (pd_input)
 
 ![phase 1](../renders/assembly/phase_01_power_entry.png)
 
-14 parts (13 top / 1 bottom)
+14 parts (11 top / 3 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
@@ -49,7 +48,7 @@ CHECKPOINT: verify +VIN at TP3002
 
 ![phase 2](../renders/assembly/phase_02_power_mon.png)
 
-13 parts (5 top / 8 bottom)
+13 parts (2 top / 11 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
@@ -71,7 +70,7 @@ CHECKPOINT: verify +VIN at TP3002
 
 ![phase 3](../renders/assembly/phase_03_power.png)
 
-54 parts (10 top / 44 bottom)
+54 parts (20 top / 34 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
@@ -165,17 +164,27 @@ CHECKPOINT: verify +1V8 at TP4003
 
 CHECKPOINT: verify +5V_SOM at TP6001
 
-### Phase 5 — SoM interface (som_j1, som_j2, som_j3)
+### Phase 5 — SoM interface (som_j1, som_j2, som_j3, uart_bridge)
 
 ![phase 5](../renders/assembly/phase_05_som_interface.png)
 
-3 parts (3 top / 0 bottom)
+13 parts (3 top / 10 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
+| C11001 | 100n | C_0603_1608Metric | uart_bridge |
+| C11002 | 10u | C_0805_2012Metric | uart_bridge |
+| C11003 | 100n | C_0603_1608Metric | uart_bridge |
+| C11004 | 100n | C_0603_1608Metric | uart_bridge |
 | J8001 | DF40C-100DP-0.4V(51) | HRS_DF40C-100DP-0.4V_51_ | som_j1 |
 | J9002 | DF40C-100DP-0.4V(51) | HRS_DF40C-100DP-0.4V_51_ | som_j2 |
 | J10003 | DF40C-100DP-0.4V(51) | HRS_DF40C-100DP-0.4V_51_ | som_j3 |
+| R11001 | 1k | R_0603_1608Metric | uart_bridge |
+| R11002 | 22k1 | R_0603_1608Metric | uart_bridge |
+| R11003 | 47k5 | R_0603_1608Metric | uart_bridge |
+| TP11001 | ZYNQ_PS_UART0_TXD | TestPoint_Pad_D1.5mm | uart_bridge |
+| TP11002 | ZYNQ_PS_UART0_RXD | TestPoint_Pad_D1.5mm | uart_bridge |
+| U11001 | CP2102N-A02 | CP2102N-A02-GQFN24R | uart_bridge |
 
 ### Phase 6 — SoM module mate
 
@@ -189,7 +198,7 @@ CHECKPOINT: boot/debug via debug_boot: J1001 (JTAG), J1002 (SWD), SW1001 (BOOT: 
 
 ![phase 7](../renders/assembly/phase_07_debug_boot.png)
 
-15 parts (7 top / 8 bottom)
+15 parts (4 top / 11 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
@@ -236,28 +245,9 @@ CHECKPOINT: boot/debug via debug_boot: J1001 (JTAG), J1002 (SWD), SW1001 (BOOT: 
 | C7017 | 100n | C_0603_1608Metric | som_decoupling |
 | C7018 | 100n | C_0603_1608Metric | som_decoupling |
 
-### Phase 9 — uart_bridge
+### Phase 9 — usb_uart_connector
 
-![phase 9](../renders/assembly/phase_09_uart_bridge.png)
-
-10 parts (2 top / 8 bottom)
-
-| ref | value | package | sheet |
-|---|---|---|---|
-| C11001 | 100n | C_0603_1608Metric | uart_bridge |
-| C11002 | 10u | C_0805_2012Metric | uart_bridge |
-| C11003 | 100n | C_0603_1608Metric | uart_bridge |
-| C11004 | 100n | C_0603_1608Metric | uart_bridge |
-| R11001 | 1k | R_0603_1608Metric | uart_bridge |
-| R11002 | 22k1 | R_0603_1608Metric | uart_bridge |
-| R11003 | 47k5 | R_0603_1608Metric | uart_bridge |
-| TP11001 | ZYNQ_PS_UART0_TXD | TestPoint_Pad_D1.5mm | uart_bridge |
-| TP11002 | ZYNQ_PS_UART0_RXD | TestPoint_Pad_D1.5mm | uart_bridge |
-| U11001 | CP2102N-A02 | CP2102N-A02-GQFN24R | uart_bridge |
-
-### Phase 10 — usb_uart_connector
-
-![phase 10](../renders/assembly/phase_10_usb_uart_connector.png)
+![phase 9](../renders/assembly/phase_09_usb_uart_connector.png)
 
 5 parts (5 top / 0 bottom)
 
@@ -269,9 +259,9 @@ CHECKPOINT: boot/debug via debug_boot: J1001 (JTAG), J1002 (SWD), SW1001 (BOOT: 
 | R12002 | 5.1k | R_0603_1608Metric | usb_uart_connector |
 | U12001 | USBLC6-2SC6 | USBLC6-2SC6 | usb_uart_connector |
 
-### Phase 11 — mechanical hardware (mechanical)
+### Phase 10 — mechanical hardware (mechanical)
 
-![phase 11](../renders/assembly/phase_11_mechanical.png)
+![phase 10](../renders/assembly/phase_10_mechanical.png)
 
 4 parts (4 top / 0 bottom)
 
@@ -299,23 +289,13 @@ CHECKPOINT: boot/debug via debug_boot: J1001 (JTAG), J1002 (SWD), SW1001 (BOOT: 
 | C4004 | 100n | C_0603_1608Metric | power |
 | C4005 | 22u | C_0805_2012Metric | power |
 | C4006 | 22u | C_0805_2012Metric | power |
-| C4007 | 100n | C_0603_1608Metric | power |
-| C4008 | 22u | C_0805_2012Metric | power |
-| C4009 | 100n | C_0603_1608Metric | power |
-| C4010 | 22u | C_0805_2012Metric | power |
-| C4011 | 22u | C_0805_2012Metric | power |
 | C4012 | 1u | C_0603_1608Metric | power |
 | C4013 | 1u | C_0603_1608Metric | power |
-| C4023 | 22p | C_0603_1608Metric | power |
 | C4024 | 1u | C_0603_1608Metric | power |
 | C4025 | 100n | C_0603_1608Metric | power |
 | C4026 | 22u | C_0805_2012Metric | power |
 | C4027 | 22p | C_0603_1608Metric | power |
 | C4028 | 1u | C_0603_1608Metric | power |
-| C4029 | 100n | C_0603_1608Metric | power |
-| C4030 | 22u | C_0805_2012Metric | power |
-| C4031 | 1u | C_0603_1608Metric | power |
-| C4032 | 1u | C_0603_1608Metric | power |
 | C5001 | 100n | C_0603_1608Metric | power_mon |
 | C5003 | 10u | C_0805_2012Metric | power_mon |
 | C6014 | 100n | C_0603_1608Metric | power_som |
@@ -350,7 +330,6 @@ CHECKPOINT: boot/debug via debug_boot: J1001 (JTAG), J1002 (SWD), SW1001 (BOOT: 
 | C11003 | 100n | C_0603_1608Metric | uart_bridge |
 | C11004 | 100n | C_0603_1608Metric | uart_bridge |
 | L4001 | 10uH | SWPA8040S100MT | power |
-| L4002 | 10uH | SWPA8040S100MT | power |
 | L6003 | 10uH | SWPA8040S100MT | power_som |
 | Q4001 | AO3400A | SOT-23 | power |
 | R1001 | 4k7 | R_0603_1608Metric | debug_boot |
@@ -364,8 +343,6 @@ CHECKPOINT: boot/debug via debug_boot: J1001 (JTAG), J1002 (SWD), SW1001 (BOOT: 
 | R4001 | 40.2k | R_0603_1608Metric | power |
 | R4002 | 10k | R_0603_1608Metric | power |
 | R4003 | 1k | R_0603_1608Metric | power |
-| R4004 | 23.2k | R_0603_1608Metric | power |
-| R4005 | 10k | R_0603_1608Metric | power |
 | R4006 | 330R | R_0603_1608Metric | power |
 | R4007 | 1k | R_0603_1608Metric | power |
 | R4008 | 100k | R_0603_1608Metric | power |
@@ -374,8 +351,6 @@ CHECKPOINT: boot/debug via debug_boot: J1001 (JTAG), J1002 (SWD), SW1001 (BOOT: 
 | R4011 | 10R | R_0603_1608Metric | power |
 | R4012 | 1k | R_0603_1608Metric | power |
 | R4013 | 10R | R_0603_1608Metric | power |
-| R4014 | 22k | R_0603_1608Metric | power |
-| R4015 | 1k | R_0603_1608Metric | power |
 | R5001 | 10k | R_0603_1608Metric | power_mon |
 | R6014 | 47k5 | R_0603_1608Metric | power_som |
 | R6015 | 13k | R_0603_1608Metric | power_som |
@@ -389,14 +364,29 @@ CHECKPOINT: boot/debug via debug_boot: J1001 (JTAG), J1002 (SWD), SW1001 (BOOT: 
 | RS5002 | 10mR | RLM12FTCMR010 | power_mon |
 | RS5003 | 10mR | RLM12FTCMR010 | power_mon |
 | RS5004 | 20mR | RLM12FTCMR020 | power_mon |
+| TP1001 | SDIO_CLK | TestPoint_Pad_D1.5mm | debug_boot |
+| TP1002 | SDIO_CMD | TestPoint_Pad_D1.5mm | debug_boot |
+| TP1003 | VBUS_OUT_EN | TestPoint_Pad_D1.5mm | debug_boot |
+| TP3001 | +VBUS_IN | TestPoint_Pad_D1.5mm | pd_input |
+| TP3002 | +VIN | TestPoint_Pad_D1.5mm | pd_input |
+| TP4001 | +5V | TestPoint_Pad_D1.5mm | power |
+| TP4002 | +3V3 | TestPoint_Pad_D1.5mm | power |
+| TP4003 | +1V8 | TestPoint_Pad_D1.5mm | power |
+| TP4004 | GND | TestPoint_Pad_D1.5mm | power |
+| TP4006 | EN_3V3 | TestPoint_Pad_D1.5mm | power |
+| TP4007 | EN_1V8 | TestPoint_Pad_D1.5mm | power |
+| TP5001 | +3V3_SC | TestPoint_Pad_D1.5mm | power_mon |
+| TP5002 | STM32_I2C2_SCL | TestPoint_Pad_D1.5mm | power_mon |
+| TP5003 | STM32_I2C2_SDA | TestPoint_Pad_D1.5mm | power_mon |
+| TP11001 | ZYNQ_PS_UART0_TXD | TestPoint_Pad_D1.5mm | uart_bridge |
+| TP11002 | ZYNQ_PS_UART0_RXD | TestPoint_Pad_D1.5mm | uart_bridge |
 | U4001 | LM61460AANRJRR | LM61460AANRJRR | power |
-| U4002 | LM61460AANRJRR | LM61460AANRJRR | power |
 | U4003 | AP2112K-1.8 | SOT-23-5 | power |
 | U5002 | INA3221AIRGVR | INA3221AIRGVR | power_mon |
 | U6004 | LM61460AANRJRR | LM61460AANRJRR | power_som |
 | U11001 | CP2102N-A02 | CP2102N-A02-GQFN24R | uart_bridge |
 
-NOTES: pin-1 orientation (Q4001, U4001, U4002, U4003, U5002, U6004, U11001): dot per silkscreen
+NOTES: pin-1 orientation (Q4001, U4001, U4003, U5002, U6004, U11001): dot per silkscreen
 
 ### Step 2 — Top-side SMD (paste + reflow)
 
@@ -409,6 +399,16 @@ NOTES: pin-1 orientation (Q4001, U4001, U4002, U4003, U5002, U6004, U11001): dot
 | C3001 | 100n | C_0603_1608Metric | pd_input |
 | C3002 | 10u | C_1210_3225Metric | pd_input |
 | C3003 | 47n | C_0603_1608Metric | pd_input |
+| C4007 | 100n | C_0603_1608Metric | power |
+| C4008 | 22u | C_0805_2012Metric | power |
+| C4009 | 100n | C_0603_1608Metric | power |
+| C4010 | 22u | C_0805_2012Metric | power |
+| C4011 | 22u | C_0805_2012Metric | power |
+| C4023 | 22p | C_0603_1608Metric | power |
+| C4029 | 100n | C_0603_1608Metric | power |
+| C4030 | 22u | C_0805_2012Metric | power |
+| C4031 | 1u | C_0603_1608Metric | power |
+| C4032 | 1u | C_0603_1608Metric | power |
 | C5002 | 100n | C_0603_1608Metric | power_mon |
 | C6021 | 22p | C_0603_1608Metric | power_som |
 | C12001 | 10u | C_0805_2012Metric | usb_uart_connector |
@@ -417,40 +417,30 @@ NOTES: pin-1 orientation (Q4001, U4001, U4002, U4003, U5002, U6004, U11001): dot
 | D4002 | red | LED_0603_1608Metric | power |
 | D4003 | red | LED_0603_1608Metric | power |
 | D6004 | red | LED_0603_1608Metric | power_som |
+| L4002 | 10uH | SWPA8040S100MT | power |
 | R3003 | 100k | R_0603_1608Metric | pd_input |
 | R3004 | 5.49k | R_0603_1608Metric | pd_input |
 | R3005 | 5.1k | R_0603_1608Metric | pd_input |
 | R3006 | 100k | R_0603_1608Metric | pd_input |
+| R4004 | 23.2k | R_0603_1608Metric | power |
+| R4005 | 10k | R_0603_1608Metric | power |
+| R4014 | 22k | R_0603_1608Metric | power |
+| R4015 | 1k | R_0603_1608Metric | power |
 | R6017 | 10R | R_0603_1608Metric | power_som |
 | R12001 | 5.1k | R_0603_1608Metric | usb_uart_connector |
 | R12002 | 5.1k | R_0603_1608Metric | usb_uart_connector |
 | SW1001 | DIP-4 | DSHP04TSGER | debug_boot |
 | SW1002 | RESET | TS-1187A-B-A-B | debug_boot |
-| TP1001 | SDIO_CLK | TestPoint_Pad_D1.5mm | debug_boot |
-| TP1002 | SDIO_CMD | TestPoint_Pad_D1.5mm | debug_boot |
-| TP1003 | VBUS_OUT_EN | TestPoint_Pad_D1.5mm | debug_boot |
-| TP3001 | +VBUS_IN | TestPoint_Pad_D1.5mm | pd_input |
-| TP3002 | +VIN | TestPoint_Pad_D1.5mm | pd_input |
-| TP4001 | +5V | TestPoint_Pad_D1.5mm | power |
-| TP4002 | +3V3 | TestPoint_Pad_D1.5mm | power |
-| TP4003 | +1V8 | TestPoint_Pad_D1.5mm | power |
-| TP4004 | GND | TestPoint_Pad_D1.5mm | power |
 | TP4005 | EN_5V0 | TestPoint_Pad_D1.5mm | power |
-| TP4006 | EN_3V3 | TestPoint_Pad_D1.5mm | power |
-| TP4007 | EN_1V8 | TestPoint_Pad_D1.5mm | power |
-| TP5001 | +3V3_SC | TestPoint_Pad_D1.5mm | power_mon |
-| TP5002 | STM32_I2C2_SCL | TestPoint_Pad_D1.5mm | power_mon |
-| TP5003 | STM32_I2C2_SDA | TestPoint_Pad_D1.5mm | power_mon |
 | TP6001 | +5V_SOM | TestPoint_Pad_D1.5mm | power_som |
-| TP11001 | ZYNQ_PS_UART0_TXD | TestPoint_Pad_D1.5mm | uart_bridge |
-| TP11002 | ZYNQ_PS_UART0_RXD | TestPoint_Pad_D1.5mm | uart_bridge |
 | U3001 | TPS26631PWPR | TPS26631PWPR | pd_input |
 | U3002 | USBLC6-2SC6 | USBLC6-2SC6 | pd_input |
+| U4002 | LM61460AANRJRR | LM61460AANRJRR | power |
 | U5001 | INA3221AIRGVR | INA3221AIRGVR | power_mon |
 | U12001 | USBLC6-2SC6 | USBLC6-2SC6 | usb_uart_connector |
 
 NOTES: diode polarity (D3001, D4001, D4002, D4003, D6004): cathode per silkscreen
-NOTES: pin-1 orientation (U3001, U3002, U5001, U12001): dot per silkscreen
+NOTES: pin-1 orientation (U3001, U3002, U4002, U5001, U12001): dot per silkscreen
 
 ### Step 3 — Through-hole (short-to-tall)
 

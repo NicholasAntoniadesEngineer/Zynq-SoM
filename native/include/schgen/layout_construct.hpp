@@ -41,6 +41,7 @@ struct ConstructReport {
 
 ConstructReport construct_owned(Kernel& kernel, Nm pitch, Nm reach, bool arrange, const std::vector<char>* only = nullptr);
 std::vector<char> owned_under(const Problem& problem, std::size_t owner);
+std::size_t park_owned(Kernel& kernel, const std::vector<char>& only);
 std::string construct_summary(const ConstructReport& report);
 
 }

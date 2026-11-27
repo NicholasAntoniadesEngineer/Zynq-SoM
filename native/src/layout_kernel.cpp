@@ -90,6 +90,7 @@ const char* breach_name(Breach breach) {
     case Breach::via_field: return "via_field";
     case Breach::spacing: return "spacing";
     case Breach::plug_path: return "plug_path";
+    case Breach::stub: return "stub";
     }
     return "unknown";
 }
@@ -138,6 +139,17 @@ Kernel::Kernel(const Problem& problem, Placement placement)
         pad_rules_[rules.pad_gaps[rule].anchor].push_back(rule);
         if (rules.pad_gaps[rule].member != rules.pad_gaps[rule].anchor)
             pad_rules_[rules.pad_gaps[rule].member].push_back(rule);
+    }
+    tap_rules_.resize(placement_.size());
+    for (std::size_t rule = 0; rule < rules.taps.size(); ++rule) {
+        const Tap& tap = rules.taps[rule];
+        if (tap.net == no_net || tap.pad >= problem_.parts[tap.part].pad_nets.size())
+            throw LayoutError("layout: " + problem_.parts[tap.part].reference + " states a test point rule on a pad with no net");
+        tap_rules_[tap.part].push_back(rule);
+        for (const Pin& pin : problem_.nets[static_cast<std::size_t>(tap.net)].pins)
+            if (pin.part != tap.part && problem_.parts[pin.part].part_class != PartClass::test_point &&
+                std::find(tap_rules_[pin.part].begin(), tap_rules_[pin.part].end(), rule) == tap_rules_[pin.part].end())
+                tap_rules_[pin.part].push_back(rule);
     }
     for (std::size_t rule = 0; rule < rules.nearest_gaps.size(); ++rule) {
         std::vector<std::size_t> touched = rules.nearest_gaps[rule].members;
@@ -658,7 +670,7 @@ std::optional<Breach> Kernel::self_breach(std::size_t part, const Shape& shape, 
     for (std::size_t reserve = 0; reserve < reserve_boxes_.size(); ++reserve) {
         const Reserve& field = problem_.reserves[reserve];
         const bool faced = pose.face == Face::top ? field.top : field.bottom;
-        const bool guest = std::find(field.guests.begin(), field.guests.end(), part) != field.guests.end();
+        const bool guest = std::find(field.guests.begin(), field.guests.end(), part) != field.guests.end() || taps_member(part, field);
         const bool freed = std::find(freed_[part].begin(), freed_[part].end(), reserve) != freed_[part].end();
         if ((!faced && shape.holes.empty()) || owns(reserve, part) || freed || (guest && shape.holes.empty())) continue;
         if (overlaps(shape.bound, reserve_boxes_[reserve])) return Breach::reserved;
@@ -755,6 +767,106 @@ bool Kernel::nearest_met(const NearestGap& rule, std::size_t moved, const Shape*
     }
     if (pending && best == std::numeric_limits<Nm>::max()) return true;
     return rule.limit >= guard && best <= squared(rule.limit - guard);
+}
+
+bool Kernel::taps_member(std::size_t part, const Reserve& field) const {
+    for (const std::size_t index : tap_rules_[part]) {
+        const Tap& rule = problem_.constraints.taps[index];
+        if (rule.part != part) continue;
+        for (const Pin& pin : problem_.nets[static_cast<std::size_t>(rule.net)].pins)
+            if (!problem_.parts[pin.part].module && std::find(field.members.begin(), field.members.end(), pin.part) != field.members.end())
+                return true;
+    }
+    return false;
+}
+
+Nm Kernel::tap_allowance(std::size_t mate, const Box& land, const Shape& tap, Face face) const {
+    if (!problem_.parts[mate].module) return 0;
+    const Point at{(land.x0 + land.x1) / 2, (land.y0 + land.y1) / 2};
+    const Nm body = std::max(tap.bound.width(), tap.bound.height());
+    Nm allowance = 0;
+    const auto out_of = [&](const Box& box) {
+        if (at.x <= box.x0 || at.x >= box.x1 || at.y <= box.y0 || at.y >= box.y1) return;
+        allowance = std::max(allowance, std::min(std::min(at.x - box.x0, box.x1 - at.x), std::min(at.y - box.y0, box.y1 - at.y)) + body);
+    };
+    if (face == Face::top && board_.module_body)
+        out_of(grown(*board_.module_body, module_gap_needed(Nm{0}, problem_.rules.module_stack_height, problem_.rules.module_clearance,
+                                                              problem_.rules.tall_module_clearance)));
+    for (std::size_t reserve = 0; reserve < reserve_boxes_.size(); ++reserve) {
+        const Reserve& field = problem_.reserves[reserve];
+        if ((face == Face::top ? field.top : field.bottom) && std::find(field.members.begin(), field.members.end(), mate) != field.members.end())
+            out_of(reserve_boxes_[reserve]);
+    }
+    return allowance;
+}
+
+bool Kernel::tap_met(const Tap& rule, std::size_t moved, const Shape* shape, const Pose* pose) const {
+    const auto shape_of_part = [&](std::size_t part) -> const Shape& {
+        return shape && part == moved ? *shape : shapes_[part];
+    };
+    const auto present = [&](std::size_t part) { return !absent_[part] || (shape && part == moved); };
+    if (!present(rule.part)) return true;
+    const auto middle = [](const Box& box) {
+        return std::pair<double, double>{(static_cast<double>(box.x0) + static_cast<double>(box.x1)) / 2,
+                                         (static_cast<double>(box.y0) + static_cast<double>(box.y1)) / 2};
+    };
+    const Box tap = shape_of_part(rule.part).lands[rule.pad].box;
+    const Face face = pose && rule.part == moved ? pose->face : placement_[rule.part].face;
+    const auto at = middle(tap);
+    std::vector<std::pair<double, double>> points;
+    std::vector<double> reach;
+    for (const Pin& pin : problem_.nets[static_cast<std::size_t>(rule.net)].pins) {
+        if (pin.part == rule.part || problem_.parts[pin.part].part_class == PartClass::test_point || !present(pin.part)) continue;
+        const Box land = shape_of_part(pin.part).lands[pin.pad].box;
+        if (squared_gap(tap, land) <= squared(rule.limit + tap_allowance(pin.part, land, shape_of_part(rule.part), face))) return true;
+        points.push_back(middle(land));
+        reach.push_back(std::hypot(points.back().first - at.first, points.back().second - at.second));
+    }
+    if (points.empty()) return true;
+    for (std::size_t first = 0; first < points.size(); ++first)
+        for (std::size_t second = first + 1; second < points.size(); ++second)
+            if (reach[first] + reach[second] -
+                    std::hypot(points[first].first - points[second].first, points[first].second - points[second].second) <=
+                static_cast<double>(rule.limit))
+                return true;
+    return false;
+}
+
+Nm Kernel::tap_room(const Tap& rule) const {
+    Nm room = 0;
+    for (const Pin& pin : problem_.nets[static_cast<std::size_t>(rule.net)].pins) {
+        if (pin.part == rule.part || absent_[pin.part]) continue;
+        for (const Face face : {Face::top, Face::bottom})
+            room = std::max(room, tap_allowance(pin.part, shapes_[pin.part].lands[pin.pad].box, shapes_[rule.part], face));
+    }
+    return room;
+}
+
+TapFigure Kernel::tap_figure(const Tap& rule) const {
+    TapFigure figure;
+    figure.met = tap_met(rule, placement_.size(), nullptr, nullptr);
+    if (absent_[rule.part]) return figure;
+    const Box tap = shapes_[rule.part].lands[rule.pad].box;
+    const double x = (static_cast<double>(tap.x0) + static_cast<double>(tap.x1)) / 2, y = (static_cast<double>(tap.y0) + static_cast<double>(tap.y1)) / 2;
+    std::vector<std::pair<double, double>> points;
+    for (const Pin& pin : problem_.nets[static_cast<std::size_t>(rule.net)].pins) {
+        if (pin.part == rule.part || problem_.parts[pin.part].part_class == PartClass::test_point || absent_[pin.part]) continue;
+        const Box land = shapes_[pin.part].lands[pin.pad].box;
+        const double gap = std::sqrt(static_cast<double>(squared_gap(tap, land)));
+        if (!figure.stub || gap < *figure.stub) {
+            figure.stub = gap;
+            figure.allowance = tap_allowance(pin.part, land, shapes_[rule.part], placement_[rule.part].face);
+            figure.nearest = pin.part;
+        }
+        points.push_back({(static_cast<double>(land.x0) + static_cast<double>(land.x1)) / 2, (static_cast<double>(land.y0) + static_cast<double>(land.y1)) / 2});
+    }
+    for (std::size_t first = 0; first < points.size(); ++first)
+        for (std::size_t second = first + 1; second < points.size(); ++second) {
+            const double detour = std::hypot(points[first].first - x, points[first].second - y) + std::hypot(points[second].first - x, points[second].second - y) -
+                                  std::hypot(points[first].first - points[second].first, points[first].second - points[second].second);
+            if (!figure.detour || detour < *figure.detour) figure.detour = detour;
+        }
+    return figure;
 }
 
 Kernel::GroupSummary Kernel::summarise(const GroupGap& rule, bool second, std::size_t moved, const Shape* shape,
@@ -1026,6 +1138,16 @@ bool Kernel::rule_breaches(std::size_t part, const Shape& shape, const Pose& pos
         if (rule.anchor != part && absent_[rule.anchor]) continue;
         if (!nearest_met(rule, part, &shape, &pose, guard) && sink(Violation{Breach::contract, part, rule.anchor}))
             return true;
+    }
+    for (const std::size_t index : tap_rules_[part]) {
+        const Tap& rule = rules.taps[index];
+        if (rule.part != part && (owned || absent_[rule.part] || (moved && (*moved)[rule.part]) || !tap_met(rule, placement_.size(), nullptr, nullptr)))
+            continue;
+        if (rule.part == part && moved &&
+            std::any_of(problem_.nets[static_cast<std::size_t>(rule.net)].pins.begin(), problem_.nets[static_cast<std::size_t>(rule.net)].pins.end(),
+                        [&](const Pin& pin) { return pin.part != part && (*moved)[pin.part]; }))
+            continue;
+        if (!tap_met(rule, part, &shape, &pose) && sink(Violation{Breach::stub, part, rule.part})) return true;
     }
     for (const std::size_t index : face_rules_[part]) {
         const FacePair& rule = rules.face_pairs[index];

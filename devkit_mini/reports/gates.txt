@@ -948,19 +948,19 @@ native_policy: PASS — NATIVE BOARD POLICY: PROVIDERS COMPLETE — 92 declarati
 pcb: PASS — 161 footprints; deferred: 
 placement_requirements: PASS — NOT APPLICABLE: reviewed ownership declarations cover carrier board_aux/bringup_rails only; devkit_mini has neither requirement set. No qualitative placement approval implied.
 pcb_drc: PASS — 0 non-unrouted errors; 401 unrouted (expected); 
-ratsnest: PASS — LAW-5 RATSNEST GATE: PASS (board 82.75 x 58.75 mm)
+ratsnest: PASS — LAW-5 RATSNEST GATE: PASS (board 67.5 x 86.5 mm)
   off-board parts: 0
   dispersed subsystems: 0 (threshold 9x)
-  cross-subsystem airwire: 1247.2 mm (advisory reference 1464 mm, OK; 100 edges; 1247.2/2684.7 mm = 46.5% of total)
+  cross-subsystem airwire: 1223.9 mm (advisory reference 1605 mm, OK; 101 edges; 1223.9/2702.7 mm = 45.3% of total)
   per-subsystem clusters (n, bbox mm, dispersion):
-    power                  n=54  bbox_area=    3074 disp=  6.2
-    pd_input               n=14  bbox_area=     662 disp=  2.5
-    power_mon              n=13  bbox_area=     329 disp=  2.3
-    uart_bridge            n=10  bbox_area=     158 disp=  2.2
-    power_som              n=20  bbox_area=     419 disp=  2.0
-    debug_boot             n=13  bbox_area=     643 disp=  1.6
-    usb_uart_connector     n=5   bbox_area=     155 disp=  1.2
-placement_mech: PASS — LAW-6 PLACEMENT (mechanical) GATE: PASS (board 82.75 x 58.75 mm)
+    debug_boot             n=13  bbox_area=    2540 disp=  6.5
+    pd_input               n=14  bbox_area=    1511 disp=  5.8
+    uart_bridge            n=10  bbox_area=     364 disp=  5.0
+    power_mon              n=13  bbox_area=     622 disp=  4.4
+    power                  n=54  bbox_area=    1410 disp=  2.9
+    power_som              n=20  bbox_area=     443 disp=  2.2
+    usb_uart_connector     n=5   bbox_area=     183 disp=  1.4
+placement_mech: PASS — LAW-6 PLACEMENT (mechanical) GATE: PASS (board 67.5 x 86.5 mm)
   SoM module-body core: (48.2,51.4)..(99.8,94.6) mm — bottom-passives-only, TOP keepout
   off-board connectors: 2 (0 mis-placed)
     OK  J12001    TYPE-C-31-M-12   edge=E rot= 90 mouth->(1, 0) flush=-1.3mm
@@ -976,11 +976,33 @@ connector_model: PASS — LAW-6 CONNECTOR-MODEL ORIENTATION GATE: PASS
   non-zero model-Z (flipped opening): 0
   geometry-cross-checked (through-shell): 2 -> 0 conflict(s)
   reviewed geometry exceptions: 7
-connector_spacing: PASS — CONNECTOR OVERMOLD SPACING GATE: PASS (board 82.75 x 58.75 mm)
+connector_spacing: PASS — CONNECTOR OVERMOLD SPACING GATE: PASS (board 67.5 x 86.5 mm)
   same-edge overmold connector pairs: 1 (0 too tight)
-    OK  J12001    <-> J3001     envelope+access gap= 67.94mm along x (need >= 5mm)
-plug_path: PASS — PLUG PATH GATE: PASS (board 82.75 x 58.75 mm)
+    OK  J12001    <-> J3001     envelope+access gap= 52.69mm along x (need >= 5mm)
+plug_path: PASS — PLUG PATH GATE: PASS (board 67.5 x 86.5 mm)
   parts entered from the side: 0 (0 blocked)
+test_point_stubs: PASS — TEST POINT GATE: PASS
+  a test point sits within its limit of another pad of its net, or adds no more than its limit to the path between two of them, on either face;
+  beside a module connector pin the limit counts from the edge of the area kept clear for that connector (the module on top, its escape corridor on the rear)
+  test points on routed nets: 17 (0 over their limit, 15 on the rear face); test points on plane nets connect by a via and are not listed
+    OK   TP1001 (rear) on SDIO_CLK: stub 5.4938 mm to J8001, limit 3 mm plus 2.65 mm to leave the module connector's keep-out
+    OK   TP1002 (rear) on SDIO_CMD: stub 3.0064 mm to J8001, limit 3 mm plus 2.65 mm to leave the module connector's keep-out
+    OK   TP1003 (rear) on VBUS_OUT_EN: stub 1.29401 mm to J8001, limit 3 mm plus 2.65 mm to leave the module connector's keep-out
+    OK   TP11001 (rear) on ZYNQ_PS_UART0_TXD: stub 8.81813 mm to J8001, detour 2.9251 mm, limit 3 mm plus 2.65 mm to leave the module connector's keep-out
+    OK   TP11002 (rear) on ZYNQ_PS_UART0_RXD: stub 5.42203 mm to J8001, detour 3.37778 mm, limit 3 mm plus 2.65 mm to leave the module connector's keep-out
+    OK   TP3001 (rear) on +VBUS_IN: stub 6.36527 mm to R3003, detour 2.99506 mm, limit 3 mm
+    OK   TP3002 (rear) on +VIN: stub 22.5167 mm to U5001, detour 2.95927 mm, limit 3 mm
+    OK   TP4001 (rear) on +5V: stub 6.61087 mm to RS5002, detour 1.51801 mm, limit 3 mm
+    OK   TP4002 (rear) on +3V3: stub 8.05064 mm to C11002, detour 7.15655e-06 mm, limit 3 mm
+    OK   TP4003 (rear) on +1V8: stub 4.02846 mm to RS5004, detour 2.82808 mm, limit 3 mm
+    OK   TP4005 (top) on EN_5V0: stub 2.98431 mm to U4001, limit 3 mm
+    OK   TP4006 (rear) on EN_3V3: stub 2.96727 mm to U4002, limit 3 mm
+    OK   TP4007 (rear) on EN_1V8: stub 2.78265 mm to U4003, limit 3 mm
+    OK   TP5001 (rear) on +3V3_SC: stub 13.6025 mm to C7013, detour 1.73458e-07 mm, limit 3 mm
+    OK   TP5002 (rear) on STM32_I2C2_SCL: stub 17.7755 mm to J8001, detour 0.000885531 mm, limit 3 mm plus 2.65 mm to leave the module connector's keep-out
+    OK   TP5003 (rear) on STM32_I2C2_SDA: stub 16.0457 mm to J8001, detour 0.52537 mm, limit 3 mm plus 2.65 mm to leave the module connector's keep-out
+    OK   TP6001 (top) on +5V_SOM: stub 3.505 mm to C6018, detour 0.00686983 mm, limit 3 mm
+
 refdes_silk: PASS — emitted-board refdes overlaps checked: top=0 bottom=0
 placement_contract: PASS — PLACEMENT-CONTRACT GATE (pd_input): PASS (contract=yes, 9 structures)
   fails: hot_loop=0 same_side=0 bulk=0 bulk_out=0 sw_node=0 fb=0 boot=0 vcc=0 bias=0 rt=0 ldo=0 proximity=0 unknown=0
@@ -1001,7 +1023,7 @@ PLACEMENT-CONTRACT GATE (usb_uart_connector): PASS (contract=yes, 4 structures)
   fails: hot_loop=0 same_side=0 bulk=0 bulk_out=0 sw_node=0 fb=0 boot=0 vcc=0 bias=0 rt=0 ldo=0 proximity=0 unknown=0
   unresolved refs: 0
   violations: 0
-placement_flow: PASS — PLACEMENT-FLOW GATE: PASS (2 external contract(s); board_area=4862mm^2, flow_budget=91.7mm)
+placement_flow: PASS — PLACEMENT-FLOW GATE: PASS (2 external contract(s); board_area=5839mm^2, flow_budget=94.0mm)
   fails: flow=0/1 facing=0/1 far=0/0 near_max=0/1
   unresolved: 0
   n/a (subsystem not in this project): 2
@@ -1009,34 +1031,34 @@ placement_flow: PASS — PLACEMENT-FLOW GATE: PASS (2 external contract(s); boar
     flow usb_pd->power: n/a — usb_pd not a subsystem of this project
   violations: 0
   advisory preferences (not hardware qualification): 2
-    ADVISORY facing power->power_som: preference satisfied (angle=84.1deg; not hardware qualification) [Reviewed 2026-10-18: all-component centroid direction changes when unrelated test points move; it is a placement preference, not a hardware limit. SNVSBD5D Rev. D section 11.1 requires local loop/layout and power-path quality, not a 90-degree subsystem-centroid cutoff. See native/benchmarks/2026-10-18-facing-centroid-review.json; routing and parasitics remain unverified.]
-    ADVISORY flow power->power_som: 41.97mm / 91.7mm heuristic reference; preference satisfied; not a trace-length or hardware limit
+    ADVISORY facing power->power_som: preference satisfied (angle=20.2deg; not hardware qualification) [Reviewed 2026-10-18: all-component centroid direction changes when unrelated test points move; it is a placement preference, not a hardware limit. SNVSBD5D Rev. D section 11.1 requires local loop/layout and power-path quality, not a 90-degree subsystem-centroid cutoff. See native/benchmarks/2026-10-18-facing-centroid-review.json; routing and parasitics remain unverified.]
+    ADVISORY flow power->power_som: 62.01mm / 94.0mm heuristic reference; preference satisfied; not a trace-length or hardware limit
   detail: 3
-    facing power->power_som: dot=+51.09 angle=84.1deg (output@(58.4178, 63.63) zone@(62.8428, 74.5252) down@(99.8838, 54.7921))
-    flow power->power_som: 41.97mm / 91.7mm budget
-    near_max uart_bridge to usb_uart_connector: 0.80mm gap / <= 40mm
+    facing power->power_som: dot=+544.21 angle=20.2deg (output@(61.1698, 90.264) zone@(61.0236, 99.6118) down@(83.2994, 41.7427))
+    flow power->power_som: 62.01mm / 94.0mm budget
+    near_max uart_bridge to usb_uart_connector: 21.87mm gap / <= 40mm
 contract_coverage: PASS (advisory) — CONTRACT COVERAGE: 4 wired(gated) / 0 inert-met / 0 inert-VIOLATED  (authored SI/PI intent not yet placer-enforced)
   pd_input               WIRED-gated      9 chk  0 viol  
   power                  WIRED-gated     20 chk  0 viol  
   uart_bridge            WIRED-gated      6 chk  0 viol  
   usb_uart_connector     WIRED-gated      4 chk  0 viol  
 floorplan_composition: PASS (advisory) — FLOORPLAN COMPOSITION (T1): 1 hard / 2 soft terms; hard RED 0, soft RED 0 (advisory)
-  hard margins (mm): measured 1, unresolved 0, sum 39.2, min 39.2 (informational)
+  hard margins (mm): measured 1, unresolved 0, sum 18.13, min 18.13 (informational)
   hard margins (degrees): measured 0, unresolved 0, sum 0.0, min unavailable (informational)
   hard terms:
-    HARD near_max uart_bridge->usb_uart_connector: 0.80 vs 40.00 (margin +39.20) ok [judgment:10.0 (D11 edge-gap) — CP2102N's USB DP/DM pair terminates at the UART USB-C; measured 365mm of cross-board airwire (avg 122mm) with the block anchored mid-board and a STALE floorplan near-intent pointing at rj45_connector]
+    HARD near_max uart_bridge->usb_uart_connector: 21.87 vs 40.00 (margin +18.13) ok [judgment:10.0 (D11 edge-gap) — CP2102N's USB DP/DM pair terminates at the UART USB-C; measured 365mm of cross-board airwire (avg 122mm) with the block anchored mid-board and a STALE floorplan near-intent pointing at rj45_connector]
   soft terms (advisory ledger — repair triggers, never gates):
-    soft facing power->power_som: 84.06 vs 90.00 (margin +5.94) ok [ADVISORY centroid preference: Reviewed 2026-10-18: all-component centroid direction changes when unrelated test points move; it is a placement preference, not a hardware limit. SNVSBD5D Rev. D section 11.1 requires local loop/layout and power-path quality, not a 90-degree subsystem-centroid cutoff. See native/benchmarks/2026-10-18-facing-centroid-review.json; routing and parasitics remain unverified.] dot=+51.09
-    soft flow_hop power->power_som: 41.97 vs 91.66 (margin +49.69) ok [ADVISORY board-size-derived flow preference [placement/v2]]
+    soft facing power->power_som: 20.16 vs 90.00 (margin +69.84) ok [ADVISORY centroid preference: Reviewed 2026-10-18: all-component centroid direction changes when unrelated test points move; it is a placement preference, not a hardware limit. SNVSBD5D Rev. D section 11.1 requires local loop/layout and power-path quality, not a 90-degree subsystem-centroid cutoff. See native/benchmarks/2026-10-18-facing-centroid-review.json; routing and parasitics remain unverified.] dot=+544.21
+    soft flow_hop power->power_som: 62.01 vs 94.00 (margin +31.99) ok [ADVISORY board-size-derived flow preference [placement/v2]]
   n/a terms (endpoint subsystem not instantiated by this project — project-scoped resolution):
     n/a far_min power->ethernet.line_side [judgment:10.0 — buck switching node vs Ethernet MDI/magnetics analog line side; datasheet silent on inter-subsystem spacing (SNVSBD5D covers intra-stage only)]
     n/a flow_hop usb_pd->power [ADVISORY board-size-derived flow preference [placement/v2]]
-  T2 escape corridors (D13 never-close): 6 loaded, 16 UNMANAGED part intrusion(s), 0 T2-coexistence-managed
+  T2 escape corridors (D13 never-close): 6 loaded, 17 UNMANAGED part intrusion(s), 0 T2-coexistence-managed
+    UNMANAGED INTRUSION C4013 (power) in escape:J2:S
     UNMANAGED INTRUSION C7003 (som_decoupling) in escape:J1:N
+    UNMANAGED INTRUSION C7004 (som_decoupling) in escape:J1:S
     UNMANAGED INTRUSION C7005 (som_decoupling) in escape:J1:N
-    UNMANAGED INTRUSION C7006 (som_decoupling) in escape:J1:S
-    UNMANAGED INTRUSION C7007 (som_decoupling) in escape:J2:S
-    UNMANAGED INTRUSION C7008 (som_decoupling) in escape:J2:N
+    UNMANAGED INTRUSION C7007 (som_decoupling) in escape:J2:N
     UNMANAGED INTRUSION C7009 (som_decoupling) in escape:J3:S
     UNMANAGED INTRUSION C7010 (som_decoupling) in escape:J3:N
     UNMANAGED INTRUSION C7011 (som_decoupling) in escape:J2:N
@@ -1044,13 +1066,13 @@ floorplan_composition: PASS (advisory) — FLOORPLAN COMPOSITION (T1): 1 hard / 
     UNMANAGED INTRUSION C7013 (som_decoupling) in escape:J1:S
     UNMANAGED INTRUSION C7015 (som_decoupling) in escape:J1:N
     UNMANAGED INTRUSION C7016 (som_decoupling) in escape:J1:N
-    UNMANAGED INTRUSION C7017 (som_decoupling) in escape:J1:N
     UNMANAGED INTRUSION C7018 (som_decoupling) in escape:J1:S
+    UNMANAGED INTRUSION L6003 (power_som) in escape:J1:N
     UNMANAGED INTRUSION R1007 (debug_boot) in escape:J1:N
-    UNMANAGED INTRUSION R4003 (power) in escape:J1:N
+    UNMANAGED INTRUSION TP1003 (debug_boot) in escape:J1:S
+    UNMANAGED INTRUSION TP4001 (power) in escape:J2:S
   D13 channel hotspots (>= 6 cross-airwires; corridor = 2 + 0.2/net mm):
-    power | power_mon: 6 airwires (182.6 mm) -> corridor >= 3.2 mm
-    power | som_decoupling: 6 airwires (30.1 mm) -> corridor >= 3.2 mm
+    power | power_mon: 11 airwires (115.6 mm) -> corridor >= 4.2 mm
 return_stitch: PASS — RETURN-STITCH GATE (return-path v2): PASS (radius 2.0 mm, HARD, class-blind)
   remediation set (v1-failing contacts): 29
   covered by som_escape GND vias        : 29
@@ -1165,37 +1187,38 @@ placement_integrity: PASS — PLACEMENT INTEGRITY GATE: PASS
     NOTE land-spacing: J8001 (DF40C-100DP-0.4V_51): land gap 0.17 mm below its net-class clearance 0.2 mm; fabricator minimum 0.09 mm; B2 15-30 V (voltage unknown, highest board voltage used); required 0.1 mm; PASS: Hirose DF40 catalogue (2013.11) p.10, DF40C-xxDP header recommended PCB layout: pad 0.23+-0.02 on pitch 0.4+-0.02, end pads 0.35+-0.02
     NOTE land-spacing: J9002 (DF40C-100DP-0.4V_51): land gap 0.17 mm below its net-class clearance 0.2 mm; fabricator minimum 0.09 mm; B2 15-30 V (voltage unknown, highest board voltage used); required 0.1 mm; PASS: Hirose DF40 catalogue (2013.11) p.10, DF40C-xxDP header recommended PCB layout: pad 0.23+-0.02 on pitch 0.4+-0.02, end pads 0.35+-0.02
     NOTE tall-part-beside-module: J1001 (debug_boot) 878311420 is 5.89991 mm tall, 4.39991 mm above the module underside at 1.5 mm, and 3.03 mm from the module body (header; highest point of the 3D model ${KIPRJMOD}/../parts/878311420/878311420.wrl)
-    NOTE tall-part-beside-module: U12001 (usb_uart_connector) USBLC6-2SC6 is 1.64897 mm tall, 0.148968 mm above the module underside at 1.5 mm, and 3.0618 mm from the module body (diode; highest point of the 3D model ${KIPRJMOD}/../parts/USBLC6-2SC6/USBLC6-2SC6.wrl)
+    NOTE tall-part-beside-module: SW1001 (debug_boot) DIP-4 is 2.35001 mm tall, 0.850008 mm above the module underside at 1.5 mm, and 3.04 mm from the module body (switch; highest point of the 3D model ${KIPRJMOD}/../parts/DSHP04TSGER/DSHP04TSGER.wrl)
+    NOTE tall-part-beside-module: SW1002 (debug_boot) RESET is 1.54991 mm tall, 0.049908 mm above the module underside at 1.5 mm, and 3.1 mm from the module body (switch; highest point of the 3D model ${KIPRJMOD}/../parts/TS-1187A-B-A-B/TS-1187A-B-A-B.wrl)
+    NOTE tall-part-beside-module: J1002 (debug_boot) HX_JN1.27-2x5 is 5.19989 mm tall, 3.69989 mm above the module underside at 1.5 mm, and 3.13 mm from the module body (header; highest point of the 3D model ${KIPRJMOD}/../parts/HX_JN1.27-2x5_TP_H4.9/HX_JN1.27-2x5_TP_H4.9.wrl)
     NOTE tall-part-beside-module: U3002 (pd_input) USBLC6-2SC6 is 1.64897 mm tall, 0.148968 mm above the module underside at 1.5 mm, and 3.1609 mm from the module body (diode; highest point of the 3D model ${KIPRJMOD}/../parts/USBLC6-2SC6/USBLC6-2SC6.wrl)
+    NOTE tall-part-beside-module: J12001 (usb_uart_connector) TYPE-C-31-M-12 is 3.25108 mm tall, 1.75108 mm above the module underside at 1.5 mm, and 3.1975 mm from the module body (connector; highest point of the 3D model ${KIPRJMOD}/../parts/TYPE-C-31-M-12/TYPE-C-31-M-12.wrl)
     NOTE tall-part-beside-module: D3001 (pd_input) SMBJ22A is 2.15 mm tall, 0.65 mm above the module underside at 1.5 mm, and 3.2267 mm from the module body (diode; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Diode_SMD.3dshapes/D_SMB.step)
-    NOTE tall-part-beside-module: SW1002 (debug_boot) RESET is 1.54991 mm tall, 0.049908 mm above the module underside at 1.5 mm, and 4.1 mm from the module body (switch; highest point of the 3D model ${KIPRJMOD}/../parts/TS-1187A-B-A-B/TS-1187A-B-A-B.wrl)
-    NOTE tall-part-beside-module: C3002 (pd_input) 10u is 2.5 mm tall, 1 mm above the module underside at 1.5 mm, and 4.2202 mm from the module body (capacitor; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_1210_3225Metric.step)
-    NOTE tall-part-beside-module: J1002 (debug_boot) HX_JN1.27-2x5 is 5.19989 mm tall, 3.69989 mm above the module underside at 1.5 mm, and 4.38 mm from the module body (header; highest point of the 3D model ${KIPRJMOD}/../parts/HX_JN1.27-2x5_TP_H4.9/HX_JN1.27-2x5_TP_H4.9.wrl)
-    NOTE tall-part-beside-module: SW1001 (debug_boot) DIP-4 is 2.35001 mm tall, 0.850008 mm above the module underside at 1.5 mm, and 7.01 mm from the module body (switch; highest point of the 3D model ${KIPRJMOD}/../parts/DSHP04TSGER/DSHP04TSGER.wrl)
-    NOTE tall-part-beside-module: J12001 (usb_uart_connector) TYPE-C-31-M-12 is 3.25108 mm tall, 1.75108 mm above the module underside at 1.5 mm, and 7.8459 mm from the module body (connector; highest point of the 3D model ${KIPRJMOD}/../parts/TYPE-C-31-M-12/TYPE-C-31-M-12.wrl)
+    NOTE tall-part-beside-module: C3002 (pd_input) 10u is 2.5 mm tall, 1 mm above the module underside at 1.5 mm, and 3.9702 mm from the module body (capacitor; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_1210_3225Metric.step)
+    NOTE tall-part-beside-module: L4002 (power) 10uH is 4.21005 mm tall, 2.71005 mm above the module underside at 1.5 mm, and 7.7899 mm from the module body (inductor; highest point of the 3D model ${KIPRJMOD}/../parts/SWPA8040S100MT/SWPA8040S100MT.wrl)
     NOTE tall-part-beside-module: J3001 (pd_input) TYPE-C-31-M-12 is 3.25108 mm tall, 1.75108 mm above the module underside at 1.5 mm, and 8.0959 mm from the module body (connector; highest point of the 3D model ${KIPRJMOD}/../parts/TYPE-C-31-M-12/TYPE-C-31-M-12.wrl)
-    NOTE termination-distance-report: R4007 (power) is 1.81371 mm from Q4001.1; the reach of a series part is 4 mm
+    NOTE tall-part-beside-module: U12001 (usb_uart_connector) USBLC6-2SC6 is 1.64897 mm tall, 0.148968 mm above the module underside at 1.5 mm, and 10.4074 mm from the module body (diode; highest point of the 3D model ${KIPRJMOD}/../parts/USBLC6-2SC6/USBLC6-2SC6.wrl)
+    NOTE termination-distance-report: R4007 (power) is 2.625 mm from Q4001.1; the reach of a series part is 4 mm
     NOTE input-capacitor-nearest: U4001 (power) VIN2 (pad 12): input capacitor C4025 at 0.955001 mm
     NOTE input-capacitor-nearest: U4001 (power) VIN1 (pad 8): input capacitor C4001 at 0.955001 mm
     NOTE input-capacitor-nearest: U4002 (power) VIN2 (pad 12): input capacitor C4029 at 0.955001 mm
     NOTE input-capacitor-nearest: U4002 (power) VIN1 (pad 8): input capacitor C4007 at 0.955001 mm
     NOTE input-capacitor-nearest: U6004 (power_som) VIN2 (pad 12): input capacitor C6025 at 1.17527 mm
     NOTE input-capacitor-nearest: U6004 (power_som) VIN1 (pad 8): input capacitor C6014 at 0.525001 mm
-    NOTE nothing-sensitive-under-inductor: inductor L4001 (power): nearest sense or timing part is R3003 (pd_input), 18.0638 mm centre to centre
-    NOTE nothing-sensitive-under-inductor: inductor L4002 (power): nearest sense or timing part is R3004 (pd_input), 7.64257 mm centre to centre
-    NOTE nothing-sensitive-under-inductor: inductor L6003 (power_som): nearest sense or timing part is RS5003 (power_mon), 15.6948 mm centre to centre
-    NOTE protect-first-after-connector: D3001 (pd_input) is 4.80746 mm from J3001.A4B9 on net +VBUS_IN
+    NOTE nothing-sensitive-under-inductor: inductor L4001 (power): nearest sense or timing part is R3004 (pd_input), 11.7473 mm centre to centre
+    NOTE nothing-sensitive-under-inductor: inductor L4002 (power): nearest sense or timing part is RS5004 (power_mon), 16.2635 mm centre to centre
+    NOTE nothing-sensitive-under-inductor: inductor L6003 (power_som): nearest sense or timing part is R11002 (uart_bridge), 28.7159 mm centre to centre
+    NOTE protect-first-after-connector: D3001 (pd_input) is 2.57139 mm from J3001.A4B9 on net +VBUS_IN
     NOTE protect-first-after-connector: U3002 (pd_input) is 2.28305 mm from J3001.A6 on net /pd_input/PD_USB_DP_CONN
     NOTE protect-first-after-connector: U12001 (usb_uart_connector) is 4.13407 mm from J12001.A6 on net /usb_uart_connector/USB_UART_DP_CONN
-    NOTE bypass-on-pin-face-or-under: bypass distance to the served pin over 31 capacitors: least 0 mm, median 0.675001 mm, greatest 2.945 mm; 1 beyond the 2 mm bypass reach; 16 on the pin's face, 15 directly under
+    NOTE bypass-on-pin-face-or-under: bypass distance to the served pin over 31 capacitors: least 0 mm, median 0.625001 mm, greatest 2.945 mm; 1 beyond the 2 mm bypass reach; 16 on the pin's face, 15 directly under
+    NOTE sense-distance-report: RS5004 (power_mon) is 4.91029 mm from U5002.12 (same face)
+    NOTE sense-distance-report: RS5001 (power_mon) is 4.39846 mm from U5001.12 (opposite face)
     NOTE sense-distance-report: RS5002 (power_mon) is 4.39581 mm from U5001.15 (opposite face)
-    NOTE sense-distance-report: RS5001 (power_mon) is 4.35761 mm from U5001.12 (opposite face)
-    NOTE sense-distance-report: R11003 (uart_bridge) is 3.88701 mm from U11001.8 (same face)
-    NOTE sense-distance-report: R11002 (uart_bridge) is 2.65308 mm from U11001.8 (same face)
-    NOTE sense-distance-report: R3003 (pd_input) is 2.1035 mm from U3001.8 (same face)
-    NOTE sense-distance-report: R3004 (pd_input) is 2.1035 mm from U3001.8 (same face)
-    NOTE sense-distance-report: RS5003 (power_mon) is 1.87087 mm from U5001.2 (opposite face)
-    NOTE sense-distance-report: RS5004 (power_mon) is 1.63831 mm from U5002.12 (same face)
+    NOTE sense-distance-report: R11002 (uart_bridge) is 4.2818 mm from U11001.8 (same face)
+    NOTE sense-distance-report: R11003 (uart_bridge) is 3.635 mm from U11001.8 (same face)
+    NOTE sense-distance-report: R3003 (pd_input) is 2.3535 mm from U3001.8 (same face)
+    NOTE sense-distance-report: R3004 (pd_input) is 2.3535 mm from U3001.8 (same face)
+    NOTE sense-distance-report: RS5003 (power_mon) is 1.856 mm from U5001.2 (opposite face)
 
 return_path: FAIL (advisory) — REPORT-ONLY: fixed SoM interface; remediation judged by return_stitch.
 RETURN-PATH GATE (HS pairs): FAIL (K=2 contact steps)
@@ -1249,18 +1272,18 @@ fanout: PASS — FAN-OUT CLEARANCE GATE (D13, report-first ratchet): PASS
   OFFENDERS (starved, worst slack first):
     (none)
   (tightest PASSING subjects:)
-    ok      SW1001    debug_boot         8pin clr=1.603 need=1.50 slack=+0.103
-    ok      Q4001     power              3pin clr=1.608 need=1.50 slack=+0.108
-    ok      U5001     power_mon         17pin clr=2.121 need=2.00 slack=+0.121
-    ok      U5002     power_mon         17pin clr=1.630 need=1.50 slack=+0.130
+    ok      U4003     power              5pin clr=1.507 need=1.50 slack=+0.007
+    ok      U5002     power_mon         17pin clr=1.532 need=1.50 slack=+0.032
+    ok      U11001    uart_bridge       25pin clr=2.110 need=2.00 slack=+0.110
     ok      J12001    usb_uart_connector  16pin clr=1.665 need=1.50 slack=+0.165
+    ok      U12001    usb_uart_connector   6pin clr=1.665 need=1.50 slack=+0.165
 pcb_geometry: PASS — independent final-board gates complete
 testpoint_map: PASS — 18 test points; 5 waived nets
 decoupling_report: PASS — 56 rows; 0 failing
-assembly: PASS — ASSEMBLY: 4 steps + 11 phases, 156 parts -> manufacturing/ASSEMBLY.md + renders/assembly (15 PNGs)
+assembly: PASS — ASSEMBLY: 4 steps + 10 phases, 156 parts -> manufacturing/ASSEMBLY.md + renders/assembly (14 PNGs)
 ratsnest_images: PASS (advisory) — ratsnest: renders/ratsnest_top.png + renders/ratsnest_bottom.png + docs/RATSNEST.svg
-  board 82.75 x 58.75 mm  (top 58 / bottom 103)
-  airwires: 2684.7 mm total, 1247.2 mm cross-subsystem (100 edges, 46.5% of length)
+  board 67.5 x 86.5 mm  (top 58 / bottom 103)
+  airwires: 2702.7 mm total, 1223.9 mm cross-subsystem (101 edges, 45.3% of length)
 
 thermal: PASS — schgen per-device thermal (Tj) gate
 ==============================================================================
@@ -1286,7 +1309,7 @@ datasheet provenance (every RthJA / Tj_max / Rds_on cited):
 
 pour-aware effective RthJA (* rows) — basis, per part (bare->credited, cited; conservative, bench-verify at bring-up):
   LM61460AANRJRR   bare 58.7 -> eff 35 C/W ; DS 7.3: bare 58.7 C/W (JESD51-7) vs 25 C/W on a 4-layer PCB (DS note + LM61460-Q1 EVM). Credit gated on EMITTED copper, verified in the .kicad_pcb per build: In1.Cu GND plane + 8-via PGND field + local F.Cu/B.Cu pours (SNVSBD5D 11.1.1). Credited 35 C/W — 10 C/W above the DS 4-layer 25, ~30% of the bare->4L delta held back (0.5-oz inner plane, modest pours vs the EVM, 3-buck mutual heating)
-                   emitted-copper evidence (verified in the board file): In1 GND plane + U4001: 8/6 GND vias<=5.2mm, local B+F pour YES; U4002: 8/6 GND vias<=5.2mm, local B+F pour YES; U6004: 8/6 GND vias<=5.2mm, local B+F pour YES
+                   emitted-copper evidence (verified in the board file): In1 GND plane + U4001: 8/6 GND vias<=5.2mm, local B+F pour YES; U4002: 8/6 GND vias<=5.2mm, local F+B pour YES; U6004: 8/6 GND vias<=5.2mm, local B+F pour YES
 
 errors: none
 
@@ -1340,13 +1363,13 @@ CD-06  Ethernet isolation moat (In1 plane voids)   [NOTHING]
 CD-07  DP90/DP100 L2 reference plane   [EMITTED]
   assumes: the DP90_USB / DP100_TMDS trace geometry (widths/gaps in the .kicad_dru + net classes) is an OUTER-layer microstrip referenced to a CONTINUOUS L2 GND plane through one 7628 prepreg sheet
   where:   subsystems/copper_claims.json#CD-07
-  emits:   In1.Cu GND plane zone 33,36.75 -> 114.75,94.5 mm (unfilled-on-disk, DRC-refilled); ethernet voids punch it locally (CD-06)
+  emits:   In1.Cu GND plane zone 33,32.75 -> 99.5,118.25 mm (unfilled-on-disk, DRC-refilled); ethernet voids punch it locally (CD-06)
   risk:    without the L2 plane every impedance number in the dru is unmoored (return path undefined, impedance wrong by design); with the plane emitted the residual risk is fill VOIDS/splits under a future route path (checked at the routing wave)
 
 CD-08  Under-SoM decoupling fanout vias   [PARTIAL]
   assumes: the under-SoM bottom-side rail-entry decoupling (som_decoupling) reaches the rails/planes through fanout vias directly beneath the DF40 mezzanine
   where:   subsystems/copper_claims.json#CD-08
-  emits:   GND vias inside the SoM body zone: 24 (SoM zone found); rail fanout vias: none emitted
+  emits:   GND vias inside the SoM body zone: 16 (SoM zone found); rail fanout vias: none emitted
   risk:    until those vias land the 18 bottom caps decouple nothing (no path from B.Cu pads to the rails) — a routing-wave item, but the prose reads as if the path exists
 
 COPPER DEBT: 8 entries — 3 emitted, 2 partial, 3 unemitted, 0 unmeasured (report-only)
@@ -1588,73 +1611,73 @@ pipeline_doc: PASS — unchanged
 === board native exclusive timing (wall s; audits included) ===
 Nested scopes pause parents; parallel batches use launch/join wall time, never summed worker spans.
 Scope: pipeline entry through build-ledger publication; excludes final summary publications and caller/process setup. Mixed stages remain mixed; not a generation-only total.
-pipeline_setup_and_other: 0.006237
-inputs: 0.006335
-authoring_audit: 9.510410
-authoring_guard_reporting_and_recheck: 0.000990
-input_factory_generation_and_ir_conversion: 0.275220
-input_circuit_validation: 0.004564
-input_publication: 0.007511
-board_definition: 0.058832
-subsystem_structure: 0.199807
-carrier_structure: 0.006580
-sheet_prepare_other: 0.002757
-sheet_electrical_validation: 0.001377
-sheet_place_route_with_internal_checks: 0.044318
-sheet_cc_validation: 0.003665
-sheet_emit_and_publish: 0.022531
-sheet_visual_validation: 0.007787
-sheet_parallel_checks_and_render_wall: 13.302299
-symbol_law: 0.000293
-link: 0.001570
-constraints: 0.000871
-diagram: 0.001149
-board_schematic: 3.937519
-bom_footprints: 0.000326
-power_tree: 0.002106
-rail_ampacity: 0.000328
-testpoints: 0.000401
-design_rules: 0.000995
-part_rules: 0.000996
-bom_values: 0.000868
-footprint_pads: 0.005908
-pin_completeness: 0.000584
-spice: 0.160906
-pcb: 0.018032
-pcb_input_loading_and_netlist_validation: 1.088242
-pcb_build_model_with_internal_checks: 1.206279
-pcb_layout_squeeze: 328.250021
-pcb_render: 0.012733
-placement_requirements: 0.001408
-pcb_drc: 1.721337
-pcb_geometry: 0.031135
-testpoint_map: 0.000311
-decoupling_report: 0.001323
-assembly: 0.120940
-ratsnest_images: 0.204613
-thermal: 0.013944
-copper_debt: 0.035156
-order_files: 0.002727
-fab_profile: 0.016255
-stage_movement: 0.000003
-xdc: 1.454798
-power_sequence: 0.001124
-floorplan: 0.000434
-model3d: 3.360634
-render3d: 24.161248
-gallery: 0.000882
-si: 0.000940
-i2c_bus_map: 0.000774
-module_pin_map: 1.454189
-connector_pinout: 0.000595
-bom_ratings: 0.000572
-manifest: 0.026523
-golden: 0.784305
-contract_coverage_lint: 0.000967
-fallbacks: 0.000559
-ledger_import: 0.001169
-quantize_census: 0.000784
-source_audit: 201.177061
-pipeline_doc: 0.001221
-MEASURED SCOPE TOTAL (not process wall): 592.729279
+pipeline_setup_and_other: 0.004436
+inputs: 0.004139
+authoring_audit: 6.758797
+authoring_guard_reporting_and_recheck: 0.000716
+input_factory_generation_and_ir_conversion: 0.183372
+input_circuit_validation: 0.001968
+input_publication: 0.006961
+board_definition: 0.041374
+subsystem_structure: 0.134608
+carrier_structure: 0.004512
+sheet_prepare_other: 0.002610
+sheet_electrical_validation: 0.000966
+sheet_place_route_with_internal_checks: 0.028732
+sheet_cc_validation: 0.002383
+sheet_emit_and_publish: 0.014901
+sheet_visual_validation: 0.005121
+sheet_parallel_checks_and_render_wall: 8.994552
+symbol_law: 0.000238
+link: 0.001082
+constraints: 0.000573
+diagram: 0.000802
+board_schematic: 2.789941
+bom_footprints: 0.000344
+power_tree: 0.001476
+rail_ampacity: 0.000362
+testpoints: 0.000272
+design_rules: 0.000693
+part_rules: 0.000737
+bom_values: 0.000936
+footprint_pads: 0.004713
+pin_completeness: 0.000525
+spice: 0.104435
+pcb: 0.012737
+pcb_input_loading_and_netlist_validation: 0.756529
+pcb_build_model_with_internal_checks: 0.812121
+pcb_layout_squeeze: 234.820598
+pcb_render: 0.008281
+placement_requirements: 0.001047
+pcb_drc: 1.391107
+pcb_geometry: 0.033181
+testpoint_map: 0.000229
+decoupling_report: 0.000761
+assembly: 0.085685
+ratsnest_images: 0.144042
+thermal: 0.009624
+copper_debt: 0.030643
+order_files: 0.002272
+fab_profile: 0.010721
+stage_movement: 0.000002
+xdc: 1.031297
+power_sequence: 0.000859
+floorplan: 0.000340
+model3d: 2.285818
+render3d: 16.900076
+gallery: 0.000541
+si: 0.000863
+i2c_bus_map: 0.000408
+module_pin_map: 0.953805
+connector_pinout: 0.000418
+bom_ratings: 0.000409
+manifest: 0.026860
+golden: 0.519327
+contract_coverage_lint: 0.002642
+fallbacks: 0.000560
+ledger_import: 0.000760
+quantize_census: 0.000327
+source_audit: 139.827076
+pipeline_doc: 0.001165
+MEASURED SCOPE TOTAL (not process wall): 418.770409
 BOARD: PASS (12 sheets)

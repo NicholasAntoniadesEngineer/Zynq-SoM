@@ -104,7 +104,7 @@ STEP   floorplan.sizing
   CALC   side_census                    = 5             blocks     <- n_blocks=5 n_two_face=0 n_chose_bottom=0 n_single_face=5  ::  n_blocks = n_two_face + n_single_face
   CALC   sizing_winner                  = 98x96         mm         <- board_w=98 board_h=96 area=9408 est_cross=1675.5 budget=2327.9 headroom=652.4 plan=conservative  ::  headroom = budget - est_cross
 STEP   gates
-  CALC   law5_airwire_measured          = 1247.2        mm         <- cross_mm=1247.2 budget_mm=1464.2 headroom_mm=217 n_cross=100 n_subsystems=7 board_w=82.75 board_h=58.75  ::  budget_mm = cross_k * (board_w * board_h) ** 0.5 * n_subsystems
+  CALC   law5_airwire_measured          = 1223.9        mm         <- cross_mm=1223.9 budget_mm=1604.6 headroom_mm=380.7 n_cross=101 n_subsystems=7 board_w=67.5 board_h=86.5  ::  budget_mm = cross_k * (board_w * board_h) ** 0.5 * n_subsystems
   CALC   fanout_d13_gate                = 16            subjects   <- n_subjects=16 n_starved=0 baseline=0  ::  starved = clearance < intelligent_need(pins) - touch_eps
 STEP   census
   CALC   quantize_engagement[breathe_forward_steps] = 80            calls      <- klass=pre-proof value=int(distance / step) + 1  ::  count of calls that ran this registered transform

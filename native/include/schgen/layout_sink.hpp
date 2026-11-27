@@ -44,6 +44,7 @@ struct OrderReport {
 
 std::vector<Point> seat_ring(Nm pitch, Nm reach, Point preferred);
 bool steps_aside(Kernel& kernel, std::size_t part, const std::vector<Point>& offsets);
+bool takes_seat(Kernel& kernel, std::size_t guest, const Pose& seat, const std::vector<Point>& aside);
 bool may_sink(const Problem& problem, const Placement& placement, std::size_t part);
 bool crowds_escape(const Problem& problem, const Placement& placement, std::size_t part, const Pose& pose);
 bool sink_part(Kernel& kernel, std::size_t part, const std::vector<Point>& offsets);

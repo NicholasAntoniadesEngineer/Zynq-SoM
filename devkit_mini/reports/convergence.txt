@@ -1,5 +1,22 @@
-CONVERGENCE: 0 breaches of staged rules (connector spacing, plug paths, face pairs, protection orders) handed over by the placer; 0 repair steps kept of 0 tried; 0 left
+CONVERGENCE: 0 breaches of staged rules (connector spacing, plug paths, face pairs, protection orders) handed over by the placer; 17 repair steps kept of 17 tried; 0 left
 level | rule | subject | action | breaches before>after | kept
+2 | test point on SDIO_CLK | TP1001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on SDIO_CMD | TP1002 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on VBUS_OUT_EN | TP1003 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on ZYNQ_PS_UART0_TXD | TP11001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on ZYNQ_PS_UART0_RXD | TP11002 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +VBUS_IN | TP3001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +VIN | TP3002 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +5V | TP4001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +3V3 | TP4002 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +1V8 | TP4003 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on EN_5V0 | TP4005 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on EN_3V3 | TP4006 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on EN_1V8 | TP4007 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +3V3_SC | TP5001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on STM32_I2C2_SCL | TP5002 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on STM32_I2C2_SDA | TP5003 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +5V_SOM | TP6001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
 ILLEGAL handed over: (0)
 ILLEGAL after connector separation: (0)
 ILLEGAL after repair: (0)

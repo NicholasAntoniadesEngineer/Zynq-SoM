@@ -12,13 +12,13 @@ axes searched: A1 edge assignment of derived edge sheets, A7 arrangement finalis
   constant plan_skips = 4: most arrangement finalists a seed skips: one per board side
 seed | reuses | edge choices | plan skip | order | reached | outline mm | correct | airwire mm | first finding
 0 | - | first | 0 | 0 | S2 | - | no | - | -
-1 | - | camera#1,hdmi_tx#1,lcd#2,motor_sense#1,pd_input#2,pmod#2,pmod_expansion#1,usb_jtag_connector#3,usb_uart_connector#1,usbc_otg#1 | 1 | 23 | S3 | 120.75 x 129.5 | yes | 21801.353300 | -
-2 | - | camera#3,lcd#2,microsd#1,motor_sense#1,pd_input#3,pmod#1,pmod_expansion#3,usb_uart_connector#1 | 0 | 0 | S3 | 160 x 97.5 | yes | 21576.623000 | -
+1 | - | camera#1,hdmi_tx#1,lcd#2,motor_sense#1,pd_input#2,pmod#2,pmod_expansion#1,usb_jtag_connector#3,usb_uart_connector#1,usbc_otg#1 | 1 | 23 | S3 | 121.5 x 134.5 | yes | 20881.440000 | -
+2 | - | camera#3,lcd#2,microsd#1,motor_sense#1,pd_input#3,pmod#1,pmod_expansion#3,usb_uart_connector#1 | 0 | 0 | S3 | 165.25 x 102.75 | yes | 20927.954200 | -
 3 | - | hdmi_rx#1,lcd#1,pd_input#2,pmod#2,pmod_expansion#2,usb_jtag_connector#1,usb_uart_connector#3 | 1 | 0 | S2 | - | no | - | -
 4 | - | camera#3,hdmi_rx#1,hdmi_tx#3,lcd#3,pd_input#3,pmod#1,pmod_expansion#2,usb_jtag_connector#2,usbc_otg#3 | 1 | 17 | S2 | - | no | - | -
 5 | - | hdmi_rx#3,lcd#2,microsd#2,pd_input#1,pmod_expansion#1,usb_jtag_connector#1,usb_uart_connector#2,usbc_otg#2 | 1 | 4 | S2 | - | no | - | -
-6 | - | camera#2,hdmi_rx#1,lcd#3,microsd#2,motor_sense#1,pd_input#3,pmod#1,pmod_expansion#1,usb_jtag_connector#3,usb_uart_connector#2,usbc_otg#2 | 2 | 22 | S3 | 146 x 101.5 | yes | 22893.833300 | -
-7 | - | hdmi_rx#2,hdmi_tx#3,microsd#2,motor_sense#1,pmod#3 | 3 | 22 | S3 | 150 x 119.75 | yes | 22480.526400 | -
+6 | - | camera#2,hdmi_rx#1,lcd#3,microsd#2,motor_sense#1,pd_input#3,pmod#1,pmod_expansion#1,usb_jtag_connector#3,usb_uart_connector#2,usbc_otg#2 | 2 | 22 | S3 | 154.75 x 103.75 | yes | 23212.542100 | -
+7 | - | hdmi_rx#2,hdmi_tx#3,microsd#2,motor_sense#1,pmod#3 | 3 | 22 | S3 | 126.25 x 132.25 | yes | 19605.846000 | -
 CHOSEN seed 6 by objective among the first batch laid out
-SWEEP: pass rate 4/4; area best 14819 median 15600 worst 17962.5 mm2; spread 0.0527026; FRAGILE against pass rate 0.8 and spread 0.05 (integrator's decision 2026-11-21; revisit after the first sweeps on three boards)
+SWEEP: pass rate 4/4; area best 16055.3 median 16341.8 worst 16979.4 mm2; spread 0.0178407; HANDLED against pass rate 0.8 and spread 0.05 (integrator's decision 2026-11-21; revisit after the first sweeps on three boards)
 
