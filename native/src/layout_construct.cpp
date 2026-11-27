@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <deque>
+#include <sstream>
 #include <functional>
 #include <map>
 #include <optional>
@@ -384,7 +385,13 @@ ConstructReport construct_owned(Kernel& kernel, Nm pitch, Nm reach, bool arrange
             const bool flips = problem.footprints[item.footprint].flippable && !item.top_only;
             bool built = false;
             scope = &inside;
-            const auto attempt = [&](std::size_t budget) {
+            std::optional<Box> held;
+            for (std::size_t mate = 0; mate < count; ++mate) {
+                if (inside[mate] || kernel.parked(mate) || problem.parts[mate].group != item.group) continue;
+                const Box box = gate_at(problem, mate, kernel.placement()[mate]);
+                held = held ? united(*held, box) : box;
+            }
+            const auto attempt = [&](std::size_t budget, const std::optional<Box>& within) {
                 std::size_t tried = 0;
                 for (std::size_t rank = 0; tried < budget && rank < sweep.size(); ++rank) {
                     const Point at = shifted(snapped, sweep[rank]);
@@ -394,6 +401,7 @@ ConstructReport construct_owned(Kernel& kernel, Nm pitch, Nm reach, bool arrange
                         if (face != original[root].face && !flips) continue;
                         for (int turn = 0; turn < turn_count; ++turn) {
                             const Pose pose{at, static_cast<Turn>(turn), face};
+                            if (within && !layout::inside(gate_at(problem, root, pose), *within)) continue;
                             if (face == Face::bottom && crowds_escape(problem, kernel.placement(), root, pose)) continue;
                             if (!kernel.seat(root, pose)) continue;
                             legal = true;
@@ -413,7 +421,8 @@ ConstructReport construct_owned(Kernel& kernel, Nm pitch, Nm reach, bool arrange
                 }
                 return false;
             };
-            built = attempt(static_cast<std::size_t>(constants::construct_trials.value));
+            built = (held && attempt(static_cast<std::size_t>(constants::construct_trials.value), held)) ||
+                    attempt(static_cast<std::size_t>(constants::construct_trials.value), std::nullopt);
             scope = nullptr;
             if (built) {
                 ++report.arranged;
@@ -432,6 +441,30 @@ ConstructReport construct_owned(Kernel& kernel, Nm pitch, Nm reach, bool arrange
                                                        (refused->other < count ? problem.parts[refused->other].reference : std::string("the board"))
                                                  : std::string("nothing")) +
                                         "; no seat on the board at the sweep pitch");
+                if (refused && refused->kind == Breach::dispersion) {
+                    std::optional<Box> hull;
+                    double total = 0;
+                    std::array<std::size_t, edge_count> extreme{root, root, root, root};
+                    for (std::size_t mate = 0; mate < count; ++mate) {
+                        if (mate == root || kernel.parked(mate) || problem.parts[mate].group != item.group) continue;
+                        const Box box = gate_at(problem, mate, kernel.placement()[mate]);
+                        total += static_cast<double>(box.width()) * static_cast<double>(box.height());
+                        if (!hull || box.y0 < hull->y0) extreme[0] = mate;
+                        if (!hull || box.y1 > hull->y1) extreme[1] = mate;
+                        if (!hull || box.x0 < hull->x0) extreme[2] = mate;
+                        if (!hull || box.x1 > hull->x1) extreme[3] = mate;
+                        hull = hull ? united(*hull, box) : box;
+                    }
+                    if (hull) {
+                        std::ostringstream line;
+                        line << item.reference << ": subsystem " << item.group << " already spans " << to_mm(hull->width()) << " x "
+                             << to_mm(hull->height()) << " mm for " << total / (constants::nano_scale.value * constants::nano_scale.value)
+                             << " mm2 of parts, limit " << problem.rules.dispersion_limit << " times that; outermost parts north "
+                             << problem.parts[extreme[0]].reference << ", south " << problem.parts[extreme[1]].reference << ", west "
+                             << problem.parts[extreme[2]].reference << ", east " << problem.parts[extreme[3]].reference;
+                        report.causes.push_back(line.str());
+                    }
+                }
                 continue;
             }
             queue.assign(members[root].begin(), members[root].end());
