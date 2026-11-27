@@ -410,6 +410,27 @@ LayReport lay_out(Kernel& kernel) {
         }
         clusters.push_back(std::move(cluster));
     }
+    for (bool changed = true; changed;) {
+        changed = false;
+        std::vector<int> home(problem.parts.size(), -1);
+        for (std::size_t index = 0; index < clusters.size(); ++index)
+            for (const std::size_t part : clusters[index].members) home[part] = static_cast<int>(index);
+        std::vector<char> satellite(clusters.size(), 0);
+        const auto bound_to = [&](std::size_t anchor, std::size_t member) {
+            if (home[member] >= 0 && home[anchor] < 0 && !kernel.parked(anchor)) satellite[static_cast<std::size_t>(home[member])] = 1;
+        };
+        for (const PadGap& rule : problem.constraints.pad_gaps) bound_to(rule.anchor, rule.member);
+        for (const PadGap& rule : problem.constraints.soft_gaps) bound_to(rule.anchor, rule.member);
+        for (const NearestGap& rule : problem.constraints.nearest_gaps)
+            for (const std::size_t member : rule.members) bound_to(rule.anchor, member);
+        for (const NetOrder& rule : problem.constraints.net_orders) bound_to(rule.anchor, rule.lead);
+        std::vector<Cluster> kept;
+        for (std::size_t index = 0; index < clusters.size(); ++index) {
+            if (satellite[index]) changed = true;
+            else kept.push_back(std::move(clusters[index]));
+        }
+        clusters = std::move(kept);
+    }
     report.routed_before = kernel.routed_length();
     report.pulled_before = kernel.pulled_length();
     report.clusters = clusters.size();
@@ -492,7 +513,8 @@ LayReport lay_out(Kernel& kernel) {
             const Point at = kernel.placement()[*tied_to[index]].at;
             want = {static_cast<double>(at.x), static_cast<double>(at.y), want.pull};
         }
-        const std::vector<Option> options = options_of(kernel, block, pitch);
+        std::vector<Option> options = options_of(kernel, block, pitch);
+        if (std::any_of(block.members.begin(), block.members.end(), [&](std::size_t part) { return !problem.parts[part].via_sites.empty(); })) options.resize(1);
         struct Try {
             double away = 0;
             std::size_t option = 0;
