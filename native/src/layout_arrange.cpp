@@ -398,11 +398,12 @@ LayReport lay_out(Kernel& kernel) {
     LayReport report;
     const Problem& problem = kernel.problem();
     const Snapshot start = kernel.snapshot();
+    std::vector<char> tapped(problem.parts.size(), 0);
+    for (const Tap& rule : problem.constraints.taps) tapped[rule.part] = 1;
     std::vector<Cluster> clusters;
     for (Cluster& cluster : clusters_of(kernel)) {
         if (!std::all_of(cluster.members.begin(), cluster.members.end(), [&](std::size_t part) { return kernel.releasable(part); })) continue;
-        if (std::all_of(cluster.members.begin(), cluster.members.end(),
-                        [&](std::size_t part) { return problem.parts[part].part_class == PartClass::test_point; })) {
+        if (std::all_of(cluster.members.begin(), cluster.members.end(), [&](std::size_t part) { return tapped[part] != 0; })) {
             for (const std::size_t part : cluster.members) kernel.park(part);
             report.deferred += cluster.members.size();
             continue;
