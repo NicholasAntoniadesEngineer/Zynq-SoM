@@ -168,6 +168,8 @@ public:
         if (known != drill_.end()) return known->second;
         const Item probe = via(board_, net_, point(cell));
         bool free = within(probe.shape, board_.outline, board_.rules.edge_clearance);
+        for (std::size_t layer = probe.first; free && layer <= probe.last; ++layer)
+            if (toll({cell.column, cell.row, layer}) > 0) free = false;
         if (free) {
             const std::vector<std::size_t> found = world_.conflicts(probe);
             free = found.empty();
