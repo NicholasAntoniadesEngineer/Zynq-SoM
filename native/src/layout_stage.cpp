@@ -1058,7 +1058,7 @@ StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model
         if (!why.empty()) throw LayoutError("layout: test points lost their net when other parts moved and have no seat within the stub limit" + why);
         return squeeze_best(kernel, settings);
     };
-    if (inputs.floorplan.project.draw) {
+    if (inputs.floorplan.project.plan) {
         result.lay = lay_out(kernel);
         seat_taps(kernel, settings);
         result.draw = draw_in(kernel);
