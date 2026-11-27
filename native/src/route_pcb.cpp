@@ -131,7 +131,11 @@ Board board_from_pcb(const Sexpr& pcb, const JsonNode& project, ReadNotes* notes
                 if (board.rules.vias[via_index].pad == kind.pad && board.rules.vias[via_index].drill == kind.drill) break;
             if (via_index == board.rules.vias.size()) board.rules.vias.push_back(kind);
             class_of.emplace(name, board.rules.classes.size());
-            board.rules.classes.push_back({name, length(entry, "track_width", "net class " + name), length(entry, "clearance", "net class " + name), via_index});
+            board.rules.classes.push_back({name, length(entry, "track_width", "net class " + name), length(entry, "clearance", "net class " + name), via_index, 0, 0});
+            if (object_field(entry, "diff_pair_width") && object_field(entry, "diff_pair_gap")) {
+                board.rules.classes.back().pair_width = length(entry, "diff_pair_width", "net class " + name);
+                board.rules.classes.back().pair_gap = length(entry, "diff_pair_gap", "net class " + name);
+            }
         }
     if (!class_of.count(default_class)) throw RouteError("route: the project file has no Default net class");
     if (const JsonNode* patterns = object_field(settings, "netclass_patterns"))

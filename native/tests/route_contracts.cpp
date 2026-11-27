@@ -1,6 +1,7 @@
 #include "schgen/route_board.hpp"
 #include "schgen/route_bridge.hpp"
 #include "schgen/route_check.hpp"
+#include "schgen/route_pair.hpp"
 #include "schgen/route_run.hpp"
 
 #include <algorithm>
@@ -19,6 +20,7 @@ constexpr Nm via_pad = 9 * unit / 20, via_drill = unit / 5;
 constexpr Nm edge = 3 * unit / 10, hole_clear = unit / 5, hole_space = 9 * unit / 20;
 constexpr Box outline{0, 0, 40 * unit, 30 * unit};
 constexpr Nm wall_inset = unit;
+constexpr Nm pair_width = 3 * unit / 20, pair_gap = unit / 5, pair_slack = unit / 100;
 constexpr std::size_t six = 6, twelve = 12, thirteen = 13, plane_layer = 1;
 constexpr int first_net = 0, second_net = 1, ground = 2;
 constexpr Point left{5 * unit, 10 * unit}, right{25 * unit, 10 * unit};
@@ -272,6 +274,30 @@ void board_file_is_the_input() {
     refuses([&] { board_from_pcb(schgen::sexpr_loads("(kicad_pcb (net 1 \"A\"))"), schgen::parse_json_text(sample_project)); }, "a board file without layers is refused");
 }
 
+void pairs_run_coupled() {
+    using namespace fixture;
+    Board board = board_of(2);
+    board.rules.classes.push_back({"pair", pair_width, clearance, 0, pair_width, pair_gap});
+    board.nets = {{"D_P", 1}, {"D_N", 1}, {"OTHER", 0}};
+    const Nm pitch = unit;
+    board.fixed = {pad(0, {5 * unit, 10 * unit}, "A.1"), pad(1, {5 * unit, 10 * unit + pitch}, "A.2"), pad(0, {30 * unit, 20 * unit}, "B.1"),
+                   pad(1, {30 * unit, 20 * unit + pitch}, "B.2"), pad(2, {17 * unit, 5 * unit}, "C.1"), pad(2, {17 * unit, 25 * unit}, "D.1")};
+    World world(board);
+    const RunReport run = route_all(world, RunSetup{});
+    const CheckReport judged = verify(board, world.routed());
+    require(run.pairs == 1 && run.coupled_pairs == 1 && run.complete() && judged.ok(), "a pair is routed coupled and the board completes: " + run.summary(board) + judged.summary());
+    std::size_t beside = 0;
+    for (const Item& one : world.routed())
+        for (const Item& other : world.routed())
+            if (one.net == 0 && other.net == 1 && one.shape.count == 2 && other.shape.count == 2 && apart(one.shape, other.shape, pair_gap - pair_slack) &&
+                !apart(one.shape, other.shape, pair_gap + pair_slack))
+                ++beside;
+    require(beside >= 1, "the two tracks of the coupled run keep the stated gap");
+    require(run.coupled_length > run.breakout_length, "most of the pair's length is coupled");
+    require(pair_partner("USB_D+") == std::optional<std::string>("USB_D-") && pair_partner("CLK_N") == std::optional<std::string>("CLK_P") && !pair_partner("RESET"),
+            "pair partners follow the KiCad suffixes");
+}
+
 }
 
 int main() {
@@ -282,6 +308,7 @@ int main() {
         verifier_finds_every_fault();
         router_joins_a_board();
         board_file_is_the_input();
+        pairs_run_coupled();
         std::cout << "route contracts: " << checks << " checks passed\n";
         return 0;
     } catch (const std::exception& error) {

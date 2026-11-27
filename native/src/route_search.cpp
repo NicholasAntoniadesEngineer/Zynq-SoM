@@ -93,7 +93,13 @@ public:
         necks_.push_back({bound, std::max(wide, board_.rules.least_track) / 2});
     }
 
+    void as_spine(int partner, Nm half) {
+        partner_ = partner;
+        spine_half_ = half;
+    }
+
     Nm half_at(const Cell& cell) const {
+        if (spine_half_ > 0) return spine_half_;
         const Point at = point(cell);
         Nm half = half_;
         for (const auto& [bound, narrow] : necks_) {
@@ -143,7 +149,9 @@ public:
         if (free) {
             if (!within(probe.shape, board_.outline, board_.rules.edge_clearance)) free = false;
             else {
-                const std::vector<std::size_t> found = world_.conflicts(probe);
+                std::vector<std::size_t> found = world_.conflicts(probe);
+                if (partner_ != no_net)
+                    found.erase(std::remove_if(found.begin(), found.end(), [&](std::size_t id) { return world_.item(id).net == partner_; }), found.end());
                 free = found.empty();
                 for (const std::size_t id : found) blockers_.insert(id);
                 if (!free && soft(found)) {
@@ -234,7 +242,7 @@ public:
                 if (!goal(cell) && !open_cell(cell)) continue;
                 relax(cell, heading, here.cost + (heading % 2 == 0 ? straight : diagonal) + bend * turn_ + toll(cell) + crossing(cell));
             }
-            if (drop || here.cell.layer < low || here.cell.layer > high || !via_fits(here.cell)) continue;
+            if (drop || spine_half_ > 0 || here.cell.layer < low || here.cell.layer > high || !via_fits(here.cell)) continue;
             for (std::size_t layer = low; layer <= high; ++layer) {
                 if (layer == here.cell.layer || board_.rules.layers[layer].kind == LayerKind::plane) continue;
                 const Cell cell{here.cell.column, here.cell.row, layer};
@@ -321,7 +329,8 @@ private:
     const SearchSetup& setup_;
     int net_;
     const Board& board_;
-    Nm half_ = 0, sag_ = 0;
+    Nm half_ = 0, sag_ = 0, spine_half_ = 0;
+    int partner_ = no_net;
     std::vector<std::pair<Box, Nm>> necks_;
     std::int64_t turn_ = 0, via_ = 0, greed_ = 0, cross_ = 0;
     Box window_;
@@ -395,6 +404,41 @@ SearchResult checked(const World& world, const SearchSetup& setup, int net, cons
     return guarded;
 }
 
+}
+
+SearchResult find_spine(const World& world, const SearchSetup& setup, int net, int partner, Nm half, std::size_t layer, Point from, Point to, Nm reach) {
+    Search engine(world, setup, net, true);
+    engine.as_spine(partner, half);
+    const Box span{std::min(from.x, to.x), std::min(from.y, to.y), std::max(from.x, to.x), std::max(from.y, to.y)};
+    const auto near = [&](Point centre) {
+        std::vector<Cell> cells;
+        const Box& outline = engine.outline();
+        for (Nm x = centre.x - reach; x <= centre.x + reach; x += setup.pitch)
+            for (Nm y = centre.y - reach; y <= centre.y + reach; y += setup.pitch) {
+                const Cell cell{(x - outline.x0) / setup.pitch, (y - outline.y0) / setup.pitch, layer};
+                const Point at = engine.point(cell);
+                if (length_of(at, centre) <= static_cast<double>(reach) && engine.open_cell(cell)) cells.push_back(cell);
+            }
+        return cells;
+    };
+    Nm margin = setup.margin + reach;
+    for (;;) {
+        const Box window = grown_within(span, margin, engine.outline());
+        engine.set_window(window);
+        const std::vector<Cell> starts = near(from), ends = near(to);
+        if (starts.empty() || ends.empty()) return engine.result(std::nullopt);
+        std::unordered_set<Key> wanted;
+        for (const Cell& cell : ends) wanted.insert(cell_key(cell));
+        const auto goal = [&](const Cell& cell) { return wanted.count(cell_key(cell)) != 0; };
+        const auto estimate = [&](const Cell& cell) -> std::int64_t {
+            const Point at = engine.point(cell);
+            const std::int64_t dx = std::max<Nm>(std::abs(at.x - to.x) - reach, 0) / setup.pitch, dy = std::max<Nm>(std::abs(at.y - to.y) - reach, 0) / setup.pitch;
+            return straight * std::max(dx, dy) + (diagonal - straight) * std::min(dx, dy);
+        };
+        if (const auto end = engine.run(starts, goal, estimate, false)) return engine.result(engine.trace(*end, false));
+        if (engine.exhausted() || covers(window, engine.outline())) return engine.result(std::nullopt);
+        margin *= static_cast<Nm>(constants::search_growth.value);
+    }
 }
 
 SearchResult find_path(const World& world, const SearchSetup& setup, int net, const std::vector<std::size_t>& sources, const std::vector<std::size_t>& goals) {

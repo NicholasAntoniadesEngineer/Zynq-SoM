@@ -44,6 +44,7 @@ struct NetClass {
     std::string name;
     Nm track = 0, clearance = 0;
     std::size_t via = 0;
+    Nm pair_width = 0, pair_gap = 0;
 };
 
 struct Net {

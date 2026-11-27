@@ -44,6 +44,9 @@ struct RunReport {
     std::vector<NetOutcome> nets;
     std::size_t links = 0, joined = 0, vias = 0, passes = 0, opened = 0, ripped = 0, first_joined = 0, stubs = 0, tidied = 0;
     double tidy_saved = 0;
+    std::size_t pairs = 0, coupled_pairs = 0;
+    double coupled_length = 0, breakout_length = 0;
+    std::vector<std::string> loose_pairs;
     double length = 0;
     std::vector<std::size_t> pass_failures;
     bool complete() const { return links == joined; }

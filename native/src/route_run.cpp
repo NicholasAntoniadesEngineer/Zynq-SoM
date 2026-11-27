@@ -1,5 +1,7 @@
 #include "schgen/route_run.hpp"
 
+#include "schgen/route_pair.hpp"
+
 #include <algorithm>
 #include <cmath>
 #include <map>
@@ -102,6 +104,7 @@ struct State {
     std::vector<int> walls;
     std::size_t rips = 0;
     std::vector<std::vector<std::size_t>> stubs;
+    bool coupled = false;
 };
 
 void note_walls(const World& world, const std::vector<std::size_t>& blockers, std::size_t fixed, int self, std::map<int, std::size_t>& tally) {
@@ -110,6 +113,7 @@ void note_walls(const World& world, const std::vector<std::size_t>& blockers, st
 }
 
 void route_state(World& world, const RunSetup& setup, State& state, std::size_t fixed, std::size_t& opened) {
+    if (state.coupled) return;
     const Job& job = state.job;
     std::map<int, std::size_t> tally;
     std::vector<int> crossers;
@@ -280,6 +284,7 @@ std::size_t lay_stubs(World& world, std::vector<State>& states, std::vector<Lane
 }
 
 void lift(World& world, State& state) {
+    if (state.coupled) return;
     for (const std::size_t id : state.items) world.remove(id);
     state.items.clear();
     if (!state.job.plane) state.outcome.joined = 0;
@@ -301,6 +306,42 @@ RunReport route_all(World& world, const RunSetup& stated) {
     RunReport report;
     RunSetup setup = stated;
     report.stubs = lay_stubs(world, states, setup.search.lanes);
+    std::map<std::string, std::size_t> by_name;
+    for (std::size_t index = 0; index < states.size(); ++index) by_name[board.nets[static_cast<std::size_t>(states[index].job.net)].name] = index;
+    for (std::size_t index = 0; index < states.size(); ++index) {
+        State& one = states[index];
+        const NetClass& entry = board.rules.classes[board.nets[static_cast<std::size_t>(one.job.net)].net_class];
+        if (one.job.plane || one.coupled || entry.pair_width <= 0 || one.job.terminals.size() != 2) continue;
+        const auto partner = pair_partner(board.nets[static_cast<std::size_t>(one.job.net)].name);
+        const auto found = partner ? by_name.find(*partner) : by_name.end();
+        if (found == by_name.end() || found->second < index) continue;
+        State& two = states[found->second];
+        if (two.job.plane || two.job.terminals.size() != 2 || board.nets[static_cast<std::size_t>(two.job.net)].net_class != board.nets[static_cast<std::size_t>(one.job.net)].net_class) continue;
+        ++report.pairs;
+        const std::size_t near = length_of(one.job.terminals[0].centre, two.job.terminals[0].centre) <= length_of(one.job.terminals[0].centre, two.job.terminals[1].centre) ? 0 : 1;
+        const auto with_stubs = [](const State& state, std::size_t terminal) {
+            std::vector<std::size_t> items = state.job.terminals[terminal].items;
+            items.insert(items.end(), state.stubs[terminal].begin(), state.stubs[terminal].end());
+            return items;
+        };
+        const PairResult made = route_pair(world, setup.search, one.job.net, two.job.net, {with_stubs(one, 0), with_stubs(two, near), with_stubs(one, 1), with_stubs(two, 1 - near)});
+        report.opened += made.opened;
+        if (!made.coupled) {
+            report.loose_pairs.push_back(board.nets[static_cast<std::size_t>(one.job.net)].name + ": " + made.why);
+            continue;
+        }
+        ++report.coupled_pairs;
+        report.coupled_length += made.coupled_length;
+        report.breakout_length += made.loose_length;
+        for (const auto& [state, items] : {std::make_pair(&one, &made.first_items), std::make_pair(&two, &made.second_items)}) {
+            state->coupled = true;
+            state->items = *items;
+            state->outcome.net = state->job.net;
+            state->outcome.links = 1;
+            state->outcome.joined = 1;
+            state->outcome.length = made.coupled_length + made.loose_length / 2;
+        }
+    }
     const std::size_t fixed = world.size();
     for (State& state : states) route_state(world, setup, state, fixed, report.opened);
     const auto joined_now = [&] {
@@ -320,7 +361,9 @@ RunReport route_all(World& world, const RunSetup& stated) {
             std::vector<std::size_t> pulled;
             for (const int net : states[failed].walls) {
                 const auto found = index_of.find(net);
-                if (found == index_of.end() || states[found->second].job.plane || states[found->second].rips >= static_cast<std::size_t>(constants::rip_cap.value)) continue;
+                if (found == index_of.end() || states[found->second].job.plane || states[found->second].coupled ||
+                    states[found->second].rips >= static_cast<std::size_t>(constants::rip_cap.value))
+                    continue;
                 pulled.push_back(found->second);
                 if (pulled.size() == static_cast<std::size_t>(constants::rip_nets.value)) break;
             }
@@ -356,7 +399,7 @@ RunReport route_all(World& world, const RunSetup& stated) {
     for (std::size_t round = 0; round < static_cast<std::size_t>(constants::tidy_rounds.value); ++round) {
         std::size_t better = 0;
         for (State& state : states) {
-            if (state.job.plane || state.outcome.joined != state.outcome.links || state.items.empty()) continue;
+            if (state.job.plane || state.coupled || state.outcome.joined != state.outcome.links || state.items.empty()) continue;
             const std::size_t mark = world.mark();
             const State before = state;
             lift(world, state);
@@ -390,6 +433,10 @@ std::string RunReport::summary(const Board& board) const {
                       " lattice points opened\n  open nets at the start of each round:";
     for (const std::size_t count : pass_failures) out += " " + std::to_string(count);
     out += "\n";
+    out += "  differential pairs: " + std::to_string(coupled_pairs) + " of " + std::to_string(pairs) + " routed as coupled pairs, " +
+           std::to_string(static_cast<long long>(std::llround(coupled_length / 1e6))) + " mm coupled and " +
+           std::to_string(static_cast<long long>(std::llround(breakout_length / 1e6))) + " mm of breakout\n";
+    for (const std::string& row : loose_pairs) out += "    routed as two single tracks: " + row + "\n";
     out += "  nets made shorter or given fewer vias when routed again alone: " + std::to_string(tidied) + ", saving the equal of " +
            std::to_string(static_cast<long long>(std::llround(tidy_saved / 1e6))) + " mm\n";
     std::size_t necked = 0;
