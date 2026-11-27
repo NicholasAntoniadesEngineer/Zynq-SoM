@@ -1,4 +1,5 @@
 #include "schgen/layout_adapter.hpp"
+#include "schgen/layout_kernel.hpp"
 
 #include "schgen/board_schematic.hpp"
 
@@ -760,7 +761,7 @@ ModelBinding bind_model(const PcbModel& model, const PcbEmitPolicy& policy, cons
         part.top_only = (controlled && !board_stackup().ground_referenced(true)) || presents_on_top(part_class) ||
                         (face == Face::top && drilled);
         part.core_exempt = module_clearance_exempt(instance);
-        part.cohesion_member = !part.core_exempt && !instance.at_module;
+        part.cohesion_member = !part.core_exempt && !instance.at_module && part_class != PartClass::test_point;
         part.fixed = part.core_exempt || mezzanine;
         part.module = mezzanine;
         if (corner_mark(part_class))
@@ -785,6 +786,15 @@ ModelBinding bind_model(const PcbModel& model, const PcbEmitPolicy& policy, cons
     problem.rules.group_guard = static_cast<Nm>(constants::group_guard.value);
     mark_connectors(model, options, binding.placement, problem);
     mark_plug_paths(model, binding.placement, problem);
+    for (std::size_t part = 0; part < problem.parts.size(); ++part) {
+        if (problem.parts[part].part_class != PartClass::test_point) continue;
+        for (std::size_t pad = 0; pad < problem.parts[part].pad_nets.size(); ++pad) {
+            const int net = problem.parts[part].pad_nets[pad];
+            if (net == no_net || problem.nets[static_cast<std::size_t>(net)].category == Category::plane) continue;
+            problem.constraints.taps.push_back({part, pad, net, to_nm(constants::tap_reach.value),
+                                                "test point on " + problem.nets[static_cast<std::size_t>(net)].name});
+        }
+    }
     reserve_thermal_fields(model, policy, binding.placement, problem);
     claim_via_fields(model, policy, binding.placement, problem);
     if (gates) translate_gates(model, *gates, problem);
@@ -901,6 +911,56 @@ GateVerdict judge_model(const PcbPlacementInput& inputs, const PcbModel& model) 
     return {check_fanout(input, 0).ok, check_placement_mech(input).ok, ratsnest.off_board.empty(),
             ratsnest.dispersed.empty(), check_pcb_placement_gates(inputs, model).ok(),
             spacing.ok, integrity.ok, integrity.placement_ok, placed_spacing, check_plug_paths(input, model.som_keepout).ok};
+}
+
+TestPointResult check_test_points(const PcbPlacementInput& inputs, const PcbModel& model, const PcbEmitPolicy& policy,
+                                  const AdapterOptions& options) {
+    const PcbPlacementGatePolicy gates = pcb_placement_gate_policy(inputs);
+    const ModelBinding binding = bind_model(model, policy, &gates, options);
+    const Kernel kernel(binding.problem, binding.placement);
+    TestPointResult result;
+    for (const Tap& rule : binding.problem.constraints.taps) {
+        const TapFigure figure = kernel.tap_figure(rule);
+        TestPointRow row;
+        row.reference = binding.problem.parts[rule.part].reference;
+        row.net = binding.problem.nets[static_cast<std::size_t>(rule.net)].name;
+        row.limit = to_mm(rule.limit);
+        row.rear = binding.placement[rule.part].face == Face::bottom;
+        row.allowance = to_mm(figure.allowance);
+        row.met = figure.met;
+        if (figure.stub) {
+            row.stub = *figure.stub / constants::nano_scale.value;
+            row.nearest = binding.problem.parts[figure.nearest].reference;
+        }
+        if (figure.detour) row.detour = *figure.detour / constants::nano_scale.value;
+        result.ok = result.ok && row.met;
+        result.rows.push_back(std::move(row));
+    }
+    std::stable_sort(result.rows.begin(), result.rows.end(), [](const TestPointRow& a, const TestPointRow& b) {
+        if (a.met != b.met) return !a.met;
+        return a.reference < b.reference;
+    });
+    return result;
+}
+
+std::string TestPointResult::summary() const {
+    std::ostringstream text;
+    const auto over = static_cast<std::size_t>(std::count_if(rows.begin(), rows.end(), [](const TestPointRow& row) { return !row.met; }));
+    const auto rear = static_cast<std::size_t>(std::count_if(rows.begin(), rows.end(), [](const TestPointRow& row) { return row.rear; }));
+    text << "TEST POINT GATE: " << (ok ? "PASS" : "FAIL") << "\n"
+         << "  a test point sits within its limit of another pad of its net, or adds no more than its limit to the path between two of them, on either face;\n"
+         << "  beside a module connector pin the limit counts from the edge of the area kept clear for that connector (the module on top, its escape corridor on the rear)\n"
+         << "  test points on routed nets: " << rows.size() << " (" << over << " over their limit, " << rear << " on the rear face); test points on plane nets connect by a via and are not listed\n";
+    for (const TestPointRow& row : rows) {
+        text << "    " << (row.met ? "OK   " : "OVER ") << row.reference << " (" << (row.rear ? "rear" : "top") << ") on " << row.net << ": ";
+        if (row.stub) text << "stub " << *row.stub << " mm to " << row.nearest;
+        else text << "no other pad on its net";
+        if (row.detour) text << ", detour " << *row.detour << " mm";
+        text << ", limit " << row.limit << " mm";
+        if (row.allowance > 0) text << " plus " << row.allowance << " mm to leave the module connector's keep-out";
+        text << "\n";
+    }
+    return text.str();
 }
 
 PcbModel model_with(const PcbModel& base, const ModelBinding& binding, const Placement& placement) {

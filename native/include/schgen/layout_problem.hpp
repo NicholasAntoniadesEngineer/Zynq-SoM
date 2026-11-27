@@ -175,6 +175,13 @@ struct Ownership {
     std::optional<std::size_t> owner;
 };
 
+struct Tap {
+    std::size_t part = 0, pad = 0;
+    int net = no_net;
+    Nm limit = 0;
+    std::string source;
+};
+
 struct Constraints {
     std::vector<PadGap> pad_gaps, soft_gaps;
     std::vector<NearestGap> nearest_gaps;
@@ -183,6 +190,7 @@ struct Constraints {
     std::vector<GroupGap> group_gaps;
     ConnectorRules connectors;
     std::vector<SpacingLimit> spacing_limits = {};
+    std::vector<Tap> taps = {};
 };
 
 struct PourRule {

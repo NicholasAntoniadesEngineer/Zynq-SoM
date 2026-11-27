@@ -693,7 +693,7 @@ std::vector<RepairRow> legalise_rest(Kernel& kernel, const SqueezeOptions& setti
     for (;;) {
         std::optional<Violation> next;
         for (const Violation& violation : kernel.violations())
-            if (violation.kind != Breach::connector_gap && violation.kind != Breach::plug_path &&
+            if (violation.kind != Breach::connector_gap && violation.kind != Breach::plug_path && violation.kind != Breach::stub &&
                 seen.insert({static_cast<int>(violation.kind), std::min(violation.part, violation.other),
                              std::max(violation.part, violation.other)}).second) {
                 next = violation;
@@ -726,6 +726,143 @@ std::vector<RepairRow> legalise_rest(Kernel& kernel, const SqueezeOptions& setti
             rows.push_back(row);
             if (row.kept) break;
         }
+    }
+    return rows;
+}
+
+std::vector<RepairRow> seat_taps(Kernel& kernel, const SqueezeOptions& settings) {
+    const Problem& problem = kernel.problem();
+    std::vector<RepairRow> rows;
+    const auto unmet = [&] {
+        const auto found = kernel.violations();
+        return static_cast<std::size_t>(std::count_if(found.begin(), found.end(),
+            [](const Violation& violation) { return violation.kind == Breach::stub; }));
+    };
+    for (const Tap& rule : problem.constraints.taps) {
+        const bool waiting = kernel.parked(rule.part);
+        const auto broken = [&] {
+            const auto found = kernel.violations();
+            return std::any_of(found.begin(), found.end(), [&](const Violation& violation) {
+                return violation.kind == Breach::stub && violation.part == rule.part;
+            });
+        };
+        if (!waiting && !broken()) continue;
+        const std::size_t staged = unmet_count(kernel);
+        const auto take = [&](const Pose& pose) {
+            const Snapshot held = kernel.snapshot();
+            if (!(kernel.parked(rule.part) ? kernel.seat(rule.part, pose) : kernel.move(rule.part, pose))) return false;
+            if (unmet_count(kernel) <= staged) return true;
+            kernel.restore(held);
+            return false;
+        };
+        const Pose from = kernel.placement()[rule.part];
+        const Variant& variant = problem.footprints[problem.parts[rule.part].footprint].on(from.face);
+        const Box pad = variant.pads[rule.pad].copper();
+        const Nm reach = rule.limit + kernel.tap_room(rule) + std::max(pad.width(), pad.height());
+        if (!waiting && !kernel.movable_alone(rule.part) && !kernel.release(rule.part)) continue;
+        std::vector<Point> centres;
+        for (const Pin& pin : problem.nets[static_cast<std::size_t>(rule.net)].pins) {
+            if (pin.part == rule.part || kernel.parked(pin.part) || problem.parts[pin.part].part_class == PartClass::test_point) continue;
+            const Pose mate = kernel.placement()[pin.part];
+            const Box land = placed(problem.footprints[problem.parts[pin.part].footprint].on(mate.face).pads[pin.pad].copper(), mate.at, mate.turn);
+            centres.push_back(Point{(land.x0 + land.x1) / 2 - (land.x0 + land.x1) / 2 % settings.pitch,
+                                    (land.y0 + land.y1) / 2 - (land.y0 + land.y1) / 2 % settings.pitch});
+        }
+        std::vector<std::pair<double, Pose>> seats;
+        std::vector<Face> faces{from.face};
+        if (problem.footprints[problem.parts[rule.part].footprint].flippable && !problem.parts[rule.part].top_only)
+            faces.push_back(from.face == Face::top ? Face::bottom : Face::top);
+        const std::vector<Point> ring = seat_ring(settings.pitch, reach, {0, 0});
+        for (const Point centre : centres)
+            for (const Point by : ring) {
+                const Point at = shifted(centre, by);
+                const double away = std::hypot(static_cast<double>(at.x - from.at.x), static_cast<double>(at.y - from.at.y));
+                for (const Face face : faces)
+                    for (int turn = 0; turn < turn_count; ++turn) seats.push_back({away, Pose{at, static_cast<Turn>(turn), face}});
+            }
+        const Nm coarse = static_cast<Nm>(constants::far_pitch.value);
+        const std::vector<Point> beside = seat_ring(coarse, rule.limit, {0, 0});
+        for (std::size_t first = 0; first < centres.size(); ++first) {
+            std::optional<std::size_t> nearest;
+            double best = 0;
+            for (std::size_t second = 0; second < centres.size(); ++second) {
+                const double apart = std::hypot(static_cast<double>(centres[first].x - centres[second].x),
+                                                static_cast<double>(centres[first].y - centres[second].y));
+                if (second != first && apart > 0 && (!nearest || apart < best)) {
+                    nearest = second;
+                    best = apart;
+                }
+            }
+            if (!nearest) continue;
+            const auto steps = static_cast<std::size_t>(best / static_cast<double>(coarse));
+            for (std::size_t step = 1; step < steps; ++step) {
+                const double share = static_cast<double>(step) / static_cast<double>(steps);
+                const Point on{centres[first].x + static_cast<Nm>(share * static_cast<double>(centres[*nearest].x - centres[first].x)),
+                               centres[first].y + static_cast<Nm>(share * static_cast<double>(centres[*nearest].y - centres[first].y))};
+                const Point snapped{on.x - on.x % settings.pitch, on.y - on.y % settings.pitch};
+                for (const Point by : beside) {
+                    const Point at = shifted(snapped, by);
+                    const double away = std::hypot(static_cast<double>(at.x - from.at.x), static_cast<double>(at.y - from.at.y));
+                    for (const Face face : faces)
+                    for (int turn = 0; turn < turn_count; ++turn) seats.push_back({away, Pose{at, static_cast<Turn>(turn), face}});
+                }
+            }
+        }
+        std::stable_sort(seats.begin(), seats.end(), [](const auto& a, const auto& b) { return a.first < b.first; });
+        RepairRow row{"2", rule.source, problem.parts[rule.part].reference, "move the test point to a pad of its net or onto the path between two"};
+        row.before = unmet();
+        const Snapshot snap = kernel.snapshot();
+        bool done = false;
+        seats.erase(std::remove_if(seats.begin(), seats.end(), [&](const auto& seat) {
+            return seat.second.face == Face::bottom && crowds_escape(problem, kernel.placement(), rule.part, seat.second);
+        }), seats.end());
+        for (std::size_t index = 0; !done && index < seats.size(); ++index) done = take(seats[index].second);
+        const std::vector<Point> near = seat_ring(settings.pitch, static_cast<Nm>(constants::aside_reach.value), {0, 0});
+        for (std::size_t index = 0, tried = 0; !waiting && !done && index < seats.size() && tried < static_cast<std::size_t>(constants::tap_evictions.value); ++index) {
+            const Probe probe = kernel.probe({{rule.part, seats[index].second}});
+            if (!probe.placeable || probe.blockers.empty()) continue;
+            ++tried;
+            done = takes_seat(kernel, rule.part, seats[index].second, near);
+        }
+        if (!done) {
+            const std::size_t illegal = kernel.violations().size();
+            std::vector<std::size_t> mates;
+            for (const Pin& pin : problem.nets[static_cast<std::size_t>(rule.net)].pins)
+                if (pin.part != rule.part && !kernel.parked(pin.part) && std::find(mates.begin(), mates.end(), pin.part) == mates.end())
+                    mates.push_back(pin.part);
+            for (std::size_t mate = 0; !done && mate < mates.size(); ++mate) {
+                const std::vector<char> under = owned_under(problem, mates[mate]);
+                if (park_owned(kernel, under) == 0) {
+                    kernel.restore(snap);
+                    continue;
+                }
+                bool seated = false;
+                for (std::size_t index = 0; !seated && index < seats.size(); ++index) seated = take(seats[index].second);
+                done = seated &&
+                       construct_owned(kernel, settings.pitch, static_cast<Nm>(constants::construct_reach.value), false, &under).unseated.empty() &&
+                       kernel.violations().size() < illegal;
+                if (!done) kernel.restore(snap);
+                else row.action += "; the parts owned by " + problem.parts[mates[mate]].reference + " were seated again around it";
+            }
+        }
+        row.after = unmet();
+        row.kept = done && (waiting || row.after < row.before);
+        if (!row.kept) {
+            kernel.restore(snap);
+            row.after = row.before;
+            std::map<std::string, std::size_t> tally;
+            for (const auto& seat : seats)
+                if (const auto refused = waiting ? kernel.seat_rejection(rule.part, seat.second) : kernel.rejection(rule.part, seat.second))
+                    ++tally[std::string(breach_name(refused->kind)) + " " +
+                            (refused->other < problem.parts.size() && refused->other != rule.part ? problem.parts[refused->other].reference : std::string("board"))];
+            std::vector<std::pair<std::size_t, std::string>> ranked;
+            for (const auto& [name, hits] : tally) ranked.push_back({hits, name});
+            std::sort(ranked.rbegin(), ranked.rend());
+            row.action += "; " + std::to_string(seats.size()) + " seats tried:";
+            for (std::size_t index = 0; index < ranked.size() && index < straggler_rows; ++index)
+                row.action += " " + std::to_string(ranked[index].first) + " " + ranked[index].second + ";";
+        }
+        rows.push_back(row);
     }
     return rows;
 }
@@ -763,6 +900,14 @@ void open_spacing(Kernel& kernel, const SqueezeOptions& settings, SpreadReport& 
 }
 
 void repair_start(Kernel& kernel, const SqueezeOptions& settings, StageResult& result, const std::function<void(bool)>& mark) {
+    for (const Tap& rule : kernel.problem().constraints.taps) {
+        const Constraints& stated = kernel.problem().constraints;
+        const auto tied = [&](const PadGap& gap) { return gap.anchor == rule.part || gap.member == rule.part; };
+        if (std::any_of(stated.soft_gaps.begin(), stated.soft_gaps.end(), tied) || std::any_of(stated.pad_gaps.begin(), stated.pad_gaps.end(), tied))
+            continue;
+        if (kernel.parked(rule.part) || (!kernel.movable_alone(rule.part) && !kernel.release(rule.part))) continue;
+        kernel.park(rule.part);
+    }
     const std::size_t gaps_inherited = gap_count(kernel) + shut_count(kernel);
     mark(false);
     result.repairs = separate_connectors(kernel, settings, bundle(kernel.problem()));
@@ -775,6 +920,17 @@ void repair_start(Kernel& kernel, const SqueezeOptions& settings, StageResult& r
     result.repairs.insert(result.repairs.end(), rest.begin(), rest.end());
     std::vector<RepairRow> paths = clear_plug_paths(kernel, settings, bundle(kernel.problem()));
     result.repairs.insert(result.repairs.end(), paths.begin(), paths.end());
+    std::vector<RepairRow> taps = seat_taps(kernel, settings);
+    result.repairs.insert(result.repairs.end(), taps.begin(), taps.end());
+    std::string waiting;
+    for (const Tap& rule : kernel.problem().constraints.taps)
+        if (kernel.parked(rule.part)) waiting += " " + kernel.problem().parts[rule.part].reference;
+    if (!waiting.empty()) {
+        std::string why;
+        for (const RepairRow& row : taps)
+            if (!row.kept) why += "\n  " + row.subject + ": " + row.action;
+        throw LayoutError("layout: no seat within the stub limit for test points" + waiting + why);
+    }
     result.inherited += gaps_inherited;
 }
 
@@ -893,9 +1049,18 @@ StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model
     const auto area = [](const SqueezeReport& report) {
         return to_mm(report.after.width) * to_mm(report.after.height);
     };
-    if (inputs.floorplan.project.arrange) result.arrange = arrange(kernel, settings);
+    const auto squeeze_seated = [&] {
+        const std::vector<RepairRow> seated_points = seat_taps(kernel, settings);
+        result.repairs.insert(result.repairs.end(), seated_points.begin(), seated_points.end());
+        std::string why;
+        for (const RepairRow& row : seated_points)
+            if (!row.kept) why += "\n  " + row.subject + ": " + row.action;
+        if (!why.empty()) throw LayoutError("layout: test points lost their net when other parts moved and have no seat within the stub limit" + why);
+        return squeeze_best(kernel, settings);
+    };
+    if (inputs.floorplan.project.arrange) result.arrange = arrange(kernel, settings, [&] { seat_taps(kernel, settings); });
     const Snapshot seated = kernel.snapshot();
-    SqueezeReport plain = squeeze_best(kernel, settings);
+    SqueezeReport plain = squeeze_seated();
     const Snapshot plain_state = kernel.snapshot();
     const Nm sink_reach = static_cast<Nm>(constants::sink_reach.value);
     const auto smaller = [&](const SqueezeReport& one, const SqueezeReport& other) {
@@ -910,7 +1075,7 @@ StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model
         const bool repeats = std::find(starts.begin(), starts.end(), kernel.placement()) != starts.end();
         if (trial.balance.flipped != 0 && !repeats) {
             starts.push_back(kernel.placement());
-            SqueezeReport squeezed = squeeze_best(kernel, settings);
+            SqueezeReport squeezed = squeeze_seated();
             trial.area = area(squeezed);
             trial.squeezed = true;
             if (!balanced || smaller(squeezed, *balanced)) {
@@ -946,7 +1111,7 @@ StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model
                 continue;
             }
             tried = kernel.placement();
-            SqueezeReport next = squeeze_best(kernel, settings);
+            SqueezeReport next = squeeze_seated();
             Rebalance pass{again, area(result.squeeze), area(next), area(next) < area(result.squeeze), scope};
             result.rebalances.push_back(pass);
             if (!pass.kept) {
@@ -963,9 +1128,18 @@ StageResult squeeze_stage(const PcbPlacementInput& inputs, const PcbModel& model
     }
     result.reseat = attract(kernel, settings.pitch, static_cast<Nm>(constants::sink_reach.value));
     result.rear_after = rear(kernel.placement());
+    const std::vector<RepairRow> settled = seat_taps(kernel, settings);
+    result.repairs.insert(result.repairs.end(), settled.begin(), settled.end());
     kernel.verify();
-    if (!kernel.violations().empty() || !kernel.outline_holds())
-        throw LayoutError("layout: the squeeze left an illegal placement");
+    if (!kernel.violations().empty() || !kernel.outline_holds()) {
+        std::string left;
+        std::size_t shown = 0;
+        for (const Violation& violation : kernel.violations()) {
+            if (++shown > straggler_rows) break;
+            left += " " + std::string(breach_name(violation.kind)) + ":" + kernel.problem().parts[violation.part].reference;
+        }
+        throw LayoutError("layout: the squeeze left an illegal placement:" + left + (kernel.outline_holds() ? "" : " outline"));
+    }
     result.model = model_with(model, binding, kernel.placement(), kernel.board());
     std::vector<Box> fields;
     for (const auto& reserve : bind_model(result.model, policy, nullptr, options).problem.reserves)

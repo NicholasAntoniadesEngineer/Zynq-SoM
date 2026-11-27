@@ -286,6 +286,9 @@ void pcb_stages(Context& c){
                 text<<" | "<<(a.correct?"yes":"no")<<" | "<<(src->layout?std::to_string(a.airwire):"-")<<" | "<<(a.first_finding.empty()?"-":a.first_finding)<<"\n";
             }
             for(const auto& a:attempts)if(!a.same_as&&!a.detail.empty())text<<"DETAIL seed "<<a.seed<<":\n"<<a.detail<<"\n";
+            if(std::filesystem::exists(c.reports))
+                for(const auto& entry:std::filesystem::directory_iterator(c.reports))
+                    if(entry.path().filename().string().rfind("failed_seed_",0)==0)std::filesystem::remove(entry.path());
             for(const auto& a:attempts)if(!a.same_as&&!a.handed.empty()){
                 const std::string name="failed_seed_"+std::to_string(a.seed)+".layout.json";
                 c.report(name,a.handed);
@@ -361,6 +364,14 @@ void pcb_stages(Context& c){
         gate("ratsnest",r.ratsnest.ok,r.ratsnest.summary());gate("placement_mech",r.mechanical.ok,r.mechanical.summary());
         gate("connector_model",r.connector_models.ok,r.connector_models.summary());gate("connector_spacing",r.connector_spacing.ok,r.connector_spacing.summary());
         gate("plug_path",r.plug_paths.ok,r.plug_paths.summary());
+        if(c.options.layout){
+            const auto& placed=*c.pcb;
+            const layout::DensityChoice spacing{placed.inputs.floorplan.project.density,sheet_densities(load_board(c.paths.project_root,c.paths.module))};
+            const auto points=layout::check_test_points(placed.inputs,placed.placement.model,pcb_emit_policy(placed.inputs.floorplan.project),
+                layout::AdapterOptions{c.options.layout->plane_net,layout::project_edge_clearance(pcb_project_board_settings(pcb_emit_policy(placed.inputs.floorplan.project))),
+                    c.options.layout->overmold_parts,placed.inputs.floorplan.place_clear,layout::authored_intent(placed.inputs),spacing});
+            gate("test_point_stubs",points.ok,points.summary());
+        }
         std::string silk_report="emitted-board refdes overlaps checked: top="+
             std::to_string(r.refdes.top_pairs.size())+" bottom="+std::to_string(r.refdes.bottom_pairs);
         for(const auto& pair:r.refdes.top_pairs)

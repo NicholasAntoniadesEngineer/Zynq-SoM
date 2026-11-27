@@ -28,7 +28,7 @@ PlacementMechResult check_placement_mech(const PcbCheckInput& input){
         auto prefix=ref_prefix(inst.ref);bool passive=(prefix=="R"||prefix=="C"||prefix=="L")&&!starts(inst.ref,"RS")&&!starts(inst.ref,"RJ")&&!starts(inst.ref,"LED");
         if(passive){res.top_under_som.push_back(row);continue;}res.under_som.push_back(row);if(prefix=="SW"||prefix=="BT")res.controls_under_som.push_back(row);
     }
-    for(const auto& inst:m.insts){auto p=ref_prefix(inst.ref);bool face=p=="TP"||p=="LED"||p=="SW"||inst.footprint.find("TestPoint")!=std::string::npos||starts(inst.footprint,"LED_")||starts(inst.footprint,"Switch:");if(!face)continue;++res.n_face_top;if(inst.side=="bottom")res.face_top_on_bottom.push_back(inst.ref+" ("+inst.sheet+") "+inst.value+" ["+inst.footprint+"] emits B.Cu — a user-facing part must present on the top face");}
+    for(const auto& inst:m.insts){auto p=ref_prefix(inst.ref);bool face=p=="TP"||p=="LED"||p=="SW"||inst.footprint.find("TestPoint")!=std::string::npos||starts(inst.footprint,"LED_")||starts(inst.footprint,"Switch:");if(!face)continue;++res.n_face_top;if(inst.side=="bottom"&&part_class_of(inst)!=PartClass::test_point)res.face_top_on_bottom.push_back(inst.ref+" ("+inst.sheet+") "+inst.value+" ["+inst.footprint+"] emits B.Cu — a user-facing part must present on the top face");}
     res.ok=res.bad_connectors.empty()&&res.under_som.empty()&&res.controls_under_som.empty()&&res.top_under_som.empty()&&res.face_top_on_bottom.empty();return res;
 }
 std::string PlacementMechResult::summary()const{

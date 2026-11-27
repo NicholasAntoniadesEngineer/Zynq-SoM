@@ -70,6 +70,17 @@ std::vector<char> owned_under(const Problem& problem, std::size_t owner) {
     return under;
 }
 
+std::size_t park_owned(Kernel& kernel, const std::vector<char>& only) {
+    std::size_t parked = 0;
+    for (std::size_t part = 0; part < only.size(); ++part) {
+        if (!only[part] || kernel.parked(part) || !eligible(kernel, part)) continue;
+        if (!kernel.movable_alone(part) && !kernel.release(part)) continue;
+        kernel.park(part);
+        ++parked;
+    }
+    return parked;
+}
+
 ConstructReport construct_owned(Kernel& kernel, Nm pitch, Nm reach, bool arrange, const std::vector<char>* only) {
     const Problem& problem = kernel.problem();
     ConstructReport report;
@@ -99,6 +110,7 @@ ConstructReport construct_owned(Kernel& kernel, Nm pitch, Nm reach, bool arrange
     });
     const Placement original = kernel.placement();
     for (const std::size_t part : order) {
+        if (kernel.parked(part)) continue;
         if (!kernel.movable_alone(part) && !kernel.release(part))
             throw LayoutError("layout: " + problem.parts[part].reference + " could not be released from its reserved field");
         kernel.park(part);

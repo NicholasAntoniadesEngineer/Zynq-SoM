@@ -17,7 +17,7 @@ inline constexpr std::array kernel_registry{hash_cell, key_shift};
 
 enum class Breach : std::uint8_t {
     overlap, off_board, fanout, module_core, bottom_face, dispersion, copper, contract, group_bound,
-    edge_mount, connector_gap, reserved, locked, corner, under_inductor, via_field, spacing, plug_path
+    edge_mount, connector_gap, reserved, locked, corner, under_inductor, via_field, spacing, plug_path, stub
 };
 
 struct Violation {
@@ -41,6 +41,13 @@ struct Snapshot {
     std::vector<Box> reserves;
     std::vector<std::vector<std::size_t>> fields, freed;
     std::vector<char> absent = {};
+};
+
+struct TapFigure {
+    bool met = true;
+    std::optional<double> stub, detour;
+    Nm allowance = 0;
+    std::size_t nearest = 0;
 };
 
 struct Probe {
@@ -77,6 +84,8 @@ public:
     bool move_many(const std::vector<Move>& moves) { return attempt(moves, nullptr, true); }
     Probe probe(const std::vector<Move>& moves);
     std::optional<Violation> breach(std::size_t part) const { return breach_at(part, 0, nullptr); }
+    TapFigure tap_figure(const Tap& rule) const;
+    Nm tap_room(const Tap& rule) const;
     std::vector<Violation> violations() const;
     std::optional<Violation> rejection(std::size_t part, const Pose& pose) const;
     bool move(std::size_t part, const Pose& pose);
@@ -126,6 +135,9 @@ private:
     Nm named_gap(const Shape& anchor, const std::vector<std::size_t>& names, const Shape& member) const;
     bool pad_gap_met(const PadGap& rule, const Shape& anchor, const Shape& member, Nm guard) const;
     bool nearest_met(const NearestGap& rule, std::size_t moved, const Shape* shape, const Pose* pose, Nm guard) const;
+    bool tap_met(const Tap& rule, std::size_t moved, const Shape* shape, const Pose* pose) const;
+    Nm tap_allowance(std::size_t mate, const Box& land, const Shape& tap, Face face) const;
+    bool taps_member(std::size_t part, const Reserve& field) const;
     bool group_gap_met(const GroupGap& rule, std::size_t moved, const Shape* shape, const Pose* pose, Nm guard) const;
     GroupSummary summarise(const GroupGap& rule, bool second, std::size_t moved, const Shape* shape,
                            const Pose* pose) const;
@@ -169,7 +181,7 @@ private:
     std::unordered_map<Key, Nm> spacing_limits_;
     std::map<std::string, std::vector<std::size_t>> groups_, members_;
     std::map<std::string, std::vector<std::size_t>> group_rules_;
-    std::vector<std::vector<std::size_t>> pad_rules_, nearest_rules_, face_rules_, order_rules_;
+    std::vector<std::vector<std::size_t>> pad_rules_, nearest_rules_, face_rules_, order_rules_, tap_rules_;
     std::vector<std::size_t> connectors_, via_owners_, plug_owners_;
     std::vector<Nm> net_lengths_;
     Nm routed_ = 0, reach_ = 0;

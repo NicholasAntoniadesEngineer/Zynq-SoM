@@ -13,7 +13,9 @@ inline constexpr NamedConstant widen_steps{"widen_steps", 4, "steps", "policy",
     "outline steps given back on each side, one at a time, while a breach handed over by the placer is repaired"};
 inline constexpr NamedConstant spread_rounds{"spread_rounds", 24, "rounds", "policy",
     "times the outline is opened by the widest density gap on every side, each followed by moving the crowded clusters apart, before the gaps a density below the densest asks for are reported as impossible"};
-inline constexpr std::array stage_registry{widen_steps, spread_rounds};
+inline constexpr NamedConstant tap_evictions{"tap_evictions", 256, "seats", "policy",
+    "seats at which a test point may move small neighbours aside to reach its net; a test point is one small pad, so more seats are worth trying than for a part with its own rules"};
+inline constexpr std::array stage_registry{widen_steps, spread_rounds, tap_evictions};
 }
 
 struct RepairRow {

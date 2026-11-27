@@ -391,7 +391,7 @@ std::string extent_holders(const Kernel& kernel) {
     return text;
 }
 
-ArrangeReport arrange(Kernel& kernel, const SqueezeOptions& options) {
+ArrangeReport arrange(Kernel& kernel, const SqueezeOptions& options, const std::function<void()>& settle) {
     ArrangeReport report;
     report.before = held_extent(kernel);
     if (!kernel.board().module_body) return report;
@@ -400,6 +400,7 @@ ArrangeReport arrange(Kernel& kernel, const SqueezeOptions& options) {
     const Snapshot start = kernel.snapshot();
     const auto squeezed = [&](const Snapshot& from) {
         kernel.restore(from);
+        if (settle) settle();
         const SqueezeReport result = squeeze(kernel, options);
         return to_mm(result.after.width) * to_mm(result.after.height);
     };
