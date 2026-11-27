@@ -90,6 +90,7 @@ public:
     std::optional<Violation> rejection(std::size_t part, const Pose& pose) const;
     bool move(std::size_t part, const Pose& pose);
     Nm routed_length() const { return routed_; }
+    Nm pulled_length() const { return pulled_; }
     Wirelength measured_wirelength() const;
     void verify() const;
     std::vector<Margin> margins() const;
@@ -184,7 +185,7 @@ private:
     std::vector<std::vector<std::size_t>> pad_rules_, nearest_rules_, face_rules_, order_rules_, tap_rules_;
     std::vector<std::size_t> connectors_, via_owners_, plug_owners_;
     std::vector<Nm> net_lengths_;
-    Nm routed_ = 0, reach_ = 0;
+    Nm routed_ = 0, pulled_ = 0, reach_ = 0;
 };
 
 }

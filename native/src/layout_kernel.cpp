@@ -186,11 +186,13 @@ void Kernel::rebuild() {
         if (!absent_[part]) insert(part);
     }
     routed_ = 0;
+    pulled_ = 0;
     net_lengths_.assign(problem_.nets.size(), 0);
     for (std::size_t net = 0; net < problem_.nets.size(); ++net) {
         if (problem_.nets[net].category == Category::plane) continue;
         net_lengths_[net] = net_length(net, placement_.size(), nullptr);
         routed_ += net_lengths_[net];
+        pulled_ += net_lengths_[net] * problem_.nets[net].pull;
     }
 }
 
@@ -265,8 +267,10 @@ void Kernel::refresh_nets(const std::vector<Move>& moves) {
     nets.erase(std::unique(nets.begin(), nets.end()), nets.end());
     for (const std::size_t net : nets) {
         routed_ -= net_lengths_[net];
+        pulled_ -= net_lengths_[net] * problem_.nets[net].pull;
         net_lengths_[net] = net_length(net, placement_.size(), nullptr);
         routed_ += net_lengths_[net];
+        pulled_ += net_lengths_[net] * problem_.nets[net].pull;
     }
 }
 

@@ -232,9 +232,9 @@ bool seat_block(Kernel& kernel, const std::vector<Block>& blocks, const Box& wit
     for (std::size_t index = 0; index < limit && legal < wanted; ++index) {
         if (!kernel.move_many(moves_at(seats[index]))) continue;
         ++legal;
-        if (!best || kernel.routed_length() < best_routed) {
+        if (!best || kernel.pulled_length() < best_routed) {
             best = seats[index];
-            best_routed = kernel.routed_length();
+            best_routed = kernel.pulled_length();
         }
         kernel.restore(before);
     }
@@ -389,6 +389,93 @@ std::string extent_holders(const Kernel& kernel) {
         text += std::string(index ? ", " : "") + side_name(sides[index]) + " " +
                 (names[index].empty() ? "the module" : names[index]);
     return text;
+}
+
+DrawReport draw_in(Kernel& kernel) {
+    DrawReport report;
+    report.routed_before = kernel.routed_length();
+    report.pulled_before = kernel.pulled_length();
+    const Problem& problem = kernel.problem();
+    const std::vector<Cluster> clusters = clusters_of(kernel);
+    report.clusters = clusters.size();
+    struct Want {
+        double x = 0, y = 0, pull = 0;
+    };
+    const auto want_of = [&](const std::vector<char>& inside) {
+        Want want;
+        for (const Net& net : problem.nets) {
+            if (net.category == Category::plane) continue;
+            bool touches = false;
+            std::size_t outside = 0;
+            for (const Pin& pin : net.pins) (inside[pin.part] ? touches = true : ++outside);
+            if (!touches || outside == 0) continue;
+            for (const Pin& pin : net.pins) {
+                if (inside[pin.part]) continue;
+                const Pose& pose = kernel.placement()[pin.part];
+                const Point at = placed(problem.footprints[problem.parts[pin.part].footprint].on(pose.face).pads[pin.pad].centre, pose.at, pose.turn);
+                const double share = static_cast<double>(net.pull) / static_cast<double>(outside);
+                want.x += share * static_cast<double>(at.x);
+                want.y += share * static_cast<double>(at.y);
+                want.pull += share;
+            }
+        }
+        if (want.pull > 0) {
+            want.x /= want.pull;
+            want.y /= want.pull;
+        }
+        return want;
+    };
+    const auto away = [](const Box& box, const Want& want) {
+        return std::hypot(static_cast<double>(box.x0 + box.x1) / 2 - want.x, static_cast<double>(box.y0 + box.y1) / 2 - want.y);
+    };
+    for (std::size_t round = 0; round < static_cast<std::size_t>(constants::draw_rounds.value); ++round) {
+        std::vector<std::pair<Want, const Cluster*>> order;
+        for (const Cluster& cluster : clusters) {
+            std::vector<char> inside(problem.parts.size(), 0);
+            for (const std::size_t part : cluster.members) inside[part] = 1;
+            const Want want = want_of(inside);
+            if (want.pull > 0) order.emplace_back(want, &cluster);
+        }
+        std::stable_sort(order.begin(), order.end(), [](const auto& a, const auto& b) { return a.first.pull > b.first.pull; });
+        std::size_t moved = 0;
+        for (const auto& [stale, cluster] : order) {
+            std::vector<char> inside(problem.parts.size(), 0);
+            for (const std::size_t part : cluster->members) inside[part] = 1;
+            const Want want = want_of(inside);
+            const double now = away(hull_of(kernel, cluster->members), want);
+            if (now < constants::draw_slack.value) continue;
+            const Nm before = kernel.pulled_length();
+            const Snapshot kept = kernel.snapshot();
+            std::vector<std::size_t> sheet;
+            for (std::size_t part = 0; part < problem.parts.size(); ++part)
+                if (problem.parts[part].group == cluster->sheet && !rides_the_outline(problem.parts[part]) && !problem.parts[part].fixed &&
+                    problem.parts[part].cohesion_member)
+                    sheet.push_back(part);
+            const auto extent = [&] {
+                if (sheet.empty()) return 0.0;
+                const Box hull = hull_of(kernel, sheet);
+                return static_cast<double>(hull.x1 - hull.x0) * static_cast<double>(hull.y1 - hull.y0);
+            };
+            const double held = extent();
+            const auto rank = [&](const Box& swept) -> std::optional<double> {
+                const double then = away(swept, want);
+                if (then >= now) return std::nullopt;
+                return then;
+            };
+            if (seat_block(kernel, {as_placed(kernel, cluster->members)}, kernel.board().outline(), rank, true,
+                           static_cast<std::size_t>(constants::draw_tries.value), nullptr) &&
+                kernel.pulled_length() < before && extent() <= held)
+                ++moved;
+            else
+                kernel.restore(kept);
+        }
+        report.moved += moved;
+        ++report.rounds;
+        if (moved == 0) break;
+    }
+    report.routed_after = kernel.routed_length();
+    report.pulled_after = kernel.pulled_length();
+    return report;
 }
 
 ArrangeReport arrange(Kernel& kernel, const SqueezeOptions& options, const std::function<void()>& settle) {
