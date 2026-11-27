@@ -201,7 +201,7 @@ void route_state(World& world, const RunSetup& setup, State& state, std::size_t 
     for (const auto& entry : ranked) state.walls.push_back(entry.second);
 }
 
-std::size_t lay_stubs(World& world, std::vector<State>& states) {
+std::size_t lay_stubs(World& world, std::vector<State>& states, std::vector<Lane>& lanes) {
     const Board& board = world.board();
     std::map<std::string, std::vector<std::size_t>> parts;
     for (std::size_t id = 0; id < board.fixed.size(); ++id) {
@@ -209,6 +209,7 @@ std::size_t lay_stubs(World& world, std::vector<State>& states) {
         if (item.kind == ItemKind::pad && item.first == item.last) parts[item.owner.substr(0, item.owner.find('.'))].push_back(id);
     }
     std::map<std::size_t, Item> stub_of;
+    std::map<std::size_t, Lane> lane_of;
     for (const auto& [name, ids] : parts) {
         if (ids.size() < static_cast<std::size_t>(constants::dense_pins.value)) continue;
         double middle_x = 0, middle_y = 0;
@@ -239,6 +240,11 @@ std::size_t lay_stubs(World& world, std::vector<State>& states) {
                 const Item stub{ItemKind::track, pad.net, pad.first, pad.first, capsule(centre, end, width / 2), 0, {}, 0};
                 if (world.conflict(stub)) continue;
                 stub_of.emplace(id, stub);
+                const Nm far = static_cast<Nm>(constants::lane_length.value), side = narrow / 2 + entry.clearance;
+                const Point beyond = along_x ? Point{end.x + sign * far, end.y} : Point{end.x, end.y + sign * far};
+                lane_of.emplace(id, Lane{Box{std::min(end.x, beyond.x) - (along_x ? 0 : side), std::min(end.y, beyond.y) - (along_x ? side : 0),
+                                             std::max(end.x, beyond.x) + (along_x ? 0 : side), std::max(end.y, beyond.y) + (along_x ? side : 0)},
+                                         pad.first, pad.net});
                 break;
             }
         }
@@ -252,6 +258,7 @@ std::size_t lay_stubs(World& world, std::vector<State>& states) {
                 const auto found = stub_of.find(id);
                 if (found == stub_of.end() || world.conflict(found->second)) continue;
                 state.stubs[index].push_back(world.add(found->second));
+                lanes.push_back(lane_of.at(id));
                 ++laid;
             }
     }
@@ -266,7 +273,7 @@ void lift(World& world, State& state) {
 
 }
 
-RunReport route_all(World& world, const RunSetup& setup) {
+RunReport route_all(World& world, const RunSetup& stated) {
     const Board& board = world.board();
     std::vector<State> states;
     for (Job& job : jobs_of(world)) states.push_back({std::move(job), {}, {}, {}, {}, 0, {}});
@@ -278,7 +285,8 @@ RunReport route_all(World& world, const RunSetup& setup) {
         return a.job.net < b.job.net;
     });
     RunReport report;
-    report.stubs = lay_stubs(world, states);
+    RunSetup setup = stated;
+    report.stubs = lay_stubs(world, states, setup.search.lanes);
     const std::size_t fixed = world.size();
     for (State& state : states) route_state(world, setup, state, fixed, report.opened);
     const auto joined_now = [&] {

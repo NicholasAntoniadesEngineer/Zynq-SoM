@@ -14,7 +14,7 @@ constexpr std::array<int, directions> step_y{0, 1, 1, 1, 0, -1, -1, -1};
 constexpr std::int64_t straight = 1000, diagonal = 1414;
 constexpr int sharpest = 2;
 constexpr std::int64_t greed_base = 100;
-constexpr Nm neck_step = 1000;
+constexpr Nm neck_step = 1000, lane_cell = 1000000;
 
 struct Cell {
     std::int64_t column = 0, row = 0;
@@ -54,6 +54,12 @@ public:
         const Nm reach = half_ + entry.clearance;
         sag_ = guarded ? setup.pitch * setup.pitch / (4 * std::max<Nm>(reach, 1)) + 1 : 0;
         greed_ = static_cast<std::int64_t>(constants::search_greed.value * static_cast<double>(greed_base));
+        for (std::size_t index = 0; index < setup.lanes.size(); ++index) {
+            const Lane& lane = setup.lanes[index];
+            if (lane.net == net) continue;
+            for (Nm column = lane.box.x0 / lane_cell; column <= lane.box.x1 / lane_cell; ++column)
+                for (Nm row = lane.box.y0 / lane_cell; row <= lane.box.y1 / lane_cell; ++row) lanes_[cell_key({column, row, lane.layer})].push_back(index);
+        }
         turn_ = setup.turn * straight / setup.pitch;
         via_ = setup.via * straight / setup.pitch;
     }
@@ -94,6 +100,18 @@ public:
             if (dx * dx + dy * dy <= setup_.neck * setup_.neck) half = std::min(half, narrow);
         }
         return half;
+    }
+
+    std::int64_t toll(const Cell& cell) const {
+        if (lanes_.empty()) return 0;
+        const Point at = point(cell);
+        const auto bucket = lanes_.find(cell_key({at.x / lane_cell, at.y / lane_cell, cell.layer}));
+        if (bucket == lanes_.end()) return 0;
+        for (const std::size_t index : bucket->second) {
+            const Box& box = setup_.lanes[index].box;
+            if (at.x >= box.x0 && at.x <= box.x1 && at.y >= box.y0 && at.y <= box.y1) return static_cast<std::int64_t>(constants::lane_weight.value) * straight;
+        }
+        return 0;
     }
 
     Point point(const Cell& cell) const { return {board_.outline.x0 + cell.column * setup_.pitch, board_.outline.y0 + cell.row * setup_.pitch}; }
@@ -197,7 +215,7 @@ public:
                 }
                 const Cell cell{here.cell.column + step_x[heading], here.cell.row + step_y[heading], here.cell.layer};
                 if (!goal(cell) && !open_cell(cell)) continue;
-                relax(cell, heading, here.cost + (heading % 2 == 0 ? straight : diagonal) + bend * turn_);
+                relax(cell, heading, here.cost + (heading % 2 == 0 ? straight : diagonal) + bend * turn_ + toll(cell));
             }
             if (drop || here.cell.layer < low || here.cell.layer > high || !via_fits(here.cell)) continue;
             for (std::size_t layer = low; layer <= high; ++layer) {
@@ -279,6 +297,7 @@ private:
     std::int64_t turn_ = 0, via_ = 0, greed_ = 0;
     Box window_;
     std::unordered_map<Key, bool> legal_, drill_;
+    std::unordered_map<Key, std::vector<std::size_t>> lanes_;
     std::unordered_map<Key, Visit> visits_;
     std::unordered_set<std::size_t> blockers_;
     std::size_t opened_ = 0;

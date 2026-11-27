@@ -24,8 +24,18 @@ inline constexpr NamedConstant search_greed{"search_greed", 1.5, "ratio", "polic
     "weight of the remaining-distance estimate against the cost so far; above one the search heads for the goal and opens far fewer points, at the price of a path up to that factor longer than the best"};
 inline constexpr NamedConstant neck_reach{"neck_reach", 2500000, "nm", "policy",
     "distance from a pad within which a track may be as narrow as the pad instead of its class width; the figure KiCadRoutingTools documents for power nets (docs/power-nets.md, read 2026-11-27)"};
-inline constexpr std::array route_search_registry{lattice_pitch, turn_length, via_length, search_margin, search_growth, search_budget, search_greed, neck_reach};
+inline constexpr NamedConstant lane_length{"lane_length", 3000000, "nm", "policy",
+    "length of the lane kept in front of a crowded pin's exit stub, in which other nets pay to run; long enough for the pin's own track to leave the row and reach a via site"};
+inline constexpr NamedConstant lane_weight{"lane_weight", 4, "ratio", "policy",
+    "extra cost, in step lengths, of each step another net takes inside a pin's lane; a track crosses a lane when it must and does not run along a row of them"};
+inline constexpr std::array route_search_registry{lattice_pitch, turn_length, via_length, search_margin, search_growth, search_budget, search_greed, neck_reach, lane_length, lane_weight};
 }
+
+struct Lane {
+    Box box;
+    std::size_t layer = 0;
+    int net = no_net;
+};
 
 struct SearchSetup {
     Nm pitch = static_cast<Nm>(constants::lattice_pitch.value);
@@ -35,6 +45,7 @@ struct SearchSetup {
     std::size_t budget = static_cast<std::size_t>(constants::search_budget.value);
     Nm neck = static_cast<Nm>(constants::neck_reach.value);
     bool narrowest = false;
+    std::vector<Lane> lanes;
 };
 
 struct Path {
