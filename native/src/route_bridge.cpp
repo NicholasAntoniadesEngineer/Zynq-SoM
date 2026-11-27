@@ -21,7 +21,7 @@ const char* const usage = "usage: schgen route-try BOARD PROJECT SETUP [BOARD_OU
                           "  The layer count, plane layers, net classes and clearances are all read from the two KiCad files.\n"
                           "  With BOARD_OUT the copper is added to a copy of the board.\n"
                           "       schgen route-explain BOARD PROJECT SETUP PAD\n"
-                          "  says what stops a track leaving one pad (for example J3.12) in each of the eight directions.\n";
+                          "  says what stops a track leaving one pad, named REFERENCE.PAD, in each of the eight directions.\n";
 
 std::string slurp(const std::string& path) {
     std::ifstream in(path, std::ios::binary);
