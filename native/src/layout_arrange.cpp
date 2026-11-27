@@ -525,7 +525,8 @@ LayReport lay_out(Kernel& kernel) {
         for (std::size_t attempt = 0; attempt < limit; ++attempt) {
             const std::vector<Move> moves = moves_of(block, options[tries[attempt].option], tries[attempt].by);
             if (!kernel.seat_together(moves)) continue;
-            if (!accept || accept()) return true;
+            const bool clear = std::none_of(moves.begin(), moves.end(), [&](const Move& move) { return kernel.covers_via_sites(move.part); });
+            if (clear && (!accept || accept())) return true;
             for (const Move& move : moves) kernel.park(move.part);
         }
         return false;
@@ -728,9 +729,13 @@ DrawReport draw_in(Kernel& kernel) {
                 if (then >= now) return std::nullopt;
                 return then;
             };
+            const std::size_t covering = static_cast<std::size_t>(
+                std::count_if(cluster->members.begin(), cluster->members.end(), [&](std::size_t part) { return kernel.covers_via_sites(part); }));
             if (seat_block(kernel, {as_placed(kernel, cluster->members)}, kernel.board().outline(), rank, true,
                            static_cast<std::size_t>(constants::draw_tries.value), nullptr) &&
-                kernel.pulled_length() < before && extent() <= held)
+                kernel.pulled_length() < before && extent() <= held &&
+                static_cast<std::size_t>(std::count_if(cluster->members.begin(), cluster->members.end(),
+                                                       [&](std::size_t part) { return kernel.covers_via_sites(part); })) <= covering)
                 ++moved;
             else
                 kernel.restore(kept);

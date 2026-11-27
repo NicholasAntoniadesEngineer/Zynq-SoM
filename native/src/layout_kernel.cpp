@@ -293,6 +293,13 @@ bool Kernel::seat_together(const std::vector<Move>& moves) {
     return false;
 }
 
+bool Kernel::covers_via_sites(std::size_t part) const {
+    if (absent_[part]) return false;
+    for (const std::size_t owner : via_owners_)
+        if (owner != part && !absent_[owner] && via_blocked(owner, placement_[owner], shapes_[part])) return true;
+    return false;
+}
+
 void Kernel::place(std::size_t part, const Pose& pose) {
     remove(part);
     placement_[part] = pose;
