@@ -53,7 +53,7 @@ public:
         half_ = entry.track / 2;
         const Nm reach = half_ + entry.clearance;
         sag_ = guarded ? setup.pitch * setup.pitch / (4 * std::max<Nm>(reach, 1)) + 1 : 0;
-        greed_ = static_cast<std::int64_t>(constants::search_greed.value * static_cast<double>(greed_base));
+        greed_ = static_cast<std::int64_t>(setup.greed * static_cast<double>(greed_base));
         for (std::size_t index = 0; index < setup.lanes.size(); ++index) {
             const Lane& lane = setup.lanes[index];
             if (lane.net == net) continue;

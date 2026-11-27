@@ -49,6 +49,7 @@ struct SearchSetup {
     bool narrowest = false;
     std::vector<Lane> lanes;
     std::size_t soft_from = 0;
+    double greed = constants::search_greed.value;
 };
 
 struct Path {

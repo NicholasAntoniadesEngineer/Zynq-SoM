@@ -350,6 +350,28 @@ RunReport route_all(World& world, const RunSetup& stated) {
         report.passes = round + 1;
         if (!gained) break;
     }
+    RunSetup exact = setup;
+    exact.search.greed = constants::tidy_greed.value;
+    const auto weight = [&](const NetOutcome& outcome) { return outcome.length + static_cast<double>(outcome.vias) * static_cast<double>(setup.search.via); };
+    for (std::size_t round = 0; round < static_cast<std::size_t>(constants::tidy_rounds.value); ++round) {
+        std::size_t better = 0;
+        for (State& state : states) {
+            if (state.job.plane || state.outcome.joined != state.outcome.links || state.items.empty()) continue;
+            const std::size_t mark = world.mark();
+            const State before = state;
+            lift(world, state);
+            route_state(world, exact, state, fixed, report.opened);
+            if (state.outcome.joined == before.outcome.joined && weight(state.outcome) < weight(before.outcome)) {
+                report.tidy_saved += weight(before.outcome) - weight(state.outcome);
+                ++better;
+                continue;
+            }
+            world.rollback(mark);
+            state = before;
+        }
+        report.tidied += better;
+        if (better == 0) break;
+    }
     for (const State& state : states) {
         report.links += state.outcome.links;
         report.joined += state.outcome.joined;
@@ -368,6 +390,8 @@ std::string RunReport::summary(const Board& board) const {
                       " lattice points opened\n  open nets at the start of each round:";
     for (const std::size_t count : pass_failures) out += " " + std::to_string(count);
     out += "\n";
+    out += "  nets made shorter or given fewer vias when routed again alone: " + std::to_string(tidied) + ", saving the equal of " +
+           std::to_string(static_cast<long long>(std::llround(tidy_saved / 1e6))) + " mm\n";
     std::size_t necked = 0;
     for (const NetOutcome& outcome : nets) {
         const Nm stated = board.rules.classes[board.nets[static_cast<std::size_t>(outcome.net)].net_class].track;
