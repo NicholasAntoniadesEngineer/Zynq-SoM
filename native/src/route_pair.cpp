@@ -67,7 +67,18 @@ PairResult route_pair(World& world, const SearchSetup& setup, int first, int sec
             return result;
         }
     const auto middle = [](Point a, Point b) { return Point{(a.x + b.x) / 2, (a.y + b.y) / 2}; };
-    const Point from = middle(centre_of(near_one), centre_of(near_two)), to = middle(centre_of(far_one), centre_of(far_two));
+    const auto tip = [&](const std::vector<std::size_t>& items) {
+        const Point pad = centre_of(world.item(items.front()));
+        Point best = pad;
+        for (const std::size_t id : items) {
+            const Item& item = world.item(id);
+            if (item.kind != ItemKind::track) continue;
+            for (std::size_t corner = 0; corner < item.shape.count; ++corner)
+                if (length_of(pad, item.shape.core[corner]) > length_of(pad, best)) best = item.shape.core[corner];
+        }
+        return best;
+    };
+    const Point from = middle(tip(ends.near_first), tip(ends.near_second)), to = middle(tip(ends.far_first), tip(ends.far_second));
     const Nm reach = static_cast<Nm>(constants::pair_reach.value);
     const SearchResult spine = find_spine(world, setup, first, second, entry.pair_width + entry.pair_gap / 2, layer, from, to, reach);
     result.opened = spine.opened;
@@ -92,47 +103,44 @@ PairResult route_pair(World& world, const SearchSetup& setup, int first, int sec
     const double sign = start_side > 0 ? 1 : -1;
     const std::vector<Point> first_line = offset(points, sign * away), second_line = offset(points, -sign * away);
     const std::size_t mark = world.mark();
-    const auto lay = [&](const std::vector<Point>& line, int net, std::vector<std::size_t>& items, std::size_t& head, std::size_t& tail) {
+    const auto lay = [&](const std::vector<Point>& line, int net, std::vector<std::size_t>& items) {
         for (std::size_t index = 0; index + 1 < line.size(); ++index) {
             const Item track{ItemKind::track, net, layer, layer, capsule(line[index], line[index + 1], entry.pair_width / 2), 0, {}, 0};
             if (world.conflict(track)) return false;
             items.push_back(world.add(track));
         }
-        for (const Point at : {line.front(), line.back()}) {
-            const Item anchor{ItemKind::track, net, layer, layer, disc(at, entry.pair_width / 2), 0, {}, 0};
-            if (world.conflict(anchor)) return false;
-            items.push_back(world.add(anchor));
-        }
-        head = items[items.size() - 2];
-        tail = items.back();
         return true;
     };
-    std::size_t first_head = 0, first_tail = 0, second_head = 0, second_tail = 0;
-    if (!lay(first_line, first, result.first_items, first_head, first_tail) || !lay(second_line, second, result.second_items, second_head, second_tail)) {
+    if (!lay(first_line, first, result.first_items) || !lay(second_line, second, result.second_items)) {
         world.rollback(mark);
         result = {};
         result.opened = spine.opened;
         result.why = "the two coupled tracks do not clear their neighbours";
         return result;
     }
-    const auto join = [&](int net, const std::vector<std::size_t>& pads, std::size_t anchor, std::vector<std::size_t>& items) {
-        const SearchResult found = find_path(world, setup, net, pads, {anchor});
+    std::string stuck;
+    const auto join = [&](int net, const std::vector<std::size_t>& pads, Point anchor, std::vector<std::size_t>& items) {
+        const SearchResult found = find_path_to(world, setup, net, pads, anchor, layer);
         result.opened += found.opened;
+        if (!found.path) stuck = world.item(pads.front()).owner + (found.exhausted ? " (search budget spent)" : " (walled in)");
         if (!found.path) return false;
         for (const Item& item : found.path->items) {
-            if (world.conflict(item)) return false;
+            if (const auto hit = world.conflict(item)) {
+                stuck = world.item(pads.front()).owner + " (its track would touch " + (hit->edge ? std::string("the board edge") : std::string(kind_name(world.item(hit->item).kind)) + " " + world.item(hit->item).owner) + ")";
+                return false;
+            }
             items.push_back(world.add(item));
         }
         result.loose_length += found.path->length;
         return true;
     };
-    if (!join(first, ends.near_first, first_head, result.first_items) || !join(second, ends.near_second, second_head, result.second_items) ||
-        !join(first, ends.far_first, first_tail, result.first_items) || !join(second, ends.far_second, second_tail, result.second_items)) {
+    if (!join(first, ends.near_first, first_line.front(), result.first_items) || !join(second, ends.near_second, second_line.front(), result.second_items) ||
+        !join(first, ends.far_first, first_line.back(), result.first_items) || !join(second, ends.far_second, second_line.back(), result.second_items)) {
         world.rollback(mark);
         const std::size_t opened = result.opened;
         result = {};
         result.opened = opened;
-        result.why = "no way from a pad to its end of the coupled run";
+        result.why = "no way from " + stuck + " to its end of the coupled run";
         return result;
     }
     result.coupled = true;

@@ -322,6 +322,7 @@ public:
     }
 
     bool exhausted() const { return exhausted_; }
+    Nm width() const { return 2 * half_; }
     const Box& outline() const { return board_.outline; }
 
 private:
@@ -350,7 +351,7 @@ Box grown_within(Box box, Nm by, const Box& limit) {
 bool covers(const Box& a, const Box& b) { return a.x0 <= b.x0 && a.y0 <= b.y0 && a.x1 >= b.x1 && a.y1 >= b.y1; }
 
 SearchResult search(const World& world, const SearchSetup& setup, int net, const std::vector<std::size_t>& sources, const std::vector<std::size_t>& goals, bool drop,
-                    bool guarded) {
+                    bool guarded, const std::pair<Point, std::size_t>* spot = nullptr) {
     Search engine(world, setup, net, guarded);
     std::vector<Cell> starts, ends;
     Box span = world.item(sources.front()).shape.bound();
@@ -370,7 +371,11 @@ SearchResult search(const World& world, const SearchSetup& setup, int net, const
         targets.push_back(world.item(id).shape.bound());
         span = layout::united(span, world.item(id).shape.bound());
     }
-    if (starts.empty() || (!drop && wanted.empty())) return engine.result(std::nullopt);
+    if (spot) {
+        targets.push_back({spot->first.x, spot->first.y, spot->first.x, spot->first.y});
+        span = layout::united(span, targets.back());
+    }
+    if (starts.empty() || (!drop && !spot && wanted.empty())) return engine.result(std::nullopt);
     const auto goal = [&](const Cell& cell) { return wanted.count(cell_key(cell)) != 0; };
     const auto estimate = [&](const Cell& cell) -> std::int64_t {
         if (drop) return 0;
@@ -388,6 +393,17 @@ SearchResult search(const World& world, const SearchSetup& setup, int net, const
     for (;;) {
         const Box window = grown_within(span, margin, engine.outline());
         engine.set_window(window);
+        if (spot) {
+            wanted.clear();
+            const Box& outline = engine.outline();
+            const Nm reach = engine.width() / 2;
+            for (Nm x = spot->first.x - reach; x <= spot->first.x + reach + setup.pitch; x += setup.pitch)
+                for (Nm y = spot->first.y - reach; y <= spot->first.y + reach + setup.pitch; y += setup.pitch) {
+                    const Cell cell{(x - outline.x0) / setup.pitch, (y - outline.y0) / setup.pitch, spot->second};
+                    if (length_of(engine.point(cell), spot->first) <= static_cast<double>(reach) && engine.open_cell(cell)) wanted.insert(cell_key(cell));
+                }
+            if (wanted.empty()) return engine.result(std::nullopt);
+        }
         if (const auto end = engine.run(starts, goal, estimate, drop)) return engine.result(engine.trace(*end, drop));
         if (engine.exhausted() || covers(window, engine.outline())) return engine.result(std::nullopt);
         margin *= static_cast<Nm>(constants::search_growth.value);
@@ -404,6 +420,18 @@ SearchResult checked(const World& world, const SearchSetup& setup, int net, cons
     return guarded;
 }
 
+}
+
+SearchResult find_path_to(const World& world, const SearchSetup& setup, int net, const std::vector<std::size_t>& sources, Point goal, std::size_t layer) {
+    if (sources.empty()) throw RouteError("route: a path needs a source");
+    const std::pair<Point, std::size_t> spot{goal, layer};
+    SearchResult exact = search(world, setup, net, sources, {}, false, false, &spot);
+    if (!exact.path) return exact;
+    const bool sound = std::none_of(exact.path->items.begin(), exact.path->items.end(), [&](const Item& item) { return world.conflict(item).has_value(); });
+    if (sound) return exact;
+    SearchResult guarded = search(world, setup, net, sources, {}, false, true, &spot);
+    guarded.opened += exact.opened;
+    return guarded;
 }
 
 SearchResult find_spine(const World& world, const SearchSetup& setup, int net, int partner, Nm half, std::size_t layer, Point from, Point to, Nm reach) {

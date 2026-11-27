@@ -67,6 +67,7 @@ struct SearchResult {
 };
 
 SearchResult find_path(const World& world, const SearchSetup& setup, int net, const std::vector<std::size_t>& sources, const std::vector<std::size_t>& goals);
+SearchResult find_path_to(const World& world, const SearchSetup& setup, int net, const std::vector<std::size_t>& sources, Point goal, std::size_t layer);
 SearchResult find_spine(const World& world, const SearchSetup& setup, int net, int partner, Nm half, std::size_t layer, Point from, Point to, Nm reach);
 SearchResult find_plane_drop(const World& world, const SearchSetup& setup, int net, const std::vector<std::size_t>& sources);
 
