@@ -13,6 +13,11 @@ Nm floor_cell(Nm value) { return value >= 0 ? value / cell : -((-value + cell - 
 
 Nm Rules::clearance(std::size_t first, std::size_t second) const { return std::max(classes.at(first).clearance, classes.at(second).clearance); }
 
+Nm Rules::between(const Item& first, const Item& second, const std::vector<Net>& nets) const {
+    const auto class_of = [&](const Item& item) { return item.net == no_net ? std::size_t{0} : nets[static_cast<std::size_t>(item.net)].net_class; };
+    return std::max({clearance(class_of(first), class_of(second)), first.clearance, second.clearance});
+}
+
 void Rules::validate() const {
     if (layers.empty() || layers.size() > static_cast<std::size_t>(constants::layer_limit.value))
         throw RouteError("route: a board states between 1 and " + std::to_string(static_cast<int>(constants::layer_limit.value)) + " copper layers, not " +
@@ -69,6 +74,7 @@ const char* kind_name(ItemKind kind) {
 World::World(const Board& board) : board_(board) {
     board.validate();
     for (const NetClass& entry : board.rules.classes) reach_ = std::max(reach_, entry.clearance);
+    for (const Item& item : board.fixed) reach_ = std::max(reach_, item.clearance);
     reach_ = std::max({reach_, board.rules.hole_clearance, board.rules.hole_spacing});
     for (const Item& item : board.fixed) add(item);
     fixed_ = items_.size();
@@ -110,8 +116,7 @@ bool World::clash(const Item& candidate, const Item& other) const {
         if (!apart(first, second, board_.rules.hole_spacing)) return true;
     }
     if (same) return false;
-    const auto class_of = [&](const Item& item) { return item.net == no_net ? std::size_t{0} : board_.nets[static_cast<std::size_t>(item.net)].net_class; };
-    if (!apart(candidate.shape, other.shape, board_.rules.clearance(class_of(candidate), class_of(other)))) return true;
+    if (!apart(candidate.shape, other.shape, board_.rules.between(candidate, other, board_.nets))) return true;
     if (candidate.drill > 0 && !apart(disc(candidate.shape.core[0], candidate.drill / 2), other.shape, board_.rules.hole_clearance)) return true;
     return other.drill > 0 && !apart(disc(other.shape.core[0], other.drill / 2), candidate.shape, board_.rules.hole_clearance);
 }

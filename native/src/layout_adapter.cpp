@@ -1,4 +1,5 @@
 #include "schgen/layout_adapter.hpp"
+#include "schgen/layout_json.hpp"
 #include "schgen/layout_kernel.hpp"
 
 #include "schgen/board_schematic.hpp"
@@ -918,6 +919,12 @@ GateVerdict judge_model(const PcbPlacementInput& inputs, const PcbModel& model) 
     return {check_fanout(input, 0).ok, check_placement_mech(input).ok, ratsnest.off_board.empty(),
             ratsnest.dispersed.empty(), check_pcb_placement_gates(inputs, model).ok(),
             spacing.ok, integrity.ok, integrity.placement_ok, placed_spacing, check_plug_paths(input, model.som_keepout).ok};
+}
+
+std::string placed_document(const PcbPlacementInput& inputs, const PcbModel& model, const PcbEmitPolicy& policy, const AdapterOptions& options) {
+    const PcbPlacementGatePolicy gates = pcb_placement_gate_policy(inputs);
+    const ModelBinding binding = bind_model(model, policy, &gates, options);
+    return document_json(binding.problem, binding.placement);
 }
 
 TestPointResult check_test_points(const PcbPlacementInput& inputs, const PcbModel& model, const PcbEmitPolicy& policy,

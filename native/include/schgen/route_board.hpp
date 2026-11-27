@@ -46,18 +46,21 @@ struct NetClass {
     std::size_t via = 0;
 };
 
+struct Net {
+    std::string name;
+    std::size_t net_class = 0;
+};
+
+struct Item;
+
 struct Rules {
     std::vector<Layer> layers;
     std::vector<NetClass> classes;
     std::vector<ViaKind> vias;
     Nm edge_clearance = 0, hole_clearance = 0, hole_spacing = 0;
     Nm clearance(std::size_t first, std::size_t second) const;
+    Nm between(const Item& first, const Item& second, const std::vector<Net>& nets) const;
     void validate() const;
-};
-
-struct Net {
-    std::string name;
-    std::size_t net_class = 0;
 };
 
 enum class ItemKind : std::uint8_t { pad, track, via, keepout };
@@ -69,6 +72,7 @@ struct Item {
     Shape shape;
     Nm drill = 0;
     std::string owner;
+    Nm clearance = 0;
 };
 
 struct Board {

@@ -131,6 +131,7 @@ struct TestPointResult {
     std::vector<TestPointRow> rows;
     std::string summary() const;
 };
+std::string placed_document(const PcbPlacementInput& inputs, const PcbModel& model, const PcbEmitPolicy& policy, const AdapterOptions& options);
 TestPointResult check_test_points(const PcbPlacementInput& inputs, const PcbModel& model, const PcbEmitPolicy& policy,
                                   const AdapterOptions& options);
 

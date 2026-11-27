@@ -49,12 +49,12 @@ CheckReport verify(const Board& board, const std::vector<Item>& copper) {
     report.nets = board.nets.size();
     Nm widest = std::max(board.rules.hole_clearance, board.rules.hole_spacing);
     for (const NetClass& entry : board.rules.classes) widest = std::max(widest, entry.clearance);
+    for (const Item& item : board.fixed) widest = std::max(widest, item.clearance);
     std::vector<std::size_t> order(entries.size());
     std::iota(order.begin(), order.end(), std::size_t{0});
     std::stable_sort(order.begin(), order.end(), [&](std::size_t a, std::size_t b) { return entries[a].bound.x0 < entries[b].bound.x0; });
     std::vector<std::size_t> parent(entries.size() + board.rules.layers.size());
     std::iota(parent.begin(), parent.end(), std::size_t{0});
-    const auto class_of = [&](const Item& item) { return item.net == no_net ? std::size_t{0} : board.nets[static_cast<std::size_t>(item.net)].net_class; };
     for (const Entry& entry : entries) {
         const Item& item = *entry.item;
         if (item.kind != ItemKind::keepout && !within(item.shape, board.outline, board.rules.edge_clearance) && entry.routed)
@@ -94,7 +94,7 @@ CheckReport verify(const Board& board, const std::vector<Item>& copper) {
             }
             const std::string pair = where(one) + " on " + net_name(board, one.net) + " and " + where(other) + " on " + net_name(board, other.net);
             if (touching(one.shape, other.shape)) report.shorts.push_back(pair + " touch");
-            else if (!apart(one.shape, other.shape, board.rules.clearance(class_of(one), class_of(other))))
+            else if (!apart(one.shape, other.shape, board.rules.between(one, other, board.nets)))
                 report.clearances.push_back(pair + " are nearer than their clearance");
             else if ((one.drill > 0 && !apart(disc(one.shape.core[0], one.drill / 2), other.shape, board.rules.hole_clearance)) ||
                      (other.drill > 0 && !apart(disc(other.shape.core[0], other.drill / 2), one.shape, board.rules.hole_clearance)))
