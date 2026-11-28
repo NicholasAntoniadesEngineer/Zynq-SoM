@@ -29,6 +29,7 @@ using namespace schgen::layout;
 namespace fixture {
 constexpr std::uint64_t walk_seed = 20261111;
 constexpr int sparse_density = 5;
+constexpr std::size_t plan_text = 300;
 constexpr double stray_boards = 2;
 const char* const gaps_kept = "GAPS NOT KEPT: 0\n";
 constexpr Nm walk_range = 5000000, walk_grid = 50000;
@@ -271,6 +272,15 @@ void squeezed_board_passes(const std::string& project, const PcbPlacementInput& 
                            const std::filesystem::path& scratch, const std::filesystem::path& project_file) {
     const StageResult stage = squeeze_stage(inputs, model, policy, options);
     std::cout << stage.report;
+    if (inputs.floorplan.project.plan) {
+        require(stage.lay.has_value() && stage.draw.has_value(), project + " runs the board plan when the run asks for it");
+        require(stage.lay->unseated.empty() || !stage.lay->taken, project + " takes a plan only when every lifted group found a seat");
+        require(!stage.lay->taken || stage.lay->pulled_after < stage.lay->pulled_before, project + " takes a plan only when the weighted airwire falls");
+        require(stage.draw->pulled_after <= stage.draw->pulled_before, project + " never lengthens the weighted airwire when it draws groups together");
+        const PlanFigures figures = plan_of(inputs, stage.model, policy, options);
+        require(!figures.blocks.empty() && figures.length > 0 && figures.crossing <= figures.length && figures.pulled >= figures.length,
+                project + " reports the wiring between its sheets: " + figures.summary().substr(0, fixture::plan_text));
+    }
     const double before = to_mm(stage.squeeze.before.width) * to_mm(stage.squeeze.before.height);
     const double after = to_mm(stage.squeeze.after.width) * to_mm(stage.squeeze.after.height);
     require(after < before, project + " squeeze shrinks the board");

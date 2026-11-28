@@ -186,11 +186,13 @@ void Kernel::rebuild() {
         if (!absent_[part]) insert(part);
     }
     routed_ = 0;
+    pulled_ = 0;
     net_lengths_.assign(problem_.nets.size(), 0);
     for (std::size_t net = 0; net < problem_.nets.size(); ++net) {
         if (problem_.nets[net].category == Category::plane) continue;
         net_lengths_[net] = net_length(net, placement_.size(), nullptr);
         routed_ += net_lengths_[net];
+        pulled_ += net_lengths_[net] * problem_.nets[net].pull;
     }
 }
 
@@ -250,6 +252,54 @@ bool Kernel::seat(std::size_t part, const Pose& pose) {
     return true;
 }
 
+bool Kernel::seat_together(const std::vector<Move>& moves) {
+    std::vector<char> moved(placement_.size(), 0);
+    for (const auto& move : moves) {
+        const Part& item = problem_.parts.at(move.part);
+        if (!absent_[move.part]) throw LayoutError("layout: " + item.reference + " is already on the board");
+        if (moved[move.part]) return false;
+        if (move.pose.face != placement_[move.part].face && !problem_.footprints[item.footprint].flippable) return false;
+        moved[move.part] = 1;
+    }
+    std::vector<Pose> before;
+    for (const auto& move : moves) {
+        before.push_back(placement_[move.part]);
+        placement_[move.part] = move.pose;
+        shapes_[move.part] = shape_of(move.part, move.pose);
+        insert(move.part);
+        absent_[move.part] = 0;
+    }
+    bool sound = true;
+    for (std::size_t index = 0; sound && index < moves.size(); ++index) {
+        const std::size_t part = moves[index].part;
+        const Nm guard = problem_.rules.compare_guard;
+        geometry_breaches(part, shapes_[part], placement_[part], guard, false, [&](const Violation&) {
+            sound = false;
+            return true;
+        });
+        if (sound && rule_breaches(part, shapes_[part], placement_[part], guard, &moved, false, [](const Violation&) { return true; })) sound = false;
+    }
+    if (sound) {
+        refresh_nets(moves);
+        return true;
+    }
+    for (std::size_t index = 0; index < moves.size(); ++index) {
+        const std::size_t part = moves[index].part;
+        remove(part);
+        absent_[part] = 1;
+        placement_[part] = before[index];
+        shapes_[part] = shape_of(part, before[index]);
+    }
+    return false;
+}
+
+bool Kernel::covers_via_sites(std::size_t part) const {
+    if (absent_[part]) return false;
+    for (const std::size_t owner : via_owners_)
+        if (owner != part && !absent_[owner] && via_blocked(owner, placement_[owner], shapes_[part])) return true;
+    return false;
+}
+
 void Kernel::place(std::size_t part, const Pose& pose) {
     remove(part);
     placement_[part] = pose;
@@ -265,8 +315,10 @@ void Kernel::refresh_nets(const std::vector<Move>& moves) {
     nets.erase(std::unique(nets.begin(), nets.end()), nets.end());
     for (const std::size_t net : nets) {
         routed_ -= net_lengths_[net];
+        pulled_ -= net_lengths_[net] * problem_.nets[net].pull;
         net_lengths_[net] = net_length(net, placement_.size(), nullptr);
         routed_ += net_lengths_[net];
+        pulled_ += net_lengths_[net] * problem_.nets[net].pull;
     }
 }
 

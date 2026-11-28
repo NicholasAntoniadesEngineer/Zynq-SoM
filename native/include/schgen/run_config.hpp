@@ -32,7 +32,7 @@ struct RunConfig {
     SearchConfig search;
     std::vector<std::string> boards;
     std::filesystem::path output;
-    bool squeeze = false, arrange = false, construct = false, renders = false, labels = false, timing = false;
+    bool squeeze = false, arrange = false, construct = false, plan = false, renders = false, labels = false, timing = false;
     std::string plane_net;
     int audit_projections = 0;
     std::map<std::string, std::string> stackup;

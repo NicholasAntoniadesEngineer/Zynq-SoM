@@ -331,7 +331,8 @@ std::string document_json(const Problem& problem, const Placement& placement) {
     for (const auto& net : problem.nets)
         nets.push_back(object({{"name", text_value(net.name)},
                                {"category", text_value(category_name(net.category))},
-                               {"clearance", integer(net.clearance)}}));
+                               {"clearance", integer(net.clearance)},
+                               {"pull", integer(net.pull)}}));
     for (const auto& footprint : problem.footprints)
         footprints.push_back(object({{"key", text_value(footprint.key)},
                                      {"flippable", boolean(footprint.flippable)},
@@ -487,9 +488,10 @@ Document read_document(const JsonNode& root) {
     problem.rules.dispersion_limit = field(rules, "dispersion_limit", JsonKind::Number).number_value;
     problem.rules.dispersion_floor = static_cast<std::size_t>(whole(field(rules, "dispersion_floor", JsonKind::Number)));
     for (const auto& entry : field(root, "nets", JsonKind::Array).array_value) {
-        reject_unknown_keys(entry, {"name", "category", "clearance"}, "layout net");
+        reject_unknown_keys(entry, {"name", "category", "clearance", "pull"}, "layout net");
         problem.nets.push_back({text(entry, "name"), category_of(text(entry, "category")),
-                                whole(field(entry, "clearance", JsonKind::Number)), {}});
+                                whole(field(entry, "clearance", JsonKind::Number)), {},
+                                static_cast<int>(whole(field(entry, "pull", JsonKind::Number)))});
     }
     for (const auto& entry : field(root, "footprints", JsonKind::Array).array_value) {
         reject_unknown_keys(entry, {"key", "flippable", "top", "bottom"}, "layout footprint");
