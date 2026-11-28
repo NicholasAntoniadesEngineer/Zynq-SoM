@@ -3,6 +3,7 @@
 #include "schgen/layout_density.hpp"
 #include "schgen/layout_squeeze.hpp"
 #include "schgen/layout_cli.hpp"
+#include "schgen/layout_plan.hpp"
 
 #include "schgen/atomic_file.hpp"
 #include "schgen/catalog.hpp"
@@ -30,11 +31,13 @@ const char* const usage =
     "       schgen layout-construct FILE\n"
     "       schgen layout-arrange FILE\n"
     "       schgen layout-repair FILE\n"
+    "       schgen layout-plan FILE\n"
     "  layout-export builds the current placed board and writes it as a layout problem.\n"
     "  layout-check replays a layout problem and reports every hard-rule violation.\n"
     "  layout-construct takes every owned part off the board, seats it again by rule and reports the result.\n"
     "  layout-arrange also takes every free unowned part off the board and places it afresh with its owned parts.\n"
-    "  layout-repair runs only the start repair on the placement as handed over and reports what is left.\n";
+    "  layout-repair runs only the start repair on the placement as handed over and reports what is left.\n"
+    "  layout-plan reports how the blocks of a placement sit: wiring between blocks, spread of each block, links that cross.\n";
 
 struct ExportArguments {
     std::filesystem::path repository = std::filesystem::current_path();
@@ -112,7 +115,7 @@ int export_problem(int argc, char** argv) {
 std::optional<int> run_layout_command(int argc, char** argv) {
     if (argc < 2) return std::nullopt;
     const std::string command = argv[1];
-    if (command != "layout-export" && command != "layout-check" && command != "layout-construct" && command != "layout-arrange" && command != "layout-repair") return std::nullopt;
+    if (command != "layout-export" && command != "layout-check" && command != "layout-construct" && command != "layout-arrange" && command != "layout-repair" && command != "layout-plan" && command != "layout-draw" && command != "layout-lay") return std::nullopt;
     if (std::any_of(argv + 2, argv + argc, [](const char* value) {
             return std::string(value) == "--help" || std::string(value) == "-h";
         })) {
@@ -122,6 +125,43 @@ std::optional<int> run_layout_command(int argc, char** argv) {
     if (command == "layout-export") return export_problem(argc, argv);
     if (argc != 3) throw LayoutError(command + ": exactly one problem file is required");
     const auto document = layout::read_document(parse_json_file(argv[2]));
+    if (command == "layout-plan") {
+        std::cout << layout::plan_figures(document.problem, document.placement).summary();
+        return 0;
+    }
+    if (command == "layout-lay") {
+        const layout::Problem dense = layout::without_density(document.problem);
+        layout::Kernel kernel(dense, document.placement);
+        layout::StageResult repaired;
+        layout::repair_start(kernel, layout::default_squeeze(), repaired, [](bool) {});
+        const std::size_t before = kernel.violations().size();
+        std::cout << "before\n" << layout::plan_figures(dense, kernel.placement()).summary().substr(0, 330) << "\n";
+        const layout::LayReport laid = layout::lay_out(kernel);
+        std::cout << "laid: " << laid.seated << " of " << laid.clusters << " clusters seated by plan, " << laid.returned << " put back, " << laid.unseated.size()
+                  << " without a seat; " << (laid.taken ? "taken" : "not taken") << "; airwire " << layout::to_mm(laid.routed_before) << " to "
+                  << layout::to_mm(laid.routed_after) << " mm; weighted " << layout::to_mm(laid.pulled_before) << " to " << layout::to_mm(laid.pulled_after)
+                  << "; violations " << before << " before, " << kernel.violations().size() << " after\n";
+        std::cout << "  test points left for their own seater: " << laid.deferred << "\n";
+        for (const auto& name : laid.unseated) std::cout << "  no seat: " << name << "\n";
+        const layout::DrawReport drawn = layout::draw_in(kernel);
+        std::cout << "drawn: " << drawn.moved << " moves; weighted " << layout::to_mm(drawn.pulled_before) << " to " << layout::to_mm(drawn.pulled_after)
+                  << "; violations " << kernel.violations().size() << "\n";
+        std::cout << "after\n" << layout::plan_figures(dense, kernel.placement()).summary() << "\n";
+        return 0;
+    }
+    if (command == "layout-draw") {
+        const layout::Problem dense = layout::without_density(document.problem);
+        layout::Kernel kernel(dense, document.placement);
+        const std::size_t before = kernel.violations().size();
+        std::cout << "before\n" << layout::plan_figures(dense, kernel.placement()).summary().substr(0, 400) << "\n";
+        const layout::DrawReport drawn = layout::draw_in(kernel);
+        std::cout << "drawn: " << drawn.moved << " moves of " << drawn.clusters << " clusters in " << drawn.rounds << " passes; airwire "
+                  << layout::to_mm(drawn.routed_before) << " to " << layout::to_mm(drawn.routed_after) << " mm; weighted "
+                  << layout::to_mm(drawn.pulled_before) << " to " << layout::to_mm(drawn.pulled_after) << "; violations " << before << " before, "
+                  << kernel.violations().size() << " after\n";
+        std::cout << "after\n" << layout::plan_figures(dense, kernel.placement()).summary().substr(0, 400) << "\n";
+        return 0;
+    }
     if (command == "layout-construct" || command == "layout-arrange" || command == "layout-repair") {
         const layout::Problem dense = layout::without_density(document.problem);
         layout::Kernel kernel(dense, document.placement);

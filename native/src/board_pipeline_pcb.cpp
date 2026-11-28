@@ -367,10 +367,11 @@ void pcb_stages(Context& c){
         if(c.options.layout){
             const auto& placed=*c.pcb;
             const layout::DensityChoice spacing{placed.inputs.floorplan.project.density,sheet_densities(load_board(c.paths.project_root,c.paths.module))};
-            const auto points=layout::check_test_points(placed.inputs,placed.placement.model,pcb_emit_policy(placed.inputs.floorplan.project),
-                layout::AdapterOptions{c.options.layout->plane_net,layout::project_edge_clearance(pcb_project_board_settings(pcb_emit_policy(placed.inputs.floorplan.project))),
-                    c.options.layout->overmold_parts,placed.inputs.floorplan.place_clear,layout::authored_intent(placed.inputs),spacing});
+            const layout::AdapterOptions judged{c.options.layout->plane_net,layout::project_edge_clearance(pcb_project_board_settings(pcb_emit_policy(placed.inputs.floorplan.project))),
+                    c.options.layout->overmold_parts,placed.inputs.floorplan.place_clear,layout::authored_intent(placed.inputs),spacing};
+            const auto points=layout::check_test_points(placed.inputs,placed.placement.model,pcb_emit_policy(placed.inputs.floorplan.project),judged);
             gate("test_point_stubs",points.ok,points.summary());
+            c.report("board_plan.txt",layout::plan_of(placed.inputs,placed.placement.model,pcb_emit_policy(placed.inputs.floorplan.project),judged).summary());
         }
         std::string silk_report="emitted-board refdes overlaps checked: top="+
             std::to_string(r.refdes.top_pairs.size())+" bottom="+std::to_string(r.refdes.bottom_pairs);

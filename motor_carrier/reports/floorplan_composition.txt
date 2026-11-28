@@ -1,41 +1,45 @@
 FLOORPLAN COMPOSITION (T1): 4 hard / 2 soft terms; hard RED 0, soft RED 1 (advisory)
-  hard margins (mm): measured 4, unresolved 0, sum 148.36, min 11.58 (informational)
+  hard margins (mm): measured 4, unresolved 0, sum 143.57, min 15.68 (informational)
   hard margins (degrees): measured 0, unresolved 0, sum 0.0, min unavailable (informational)
   hard terms:
-    HARD far_min ethernet->power: 69.61 vs 10.00 (margin +59.61) ok [judgment:10.0 — buck switching node vs Ethernet media/magnetics analog line side]
-    HARD far_min power->ethernet.line_side: 69.61 vs 10.00 (margin +59.61) ok [judgment:10.0 — buck switching node vs Ethernet MDI/magnetics analog line side; datasheet silent on inter-subsystem spacing (SNVSBD5D covers intra-stage only)]
-    HARD near_max ethernet->rj45_connector: 2.44 vs 20.00 (margin +17.56) ok [Pulse v7 p.1 <=25mm part-to-part|judgment:20.0 edge-gap proxy (D11)]
-    HARD near_max uart_bridge->usb_uart_connector: 28.42 vs 40.00 (margin +11.58) ok [judgment:10.0 (D11 edge-gap) — CP2102N's USB DP/DM pair terminates at the UART USB-C; measured 365mm of cross-board airwire (avg 122mm) with the block anchored mid-board and a STALE floorplan near-intent pointing at rj45_connector]
+    HARD far_min ethernet->power: 60.19 vs 10.00 (margin +50.19) ok [judgment:10.0 — buck switching node vs Ethernet media/magnetics analog line side]
+    HARD far_min power->ethernet.line_side: 60.19 vs 10.00 (margin +50.19) ok [judgment:10.0 — buck switching node vs Ethernet MDI/magnetics analog line side; datasheet silent on inter-subsystem spacing (SNVSBD5D covers intra-stage only)]
+    HARD near_max ethernet->rj45_connector: 4.32 vs 20.00 (margin +15.68) ok [Pulse v7 p.1 <=25mm part-to-part|judgment:20.0 edge-gap proxy (D11)]
+    HARD near_max uart_bridge->usb_uart_connector: 12.49 vs 40.00 (margin +27.51) ok [judgment:10.0 (D11 edge-gap) — CP2102N's USB DP/DM pair terminates at the UART USB-C; measured 365mm of cross-board airwire (avg 122mm) with the block anchored mid-board and a STALE floorplan near-intent pointing at rj45_connector]
   soft terms (advisory ledger — repair triggers, never gates):
-    soft facing power->power_som: 157.87 vs 90.00 (margin -67.87) RED [ADVISORY centroid preference: Reviewed 2026-10-18: all-component centroid direction changes when unrelated test points move; it is a placement preference, not a hardware limit. SNVSBD5D Rev. D section 11.1 requires local loop/layout and power-path quality, not a 90-degree subsystem-centroid cutoff. See native/benchmarks/2026-10-18-facing-centroid-review.json; routing and parasitics remain unverified.] dot=-680.74
-    soft flow_hop power->power_som: 53.04 vs 102.91 (margin +49.87) ok [ADVISORY board-size-derived flow preference [placement/v2]]
+    soft facing power->power_som: 98.30 vs 90.00 (margin -8.30) RED [ADVISORY centroid preference: Reviewed 2026-10-18: all-component centroid direction changes when unrelated test points move; it is a placement preference, not a hardware limit. SNVSBD5D Rev. D section 11.1 requires local loop/layout and power-path quality, not a 90-degree subsystem-centroid cutoff. See native/benchmarks/2026-10-18-facing-centroid-review.json; routing and parasitics remain unverified.] dot=-53.04
+    soft flow_hop power->power_som: 21.96 vs 103.83 (margin +81.87) ok [ADVISORY board-size-derived flow preference [placement/v2]]
   n/a terms (endpoint subsystem not instantiated by this project — project-scoped resolution):
     n/a flow_hop usb_pd->power [ADVISORY board-size-derived flow preference [placement/v2]]
-  T2 escape corridors (D13 never-close): 6 loaded, 22 UNMANAGED part intrusion(s), 0 T2-coexistence-managed
-    UNMANAGED INTRUSION C11012 (power) in escape:J3:N
-    UNMANAGED INTRUSION C15001 (som_decoupling) in escape:J1:S
-    UNMANAGED INTRUSION C15003 (som_decoupling) in escape:J1:S
-    UNMANAGED INTRUSION C15004 (som_decoupling) in escape:J1:N
+  T2 escape corridors (D13 never-close): 6 loaded, 24 UNMANAGED part intrusion(s), 0 T2-coexistence-managed
+    UNMANAGED INTRUSION C15002 (som_decoupling) in escape:J1:S
+    UNMANAGED INTRUSION C15003 (som_decoupling) in escape:J1:N
+    UNMANAGED INTRUSION C15004 (som_decoupling) in escape:J1:S
     UNMANAGED INTRUSION C15005 (som_decoupling) in escape:J1:N
     UNMANAGED INTRUSION C15007 (som_decoupling) in escape:J2:S
-    UNMANAGED INTRUSION C15009 (som_decoupling) in escape:J3:S
-    UNMANAGED INTRUSION C15010 (som_decoupling) in escape:J3:N
+    UNMANAGED INTRUSION C15008 (som_decoupling) in escape:J2:N
+    UNMANAGED INTRUSION C15009 (som_decoupling) in escape:J3:N
+    UNMANAGED INTRUSION C15010 (som_decoupling) in escape:J3:S
     UNMANAGED INTRUSION C15011 (som_decoupling) in escape:J2:N
-    UNMANAGED INTRUSION C15012 (som_decoupling) in escape:J2:N
-    UNMANAGED INTRUSION C15013 (som_decoupling) in escape:J1:N
+    UNMANAGED INTRUSION C15012 (som_decoupling) in escape:J2:S
     UNMANAGED INTRUSION C15014 (som_decoupling) in escape:J1:S
     UNMANAGED INTRUSION C15015 (som_decoupling) in escape:J1:N
     UNMANAGED INTRUSION C15016 (som_decoupling) in escape:J1:N
     UNMANAGED INTRUSION C15018 (som_decoupling) in escape:J1:N
-    UNMANAGED INTRUSION R1008 (board_control) in escape:J3:N
-    UNMANAGED INTRUSION R2004 (bringup_en) in escape:J2:S
-    UNMANAGED INTRUSION R6001 (esc_power) in escape:J2:S
-    UNMANAGED INTRUSION TP11003 (power) in escape:J3:N
-    UNMANAGED INTRUSION TP2002 (bringup_en) in escape:J3:N
-    UNMANAGED INTRUSION TP3002 (can_bus) in escape:J1:N
-    UNMANAGED INTRUSION U6001 (esc_power) in escape:J2:S
+    UNMANAGED INTRUSION C2003 (bringup_en) in escape:J1:S
+    UNMANAGED INTRUSION C5006 (esc_io) in escape:J3:S
+    UNMANAGED INTRUSION R12001 (power_mon) in escape:J3:S
+    UNMANAGED INTRUSION R13016 (power_som) in escape:J3:N
+    UNMANAGED INTRUSION R2003 (bringup_en) in escape:J3:N
+    UNMANAGED INTRUSION TP1008 (board_control) in escape:J1:N
+    UNMANAGED INTRUSION TP1010 (board_control) in escape:J1:N
+    UNMANAGED INTRUSION TP2001 (bringup_en) in escape:J3:N
+    UNMANAGED INTRUSION TP5003 (esc_io) in escape:J3:N
+    UNMANAGED INTRUSION TP9002 (microsd) in escape:J1:S
   D13 channel hotspots (>= 6 cross-airwires; corridor = 2 + 0.2/net mm):
-    bringup_en | power: 9 airwires (72.9 mm) -> corridor >= 3.8 mm
-    board_control | esc_io: 8 airwires (60.6 mm) -> corridor >= 3.6 mm
-    ethernet | rj45_connector: 8 airwires (189.8 mm) -> corridor >= 3.6 mm
-    board_control | esc_power: 6 airwires (121.0 mm) -> corridor >= 3.2 mm
+    microsd | power: 12 airwires (43.4 mm) -> corridor >= 4.4 mm
+    ethernet | rj45_connector: 9 airwires (347.8 mm) -> corridor >= 3.8 mm
+    board_control | bringup_en: 8 airwires (56.8 mm) -> corridor >= 3.6 mm
+    board_control | power_mon: 8 airwires (90.5 mm) -> corridor >= 3.6 mm
+    board_control | esc_power: 7 airwires (137.0 mm) -> corridor >= 3.4 mm
+    esc_io | power: 6 airwires (58.5 mm) -> corridor >= 3.2 mm

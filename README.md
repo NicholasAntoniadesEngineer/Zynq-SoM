@@ -35,6 +35,7 @@ nothing needs recompiling. A misspelt or unknown key stops the run with an error
 | `squeeze` | `true` | Compact the placed board to the smallest outline that passes every rule |
 | `arrange` | `true` | Before squeezing, move clusters of parts off sides of the module so those sides can close up; needs `squeeze` |
 | `construct` | `false` | Before repair and squeezing, take every part that belongs to an owner off the board and seat it again by the layout rules; needs `squeeze` |
+| `plan` | `true` | After the start is repaired, lift every group of tied parts that is free to move and seat it again, sheet by sheet, nearest the pins it connects to, with power and fast nets counted more heavily; then offer each group a nearer place. Every layout rule is checked on each seat. `reports/board_plan.txt` lists the wiring between sheets and how compact each sheet is; needs `squeeze` |
 | `renders` | `true` | Produce the 3D and per-sheet images |
 | `labels` | `false` | After the layout is final, seat each part's reference label beside it on its own face and draw the function labels. Parts never move for a label; one with no free seat is hidden and listed in `reports/label_seats.txt` |
 | `timing` | `true` | Print how long each stage took |

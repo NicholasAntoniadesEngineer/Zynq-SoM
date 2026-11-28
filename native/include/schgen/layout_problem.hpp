@@ -95,6 +95,7 @@ struct Net {
     Category category = Category::signal;
     Nm clearance = 0;
     std::vector<Pin> pins;
+    int pull = 1;
 };
 
 struct Board {

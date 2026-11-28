@@ -683,7 +683,9 @@ ModelBinding bind_model(const PcbModel& model, const PcbEmitPolicy& policy, cons
         index = problem.nets.size();
         const Category category = category_of(model, policy, options, name);
         const double clearance = category == Category::power ? policy.power_clearance : policy.default_clearance;
-        problem.nets.push_back({name, category, to_nm(clearance), {}});
+        const int pull = options.intent.fast_nets.count(name) != 0 ? static_cast<int>(constants::fast_pull.value)
+                         : category == Category::power ? static_cast<int>(constants::power_pull.value) : 1;
+        problem.nets.push_back({name, category, to_nm(clearance), {}, pull});
     }
 
     problem.rules.copper_clearance = to_nm(std::max(policy.default_clearance, policy.power_clearance));
@@ -918,6 +920,12 @@ GateVerdict judge_model(const PcbPlacementInput& inputs, const PcbModel& model) 
     return {check_fanout(input, 0).ok, check_placement_mech(input).ok, ratsnest.off_board.empty(),
             ratsnest.dispersed.empty(), check_pcb_placement_gates(inputs, model).ok(),
             spacing.ok, integrity.ok, integrity.placement_ok, placed_spacing, check_plug_paths(input, model.som_keepout).ok};
+}
+
+PlanFigures plan_of(const PcbPlacementInput& inputs, const PcbModel& model, const PcbEmitPolicy& policy, const AdapterOptions& options) {
+    const PcbPlacementGatePolicy gates = pcb_placement_gate_policy(inputs);
+    const ModelBinding binding = bind_model(model, policy, &gates, options);
+    return plan_figures(binding.problem, binding.placement);
 }
 
 TestPointResult check_test_points(const PcbPlacementInput& inputs, const PcbModel& model, const PcbEmitPolicy& policy,

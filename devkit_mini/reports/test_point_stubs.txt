@@ -1,22 +1,22 @@
 TEST POINT GATE: PASS
   a test point sits within its limit of another pad of its net, or adds no more than its limit to the path between two of them, on either face;
   beside a module connector pin the limit counts from the edge of the area kept clear for that connector (the module on top, its escape corridor on the rear)
-  test points on routed nets: 17 (0 over their limit, 13 on the rear face); test points on plane nets connect by a via and are not listed
-    OK   TP1001 (rear) on SDIO_CLK: stub 3.61688 mm to J8001, limit 1 mm plus 2.65 mm to leave the module connector's keep-out
-    OK   TP1002 (rear) on SDIO_CMD: stub 1.54222 mm to J8001, limit 1 mm plus 2.65 mm to leave the module connector's keep-out
-    OK   TP1003 (rear) on VBUS_OUT_EN: stub 5.201 mm to J8001, limit 3 mm plus 2.65 mm to leave the module connector's keep-out
-    OK   TP11001 (rear) on ZYNQ_PS_UART0_TXD: stub 5.6515 mm to J8001, detour 2.82312 mm, limit 3 mm plus 2.65 mm to leave the module connector's keep-out
-    OK   TP11002 (top) on ZYNQ_PS_UART0_RXD: stub 0 mm to U11001, detour 1.10529 mm, limit 3 mm
-    OK   TP3001 (rear) on +VBUS_IN: stub 13.4281 mm to J3001, detour 0.0214087 mm, limit 3 mm
-    OK   TP3002 (rear) on +VIN: stub 26.4989 mm to C3002, detour 2.85716 mm, limit 3 mm
-    OK   TP4001 (rear) on +5V: stub 2.95785 mm to C4008, detour 8.91998 mm, limit 3 mm
-    OK   TP4002 (rear) on +3V3: stub 2.9 mm to U4003, detour 0.000211476 mm, limit 3 mm
-    OK   TP4003 (rear) on +1V8: stub 17.2462 mm to RS5004, detour 2.98758 mm, limit 3 mm
-    OK   TP4005 (top) on EN_5V0: stub 2.80603 mm to U4001, limit 3 mm
-    OK   TP4006 (top) on EN_3V3: stub 2.8925 mm to U4002, limit 3 mm
-    OK   TP4007 (rear) on EN_1V8: stub 1.25 mm to U4003, limit 3 mm
-    OK   TP5001 (rear) on +3V3_SC: stub 16.13 mm to C7013, detour 5.17529e-06 mm, limit 3 mm
-    OK   TP5002 (rear) on STM32_I2C2_SCL: stub 11.8402 mm to R1007, detour 2.99588 mm, limit 3 mm
-    OK   TP5003 (rear) on STM32_I2C2_SDA: stub 14.4879 mm to J8001, detour 1.10943 mm, limit 3 mm plus 2.65 mm to leave the module connector's keep-out
-    OK   TP6001 (top) on +5V_SOM: stub 4.7199 mm to R6017, detour 0.125734 mm, limit 3 mm
+  test points on routed nets: 17 (0 over their limit, 14 on the rear face); test points on plane nets connect by a via and are not listed
+    OK   TP1001 (rear) on SDIO_CLK: stub 0.566083 mm to J8001, limit 1 mm plus 2.65 mm to leave the module connector's keep-out
+    OK   TP1002 (rear) on SDIO_CMD: stub 2.98889 mm to J8001, limit 1 mm plus 2.65 mm to leave the module connector's keep-out
+    OK   TP1003 (rear) on VBUS_OUT_EN: stub 1.29401 mm to J8001, limit 3 mm plus 2.65 mm to leave the module connector's keep-out
+    OK   TP11001 (rear) on ZYNQ_PS_UART0_TXD: stub 12.815 mm to J8001, detour 0.113988 mm, limit 3 mm plus 2.65 mm to leave the module connector's keep-out
+    OK   TP11002 (rear) on ZYNQ_PS_UART0_RXD: stub 15.0806 mm to J8001, detour 0.0154049 mm, limit 3 mm plus 2.65 mm to leave the module connector's keep-out
+    OK   TP3001 (rear) on +VBUS_IN: stub 2.89807 mm to J3001, detour 3.55187 mm, limit 3 mm
+    OK   TP3002 (rear) on +VIN: stub 23.8672 mm to RS5001, detour 2.7091e-07 mm, limit 3 mm
+    OK   TP4001 (rear) on +5V: stub 2.84414 mm to U5001, detour 5.99635 mm, limit 3 mm
+    OK   TP4002 (rear) on +3V3: stub 13.4611 mm to C7010, detour 0.00111248 mm, limit 3 mm
+    OK   TP4003 (rear) on +1V8: stub 26.425 mm to R4007, detour 0.0080662 mm, limit 3 mm
+    OK   TP4005 (top) on EN_5V0: stub 2.8302 mm to U4001, limit 3 mm
+    OK   TP4006 (top) on EN_3V3: stub 2.7602 mm to U4002, limit 3 mm
+    OK   TP4007 (rear) on EN_1V8: stub 2.755 mm to U4003, limit 3 mm
+    OK   TP5001 (rear) on +3V3_SC: stub 11.1207 mm to C7013, detour 1.29119e-05 mm, limit 3 mm
+    OK   TP5002 (rear) on STM32_I2C2_SCL: stub 22.1641 mm to J8001, detour 0.221682 mm, limit 3 mm plus 2.65 mm to leave the module connector's keep-out
+    OK   TP5003 (rear) on STM32_I2C2_SDA: stub 19.4972 mm to J8001, detour 0.155711 mm, limit 3 mm plus 2.65 mm to leave the module connector's keep-out
+    OK   TP6001 (top) on +5V_SOM: stub 3.255 mm to C6018, detour 0.000435792 mm, limit 3 mm
 

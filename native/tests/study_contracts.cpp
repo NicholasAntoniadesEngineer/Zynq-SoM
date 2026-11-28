@@ -45,7 +45,7 @@ void write(const std::filesystem::path& file, const std::string& text) {
 }
 
 const std::string base = "{\"schema\":\"schgen.run/1\",\"boards\":[\"carrier\",\"devkit_mini\"],\"output\":\"out\",\"squeeze\":true,"
-                         "\"arrange\":false,\"construct\":false,\"renders\":false,\"labels\":false,\"timing\":false,\"plane_net\":\"GND\","
+                         "\"arrange\":false,\"construct\":false,\"plan\":false,\"renders\":false,\"labels\":false,\"timing\":false,\"plane_net\":\"GND\","
                          "\"audit_projections\":2,\"stackup\":{\"carrier\":\"JLC06161H-3313\",\"devkit_mini\":\"JLC06161H-3313\"},"
                          "\"density\":{\"carrier\":10,\"devkit_mini\":10},"
                          "\"fabrication\":{\"carrier\":{\"fabricator\":\"jlcpcb\",\"copper\":{\"outer_oz\":1,\"inner_oz\":0.5},\"finish\":\"ENIG\",\"assembly_service\":\"standard\",\"build_count\":5},\"devkit_mini\":{\"fabricator\":\"jlcpcb\",\"copper\":{\"outer_oz\":1,\"inner_oz\":0.5},\"finish\":\"ENIG\",\"assembly_service\":\"standard\",\"build_count\":5}},"

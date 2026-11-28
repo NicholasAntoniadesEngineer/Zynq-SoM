@@ -3,7 +3,7 @@ SEARCH EFFORT: observational, no acceptance ceiling; counts include rejected wor
   bottom_variant_contract_reject: 0
   cand_cap_truncated: 18
   contract_group_orientation_retry: 0
-  corridor_evict_moved: 4
+  corridor_evict_moved: 5
   edge_geometry_replan_retry: 0
   edge_run_translation: 0
   facing_replan_retry: 0
@@ -24,7 +24,7 @@ SEARCH EFFORT: observational, no acceptance ceiling; counts include rejected wor
   interior_reseat_pose_search: 0
   interior_reseat_pose_skip: 0
   interior_reseat_pose_trial: 0
-  interior_reseat_retry: 2
+  interior_reseat_retry: 0
   interior_reseat_shape_retry: 0
   interior_reseat_shape_trial: 0
   interior_shape_choice_budget: 0

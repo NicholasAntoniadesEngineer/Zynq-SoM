@@ -19,27 +19,27 @@ SoM outline: **50 x 42 mm**.
 | J2 | (136.5, 129.5) rot 180 | (29, 38.5) | 19.8 x 3.78 mm |
 | J3 | (154.5, 112) rot 90 | (47, 21) | 3.78 x 19.8 mm |
 
-Derived board: **98 x 97 mm**; SoM origin at **(24, 27.5)** (centered). All coordinates below are board-frame mm, origin top-left, +y down (KiCad convention).
+Derived board: **98 x 96 mm**; SoM origin at **(24, 27)** (centered). All coordinates below are board-frame mm, origin top-left, +y down (KiCad convention).
 
-Outline derivation: SoM 50x42 + 7mm halo + 11mm connector band/edge -> core 86x78; component area 1472mm2 / 0.6 fill -> area floor 82x74; + 3mm perimeter keepout -> 95x85 mm (rounded up to 5mm grid); then bounded search over aspects 1, 1.1, 1.1176, 1.2, 1.3, 1.4 -> 98x97 mm (the smallest feasible board FOUND by this bounded aspect/grid search and greedy packing order, not a global minimum; holding the REAL 2-sided packed blocks with the estimated cross-subsystem airwire 1919 mm; advisory airwire reference 2340 mm, not an acceptance constraint), SoM 50x42 centered.
+Outline derivation: SoM 50x42 + 7mm halo + 11mm connector band/edge -> core 86x78; component area 1472mm2 / 0.6 fill -> area floor 82x74; + 3mm perimeter keepout -> 95x85 mm (rounded up to 5mm grid); then bounded search over aspects 1, 1.1, 1.1176, 1.2, 1.3, 1.4 -> 98x96 mm (the smallest feasible board FOUND by this bounded aspect/grid search and greedy packing order, not a global minimum; holding the REAL 2-sided packed blocks with the estimated cross-subsystem airwire 1675 mm; advisory airwire reference 2328 mm, not an acceptance constraint), SoM 50x42 centered.
 
 ## Edge connectors (pinned to edges by their mating direction)
 
 | edge | sheet | block (x, y, w x h) | connector(s) | notes |
 |---|---|---|---|---|
-| E | usb_uart_connector | (85.4768, 40.1424, 11.0232 x 16.7151) | TYPE-C-31-M-12 (USB-C receptacle) |  |
-| S | pd_input | (40.52, 74.1536, 24.96 x 21.3464) | TYPE-C-31-M-12 (USB-C receptacle) |  |
+| W | pd_input | (1.5, 12.3969, 16.6982 x 36.2062) | TYPE-C-31-M-12 (USB-C receptacle) |  |
+| E | usb_uart_connector | (85.4768, 39.6424, 11.0232 x 16.7151) | TYPE-C-31-M-12 (USB-C receptacle) |  |
 
 ## Interior blocks (zone = dominant SoM connector side, or the power cluster)
 
 | sheet | anchor | block (x, y, w x h) | parts | est mm2 | notes |
 |---|---|---|---|---|---|
-| debug_boot | N | (2, 33, 18.76 x 29.98) | 15 | 562.4 |  |
-| mechanical | E | (27, 72, 13 x 13) | 4 | 169 |  |
-| power | E | (19, 1, 55.7404 x 24.44) | 54 | 1362.3 |  |
-| power_mon | E | (12, 9, 6.64 x 23.23) | 13 | 154.2 |  |
-| power_som | E | (67, 73, 28.1 x 9.6) | 20 | 269.8 |  |
-| uart_bridge | @usb_uart_connector | (76, 23, 10.805 x 16.78) | 10 | 181.3 |  |
+| debug_boot | N | (31, 5, 36.59 x 18.27) | 15 | 668.5 |  |
+| mechanical | E | (9, 49, 13 x 13) | 4 | 169 |  |
+| power | E | (19.9596, 70.8, 55.7404 x 24.44) | 54 | 1362.3 |  |
+| power_mon | E | (77, 33, 6.64 x 23.23) | 13 | 154.2 |  |
+| power_som | E | (68, 14, 28.1 x 9.6) | 20 | 269.8 |  |
+| uart_bridge | @usb_uart_connector | (76, 57, 10.805 x 16.78) | 10 | 181.3 |  |
 
 ## Routing constraint classes (JLC06161H-3313 — from native/src/constraints.cpp)
 

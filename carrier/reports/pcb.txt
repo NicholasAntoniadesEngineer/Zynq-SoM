@@ -1,0 +1,110 @@
+FAIL: search: no correct attempt in the stated budget
+  seed 0 (S3): layout: 2 face pairs or protection orders could not be repaired within the stated budget
+  seed 1 (S3): layout: 1 face pairs or protection orders could not be repaired within the stated budget
+  seed 2 (S3): layout: 1 face pairs or protection orders could not be repaired within the stated budget
+  seed 3 (S3): layout: 2 face pairs or protection orders could not be repaired within the stated budget
+  seed 4 (S3): layout: 2 face pairs or protection orders could not be repaired within the stated budget
+  seed 5 (S3): layout: 2 face pairs or protection orders could not be repaired within the stated budget
+  seed 6 (S3): layout: 1 face pairs or protection orders could not be repaired within the stated budget
+  seed 7 (S3): layout: 1 face pairs or protection orders could not be repaired within the stated budget
+CLOSEST seed 0:
+layout: 2 face pairs or protection orders could not be repaired within the stated budget
+CONVERGENCE: 6 breaches of staged rules (connector spacing, plug paths, face pairs, protection orders) handed over by the placer; 66 repair steps kept of 91 tried; 2 left
+level | rule | subject | action | breaches before>after | kept
+0 | owner of U18001 | U18001 -> R18002 | reseat at the pin on its face | 5>5 | no
+1 | owner of U18001 | U18001 -> R18002 | reseat after moving small parts aside | 5>5 | no
+1 | owner of U18001 | U18001 -> R18002 | reseat in the wide ring | 5>5 | no
+1 | owner of U18001 | U18001 -> R18002 | reseat together with the parts tied to it | 5>5 | no
+1 | owner of U18001 | U18001 -> R18002 | take the seat at the pin and reseat the parts in it by their own rules | 5>5 | no
+1 | owner of U18001 | U18001 -> R18002 | seat every part owned by R18002 again by rule, face-bound parts first | 5>5 | no
+2 | owner of U18001 | U18001 -> R18002 | move R18002 and its face-tied set to the other face | 5>4 | yes
+0 | owner of U18002 | U18002 -> R18006 | reseat at the pin on its face | 4>4 | no
+1 | owner of U18002 | U18002 -> R18006 | reseat after moving small parts aside | 4>4 | no
+1 | owner of U18002 | U18002 -> R18006 | reseat in the wide ring | 4>4 | no
+1 | owner of U18002 | U18002 -> R18006 | reseat together with the parts tied to it | 4>4 | no
+1 | owner of U18002 | U18002 -> R18006 | take the seat at the pin and reseat the parts in it by their own rules | 4>4 | no
+1 | owner of U18002 | U18002 -> R18006 | seat every part owned by R18006 again by rule, face-bound parts first | 4>4 | no
+2 | owner of U18002 | U18002 -> R18006 | move R18006 and its face-tied set to the other face | 4>3 | yes
+0 | owner of U18003 | U18003 -> R18010 | reseat at the pin on its face | 3>3 | no
+1 | owner of U18003 | U18003 -> R18010 | reseat after moving small parts aside | 3>3 | no
+1 | owner of U18003 | U18003 -> R18010 | reseat in the wide ring | 3>3 | no
+1 | owner of U18003 | U18003 -> R18010 | reseat together with the parts tied to it | 3>3 | no
+1 | owner of U18003 | U18003 -> R18010 | take the seat at the pin and reseat the parts in it by their own rules | 3>3 | no
+1 | owner of U18003 | U18003 -> R18010 | seat every part owned by R18010 again by rule, face-bound parts first | 3>3 | no
+2 | owner of U18003 | U18003 -> R18010 | move R18010 and its face-tied set to the other face | 3>2 | yes
+0 | owner of U18004 | U18004 -> R18014 | reseat at the pin on its face | 2>2 | no
+1 | owner of U18004 | U18004 -> R18014 | reseat after moving small parts aside | 2>2 | no
+1 | owner of U18004 | U18004 -> R18014 | reseat in the wide ring | 2>2 | no
+1 | owner of U18004 | U18004 -> R18014 | reseat together with the parts tied to it | 2>2 | no
+1 | owner of U18004 | U18004 -> R18014 | take the seat at the pin and reseat the parts in it by their own rules | 2>2 | no
+1 | owner of U18004 | U18004 -> R18014 | seat every part owned by R18014 again by rule, face-bound parts first | 2>2 | no
+2 | owner of U18004 | U18004 -> R18014 | move R18014 and its face-tied set to the other face | 2>1 | yes
+1 | protection order | U16002 -> J16001 | seat the protection part first and move the parts nearer than it back | 1>0 | yes
+2 | overlap | C37003 / J37002 | move C37003 to the nearest legal seat | 5>4 | yes
+2 | overlap | D37001 / J37002 | move D37001 to the nearest legal seat | 4>3 | yes
+2 | overlap | J37002 / U37002 | move U37002 to the nearest legal seat | 3>3 | no
+2 | contract | J8001 / U8002 | move U8002 to the nearest legal seat | 3>2 | yes
+0 | plug path | BT3001 | turn BT3001 where it stands | 1>0 | yes
+2 | test point on +3V3_AUX | TP1001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on AUX_I2C_SCL | TP1002 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on AUX_I2C_SDA | TP1003 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +2V5_VADJ | TP11001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +5V_HDMI_TX | TP14001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on ZYNQ_HDMI_TX_SCL | TP14002 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on ZYNQ_HDMI_TX_SDA | TP14003 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +5V_LCD | TP15001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on LCD_CTP_SDA | TP15002 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on LCD_CTP_SCL | TP15003 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on fast net SDIO_CMD | TP16001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on fast net SDIO_CLK | TP16002 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +VBUS_IN | TP17001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +VIN | TP17002 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +3V3_PMODX | TP19001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +5V | TP20001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +3V3 | TP20002 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +1V8 | TP20003 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +5V_SOM | TP22001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on ZYNQ_PS_UART0_TXD | TP27001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on ZYNQ_PS_UART0_RXD | TP27002 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +3V3_DBG | TP28001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on DBG_UART_TXD | TP28002 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on DBG_UART_RXD | TP28003 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +5V_DBG | TP29001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on VBUS_OUT_EN | TP32001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +5V_MOTOR_IO | TP36001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on EN_5V0 | TP4001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on EN_3V3 | TP4002 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on EN_1V8 | TP4003 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on EN_HDMI_TX | TP5001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on EN_HDMI_RX | TP5002 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on EN_LCD | TP5003 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on EN_CAM | TP5004 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on EN_SD | TP5005 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on EN_USB | TP5006 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on EN_PMOD | TP5007 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on EN_USER_LED | TP5008 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on EN_LCD_BL | TP5009 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on EN_HDMI_TX_5V | TP5010 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on EN_LCD_5V | TP5011 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +3V3_HDMI_TX | TP6001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +3V3_HDMI_RX | TP6002 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +3V3_LCD | TP6003 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +3V3_CAM | TP6004 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +3V3_SD | TP6005 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +5V_USB | TP6006 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +3V3_PMOD | TP6007 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +3V3_USER_LED | TP6008 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +5V_HDMI_TX | TP6009 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +5V_LCD | TP6010 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on +3V3_SC | TP7001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on STM32_I2C2_SDA | TP7002 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on STM32_I2C2_SCL | TP7003 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on CAM_SCL | TP8001 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on CAM_SDA | TP8002 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+2 | test point on CAM_EN | TP8003 | move the test point to a pad of its net or onto the path between two | 0>0 | yes
+ILLEGAL handed over: overlap:C37001/J37002 overlap:C37003/J37002 overlap:C37004/J37003 overlap:D37001/J37002 overlap:J37002/U37002 plug_path:BT3001/BT3001 contract:J12001/U12004 contract:J8001/U8002 (8)
+ILLEGAL after connector separation: overlap:C37001/J37002 overlap:C37003/J37002 overlap:C37004/J37003 overlap:D37001/J37002 overlap:J37002/U37002 plug_path:BT3001/BT3001 contract:J12001/U12004 contract:J8001/U8002 (8)
+ILLEGAL after repair: overlap:J37002/U37002 (1)
+LEFT D37001 -> J37002 (owner of D37001) on the other face: D37001 at 102.844,47.65 rear, J37002 at 102.244,38.165 top; 7844 seats within reach; 5534 overlap J37002; 1950 overlap C37001; 360 overlap C37002
+LEFT protection order: D37001 at 102.844,47.65 rear, 5.92196 mm from the pin; nearer: C37001 at 103.344,46.165 top, 2.78321 mm from the pin; U37002 at 109.745,44.975 top, 3.50698 mm from the pin;
+

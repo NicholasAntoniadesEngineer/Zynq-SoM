@@ -27,7 +27,21 @@ inline constexpr NamedConstant arrange_choices{"arrange_choices", 6, "positions"
     "legal positions compared by airwire length before one is taken for a block"};
 inline constexpr NamedConstant arrange_finalists{"arrange_finalists", 2, "plans", "policy",
     "plans with the smallest span that are squeezed to find which gives the smallest board"};
-inline constexpr std::array arrange_registry{arrange_pitch, arrange_gap, room_factor, rehome_pitch, rehome_tries, tighten_rounds, arrange_tries, arrange_choices,
+inline constexpr NamedConstant draw_rounds{"draw_rounds", 4, "passes", "policy",
+    "passes in which every cluster is offered a place nearer the pins it connects to; a pass that moves nothing ends the search"};
+inline constexpr NamedConstant draw_slack{"draw_slack", 1e6, "nm", "policy",
+    "distance from the centre of what a cluster connects to within which it is left alone; one lattice step, so nearer cannot be offered"};
+inline constexpr NamedConstant draw_tries{"draw_tries", 200, "positions", "policy",
+    "positions nearest the wanted place checked against every rule for one cluster in one pass"};
+inline constexpr NamedConstant lay_tries{"lay_tries", 4000, "positions", "policy",
+    "positions nearest the wanted place tried for one lifted cluster before it waits for the rest of the board to be seated"};
+inline constexpr NamedConstant lay_rounds{"lay_rounds", 6, "passes", "policy",
+    "times the whole board is laid out again with the clusters that found no seat placed first; a pass that fails only clusters already placed first ends the search"};
+inline constexpr NamedConstant lay_gather{"lay_gather", 0.5, "ratio", "policy",
+    "share of a cluster's wanted place given to the middle of the clusters of its own sheet already seated, the rest to the pins it connects to; a sheet must stay one block for its cohesion rules and its return currents"};
+inline constexpr NamedConstant lay_follow{"lay_follow", 16, "positions", "policy",
+    "seats of a group tried in turn while the groups tied to it find no seat beside it; past this the group is taken to have no seat that suits them, since a search inside a search over every seat of the board does not end"};
+inline constexpr std::array arrange_registry{arrange_pitch, arrange_gap, room_factor, rehome_pitch, rehome_tries, tighten_rounds, arrange_tries, arrange_choices, draw_rounds, draw_slack, draw_tries, lay_tries, lay_rounds, lay_gather, lay_follow,
                                              arrange_finalists};
 }
 
@@ -50,6 +64,20 @@ struct ArrangeReport {
     double plan_seconds = 0, squeeze_seconds = 0;
 };
 
+struct DrawReport {
+    std::size_t clusters = 0, moved = 0, rounds = 0;
+    Nm routed_before = 0, routed_after = 0, pulled_before = 0, pulled_after = 0;
+};
+
+struct LayReport {
+    std::size_t clusters = 0, seated = 0, returned = 0, deferred = 0, rounds = 0;
+    std::vector<std::string> unseated;
+    bool taken = false;
+    Nm routed_before = 0, routed_after = 0, pulled_before = 0, pulled_after = 0;
+};
+
+LayReport lay_out(Kernel& kernel);
+DrawReport draw_in(Kernel& kernel);
 Box held_extent(const Kernel& kernel);
 std::string extent_holders(const Kernel& kernel);
 ArrangeReport arrange(Kernel& kernel, const SqueezeOptions& options, const std::function<void()>& settle = {});

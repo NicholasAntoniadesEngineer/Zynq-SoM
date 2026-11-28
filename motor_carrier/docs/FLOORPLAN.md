@@ -19,36 +19,36 @@ SoM outline: **50 x 42 mm**.
 | J2 | (136.5, 129.5) rot 180 | (29, 38.5) | 19.8 x 3.78 mm |
 | J3 | (154.5, 112) rot 90 | (47, 21) | 3.78 x 19.8 mm |
 
-Derived board: **149 x 149 mm**; SoM origin at **(49.5, 53.5)** (centered). All coordinates below are board-frame mm, origin top-left, +y down (KiCad convention).
+Derived board: **150 x 149 mm**; SoM origin at **(50, 53.5)** (centered). All coordinates below are board-frame mm, origin top-left, +y down (KiCad convention).
 
-Outline derivation: SoM 50x42 + 7mm halo + 11mm connector band/edge -> core 86x78; component area 5857mm2 / 0.6 fill -> area floor 121x110; + 3mm perimeter keepout -> 130x120 mm (rounded up to 5mm grid); then bounded search over aspects 1, 1.0833, 1.1, 1.2, 1.3, 1.4 -> 149x149 mm (the smallest feasible board FOUND by this bounded aspect/grid search and greedy packing order, not a global minimum; holding the REAL 2-sided packed blocks with the estimated cross-subsystem airwire 6667 mm; advisory airwire reference 7599 mm, not an acceptance constraint), SoM 50x42 centered.
+Outline derivation: SoM 50x42 + 7mm halo + 11mm connector band/edge -> core 86x78; component area 5857mm2 / 0.6 fill -> area floor 121x110; + 3mm perimeter keepout -> 130x120 mm (rounded up to 5mm grid); then bounded search over aspects 1, 1.0833, 1.1, 1.2, 1.3, 1.4 -> 150x149 mm (the smallest feasible board FOUND by this bounded aspect/grid search and greedy packing order, not a global minimum; holding the REAL 2-sided packed blocks with the estimated cross-subsystem airwire 6499 mm; advisory airwire reference 7624 mm, not an acceptance constraint), SoM 50x42 centered.
 
 ## Edge connectors (pinned to edges by their mating direction)
 
 | edge | sheet | block (x, y, w x h) | connector(s) | notes |
 |---|---|---|---|---|
-| N | microsd | (68.7629, 1.5, 19.4743 x 30.2967) | TF-01A (microSD push-pull) |  |
-| E | pd_input | (131.052, 38.8967, 16.4482 x 36.2066) | TYPE-C-31-M-12 (USB-C receptacle) |  |
-| S | usb_uart_connector | (29.8775, 133.866, 10.9551 x 13.6342) | TYPE-C-31-M-12 (USB-C receptacle) |  |
-| S | esc_power | (45.8326, 100.32, 66.11 x 47.18) | XT60PW-M (XT60 ESC power inlet (horizontal)), XT60PW-M (XT60 ESC power inlet (horizontal)) |  |
+| N | usb_uart_connector | (30.0889, 1.5, 11.2451 x 13.3891) | TYPE-C-31-M-12 (USB-C receptacle) |  |
+| N | esc_power | (46.334, 1.5, 66.11 x 47.18) | XT60PW-M (XT60 ESC power inlet (horizontal)), XT60PW-M (XT60 ESC power inlet (horizontal)) |  |
+| W | pd_input | (1.5, 38.8969, 16.6982 x 36.2062) | TYPE-C-31-M-12 (USB-C receptacle) |  |
+| E | microsd | (123.758, 47.1073, 24.7417 x 25.17) | TF-01A (microSD push-pull) |  |
 
 ## Interior blocks (zone = dominant SoM connector side, or the power cluster)
 
 | sheet | anchor | block (x, y, w x h) | parts | est mm2 | notes |
 |---|---|---|---|---|---|
-| board_control | E | (12, 51, 9.4 x 57.3) | 33 | 538.6 |  |
-| bringup_en | E | (113, 95, 8.2 x 14.4) | 15 | 118.1 |  |
-| can_bus | S | (94, 37, 24.21 x 13.91) | 11 | 336.8 |  |
-| debug_boot | N | (103, 54, 18.76 x 40.63) | 11 | 762.2 |  |
+| board_control | E | (53, 110, 38.55 x 13.77) | 33 | 530.8 |  |
+| bringup_en | E | (94, 98, 8.2 x 14.4) | 15 | 118.1 |  |
+| can_bus | S | (21, 39, 24.21 x 13.91) | 11 | 336.8 |  |
+| debug_boot | N | (103, 55, 18.76 x 37.63) | 11 | 705.9 |  |
 | esc_io | E | (23, 54, 23.89 x 41.66) | 41 | 995.3 |  |
-| ethernet | N | (42, 21, 21.745 x 29.7676) | 11 | 647.3 |  |
-| mechanical | E | (89, 4, 13 x 13) | 4 | 169 |  |
-| power | E | (122.96, 75.4033, 24.44 x 53.6604) | 51 | 1311.5 |  |
-| power_mon | E | (35, 97, 9.68 x 14.23) | 10 | 137.7 |  |
-| power_som | E | (65.4499, 40.9, 28.1 x 9.6) | 20 | 269.8 |  |
-| rj45_connector | E | (20, 29, 20.41 x 20.77) | 3 | 423.9 |  |
-| uart_bridge | @usb_uart_connector | (27, 121, 16.78 x 10.805) | 10 | 181.3 |  |
-| vbat_supply | E | (89, 19, 47.42 x 17.06) | 35 | 809 |  |
+| ethernet | N | (62, 125, 29.7676 x 21.745) | 11 | 647.3 |  |
+| mechanical | E | (103, 94, 13 x 13) | 4 | 169 |  |
+| power | E | (122.96, 72.5773, 24.44 x 53.6604) | 51 | 1311.5 |  |
+| power_mon | E | (42, 99, 21.32 x 6.64) | 10 | 141.6 |  |
+| power_som | E | (65.4499, 99.45, 28.1 x 9.6) | 20 | 269.8 |  |
+| rj45_connector | E | (93, 115, 20.41 x 20.77) | 3 | 423.9 |  |
+| uart_bridge | @usb_uart_connector | (28, 16, 16.78 x 10.805) | 10 | 181.3 |  |
+| vbat_supply | E | (5, 107, 47.42 x 17.06) | 35 | 809 |  |
 
 ## Routing constraint classes (JLC06161H-3313 — from native/src/constraints.cpp)
 
