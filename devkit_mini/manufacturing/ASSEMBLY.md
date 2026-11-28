@@ -1,6 +1,6 @@
 # Assembly order — devkit_mini
 
-Board 74.25 x 77 mm. 156 placed parts (40 top / 116 bottom); 5 fiducials are bare-copper marks, excluded from every phase and step.
+Board 63 x 87.75 mm. 156 placed parts (37 top / 119 bottom); 5 fiducials are bare-copper marks, excluded from every phase and step.
 Section A is the staged hand-assembly + bring-up order; section B is the PCBA process order. Every part appears in exactly one phase and exactly one step.
 
 ## A. Incremental bring-up order
@@ -49,7 +49,7 @@ CHECKPOINT: verify +VIN at TP3002
 
 ![phase 2](../renders/assembly/phase_02_power_mon.png)
 
-13 parts (3 top / 10 bottom)
+13 parts (2 top / 11 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
@@ -71,7 +71,7 @@ CHECKPOINT: verify +VIN at TP3002
 
 ![phase 3](../renders/assembly/phase_03_power.png)
 
-54 parts (5 top / 49 bottom)
+54 parts (6 top / 48 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
@@ -138,7 +138,7 @@ CHECKPOINT: verify +1V8 at TP4003
 
 ![phase 4](../renders/assembly/phase_04_power_som.png)
 
-20 parts (4 top / 16 bottom)
+20 parts (2 top / 18 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
@@ -240,7 +240,7 @@ CHECKPOINT: boot/debug via debug_boot: J1001 (JTAG), J1002 (SWD), SW1001 (BOOT: 
 
 ![phase 9](../renders/assembly/phase_09_uart_bridge.png)
 
-10 parts (1 top / 9 bottom)
+10 parts (0 top / 10 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
@@ -288,7 +288,7 @@ CHECKPOINT: boot/debug via debug_boot: J1001 (JTAG), J1002 (SWD), SW1001 (BOOT: 
 
 ![step 1](../renders/assembly/step_1_bottom_smd.png)
 
-116 parts (0 top / 116 bottom)
+119 parts (0 top / 119 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
@@ -324,6 +324,7 @@ CHECKPOINT: boot/debug via debug_boot: J1001 (JTAG), J1002 (SWD), SW1001 (BOOT: 
 | C6017 | 100n | C_0603_1608Metric | power_som |
 | C6018 | 22u | C_0805_2012Metric | power_som |
 | C6019 | 22u | C_0805_2012Metric | power_som |
+| C6021 | 22p | C_0603_1608Metric | power_som |
 | C6022 | 1u | C_0603_1608Metric | power_som |
 | C6023 | 1u | C_0603_1608Metric | power_som |
 | C6025 | 100n | C_0603_1608Metric | power_som |
@@ -371,7 +372,6 @@ CHECKPOINT: boot/debug via debug_boot: J1001 (JTAG), J1002 (SWD), SW1001 (BOOT: 
 | R4008 | 100k | R_0603_1608Metric | power |
 | R4009 | 330R | R_0603_1608Metric | power |
 | R4010 | 22k | R_0603_1608Metric | power |
-| R4011 | 10R | R_0603_1608Metric | power |
 | R4012 | 1k | R_0603_1608Metric | power |
 | R4013 | 10R | R_0603_1608Metric | power |
 | R4014 | 22k | R_0603_1608Metric | power |
@@ -380,6 +380,7 @@ CHECKPOINT: boot/debug via debug_boot: J1001 (JTAG), J1002 (SWD), SW1001 (BOOT: 
 | R6014 | 47k5 | R_0603_1608Metric | power_som |
 | R6015 | 13k | R_0603_1608Metric | power_som |
 | R6016 | 1k | R_0603_1608Metric | power_som |
+| R6017 | 10R | R_0603_1608Metric | power_som |
 | R6018 | 22k | R_0603_1608Metric | power_som |
 | R6019 | 1k | R_0603_1608Metric | power_som |
 | R11001 | 1k | R_0603_1608Metric | uart_bridge |
@@ -388,6 +389,7 @@ CHECKPOINT: boot/debug via debug_boot: J1001 (JTAG), J1002 (SWD), SW1001 (BOOT: 
 | RS5001 | 10mR | RLM12FTCMR010 | power_mon |
 | RS5002 | 10mR | RLM12FTCMR010 | power_mon |
 | RS5003 | 10mR | RLM12FTCMR010 | power_mon |
+| RS5004 | 20mR | RLM12FTCMR020 | power_mon |
 | TP1001 | SDIO_CLK | TestPoint_Pad_D1.5mm | debug_boot |
 | TP1002 | SDIO_CMD | TestPoint_Pad_D1.5mm | debug_boot |
 | TP1003 | VBUS_OUT_EN | TestPoint_Pad_D1.5mm | debug_boot |
@@ -402,6 +404,7 @@ CHECKPOINT: boot/debug via debug_boot: J1001 (JTAG), J1002 (SWD), SW1001 (BOOT: 
 | TP5002 | STM32_I2C2_SCL | TestPoint_Pad_D1.5mm | power_mon |
 | TP5003 | STM32_I2C2_SDA | TestPoint_Pad_D1.5mm | power_mon |
 | TP11001 | ZYNQ_PS_UART0_TXD | TestPoint_Pad_D1.5mm | uart_bridge |
+| TP11002 | ZYNQ_PS_UART0_RXD | TestPoint_Pad_D1.5mm | uart_bridge |
 | U4001 | LM61460AANRJRR | LM61460AANRJRR | power |
 | U4002 | LM61460AANRJRR | LM61460AANRJRR | power |
 | U4003 | AP2112K-1.8 | SOT-23-5 | power |
@@ -415,7 +418,7 @@ NOTES: pin-1 orientation (Q4001, U4001, U4002, U4003, U5002, U6004, U11001): dot
 
 ![step 2](../renders/assembly/step_2_top_smd.png)
 
-29 parts (29 top / 0 bottom)
+26 parts (26 top / 0 bottom)
 
 | ref | value | package | sheet |
 |---|---|---|---|
@@ -423,7 +426,6 @@ NOTES: pin-1 orientation (Q4001, U4001, U4002, U4003, U5002, U6004, U11001): dot
 | C3002 | 10u | C_1210_3225Metric | pd_input |
 | C3003 | 47n | C_0603_1608Metric | pd_input |
 | C5002 | 100n | C_0603_1608Metric | power_mon |
-| C6021 | 22p | C_0603_1608Metric | power_som |
 | C12001 | 10u | C_0805_2012Metric | usb_uart_connector |
 | D3001 | SMBJ22A | D_SMB | pd_input |
 | D4001 | red | LED_0603_1608Metric | power |
@@ -434,16 +436,14 @@ NOTES: pin-1 orientation (Q4001, U4001, U4002, U4003, U5002, U6004, U11001): dot
 | R3004 | 5.49k | R_0603_1608Metric | pd_input |
 | R3005 | 5.1k | R_0603_1608Metric | pd_input |
 | R3006 | 100k | R_0603_1608Metric | pd_input |
-| R6017 | 10R | R_0603_1608Metric | power_som |
+| R4011 | 10R | R_0603_1608Metric | power |
 | R12001 | 5.1k | R_0603_1608Metric | usb_uart_connector |
 | R12002 | 5.1k | R_0603_1608Metric | usb_uart_connector |
-| RS5004 | 20mR | RLM12FTCMR020 | power_mon |
 | SW1001 | DIP-4 | DSHP04TSGER | debug_boot |
 | SW1002 | RESET | TS-1187A-B-A-B | debug_boot |
 | TP4005 | EN_5V0 | TestPoint_Pad_D1.5mm | power |
 | TP4006 | EN_3V3 | TestPoint_Pad_D1.5mm | power |
 | TP6001 | +5V_SOM | TestPoint_Pad_D1.5mm | power_som |
-| TP11002 | ZYNQ_PS_UART0_RXD | TestPoint_Pad_D1.5mm | uart_bridge |
 | U3001 | TPS26631PWPR | TPS26631PWPR | pd_input |
 | U3002 | USBLC6-2SC6 | USBLC6-2SC6 | pd_input |
 | U5001 | INA3221AIRGVR | INA3221AIRGVR | power_mon |
@@ -478,7 +478,7 @@ No parts in this step on this board.
 | J10003 | DF40C-100DP-0.4V(51) | HRS_DF40C-100DP-0.4V_51_ | som_j3 | SMD |
 | J12001 | TYPE-C-31-M-12 | TYPE-C-31-M-12 | usb_uart_connector | SMD |
 
-NOTES: J3001 TYPE-C-31-M-12 (PWR): mating face toward the S board edge
+NOTES: J3001 TYPE-C-31-M-12 (PWR): mating face toward the W board edge
 NOTES: J12001 TYPE-C-31-M-12 (UART): mating face toward the E board edge
 NOTES: J8001, J9002, J10003: DF40C SoM receptacles — the SoM module mates onto them (bring-up section, mate phase)
 

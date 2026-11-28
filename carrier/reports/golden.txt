@@ -1,10 +1,8 @@
 golden renders: DRIFT (explicit --bless to accept):
-3d_bottom: drift 45/256 bits
-3d_left: drift 15/256 bits
-3d_persp: drift 54/256 bits
-3d_persp_rear: drift 63/256 bits
-3d_right: drift 14/256 bits
-3d_top: drift 52/256 bits
+3d_bottom: drift 30/256 bits
+3d_persp: drift 43/256 bits
+3d_persp_rear: drift 50/256 bits
+3d_top: drift 50/256 bits
 board_aux: drift 44/256 bits
 board_qwiic: drift 25/256 bits
 board_services: drift 28/256 bits

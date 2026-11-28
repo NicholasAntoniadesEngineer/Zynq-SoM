@@ -1,0 +1,41 @@
+BOARD PLAN
+  airwire between blocks: 933.6 of 2147.1 mm (43.5%); weighted by net kind 1538.0 of 3343.6 (46.0%)
+  block links: 23; pairs of links that cross between block centres: 18
+  blocks, most spread first (parts, own area mm2, hull mm2, hull over own area; edge parts, fixed parts and test points left out of the areas):
+    power: 54, 448, 3759, 8.4
+    debug_boot: 15, 373, 2265, 6.1
+    power_som: 20, 198, 524, 2.6
+    power_mon: 13, 123, 254, 2.1
+    pd_input: 14, 147, 299, 2.0
+    usb_uart_connector: 5, 29, 54, 1.9
+    uart_bridge: 10, 61, 114, 1.9
+    mechanical: 9, 0, 0, 0.0
+    som_decoupling: 18, 0, 0, 0.0
+    som_j1 (module): 1, 0, 0, 0.0
+    som_j2 (module): 1, 0, 0, 0.0
+    som_j3 (module): 1, 0, 0, 0.0
+  links, heaviest first (weighted mm, mm, nets):
+    power - power_mon: 263.0, 131.5, 6
+    debug_boot - som_j1: 253.9, 235.9, 15
+    uart_bridge - usb_uart_connector: 208.4, 65.7, 3
+    pd_input - som_j1: 162.1, 74.8, 4
+    power_mon - power_som: 108.4, 54.2, 1
+    usb_uart_connector - mechanical: 70.1, 70.1, 1
+    pd_input - power_mon: 51.0, 25.5, 1
+    uart_bridge - som_j2: 50.2, 50.2, 2
+    power_mon - som_decoupling: 45.7, 22.9, 2
+    power_mon - som_j1: 44.1, 44.1, 2
+    som_decoupling - som_j1: 34.2, 17.1, 2
+    som_decoupling - debug_boot: 32.8, 16.4, 2
+    pd_input - debug_boot: 32.5, 16.3, 1
+    power - som_decoupling: 30.2, 15.1, 1
+    uart_bridge - som_j1: 30.1, 30.1, 2
+    som_j3 - som_j2: 22.9, 11.5, 1
+    som_j3 - debug_boot: 22.0, 11.0, 1
+    power_som - som_decoupling: 21.8, 10.9, 1
+    uart_bridge - power_mon: 16.7, 8.3, 1
+    som_decoupling - som_j2: 15.4, 7.7, 1
+    power_mon - som_j2: 8.5, 4.2, 1
+    som_decoupling - som_j3: 7.4, 3.7, 1
+    pd_input - mechanical: 6.4, 6.4, 1
+

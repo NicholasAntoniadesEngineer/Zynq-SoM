@@ -144,7 +144,7 @@
 		)
 		(pad_to_mask_clearance 0)
 		(allow_soldermask_bridges_in_footprints yes)
-		(aux_axis_origin 41 37.75)
+		(aux_axis_origin 48 27.25)
 	)
 	(net 0 "")
 	(net 1 "+1V8")
@@ -413,8 +413,8 @@
 	(net 264 "ZYNQ_TDO")
 	(net 265 "ZYNQ_TMS")
 	(gr_line
-		(start 41 37.75)
-		(end 115.25 37.75)
+		(start 48 27.25)
+		(end 111 27.25)
 		(stroke
 			(width 0.1)
 			(type default)
@@ -423,8 +423,8 @@
 		(uuid "977b8adb-af79-52e3-b877-4308ca0f28c7")
 	)
 	(gr_line
-		(start 115.25 37.75)
-		(end 115.25 114.75)
+		(start 111 27.25)
+		(end 111 115)
 		(stroke
 			(width 0.1)
 			(type default)
@@ -433,8 +433,8 @@
 		(uuid "945eeb39-a741-580a-aa0f-a5f6011bf3cf")
 	)
 	(gr_line
-		(start 115.25 114.75)
-		(end 41 114.75)
+		(start 111 115)
+		(end 48 115)
 		(stroke
 			(width 0.1)
 			(type default)
@@ -443,8 +443,8 @@
 		(uuid "6d1706e2-8518-5f23-a728-08c3e671f72c")
 	)
 	(gr_line
-		(start 41 114.75)
-		(end 41 37.75)
+		(start 48 115)
+		(end 48 27.25)
 		(stroke
 			(width 0.1)
 			(type default)
@@ -476,10 +476,10 @@
 		)
 		(polygon
 			(pts
-				(xy 48 51.5)
-				(xy 100 51.5)
-				(xy 100 95.5)
-				(xy 48 95.5)
+				(xy 48 51)
+				(xy 100 51)
+				(xy 100 95)
+				(xy 48 95)
 			)
 		)
 	)
@@ -502,10 +502,10 @@
 		)
 		(polygon
 			(pts
-				(xy 41.5 38.25)
-				(xy 114.75 38.25)
-				(xy 114.75 114.25)
-				(xy 41.5 114.25)
+				(xy 48.5 27.75)
+				(xy 110.5 27.75)
+				(xy 110.5 114.5)
+				(xy 48.5 114.5)
 			)
 		)
 	)
@@ -528,10 +528,10 @@
 		)
 		(polygon
 			(pts
-				(xy 41.5 38.25)
-				(xy 114.75 38.25)
-				(xy 114.75 114.25)
-				(xy 41.5 114.25)
+				(xy 48.5 27.75)
+				(xy 110.5 27.75)
+				(xy 110.5 114.5)
+				(xy 48.5 114.5)
 			)
 		)
 	)
@@ -555,10 +555,10 @@
 		)
 		(polygon
 			(pts
-				(xy 108.03 48.105)
-				(xy 108.03 55.505)
-				(xy 98.53 55.505)
-				(xy 98.53 48.105)
+				(xy 54.67 102.635)
+				(xy 54.67 95.235)
+				(xy 64.17 95.235)
+				(xy 64.17 102.635)
 			)
 		)
 	)
@@ -582,10 +582,10 @@
 		)
 		(polygon
 			(pts
-				(xy 108.03 48.105)
-				(xy 108.03 55.505)
-				(xy 98.53 55.505)
-				(xy 98.53 48.105)
+				(xy 54.67 102.635)
+				(xy 54.67 95.235)
+				(xy 64.17 95.235)
+				(xy 64.17 102.635)
 			)
 		)
 	)
@@ -609,10 +609,10 @@
 		)
 		(polygon
 			(pts
-				(xy 66.41 42.605)
-				(xy 66.41 50.005)
-				(xy 56.91 50.005)
-				(xy 56.91 42.605)
+				(xy 89.04 110.135)
+				(xy 89.04 102.735)
+				(xy 98.54 102.735)
+				(xy 98.54 110.135)
 			)
 		)
 	)
@@ -636,10 +636,10 @@
 		)
 		(polygon
 			(pts
-				(xy 66.41 42.605)
-				(xy 66.41 50.005)
-				(xy 56.91 50.005)
-				(xy 56.91 42.605)
+				(xy 89.04 110.135)
+				(xy 89.04 102.735)
+				(xy 98.54 102.735)
+				(xy 98.54 110.135)
 			)
 		)
 	)
@@ -663,10 +663,10 @@
 		)
 		(polygon
 			(pts
-				(xy 90.38 97.01)
-				(xy 97.78 97.01)
-				(xy 97.78 106.51)
-				(xy 90.38 106.51)
+				(xy 95.613 38.527)
+				(xy 95.613 45.927)
+				(xy 86.113 45.927)
+				(xy 86.113 38.527)
 			)
 		)
 	)
@@ -690,16 +690,16 @@
 		)
 		(polygon
 			(pts
-				(xy 90.38 97.01)
-				(xy 97.78 97.01)
-				(xy 97.78 106.51)
-				(xy 90.38 106.51)
+				(xy 95.613 38.527)
+				(xy 95.613 45.927)
+				(xy 86.113 45.927)
+				(xy 86.113 38.527)
 			)
 		)
 	)
 	(gr_line
-		(start 48.25 51.87)
-		(end 99.75 51.87)
+		(start 48.25 51.37)
+		(end 99.75 51.37)
 		(stroke
 			(width 0.15)
 			(type default)
@@ -708,8 +708,8 @@
 		(uuid "f1baa6dc-3505-540a-a9dd-e066193b07ae")
 	)
 	(gr_line
-		(start 99.75 51.87)
-		(end 99.75 95.13)
+		(start 99.75 51.37)
+		(end 99.75 94.63)
 		(stroke
 			(width 0.15)
 			(type default)
@@ -718,8 +718,8 @@
 		(uuid "fe341f19-f5fd-5653-8ea5-6969d0cf5968")
 	)
 	(gr_line
-		(start 99.75 95.13)
-		(end 48.25 95.13)
+		(start 99.75 94.63)
+		(end 48.25 94.63)
 		(stroke
 			(width 0.15)
 			(type default)
@@ -728,8 +728,8 @@
 		(uuid "851d0376-7ff5-5988-82e6-8635b7eb13ac")
 	)
 	(gr_line
-		(start 48.25 95.13)
-		(end 48.25 51.87)
+		(start 48.25 94.63)
+		(end 48.25 51.37)
 		(stroke
 			(width 0.15)
 			(type default)
@@ -738,8 +738,8 @@
 		(uuid "c1ce3fef-7b5b-54fb-9035-18a98778512c")
 	)
 	(gr_line
-		(start 48.25 54.87)
-		(end 51.25 51.87)
+		(start 48.25 54.37)
+		(end 51.25 51.37)
 		(stroke
 			(width 0.15)
 			(type default)
@@ -749,7 +749,7 @@
 	)
 	(gr_text
 		"Zynq SoM"
-		(at 52.75 53.07 0)
+		(at 52.75 52.57 0)
 		(layer "F.SilkS")
 		(uuid "510edfe8-8b34-55f1-b44f-61a7a2295ffb")
 		(effects
@@ -765,7 +765,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 103.7749 75.95 90)
+		(at 77.5301 106.83 270)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -876,7 +876,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.775 0 90)
+			(at -0.775 0 270)
 			(size 0.9 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -887,7 +887,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.775 0 90)
+			(at 0.775 0 270)
 			(size 0.9 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -914,7 +914,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 100.7749 75.45 180)
+		(at 80.5301 107.33)
 		(descr
 			"Capacitor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf, https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing)"
 		)
@@ -1025,7 +1025,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.95 0 180)
+			(at -0.95 0)
 			(size 1 1.45)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -1036,7 +1036,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.95 0 180)
+			(at 0.95 0)
 			(size 1 1.45)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -1063,7 +1063,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 106.525 72.2 180)
+		(at 75.03 110.83)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -1174,7 +1174,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.775 0 180)
+			(at -0.775 0)
 			(size 0.9 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -1185,7 +1185,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.775 0 180)
+			(at 0.775 0)
 			(size 0.9 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -1212,7 +1212,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 106.525 70.2001 180)
+		(at 75.03 112.5799)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -1323,7 +1323,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.775 0 180)
+			(at -0.775 0)
 			(size 0.9 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -1334,7 +1334,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.775 0 180)
+			(at 0.775 0)
 			(size 0.9 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -1361,7 +1361,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 104.5018 70.6273)
+		(at 101.7518 97.1273)
 		(descr
 			"Capacitor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf, https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing)"
 		)
@@ -1506,7 +1506,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 104.87 94.17 90)
+		(at 58.4567 31.9798)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -1613,7 +1613,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.775 0 90)
+			(at -0.775 0)
 			(size 0.9 0.95)
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(roundrect_rratio 0.25)
@@ -1624,7 +1624,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.775 0 90)
+			(at 0.775 0)
 			(size 0.9 0.95)
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(roundrect_rratio 0.25)
@@ -1651,7 +1651,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 105.37 82.6736)
+		(at 69.9531 33.4798 270)
 		(descr
 			"Capacitor SMD 1210 (3225 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -1758,7 +1758,7 @@
 			"1"
 			smd
 			roundrect
-			(at -1.475 0)
+			(at -1.475 0 270)
 			(size 1.15 2.7)
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(roundrect_rratio 0.217391)
@@ -1769,7 +1769,7 @@
 			"2"
 			smd
 			roundrect
-			(at 1.475 0)
+			(at 1.475 0 270)
 			(size 1.15 2.7)
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(roundrect_rratio 0.217391)
@@ -1796,7 +1796,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 111.0702 94.17 90)
+		(at 58.2067 33.68)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -1903,7 +1903,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.775 0 90)
+			(at -0.775 0)
 			(size 0.9 0.95)
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(roundrect_rratio 0.25)
@@ -1914,7 +1914,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.775 0 90)
+			(at 0.775 0)
 			(size 0.9 0.95)
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(roundrect_rratio 0.25)
@@ -1941,7 +1941,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 59.75 100.9518 90)
+		(at 61.7982 47.0231)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -2052,7 +2052,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.775 0 90)
+			(at -0.775 0)
 			(size 0.9 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -2063,7 +2063,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.775 0 90)
+			(at 0.775 0)
 			(size 0.9 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -2090,7 +2090,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 106.6604 52.35 270)
+		(at 56.0396 98.39 90)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -2201,7 +2201,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.775 0 270)
+			(at -0.775 0 90)
 			(size 0.9 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -2212,7 +2212,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.775 0 270)
+			(at 0.775 0 90)
 			(size 0.9 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -2239,7 +2239,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 110.3904 53.35 180)
+		(at 52.3096 98.39)
 		(descr
 			"Capacitor SMD 1206 (3216 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -2350,7 +2350,7 @@
 			"1"
 			smd
 			roundrect
-			(at -1.475 0 180)
+			(at -1.475 0)
 			(size 1.15 1.8)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.217391)
@@ -2361,7 +2361,7 @@
 			"2"
 			smd
 			roundrect
-			(at 1.475 0 180)
+			(at 1.475 0)
 			(size 1.15 1.8)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.217391)
@@ -2388,7 +2388,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 96.1702 52.35 180)
+		(at 66.5298 95.89)
 		(descr
 			"Capacitor SMD 1206 (3216 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -2499,7 +2499,7 @@
 			"1"
 			smd
 			roundrect
-			(at -1.475 0 180)
+			(at -1.475 0)
 			(size 1.15 1.8)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.217391)
@@ -2510,7 +2510,7 @@
 			"2"
 			smd
 			roundrect
-			(at 1.475 0 180)
+			(at 1.475 0)
 			(size 1.15 1.8)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.217391)
@@ -2537,7 +2537,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 99.1804 49.2549 180)
+		(at 63.5196 101.4851)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -2648,7 +2648,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.775 0 180)
+			(at -0.775 0)
 			(size 0.9 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -2659,7 +2659,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.775 0 180)
+			(at 0.775 0)
 			(size 0.9 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -2686,7 +2686,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 99.3803 66.16 180)
+		(at 63.3197 85.33)
 		(descr
 			"Capacitor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf, https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing)"
 		)
@@ -2797,7 +2797,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.95 0 180)
+			(at -0.95 0)
 			(size 1 1.45)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -2808,7 +2808,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.95 0 180)
+			(at 0.95 0)
 			(size 1 1.45)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -2835,7 +2835,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 103.2803 66.16 180)
+		(at 59.4197 85.33)
 		(descr
 			"Capacitor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf, https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing)"
 		)
@@ -2946,7 +2946,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.95 0 180)
+			(at -0.95 0)
 			(size 1 1.45)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -2957,7 +2957,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.95 0 180)
+			(at 0.95 0)
 			(size 1 1.45)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -2984,7 +2984,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 65.0402 46.85 270)
+		(at 90.4098 105.89 90)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -3095,7 +3095,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.775 0 270)
+			(at -0.775 0 90)
 			(size 0.9 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -3106,7 +3106,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.775 0 270)
+			(at 0.775 0 90)
 			(size 0.9 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -3133,7 +3133,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 68.1702 46.85 180)
+		(at 87.2798 105.89)
 		(descr
 			"Capacitor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf, https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing)"
 		)
@@ -3244,7 +3244,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.95 0 180)
+			(at -0.95 0)
 			(size 1 1.45)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -3255,7 +3255,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.95 0 180)
+			(at 0.95 0)
 			(size 1 1.45)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -3282,7 +3282,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 57.5602 43.7549 180)
+		(at 97.8898 108.9851)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -3393,7 +3393,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.775 0 180)
+			(at -0.775 0)
 			(size 0.9 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -3404,7 +3404,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.775 0 180)
+			(at 0.775 0)
 			(size 0.9 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -3431,7 +3431,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 59.7101 60.66 180)
+		(at 95.7399 92.83)
 		(descr
 			"Capacitor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf, https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing)"
 		)
@@ -3542,7 +3542,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.95 0 180)
+			(at -0.95 0)
 			(size 1 1.45)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -3553,7 +3553,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.95 0 180)
+			(at 0.95 0)
 			(size 1 1.45)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -3580,7 +3580,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 63.6101 60.66 180)
+		(at 91.8399 92.83)
 		(descr
 			"Capacitor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf, https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing)"
 		)
@@ -3691,7 +3691,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.95 0 180)
+			(at -0.95 0)
 			(size 1 1.45)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -3702,7 +3702,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.95 0 180)
+			(at 0.95 0)
 			(size 1 1.45)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -3729,7 +3729,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 67.3 69.28 270)
+		(at 67.835 48.545 90)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -3840,7 +3840,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.775 0 270)
+			(at -0.775 0 90)
 			(size 0.9 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -3851,7 +3851,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.775 0 270)
+			(at 0.775 0 90)
 			(size 0.9 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -3878,7 +3878,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 67.3 77.48 270)
+		(at 68.335 44.595 90)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -3989,7 +3989,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.775 0 270)
+			(at -0.775 0 90)
 			(size 0.9 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -4000,7 +4000,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.775 0 270)
+			(at 0.775 0 90)
 			(size 0.9 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -4027,7 +4027,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 61.1851 39.78 270)
+		(at 94.2649 112.96 90)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -4138,7 +4138,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.775 0 270)
+			(at -0.775 0 90)
 			(size 0.9 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -4149,7 +4149,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.775 0 270)
+			(at 0.775 0 90)
 			(size 0.9 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -4176,7 +4176,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 100.7553 46.28 270)
+		(at 61.9447 104.46 90)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -4287,7 +4287,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.775 0 270)
+			(at -0.775 0 90)
 			(size 0.9 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -4298,7 +4298,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.775 0 270)
+			(at 0.775 0 90)
 			(size 0.9 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -4325,7 +4325,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 99.9002 52.35 270)
+		(at 62.7998 98.39 90)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -4436,7 +4436,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.775 0 270)
+			(at -0.775 0 90)
 			(size 0.9 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -4447,7 +4447,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.775 0 270)
+			(at 0.775 0 90)
 			(size 0.9 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -4474,7 +4474,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 107.1803 66.16 180)
+		(at 55.5197 85.33)
 		(descr
 			"Capacitor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf, https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing)"
 		)
@@ -4585,7 +4585,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.95 0 180)
+			(at -0.95 0)
 			(size 1 1.45)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -4596,7 +4596,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.95 0 180)
+			(at 0.95 0)
 			(size 1 1.45)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -4623,7 +4623,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 102.8053 45.28 270)
+		(at 59.8947 105.46 90)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -4734,7 +4734,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.775 0 270)
+			(at -0.775 0 90)
 			(size 0.9 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -4745,7 +4745,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.775 0 270)
+			(at 0.775 0 90)
 			(size 0.9 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -4772,7 +4772,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 98.3302 47.78 180)
+		(at 64.3698 102.96 180)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -4921,7 +4921,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 58.28 46.85 270)
+		(at 97.17 105.89 90)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -5032,7 +5032,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.775 0 270)
+			(at -0.775 0 90)
 			(size 0.9 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -5043,7 +5043,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.775 0 270)
+			(at 0.775 0 90)
 			(size 0.9 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -5070,7 +5070,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 55.15 46.85 180)
+		(at 100.3 105.89)
 		(descr
 			"Capacitor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf, https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing)"
 		)
@@ -5181,7 +5181,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.95 0 180)
+			(at -0.95 0)
 			(size 1 1.45)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -5192,7 +5192,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.95 0 180)
+			(at 0.95 0)
 			(size 1 1.45)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -5219,7 +5219,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 59.1351 40.78 270)
+		(at 96.3149 111.96 90)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -5330,7 +5330,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.775 0 270)
+			(at -0.775 0 90)
 			(size 0.9 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -5341,7 +5341,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.775 0 270)
+			(at 0.775 0 90)
 			(size 0.9 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -5368,7 +5368,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 56.71 42.28 180)
+		(at 98.74 110.46 180)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -5517,7 +5517,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 50.6015 48.6351)
+		(at 75.6015 99.2951 90)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -5628,7 +5628,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.775 0)
+			(at -0.775 0 90)
 			(size 0.9 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -5639,7 +5639,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.775 0)
+			(at 0.775 0 90)
 			(size 0.9 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -5666,7 +5666,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 45.4185 73.0451 180)
+		(at 72.8851 104.2565 180)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -5811,7 +5811,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 50.8515 46.8851)
+		(at 77.3515 99.0451 90)
 		(descr
 			"Capacitor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf, https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing)"
 		)
@@ -5922,7 +5922,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.95 0)
+			(at -0.95 0 90)
 			(size 1 1.45)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -5933,7 +5933,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.95 0)
+			(at 0.95 0 90)
 			(size 1 1.45)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -5960,7 +5960,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 93.3551 98.8099)
+		(at 93.8127 41.5025 270)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -6071,7 +6071,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.775 0)
+			(at -0.775 0 270)
 			(size 0.9 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -6082,7 +6082,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.775 0)
+			(at 0.775 0 270)
 			(size 0.9 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -6109,7 +6109,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 94.6051 95.0599 270)
+		(at 97.5627 42.7525 180)
 		(descr
 			"Capacitor SMD 1206 (3216 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -6220,7 +6220,7 @@
 			"1"
 			smd
 			roundrect
-			(at -1.475 0 270)
+			(at -1.475 0 180)
 			(size 1.15 1.8)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.217391)
@@ -6231,7 +6231,7 @@
 			"2"
 			smd
 			roundrect
-			(at 1.475 0 270)
+			(at 1.475 0 180)
 			(size 1.15 1.8)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.217391)
@@ -6258,7 +6258,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 93.1051 107.9601 270)
+		(at 84.6625 41.2525 180)
 		(descr
 			"Capacitor SMD 1206 (3216 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -6369,7 +6369,7 @@
 			"1"
 			smd
 			roundrect
-			(at -1.475 0 270)
+			(at -1.475 0 180)
 			(size 1.15 1.8)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.217391)
@@ -6380,7 +6380,7 @@
 			"2"
 			smd
 			roundrect
-			(at 1.475 0 270)
+			(at 1.475 0 180)
 			(size 1.15 1.8)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.217391)
@@ -6407,7 +6407,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 90.03 105.6099 270)
+		(at 87.0127 38.1774 180)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -6518,7 +6518,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.775 0 270)
+			(at -0.775 0 180)
 			(size 0.9 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -6529,7 +6529,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.775 0 270)
+			(at 0.775 0 180)
 			(size 0.9 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -6556,7 +6556,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 107.455 98.26 270)
+		(at 89.1126 50.8524 270)
 		(descr
 			"Capacitor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf, https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing)"
 		)
@@ -6705,7 +6705,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 107.455 101.76 270)
+		(at 99.6126 50.8524 270)
 		(descr
 			"Capacitor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf, https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing)"
 		)
@@ -6853,8 +6853,8 @@
 		"Capacitor_SMD:C_0603_1608Metric"
 		(version 20260206)
 		(generator "kicad-footprint-generator")
-		(layer "F.Cu")
-		(at 86.4801 97.235)
+		(layer "B.Cu")
+		(at 92.3876 34.3775 270)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -6864,12 +6864,13 @@
 			"C6021"
 			(hide yes)
 			(at 0 -1.43 0)
-			(layer "F.SilkS")
+			(layer "B.SilkS")
 			(effects
 				(font
 					(size 1 1)
 					(thickness 0.15)
 				)
+				(justify mirror)
 			)
 			(uuid "ea6d2cdd-06e1-51d0-90cb-f33e7e126149")
 		)
@@ -6877,12 +6878,13 @@
 			"Value"
 			"22p"
 			(at 0 1.43 0)
-			(layer "F.Fab")
+			(layer "B.Fab")
 			(effects
 				(font
 					(size 1 1)
 					(thickness 0.15)
 				)
+				(justify mirror)
 			)
 			(uuid "b8e303a8-a930-55b7-8b5d-f4bbb1d315bf")
 		)
@@ -6890,13 +6892,14 @@
 			"KiLib_Generator"
 			"SMD_2terminal_chip_molded"
 			(at 0 0 0)
-			(layer "F.SilkS")
+			(layer "B.SilkS")
 			(hide yes)
 			(effects
 				(font
 					(size 1 1)
 					(thickness 0.15)
 				)
+				(justify mirror)
 			)
 			(uuid "8c4932b2-7cee-59b4-8f63-145deca121aa")
 		)
@@ -6909,7 +6912,7 @@
 				(width 0.15)
 				(type solid)
 			)
-			(layer "F.SilkS")
+			(layer "B.SilkS")
 			(uuid "afcf54e3-24f8-594a-9028-4cc029e49a8e")
 		)
 		(fp_line
@@ -6919,7 +6922,7 @@
 				(width 0.15)
 				(type solid)
 			)
-			(layer "F.SilkS")
+			(layer "B.SilkS")
 			(uuid "d2fdb41e-a2e0-51a5-8d1e-17e4e81be5d1")
 		)
 		(fp_rect
@@ -6930,7 +6933,7 @@
 				(type solid)
 			)
 			(fill no)
-			(layer "F.CrtYd")
+			(layer "B.CrtYd")
 			(uuid "bb6542e3-e4d8-5c08-9fd4-a51aa46290be")
 		)
 		(fp_rect
@@ -6941,19 +6944,20 @@
 				(type solid)
 			)
 			(fill no)
-			(layer "F.Fab")
+			(layer "B.Fab")
 			(uuid "013c45c7-0c28-5b90-940b-3351d561dbc1")
 		)
 		(fp_text
 			user
 			"${REFERENCE}"
 			(at 0 0 0)
-			(layer "F.Fab")
+			(layer "B.Fab")
 			(effects
 				(font
 					(size 0.4 0.4)
 					(thickness 0.06)
 				)
+				(justify mirror)
 			)
 			(uuid "c99a7344-122c-57d0-be08-4be9337183da")
 		)
@@ -6961,9 +6965,9 @@
 			"1"
 			smd
 			roundrect
-			(at -0.775 0)
+			(at -0.775 0 270)
 			(size 0.9 0.95)
-			(layers "F.Cu" "F.Mask" "F.Paste")
+			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
 			(net 8 "+5V_SOM")
 			(uuid "f7425e41-0a1b-5a61-a71d-dab3520bb824")
@@ -6972,9 +6976,9 @@
 			"2"
 			smd
 			roundrect
-			(at 0.775 0)
+			(at 0.775 0 270)
 			(size 0.9 0.95)
-			(layers "F.Cu" "F.Mask" "F.Paste")
+			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
 			(net 194 "Net-(C6021-Pad2)")
 			(uuid "ae269c9c-4684-5c14-91d3-98c8fa56ebbc")
@@ -6999,7 +7003,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 90.0551 102.535 270)
+		(at 90.0876 38.2025 180)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -7110,7 +7114,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.775 0 270)
+			(at -0.775 0 180)
 			(size 0.9 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -7121,7 +7125,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.775 0 270)
+			(at 0.775 0 180)
 			(size 0.9 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -7148,7 +7152,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 92.3051 104.7101)
+		(at 87.9125 40.4525 270)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -7259,7 +7263,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.775 0)
+			(at -0.775 0 270)
 			(size 0.9 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -7270,7 +7274,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.775 0)
+			(at 0.775 0 270)
 			(size 0.9 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -7297,7 +7301,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 95.8551 105.2101 180)
+		(at 87.4125 44.0025 90)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -7408,7 +7412,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.775 0 180)
+			(at -0.775 0 90)
 			(size 0.9 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -7419,7 +7423,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.775 0 180)
+			(at 0.775 0 90)
 			(size 0.9 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -7446,7 +7450,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 69.65 52)
+		(at 73.9 61 90)
 		(descr
 			"Capacitor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf, https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing)"
 		)
@@ -7557,7 +7561,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.95 0)
+			(at -0.95 0 90)
 			(size 1 1.45)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -7568,7 +7572,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.95 0)
+			(at 0.95 0 90)
 			(size 1 1.45)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -7595,7 +7599,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 67.65 60)
+		(at 66.9 58.75 90)
 		(descr
 			"Capacitor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf, https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing)"
 		)
@@ -7706,7 +7710,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.95 0)
+			(at -0.95 0 90)
 			(size 1 1.45)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -7717,7 +7721,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.95 0)
+			(at 0.95 0 90)
 			(size 1 1.45)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -7744,7 +7748,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 70.9 58.75)
+		(at 70.65 51.5)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -7893,7 +7897,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 69.4 53.75)
+		(at 69.4 57.75)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -8042,7 +8046,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 67.9 58.25)
+		(at 67.65 51.5)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -8191,7 +8195,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 67.15 53 90)
+		(at 67.4 53.25)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -8302,7 +8306,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.775 0 90)
+			(at -0.775 0)
 			(size 0.9 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -8313,7 +8317,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.775 0 90)
+			(at 0.775 0)
 			(size 0.9 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -8340,7 +8344,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 70.5 93.5)
+		(at 85.5 88)
 		(descr
 			"Capacitor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf, https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing)"
 		)
@@ -8489,7 +8493,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 74 85.75)
+		(at 71.25 86.5)
 		(descr
 			"Capacitor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf, https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing)"
 		)
@@ -8638,7 +8642,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 93.75 66 90)
+		(at 98.25 82 90)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -8787,7 +8791,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 98.25 81 90)
+		(at 93.75 65.5 90)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -8936,7 +8940,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 70.5 88.75)
+		(at 70.5 88.25)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -9085,7 +9089,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 85.5 93.25)
+		(at 85.5 92.75)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -9234,7 +9238,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 74.9 58.645)
+		(at 79.4 58.895 90)
 		(descr
 			"Capacitor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf, https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing)"
 		)
@@ -9345,7 +9349,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.95 0)
+			(at -0.95 0 90)
 			(size 1 1.45)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -9356,7 +9360,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.95 0)
+			(at 0.95 0 90)
 			(size 1 1.45)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -9383,7 +9387,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 76.15 50.395)
+		(at 74.15 49.895)
 		(descr
 			"Capacitor SMD 0805 (2012 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf, https://docs.google.com/spreadsheets/d/1BsfQQcO9C6DZCsRaXUlFlo91Tg2WpOkGARC1WS5S8t0/edit?usp=sharing)"
 		)
@@ -9532,7 +9536,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 75.15 53.645)
+		(at 75.15 53.145)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -9681,7 +9685,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 77.4 52.895 90)
+		(at 75.15 51.645)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -9792,7 +9796,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.775 0 90)
+			(at -0.775 0)
 			(size 0.9 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -9803,7 +9807,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.775 0 90)
+			(at 0.775 0)
 			(size 0.9 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -9830,7 +9834,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 75.15 52.145)
+		(at 72.9 52.395 90)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -9941,7 +9945,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.775 0)
+			(at -0.775 0 90)
 			(size 0.9 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -9952,7 +9956,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.775 0)
+			(at 0.775 0 90)
 			(size 0.9 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -9979,7 +9983,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 72.9 52.895 90)
+		(at 74.15 57.895)
 		(descr
 			"Capacitor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 76, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -10090,7 +10094,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.775 0 90)
+			(at -0.775 0)
 			(size 0.9 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -10101,7 +10105,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.775 0 90)
+			(at 0.775 0)
 			(size 0.9 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -10129,7 +10133,7 @@
 		(generator "pcbnew")
 		(generator_version "10.0")
 		(layer "F.Cu")
-		(at 53.7502 102.2518 90)
+		(at 61.2482 40.7733)
 		(descr "Diode SMB (DO-214AA)")
 		(tags "Diode SMB (DO-214AA)")
 		(property
@@ -10378,7 +10382,7 @@
 			"1"
 			smd
 			roundrect
-			(at -2.15 0 90)
+			(at -2.15 0)
 			(size 2.5 2.3)
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(roundrect_rratio 0.108696)
@@ -10389,7 +10393,7 @@
 			"2"
 			smd
 			roundrect
-			(at 2.15 0 90)
+			(at 2.15 0)
 			(size 2.5 2.3)
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(roundrect_rratio 0.108696)
@@ -10416,7 +10420,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 63.57 98.14 270)
+		(at 63.35 49.12 180)
 		(descr
 			"LED SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: http://www.tortai-tech.com/upload/download/2011102023233369053.pdf)"
 		)
@@ -10572,7 +10576,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.7875 0 270)
+			(at -0.7875 0 180)
 			(size 0.875 0.95)
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(roundrect_rratio 0.25)
@@ -10583,7 +10587,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.7875 0 270)
+			(at 0.7875 0 180)
 			(size 0.875 0.95)
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(roundrect_rratio 0.25)
@@ -10610,7 +10614,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 63.82 101.1 270)
+		(at 93.38 48.39 90)
 		(descr
 			"LED SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: http://www.tortai-tech.com/upload/download/2011102023233369053.pdf)"
 		)
@@ -10766,7 +10770,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.7875 0 270)
+			(at -0.7875 0 90)
 			(size 0.875 0.95)
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(roundrect_rratio 0.25)
@@ -10777,7 +10781,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.7875 0 270)
+			(at 0.7875 0 90)
 			(size 0.875 0.95)
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(roundrect_rratio 0.25)
@@ -10804,7 +10808,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 58.19 97.32 180)
+		(at 63.18 43.87 180)
 		(descr
 			"LED SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: http://www.tortai-tech.com/upload/download/2011102023233369053.pdf)"
 		)
@@ -10998,7 +11002,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 102.59 85.03)
+		(at 80.91 47.72 180)
 		(descr
 			"LED SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: http://www.tortai-tech.com/upload/download/2011102023233369053.pdf)"
 		)
@@ -11154,7 +11158,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.7875 0)
+			(at -0.7875 0 180)
 			(size 0.875 0.95)
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(roundrect_rratio 0.25)
@@ -11165,7 +11169,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.7875 0)
+			(at 0.7875 0 180)
 			(size 0.875 0.95)
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(roundrect_rratio 0.25)
@@ -11192,7 +11196,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 45.72 43.18)
+		(at 53.34 31.75)
 		(descr "Mounting Hole 3.2mm, M3, generated by kicad-footprint-generator mountinghole.py")
 		(tags "mountinghole M3")
 		(property
@@ -11294,7 +11298,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 110.49 43.18)
+		(at 105.41 31.75)
 		(descr "Mounting Hole 3.2mm, M3, generated by kicad-footprint-generator mountinghole.py")
 		(tags "mountinghole M3")
 		(property
@@ -11396,7 +11400,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 110.49 109.22)
+		(at 105.41 110.49)
 		(descr "Mounting Hole 3.2mm, M3, generated by kicad-footprint-generator mountinghole.py")
 		(tags "mountinghole M3")
 		(property
@@ -11498,7 +11502,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 45.72 109.22)
+		(at 53.34 110.49)
 		(descr "Mounting Hole 3.2mm, M3, generated by kicad-footprint-generator mountinghole.py")
 		(tags "mountinghole M3")
 		(property
@@ -11600,7 +11604,7 @@
 		(version 20221018)
 		(generator pcbnew)
 		(layer "F.Cu")
-		(at 96 73.5 270)
+		(at 96 73 270)
 		(attr smd)
 		(property
 			"Reference"
@@ -13027,7 +13031,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 81.37 102.22 180)
+		(at 106.82 72.88 90)
 		(descr
 			"CONN-TH_14P-P2.00_87831-1420 — 87831-1420 (CONN-TH_14P-P2.00_87831-1420) (EasyEDA/LCSC C240854, faithful conversion)"
 		)
@@ -13410,7 +13414,7 @@
 			"13"
 			thru_hole
 			circle
-			(at 6 1 180)
+			(at 6 1 90)
 			(size 1.499997 1.499997)
 			(drill 0.900024)
 			(layers "*.Cu" "*.Mask")
@@ -13421,7 +13425,7 @@
 			"11"
 			thru_hole
 			circle
-			(at 4 1 180)
+			(at 4 1 90)
 			(size 1.499997 1.499997)
 			(drill 0.900024)
 			(layers "*.Cu" "*.Mask")
@@ -13432,7 +13436,7 @@
 			"9"
 			thru_hole
 			circle
-			(at 2 1 180)
+			(at 2 1 90)
 			(size 1.499997 1.499997)
 			(drill 0.900024)
 			(layers "*.Cu" "*.Mask")
@@ -13443,7 +13447,7 @@
 			"7"
 			thru_hole
 			circle
-			(at 0 1 180)
+			(at 0 1 90)
 			(size 1.499997 1.499997)
 			(drill 0.900024)
 			(layers "*.Cu" "*.Mask")
@@ -13454,7 +13458,7 @@
 			"5"
 			thru_hole
 			circle
-			(at -2 1 180)
+			(at -2 1 90)
 			(size 1.499997 1.499997)
 			(drill 0.900024)
 			(layers "*.Cu" "*.Mask")
@@ -13465,7 +13469,7 @@
 			"3"
 			thru_hole
 			circle
-			(at -4 1 180)
+			(at -4 1 90)
 			(size 1.499997 1.499997)
 			(drill 0.900024)
 			(layers "*.Cu" "*.Mask")
@@ -13476,7 +13480,7 @@
 			"1"
 			thru_hole
 			rect
-			(at -6 1 180)
+			(at -6 1 90)
 			(size 1.499997 1.499997)
 			(drill 0.900024)
 			(layers "*.Cu" "*.Mask")
@@ -13487,7 +13491,7 @@
 			"14"
 			thru_hole
 			circle
-			(at 6 -1 180)
+			(at 6 -1 90)
 			(size 1.499997 1.499997)
 			(drill 0.900024)
 			(layers "*.Cu" "*.Mask")
@@ -13497,7 +13501,7 @@
 			"12"
 			thru_hole
 			circle
-			(at 4 -1 180)
+			(at 4 -1 90)
 			(size 1.499997 1.499997)
 			(drill 0.900024)
 			(layers "*.Cu" "*.Mask")
@@ -13507,7 +13511,7 @@
 			"10"
 			thru_hole
 			circle
-			(at 2 -1 180)
+			(at 2 -1 90)
 			(size 1.499997 1.499997)
 			(drill 0.900024)
 			(layers "*.Cu" "*.Mask")
@@ -13518,7 +13522,7 @@
 			"8"
 			thru_hole
 			circle
-			(at 0 -1 180)
+			(at 0 -1 90)
 			(size 1.499997 1.499997)
 			(drill 0.900024)
 			(layers "*.Cu" "*.Mask")
@@ -13529,7 +13533,7 @@
 			"6"
 			thru_hole
 			circle
-			(at -2 -1 180)
+			(at -2 -1 90)
 			(size 1.499997 1.499997)
 			(drill 0.900024)
 			(layers "*.Cu" "*.Mask")
@@ -13540,7 +13544,7 @@
 			"4"
 			thru_hole
 			circle
-			(at -4 -1 180)
+			(at -4 -1 90)
 			(size 1.499997 1.499997)
 			(drill 0.900024)
 			(layers "*.Cu" "*.Mask")
@@ -13551,7 +13555,7 @@
 			"2"
 			thru_hole
 			circle
-			(at -6 -1 180)
+			(at -6 -1 90)
 			(size 1.499997 1.499997)
 			(drill 0.900024)
 			(layers "*.Cu" "*.Mask")
@@ -13578,7 +13582,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 74.1 110.33 180)
+		(at 72.39 43.96)
 		(descr
 			"IDC-SMD_10P-P1.27-3220-10-0300-00 — HX JN1.27-2X5 TP H4.9 (IDC-SMD_10P-P1.27-3220-10-0300-00) (EasyEDA/LCSC C42372555, faithful conversion)"
 		)
@@ -13941,7 +13945,7 @@
 			"10"
 			smd
 			rect
-			(at 2.54 -2.0151 180)
+			(at 2.54 -2.0151)
 			(size 0.650011 2.769997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 240 "STM32_NRST")
@@ -13951,7 +13955,7 @@
 			"9"
 			smd
 			rect
-			(at 2.54 2.0151 180)
+			(at 2.54 2.0151)
 			(size 0.650011 2.769997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 37 "GND")
@@ -13961,7 +13965,7 @@
 			"8"
 			smd
 			rect
-			(at 1.27 -2.0151 180)
+			(at 1.27 -2.0151)
 			(size 0.650011 2.769997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(uuid "e6b916e0-9eef-517a-abf9-45ca13072586")
@@ -13970,7 +13974,7 @@
 			"7"
 			smd
 			rect
-			(at 1.27 2.0151 180)
+			(at 1.27 2.0151)
 			(size 0.650011 2.769997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(uuid "6dc133ab-1fb5-5249-83c6-af85af8aaa4b")
@@ -13979,7 +13983,7 @@
 			"6"
 			smd
 			rect
-			(at 0 -2.0151 180)
+			(at 0 -2.0151)
 			(size 0.650011 2.769997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(uuid "785a385d-6273-5db4-8dd0-675e1a866380")
@@ -13988,7 +13992,7 @@
 			"5"
 			smd
 			rect
-			(at 0 2.0151 180)
+			(at 0 2.0151)
 			(size 0.650011 2.769997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 37 "GND")
@@ -13998,7 +14002,7 @@
 			"4"
 			smd
 			rect
-			(at -1.27 -2.0151 180)
+			(at -1.27 -2.0151)
 			(size 0.650011 2.769997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 234 "STM32_GPIO5")
@@ -14008,7 +14012,7 @@
 			"3"
 			smd
 			rect
-			(at -1.27 2.0151 180)
+			(at -1.27 2.0151)
 			(size 0.650011 2.769997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 37 "GND")
@@ -14018,7 +14022,7 @@
 			"2"
 			smd
 			rect
-			(at -2.54 -2.0151 180)
+			(at -2.54 -2.0151)
 			(size 0.650011 2.769997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 235 "STM32_GPIO6")
@@ -14028,7 +14032,7 @@
 			"1"
 			smd
 			rect
-			(at -2.54 2.0151 180)
+			(at -2.54 2.0151)
 			(size 0.650011 2.769997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 5 "+3V3_SC")
@@ -14054,7 +14058,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 111.4759 73.6275 90)
+		(at 107.2259 99.6275 90)
 		(descr
 			"USB-C_SMD-TYPE-C-31-M-12_1 — TYPE-C-31-M-12 (USB-C_SMD-TYPE-C-31-M-12_1) (EasyEDA/LCSC C165948, faithful conversion)"
 		)
@@ -14619,7 +14623,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 57.25 110.9759)
+		(at 51.7741 42.5231 270)
 		(descr
 			"USB-C_SMD-TYPE-C-31-M-12_1 — TYPE-C-31-M-12 (USB-C_SMD-TYPE-C-31-M-12_1) (EasyEDA/LCSC C165948, faithful conversion)"
 		)
@@ -14874,7 +14878,7 @@
 			"B8"
 			smd
 			rect
-			(at -1.7501 -2.4741)
+			(at -1.7501 -2.4741 270)
 			(size 0.299999 1.299997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(uuid "ff5a0412-a1fe-5fea-b769-4a2b45d137d7")
@@ -14883,7 +14887,7 @@
 			"A5"
 			smd
 			rect
-			(at -1.2499 -2.4741)
+			(at -1.2499 -2.4741 270)
 			(size 0.299999 1.299997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 241 "STM32_USB_CC1")
@@ -14893,7 +14897,7 @@
 			"B7"
 			smd
 			rect
-			(at -0.7501 -2.4741)
+			(at -0.7501 -2.4741 270)
 			(size 0.299999 1.299997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 12 "/pd_input/PD_USB_DN_CONN")
@@ -14903,7 +14907,7 @@
 			"A6"
 			smd
 			rect
-			(at -0.2499 -2.4741)
+			(at -0.2499 -2.4741 270)
 			(size 0.299999 1.299997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 13 "/pd_input/PD_USB_DP_CONN")
@@ -14913,7 +14917,7 @@
 			"A7"
 			smd
 			rect
-			(at 0.2499 -2.4741)
+			(at 0.2499 -2.4741 270)
 			(size 0.299999 1.299997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 12 "/pd_input/PD_USB_DN_CONN")
@@ -14923,7 +14927,7 @@
 			"B6"
 			smd
 			rect
-			(at 0.7501 -2.4741)
+			(at 0.7501 -2.4741 270)
 			(size 0.299999 1.299997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 13 "/pd_input/PD_USB_DP_CONN")
@@ -14933,7 +14937,7 @@
 			"A8"
 			smd
 			rect
-			(at 1.2497 -2.4741)
+			(at 1.2497 -2.4741 270)
 			(size 0.299999 1.299997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(uuid "a5e6654c-357a-5326-ab96-378df289974b")
@@ -14942,7 +14946,7 @@
 			"B5"
 			smd
 			rect
-			(at 1.7501 -2.4741)
+			(at 1.7501 -2.4741 270)
 			(size 0.299999 1.299997)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 242 "STM32_USB_CC2")
@@ -14952,7 +14956,7 @@
 			"A1B12"
 			smd
 			custom
-			(at -3.1999 -2.4741)
+			(at -3.1999 -2.4741 270)
 			(size 0.1 0.1)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(options
@@ -14990,7 +14994,7 @@
 			"B1A12"
 			smd
 			custom
-			(at 3.2001 -2.4741)
+			(at 3.2001 -2.4741 270)
 			(size 0.1 0.1)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(options
@@ -15028,7 +15032,7 @@
 			"B4A9"
 			smd
 			custom
-			(at 2.4003 -2.4741)
+			(at 2.4003 -2.4741 270)
 			(size 0.1 0.1)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(options
@@ -15066,7 +15070,7 @@
 			"A4B9"
 			smd
 			custom
-			(at -2.4 -2.4741)
+			(at -2.4 -2.4741 270)
 			(size 0.1 0.1)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(options
@@ -15104,7 +15108,7 @@
 			""
 			np_thru_hole
 			circle
-			(at -2.8999 -1.2056)
+			(at -2.8999 -1.2056 270)
 			(size 0.750012 0.750012)
 			(drill 0.750012)
 			(layers "*.Cu" "*.Mask")
@@ -15114,7 +15118,7 @@
 			""
 			np_thru_hole
 			circle
-			(at 2.8999 -1.2056)
+			(at 2.8999 -1.2056 270)
 			(size 0.750012 0.750012)
 			(drill 0.750012)
 			(layers "*.Cu" "*.Mask")
@@ -15124,7 +15128,7 @@
 			"2"
 			thru_hole
 			oval
-			(at 4.3251 2.4741)
+			(at 4.3251 2.4741 270)
 			(size 1.199998 1.799996)
 			(drill oval 0.6 1.4)
 			(layers "*.Cu" "*.Mask")
@@ -15135,7 +15139,7 @@
 			"1"
 			thru_hole
 			oval
-			(at 4.3251 -1.7057)
+			(at 4.3251 -1.7057 270)
 			(size 1.199998 1.999996)
 			(drill oval 0.6 1.7)
 			(layers "*.Cu" "*.Mask")
@@ -15146,7 +15150,7 @@
 			"4"
 			thru_hole
 			oval
-			(at -4.3251 -1.7057)
+			(at -4.3251 -1.7057 270)
 			(size 1.199998 1.999996)
 			(drill oval 0.6 1.7)
 			(layers "*.Cu" "*.Mask")
@@ -15157,7 +15161,7 @@
 			"3"
 			thru_hole
 			oval
-			(at -4.3251 2.4741)
+			(at -4.3251 2.4741 270)
 			(size 1.199998 1.799996)
 			(drill oval 0.6 1.4)
 			(layers "*.Cu" "*.Mask")
@@ -15183,7 +15187,7 @@
 		(version 20221018)
 		(generator pcbnew)
 		(layer "F.Cu")
-		(at 78 56)
+		(at 78 55.5)
 		(attr smd)
 		(property
 			"Reference"
@@ -16602,7 +16606,7 @@
 		(version 20221018)
 		(generator pcbnew)
 		(layer "F.Cu")
-		(at 78 91)
+		(at 78 90.5)
 		(attr smd)
 		(property
 			"Reference"
@@ -18029,7 +18033,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "B.Cu")
-		(at 103.2803 59.38 270)
+		(at 59.4197 91.36 90)
 		(descr
 			"IND-SMD_L8.0-W8.0_SMNR8040 — SWPA8040S100MT (EasyEDA/LCSC C37429, faithful conversion)"
 		)
@@ -18278,7 +18282,7 @@
 			"1"
 			smd
 			rect
-			(at -3.3 0 270)
+			(at -3.3 0 90)
 			(size 2.999994 6.700012)
 			(layers "B.Cu" "B.Mask")
 			(net 211 "Net-(U4001-SW)")
@@ -18288,7 +18292,7 @@
 			"1"
 			smd
 			rect
-			(at -4.05 2.68 270)
+			(at -4.05 2.68 90)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 211 "Net-(U4001-SW)")
@@ -18298,7 +18302,7 @@
 			"1"
 			smd
 			rect
-			(at -4.05 1.34 270)
+			(at -4.05 1.34 90)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 211 "Net-(U4001-SW)")
@@ -18308,7 +18312,7 @@
 			"1"
 			smd
 			rect
-			(at -4.05 0 270)
+			(at -4.05 0 90)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 211 "Net-(U4001-SW)")
@@ -18318,7 +18322,7 @@
 			"1"
 			smd
 			rect
-			(at -4.05 -1.34 270)
+			(at -4.05 -1.34 90)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 211 "Net-(U4001-SW)")
@@ -18328,7 +18332,7 @@
 			"1"
 			smd
 			rect
-			(at -4.05 -2.68 270)
+			(at -4.05 -2.68 90)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 211 "Net-(U4001-SW)")
@@ -18338,7 +18342,7 @@
 			"1"
 			smd
 			rect
-			(at -2.55 2.68 270)
+			(at -2.55 2.68 90)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 211 "Net-(U4001-SW)")
@@ -18348,7 +18352,7 @@
 			"1"
 			smd
 			rect
-			(at -2.55 1.34 270)
+			(at -2.55 1.34 90)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 211 "Net-(U4001-SW)")
@@ -18358,7 +18362,7 @@
 			"1"
 			smd
 			rect
-			(at -2.55 0 270)
+			(at -2.55 0 90)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 211 "Net-(U4001-SW)")
@@ -18368,7 +18372,7 @@
 			"1"
 			smd
 			rect
-			(at -2.55 -1.34 270)
+			(at -2.55 -1.34 90)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 211 "Net-(U4001-SW)")
@@ -18378,7 +18382,7 @@
 			"1"
 			smd
 			rect
-			(at -2.55 -2.68 270)
+			(at -2.55 -2.68 90)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 211 "Net-(U4001-SW)")
@@ -18388,7 +18392,7 @@
 			"2"
 			smd
 			rect
-			(at 3.3 0 270)
+			(at 3.3 0 90)
 			(size 2.999994 6.700012)
 			(layers "B.Cu" "B.Mask")
 			(net 7 "+5V_REG")
@@ -18398,7 +18402,7 @@
 			"2"
 			smd
 			rect
-			(at 2.55 2.68 270)
+			(at 2.55 2.68 90)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 7 "+5V_REG")
@@ -18408,7 +18412,7 @@
 			"2"
 			smd
 			rect
-			(at 2.55 1.34 270)
+			(at 2.55 1.34 90)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 7 "+5V_REG")
@@ -18418,7 +18422,7 @@
 			"2"
 			smd
 			rect
-			(at 2.55 0 270)
+			(at 2.55 0 90)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 7 "+5V_REG")
@@ -18428,7 +18432,7 @@
 			"2"
 			smd
 			rect
-			(at 2.55 -1.34 270)
+			(at 2.55 -1.34 90)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 7 "+5V_REG")
@@ -18438,7 +18442,7 @@
 			"2"
 			smd
 			rect
-			(at 2.55 -2.68 270)
+			(at 2.55 -2.68 90)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 7 "+5V_REG")
@@ -18448,7 +18452,7 @@
 			"2"
 			smd
 			rect
-			(at 4.05 2.68 270)
+			(at 4.05 2.68 90)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 7 "+5V_REG")
@@ -18458,7 +18462,7 @@
 			"2"
 			smd
 			rect
-			(at 4.05 1.34 270)
+			(at 4.05 1.34 90)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 7 "+5V_REG")
@@ -18468,7 +18472,7 @@
 			"2"
 			smd
 			rect
-			(at 4.05 0 270)
+			(at 4.05 0 90)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 7 "+5V_REG")
@@ -18478,7 +18482,7 @@
 			"2"
 			smd
 			rect
-			(at 4.05 -1.34 270)
+			(at 4.05 -1.34 90)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 7 "+5V_REG")
@@ -18488,7 +18492,7 @@
 			"2"
 			smd
 			rect
-			(at 4.05 -2.68 270)
+			(at 4.05 -2.68 90)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 7 "+5V_REG")
@@ -18514,7 +18518,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "B.Cu")
-		(at 61.6601 53.88 270)
+		(at 93.7899 98.86 90)
 		(descr
 			"IND-SMD_L8.0-W8.0_SMNR8040 — SWPA8040S100MT (EasyEDA/LCSC C37429, faithful conversion)"
 		)
@@ -18763,7 +18767,7 @@
 			"1"
 			smd
 			rect
-			(at -3.3 0 270)
+			(at -3.3 0 90)
 			(size 2.999994 6.700012)
 			(layers "B.Cu" "B.Mask")
 			(net 215 "Net-(U4002-SW)")
@@ -18773,7 +18777,7 @@
 			"1"
 			smd
 			rect
-			(at -4.05 2.68 270)
+			(at -4.05 2.68 90)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 215 "Net-(U4002-SW)")
@@ -18783,7 +18787,7 @@
 			"1"
 			smd
 			rect
-			(at -4.05 1.34 270)
+			(at -4.05 1.34 90)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 215 "Net-(U4002-SW)")
@@ -18793,7 +18797,7 @@
 			"1"
 			smd
 			rect
-			(at -4.05 0 270)
+			(at -4.05 0 90)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 215 "Net-(U4002-SW)")
@@ -18803,7 +18807,7 @@
 			"1"
 			smd
 			rect
-			(at -4.05 -1.34 270)
+			(at -4.05 -1.34 90)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 215 "Net-(U4002-SW)")
@@ -18813,7 +18817,7 @@
 			"1"
 			smd
 			rect
-			(at -4.05 -2.68 270)
+			(at -4.05 -2.68 90)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 215 "Net-(U4002-SW)")
@@ -18823,7 +18827,7 @@
 			"1"
 			smd
 			rect
-			(at -2.55 2.68 270)
+			(at -2.55 2.68 90)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 215 "Net-(U4002-SW)")
@@ -18833,7 +18837,7 @@
 			"1"
 			smd
 			rect
-			(at -2.55 1.34 270)
+			(at -2.55 1.34 90)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 215 "Net-(U4002-SW)")
@@ -18843,7 +18847,7 @@
 			"1"
 			smd
 			rect
-			(at -2.55 0 270)
+			(at -2.55 0 90)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 215 "Net-(U4002-SW)")
@@ -18853,7 +18857,7 @@
 			"1"
 			smd
 			rect
-			(at -2.55 -1.34 270)
+			(at -2.55 -1.34 90)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 215 "Net-(U4002-SW)")
@@ -18863,7 +18867,7 @@
 			"1"
 			smd
 			rect
-			(at -2.55 -2.68 270)
+			(at -2.55 -2.68 90)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 215 "Net-(U4002-SW)")
@@ -18873,7 +18877,7 @@
 			"2"
 			smd
 			rect
-			(at 3.3 0 270)
+			(at 3.3 0 90)
 			(size 2.999994 6.700012)
 			(layers "B.Cu" "B.Mask")
 			(net 4 "+3V3_REG")
@@ -18883,7 +18887,7 @@
 			"2"
 			smd
 			rect
-			(at 2.55 2.68 270)
+			(at 2.55 2.68 90)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 4 "+3V3_REG")
@@ -18893,7 +18897,7 @@
 			"2"
 			smd
 			rect
-			(at 2.55 1.34 270)
+			(at 2.55 1.34 90)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 4 "+3V3_REG")
@@ -18903,7 +18907,7 @@
 			"2"
 			smd
 			rect
-			(at 2.55 0 270)
+			(at 2.55 0 90)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 4 "+3V3_REG")
@@ -18913,7 +18917,7 @@
 			"2"
 			smd
 			rect
-			(at 2.55 -1.34 270)
+			(at 2.55 -1.34 90)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 4 "+3V3_REG")
@@ -18923,7 +18927,7 @@
 			"2"
 			smd
 			rect
-			(at 2.55 -2.68 270)
+			(at 2.55 -2.68 90)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 4 "+3V3_REG")
@@ -18933,7 +18937,7 @@
 			"2"
 			smd
 			rect
-			(at 4.05 2.68 270)
+			(at 4.05 2.68 90)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 4 "+3V3_REG")
@@ -18943,7 +18947,7 @@
 			"2"
 			smd
 			rect
-			(at 4.05 1.34 270)
+			(at 4.05 1.34 90)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 4 "+3V3_REG")
@@ -18953,7 +18957,7 @@
 			"2"
 			smd
 			rect
-			(at 4.05 0 270)
+			(at 4.05 0 90)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 4 "+3V3_REG")
@@ -18963,7 +18967,7 @@
 			"2"
 			smd
 			rect
-			(at 4.05 -1.34 270)
+			(at 4.05 -1.34 90)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 4 "+3V3_REG")
@@ -18973,7 +18977,7 @@
 			"2"
 			smd
 			rect
-			(at 4.05 -2.68 270)
+			(at 4.05 -2.68 90)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 4 "+3V3_REG")
@@ -18999,7 +19003,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "B.Cu")
-		(at 101.405 98.26)
+		(at 94.3626 49.5524 270)
 		(descr
 			"IND-SMD_L8.0-W8.0_SMNR8040 — SWPA8040S100MT (EasyEDA/LCSC C37429, faithful conversion)"
 		)
@@ -19248,7 +19252,7 @@
 			"1"
 			smd
 			rect
-			(at -3.3 0)
+			(at -3.3 0 270)
 			(size 2.999994 6.700012)
 			(layers "B.Cu" "B.Mask")
 			(net 219 "Net-(U6004-SW)")
@@ -19258,7 +19262,7 @@
 			"1"
 			smd
 			rect
-			(at -4.05 2.68)
+			(at -4.05 2.68 270)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 219 "Net-(U6004-SW)")
@@ -19268,7 +19272,7 @@
 			"1"
 			smd
 			rect
-			(at -4.05 1.34)
+			(at -4.05 1.34 270)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 219 "Net-(U6004-SW)")
@@ -19278,7 +19282,7 @@
 			"1"
 			smd
 			rect
-			(at -4.05 0)
+			(at -4.05 0 270)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 219 "Net-(U6004-SW)")
@@ -19288,7 +19292,7 @@
 			"1"
 			smd
 			rect
-			(at -4.05 -1.34)
+			(at -4.05 -1.34 270)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 219 "Net-(U6004-SW)")
@@ -19298,7 +19302,7 @@
 			"1"
 			smd
 			rect
-			(at -4.05 -2.68)
+			(at -4.05 -2.68 270)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 219 "Net-(U6004-SW)")
@@ -19308,7 +19312,7 @@
 			"1"
 			smd
 			rect
-			(at -2.55 2.68)
+			(at -2.55 2.68 270)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 219 "Net-(U6004-SW)")
@@ -19318,7 +19322,7 @@
 			"1"
 			smd
 			rect
-			(at -2.55 1.34)
+			(at -2.55 1.34 270)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 219 "Net-(U6004-SW)")
@@ -19328,7 +19332,7 @@
 			"1"
 			smd
 			rect
-			(at -2.55 0)
+			(at -2.55 0 270)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 219 "Net-(U6004-SW)")
@@ -19338,7 +19342,7 @@
 			"1"
 			smd
 			rect
-			(at -2.55 -1.34)
+			(at -2.55 -1.34 270)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 219 "Net-(U6004-SW)")
@@ -19348,7 +19352,7 @@
 			"1"
 			smd
 			rect
-			(at -2.55 -2.68)
+			(at -2.55 -2.68 270)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 219 "Net-(U6004-SW)")
@@ -19358,7 +19362,7 @@
 			"2"
 			smd
 			rect
-			(at 3.3 0)
+			(at 3.3 0 270)
 			(size 2.999994 6.700012)
 			(layers "B.Cu" "B.Mask")
 			(net 8 "+5V_SOM")
@@ -19368,7 +19372,7 @@
 			"2"
 			smd
 			rect
-			(at 2.55 2.68)
+			(at 2.55 2.68 270)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 8 "+5V_SOM")
@@ -19378,7 +19382,7 @@
 			"2"
 			smd
 			rect
-			(at 2.55 1.34)
+			(at 2.55 1.34 270)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 8 "+5V_SOM")
@@ -19388,7 +19392,7 @@
 			"2"
 			smd
 			rect
-			(at 2.55 0)
+			(at 2.55 0 270)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 8 "+5V_SOM")
@@ -19398,7 +19402,7 @@
 			"2"
 			smd
 			rect
-			(at 2.55 -1.34)
+			(at 2.55 -1.34 270)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 8 "+5V_SOM")
@@ -19408,7 +19412,7 @@
 			"2"
 			smd
 			rect
-			(at 2.55 -2.68)
+			(at 2.55 -2.68 270)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 8 "+5V_SOM")
@@ -19418,7 +19422,7 @@
 			"2"
 			smd
 			rect
-			(at 4.05 2.68)
+			(at 4.05 2.68 270)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 8 "+5V_SOM")
@@ -19428,7 +19432,7 @@
 			"2"
 			smd
 			rect
-			(at 4.05 1.34)
+			(at 4.05 1.34 270)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 8 "+5V_SOM")
@@ -19438,7 +19442,7 @@
 			"2"
 			smd
 			rect
-			(at 4.05 0)
+			(at 4.05 0 270)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 8 "+5V_SOM")
@@ -19448,7 +19452,7 @@
 			"2"
 			smd
 			rect
-			(at 4.05 -1.34)
+			(at 4.05 -1.34 270)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 8 "+5V_SOM")
@@ -19458,7 +19462,7 @@
 			"2"
 			smd
 			rect
-			(at 4.05 -2.68)
+			(at 4.05 -2.68 270)
 			(size 1.1619 1.038)
 			(layers "B.Paste")
 			(net 8 "+5V_SOM")
@@ -19483,7 +19487,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 72.02 97.85)
+		(at 70.51 47.9 180)
 		(descr
 			"SOT, 3 Pin (JEDEC TO-236 Var AB https://www.jedec.org/document_search?search_api_views_fulltext=TO-236)"
 		)
@@ -19812,7 +19816,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.9375 0.95)
+			(at -0.9375 0.95 180)
 			(size 1.475 0.6)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -19823,7 +19827,7 @@
 			"2"
 			smd
 			roundrect
-			(at -0.9375 -0.95)
+			(at -0.9375 -0.95 180)
 			(size 1.475 0.6)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -19834,7 +19838,7 @@
 			"3"
 			smd
 			roundrect
-			(at 0.9375 0)
+			(at 0.9375 0 180)
 			(size 1.475 0.6)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -19861,7 +19865,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 85.37 104.72 180)
+		(at 104.32 76.88 90)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -19972,7 +19976,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.825 0 180)
+			(at -0.825 0 90)
 			(size 0.8 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -19983,7 +19987,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.825 0 180)
+			(at 0.825 0 90)
 			(size 0.8 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -20010,7 +20014,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 79.37 104.72 180)
+		(at 104.32 70.88 90)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -20121,7 +20125,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.825 0 180)
+			(at -0.825 0 90)
 			(size 0.8 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -20132,7 +20136,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.825 0 180)
+			(at 0.825 0 90)
 			(size 0.8 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -20159,7 +20163,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 88.32 112.265 180)
+		(at 80.18 34.235)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -20270,7 +20274,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.825 0 180)
+			(at -0.825 0)
 			(size 0.8 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -20281,7 +20285,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.825 0 180)
+			(at 0.825 0)
 			(size 0.8 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -20308,7 +20312,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 95.94 110.995 180)
+		(at 72.56 35.505)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -20419,7 +20423,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.825 0 180)
+			(at -0.825 0)
 			(size 0.8 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -20430,7 +20434,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.825 0 180)
+			(at 0.825 0)
 			(size 0.8 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -20457,7 +20461,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 95.94 109.475 180)
+		(at 72.56 37.025)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -20568,7 +20572,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.825 0 180)
+			(at -0.825 0)
 			(size 0.8 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -20579,7 +20583,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.825 0 180)
+			(at 0.825 0)
 			(size 0.8 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -20606,7 +20610,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 95.94 107.955 180)
+		(at 72.56 38.545)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -20717,7 +20721,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.825 0 180)
+			(at -0.825 0)
 			(size 0.8 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -20728,7 +20732,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.825 0 180)
+			(at 0.825 0)
 			(size 0.8 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -20755,7 +20759,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 81.75 59.145 270)
+		(at 82.5 52.395 90)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -20866,7 +20870,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.825 0 270)
+			(at -0.825 0 90)
 			(size 0.8 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -20877,7 +20881,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.825 0 270)
+			(at 0.825 0 90)
 			(size 0.8 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -20904,7 +20908,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 79.8 50.895)
+		(at 78.3 50.395)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -21053,7 +21057,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 105.7749 74.95 90)
+		(at 75.7801 107.83 270)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -21164,7 +21168,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.825 0 90)
+			(at -0.825 0 270)
 			(size 0.8 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -21175,7 +21179,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.825 0 90)
+			(at 0.825 0 270)
 			(size 0.8 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -21202,7 +21206,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 101.775 78.45 90)
+		(at 81.53 104.33 270)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -21313,7 +21317,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.825 0 90)
+			(at -0.825 0 270)
 			(size 0.8 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -21324,7 +21328,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.825 0 90)
+			(at 0.825 0 270)
 			(size 0.8 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -21351,7 +21355,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 98.275 71.95 90)
+		(at 83.03 110.83 270)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -21462,7 +21466,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.825 0 90)
+			(at -0.825 0 270)
 			(size 0.8 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -21473,7 +21477,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.825 0 90)
+			(at 0.825 0 270)
 			(size 0.8 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -21500,7 +21504,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 105.5018 73.8774 90)
+		(at 101.2518 99.8774 90)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -21645,7 +21649,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 103.5018 73.8774 90)
+		(at 98.0018 100.6274 90)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -21790,7 +21794,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 108.7702 94.17 90)
+		(at 65.2067 37.63)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -21897,7 +21901,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.825 0 90)
+			(at -0.825 0)
 			(size 0.8 0.95)
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(roundrect_rratio 0.25)
@@ -21908,7 +21912,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.825 0 90)
+			(at 0.825 0)
 			(size 0.8 0.95)
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(roundrect_rratio 0.25)
@@ -21935,7 +21939,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 113.2702 84.67 90)
+		(at 60.7067 37.63)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -22042,7 +22046,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.825 0 90)
+			(at -0.825 0)
 			(size 0.8 0.95)
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(roundrect_rratio 0.25)
@@ -22053,7 +22057,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.825 0 90)
+			(at 0.825 0)
 			(size 0.8 0.95)
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(roundrect_rratio 0.25)
@@ -22080,7 +22084,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 111.0702 82.6736 90)
+		(at 69.9531 37.18)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -22187,7 +22191,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.825 0 90)
+			(at -0.825 0)
 			(size 0.8 0.95)
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(roundrect_rratio 0.25)
@@ -22198,7 +22202,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.825 0 90)
+			(at 0.825 0)
 			(size 0.8 0.95)
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(roundrect_rratio 0.25)
@@ -22225,7 +22229,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 108.9702 82.6736 90)
+		(at 69.4531 29.33 270)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -22332,7 +22336,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.825 0 90)
+			(at -0.825 0 270)
 			(size 0.8 0.95)
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(roundrect_rratio 0.25)
@@ -22343,7 +22347,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.825 0 90)
+			(at 0.825 0 270)
 			(size 0.8 0.95)
 			(layers "F.Cu" "F.Mask" "F.Paste")
 			(roundrect_rratio 0.25)
@@ -22370,7 +22374,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 107.8053 49.28 180)
+		(at 54.8947 101.46)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -22481,7 +22485,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.825 0 180)
+			(at -0.825 0)
 			(size 0.8 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -22492,7 +22496,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.825 0 180)
+			(at 0.825 0)
 			(size 0.8 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -22519,7 +22523,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 106.5553 46.28 270)
+		(at 55.8947 104.46 90)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -22630,7 +22634,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.825 0 270)
+			(at -0.825 0 90)
 			(size 0.8 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -22641,7 +22645,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.825 0 270)
+			(at 0.825 0 90)
 			(size 0.8 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -22668,7 +22672,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 65.07 90.78 270)
+		(at 70.46 53.12 180)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -22779,7 +22783,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.825 0 270)
+			(at -0.825 0 180)
 			(size 0.8 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -22790,7 +22794,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.825 0 270)
+			(at 0.825 0 180)
 			(size 0.8 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -22817,7 +22821,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 66.1851 43.78 180)
+		(at 89.2649 108.96)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -22928,7 +22932,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.825 0 180)
+			(at -0.825 0)
 			(size 0.8 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -22939,7 +22943,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.825 0 180)
+			(at 0.825 0)
 			(size 0.8 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -22966,7 +22970,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 65.1851 40.78 270)
+		(at 90.2649 111.96 90)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -23077,7 +23081,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.825 0 270)
+			(at -0.825 0 90)
 			(size 0.8 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -23088,7 +23092,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.825 0 270)
+			(at 0.825 0 90)
 			(size 0.8 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -23115,7 +23119,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 65.07 93.74 270)
+		(at 90.88 56.25 90)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -23226,7 +23230,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.825 0 270)
+			(at -0.825 0 90)
 			(size 0.8 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -23237,7 +23241,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.825 0 270)
+			(at 0.825 0 90)
 			(size 0.8 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -23264,7 +23268,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 72.9575 100.3)
+		(at 71.1975 45.35 180)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -23375,7 +23379,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.825 0)
+			(at -0.825 0 180)
 			(size 0.8 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -23386,7 +23390,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.825 0)
+			(at 0.825 0 180)
 			(size 0.8 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -23413,7 +23417,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 62.09 100.32 180)
+		(at 60.33 45.37 180)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -23562,7 +23566,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 58.63 98.57 180)
+		(at 61.12 48.62 180)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -23711,7 +23715,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 103.8802 47.5049 180)
+		(at 58.8198 103.2351)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -23822,7 +23826,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.825 0 180)
+			(at -0.825 0)
 			(size 0.8 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -23833,7 +23837,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.825 0 180)
+			(at 0.825 0)
 			(size 0.8 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -23859,8 +23863,8 @@
 		"Resistor_SMD:R_0603_1608Metric"
 		(version 20260206)
 		(generator "kicad-footprint-generator")
-		(layer "B.Cu")
-		(at 97.8302 45.28 180)
+		(layer "F.Cu")
+		(at 64.6198 105.46 180)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -23869,28 +23873,26 @@
 			"Reference"
 			"R4011"
 			(hide yes)
-			(at 0 1.43 0)
-			(layer "B.SilkS")
+			(at 0 -1.43 0)
+			(layer "F.SilkS")
 			(effects
 				(font
 					(size 1 1)
 					(thickness 0.15)
 				)
-				(justify mirror)
 			)
 			(uuid "c4e93fed-2ce6-51ac-86ba-af8ed52985df")
 		)
 		(property
 			"Value"
 			"10R"
-			(at 0 -1.43 0)
-			(layer "B.Fab")
+			(at 0 1.43 0)
+			(layer "F.Fab")
 			(effects
 				(font
 					(size 1 1)
 					(thickness 0.15)
 				)
-				(justify mirror)
 			)
 			(uuid "9b692e98-c2f4-5b18-8c80-1d9486eef1e0")
 		)
@@ -23898,29 +23900,18 @@
 			"KiLib_Generator"
 			"SMD_2terminal_chip_molded"
 			(at 0 0 0)
-			(layer "B.SilkS")
+			(layer "F.SilkS")
 			(hide yes)
 			(effects
 				(font
 					(size 1 1)
 					(thickness 0.15)
 				)
-				(justify mirror)
 			)
 			(uuid "2f41b41b-424c-5341-812a-0ce63db056f1")
 		)
 		(attr smd)
 		(duplicate_pad_numbers_are_jumpers no)
-		(fp_line
-			(start -0.237258 0.5225)
-			(end 0.237258 0.5225)
-			(stroke
-				(width 0.15)
-				(type solid)
-			)
-			(layer "B.SilkS")
-			(uuid "d0bdf753-1706-5409-986c-d19873deb9a0")
-		)
 		(fp_line
 			(start -0.237258 -0.5225)
 			(end 0.237258 -0.5225)
@@ -23928,42 +23919,51 @@
 				(width 0.15)
 				(type solid)
 			)
-			(layer "B.SilkS")
+			(layer "F.SilkS")
+			(uuid "d0bdf753-1706-5409-986c-d19873deb9a0")
+		)
+		(fp_line
+			(start -0.237258 0.5225)
+			(end 0.237258 0.5225)
+			(stroke
+				(width 0.15)
+				(type solid)
+			)
+			(layer "F.SilkS")
 			(uuid "f69a3960-42e2-5fc6-a1f2-3ab498c9ca0c")
 		)
 		(fp_rect
-			(start -1.48 0.73)
-			(end 1.48 -0.73)
+			(start -1.48 -0.73)
+			(end 1.48 0.73)
 			(stroke
 				(width 0.05)
 				(type solid)
 			)
 			(fill no)
-			(layer "B.CrtYd")
+			(layer "F.CrtYd")
 			(uuid "d654f848-643e-5899-9e0e-79de4bc1ab91")
 		)
 		(fp_rect
-			(start -0.8 0.4125)
-			(end 0.8 -0.4125)
+			(start -0.8 -0.4125)
+			(end 0.8 0.4125)
 			(stroke
 				(width 0.1)
 				(type solid)
 			)
 			(fill no)
-			(layer "B.Fab")
+			(layer "F.Fab")
 			(uuid "3c9655de-50e5-5301-b91b-a28ca0d94300")
 		)
 		(fp_text
 			user
 			"${REFERENCE}"
 			(at 0 0 0)
-			(layer "B.Fab")
+			(layer "F.Fab")
 			(effects
 				(font
 					(size 0.4 0.4)
 					(thickness 0.06)
 				)
-				(justify mirror)
 			)
 			(uuid "2d83c1b0-8312-5479-9b65-26a56841d34c")
 		)
@@ -23973,7 +23973,7 @@
 			roundrect
 			(at -0.825 0 180)
 			(size 0.8 0.95)
-			(layers "B.Cu" "B.Mask" "B.Paste")
+			(layers "F.Cu" "F.Mask" "F.Paste")
 			(roundrect_rratio 0.25)
 			(net 7 "+5V_REG")
 			(uuid "760ef6e9-d1b4-5b7b-8f0a-1fc4404b0319")
@@ -23984,7 +23984,7 @@
 			roundrect
 			(at 0.825 0 180)
 			(size 0.8 0.95)
-			(layers "B.Cu" "B.Mask" "B.Paste")
+			(layers "F.Cu" "F.Mask" "F.Paste")
 			(roundrect_rratio 0.25)
 			(net 15 "/power/BIAS_5V0")
 			(uuid "6355e24e-c630-57c4-9378-6873c8fe4b2e")
@@ -24009,7 +24009,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 104.8053 45.28 270)
+		(at 57.8947 105.46 90)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -24120,7 +24120,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.825 0 270)
+			(at -0.825 0 90)
 			(size 0.8 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -24131,7 +24131,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.825 0 270)
+			(at 0.825 0 90)
 			(size 0.8 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -24158,7 +24158,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 56.21 39.78 180)
+		(at 99.24 112.96)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -24269,7 +24269,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.825 0 180)
+			(at -0.825 0)
 			(size 0.8 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -24280,7 +24280,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.825 0 180)
+			(at 0.825 0)
 			(size 0.8 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -24307,7 +24307,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 62.26 42.0049 180)
+		(at 93.19 110.7351)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -24418,7 +24418,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.825 0 180)
+			(at -0.825 0)
 			(size 0.8 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -24429,7 +24429,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.825 0 180)
+			(at 0.825 0)
 			(size 0.8 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -24456,7 +24456,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 63.1851 39.78 270)
+		(at 92.2649 112.96 90)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -24567,7 +24567,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.825 0 270)
+			(at -0.825 0 90)
 			(size 0.8 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -24578,7 +24578,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.825 0 270)
+			(at 0.825 0 90)
 			(size 0.8 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -24605,7 +24605,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 56.0385 49.3851 90)
+		(at 79.5385 99.2951 90)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -24754,7 +24754,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 90.0551 99.485 270)
+		(at 93.1376 38.2025 180)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -24865,7 +24865,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.825 0 270)
+			(at -0.825 0 180)
 			(size 0.8 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -24876,7 +24876,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.825 0 270)
+			(at 0.825 0 180)
 			(size 0.8 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -24903,7 +24903,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 87.0551 98.985 270)
+		(at 90.1376 36.7025 180)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -25014,7 +25014,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.825 0 270)
+			(at -0.825 0 180)
 			(size 0.8 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -25025,7 +25025,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.825 0 270)
+			(at 0.825 0 180)
 			(size 0.8 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -25052,7 +25052,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 90.0184 73.4095)
+		(at 77.9475 48.72 180)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -25163,7 +25163,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.825 0)
+			(at -0.825 0 180)
 			(size 0.8 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -25174,7 +25174,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.825 0)
+			(at 0.825 0 180)
 			(size 0.8 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -25200,8 +25200,8 @@
 		"Resistor_SMD:R_0603_1608Metric"
 		(version 20260206)
 		(generator "kicad-footprint-generator")
-		(layer "F.Cu")
-		(at 91.5551 103.2101 270)
+		(layer "B.Cu")
+		(at 86.4125 36.7025)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -25211,12 +25211,13 @@
 			"R6017"
 			(hide yes)
 			(at 0 -1.43 0)
-			(layer "F.SilkS")
+			(layer "B.SilkS")
 			(effects
 				(font
 					(size 1 1)
 					(thickness 0.15)
 				)
+				(justify mirror)
 			)
 			(uuid "9bfd2574-7e93-569f-ad09-bd8c942f5ed0")
 		)
@@ -25224,12 +25225,13 @@
 			"Value"
 			"10R"
 			(at 0 1.43 0)
-			(layer "F.Fab")
+			(layer "B.Fab")
 			(effects
 				(font
 					(size 1 1)
 					(thickness 0.15)
 				)
+				(justify mirror)
 			)
 			(uuid "d9f1442b-7108-588b-8929-d30902b25a22")
 		)
@@ -25237,13 +25239,14 @@
 			"KiLib_Generator"
 			"SMD_2terminal_chip_molded"
 			(at 0 0 0)
-			(layer "F.SilkS")
+			(layer "B.SilkS")
 			(hide yes)
 			(effects
 				(font
 					(size 1 1)
 					(thickness 0.15)
 				)
+				(justify mirror)
 			)
 			(uuid "5815df82-2151-5662-85c6-d0411d16dd02")
 		)
@@ -25256,7 +25259,7 @@
 				(width 0.15)
 				(type solid)
 			)
-			(layer "F.SilkS")
+			(layer "B.SilkS")
 			(uuid "a431e8e8-bd83-5aaa-9998-1feca9fbc036")
 		)
 		(fp_line
@@ -25266,7 +25269,7 @@
 				(width 0.15)
 				(type solid)
 			)
-			(layer "F.SilkS")
+			(layer "B.SilkS")
 			(uuid "7b686856-2ebc-5536-a3a1-29c11a51bf67")
 		)
 		(fp_rect
@@ -25277,7 +25280,7 @@
 				(type solid)
 			)
 			(fill no)
-			(layer "F.CrtYd")
+			(layer "B.CrtYd")
 			(uuid "2f5a6cd9-be54-5369-a85f-4a1d2b285ce2")
 		)
 		(fp_rect
@@ -25288,19 +25291,20 @@
 				(type solid)
 			)
 			(fill no)
-			(layer "F.Fab")
+			(layer "B.Fab")
 			(uuid "07bccd42-d637-5068-9a15-104f723f4a5c")
 		)
 		(fp_text
 			user
 			"${REFERENCE}"
 			(at 0 0 0)
-			(layer "F.Fab")
+			(layer "B.Fab")
 			(effects
 				(font
 					(size 0.4 0.4)
 					(thickness 0.06)
 				)
+				(justify mirror)
 			)
 			(uuid "beaed458-0145-577e-a7bb-60d7a7577930")
 		)
@@ -25308,9 +25312,9 @@
 			"1"
 			smd
 			roundrect
-			(at -0.825 0 270)
+			(at -0.825 0)
 			(size 0.8 0.95)
-			(layers "F.Cu" "F.Mask" "F.Paste")
+			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
 			(net 8 "+5V_SOM")
 			(uuid "aadca02b-d8e1-5091-a452-63c8c8bb0c13")
@@ -25319,9 +25323,9 @@
 			"2"
 			smd
 			roundrect
-			(at 0.825 0 270)
+			(at 0.825 0)
 			(size 0.8 0.95)
-			(layers "F.Cu" "F.Mask" "F.Paste")
+			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
 			(net 18 "/power_som/BIAS_5V_SOM")
 			(uuid "6569f708-c8a1-522d-9fc3-ca7a43a26c0d")
@@ -25346,7 +25350,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 91.78 97.1601)
+		(at 95.4625 39.9274 270)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -25457,7 +25461,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.825 0)
+			(at -0.825 0 270)
 			(size 0.8 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -25468,7 +25472,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.825 0)
+			(at 0.825 0 270)
 			(size 0.8 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -25495,7 +25499,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 88.5551 98.735 270)
+		(at 93.8876 36.7025 180)
 		(descr
 			"Resistor SMD 0603 (1608 Metric), square (rectangular) end terminal, IPC-7351 nominal, (Body size source: IPC-SM-782 page 72, https://www.pcb-3d.com/wordpress/wp-content/uploads/ipc-sm-782a_amendment_1_and_2.pdf)"
 		)
@@ -25606,7 +25610,7 @@
 			"1"
 			smd
 			roundrect
-			(at -0.825 0 270)
+			(at -0.825 0 180)
 			(size 0.8 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -25617,7 +25621,7 @@
 			"2"
 			smd
 			roundrect
-			(at 0.825 0 270)
+			(at 0.825 0 180)
 			(size 0.8 0.95)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -25645,7 +25649,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "B.Cu")
-		(at 54.0385 50.1849 90)
+		(at 72.345 98.4677)
 		(descr "R1206 — RLM12FTCMR010 (R1206) (EasyEDA/LCSC C188070, faithful conversion)")
 		(tags "Current Sense Resistors/Shunt Resistors")
 		(attr smd)
@@ -25892,7 +25896,7 @@
 			"2"
 			smd
 			rect
-			(at 1.4788 0 90)
+			(at 1.4788 0)
 			(size 1.207516 1.701013)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 11 "+VIN_SYS")
@@ -25902,7 +25906,7 @@
 			"1"
 			smd
 			rect
-			(at -1.4788 0 90)
+			(at -1.4788 0)
 			(size 1.207516 1.701013)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 10 "+VIN")
@@ -25928,7 +25932,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "B.Cu")
-		(at 53.2451 40.6915 90)
+		(at 72.345 101.1877)
 		(descr "R1206 — RLM12FTCMR010 (R1206) (EasyEDA/LCSC C188070, faithful conversion)")
 		(tags "Current Sense Resistors/Shunt Resistors")
 		(attr smd)
@@ -26175,7 +26179,7 @@
 			"2"
 			smd
 			rect
-			(at 1.4788 0 90)
+			(at 1.4788 0)
 			(size 1.207516 1.701013)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 6 "+5V")
@@ -26185,7 +26189,7 @@
 			"1"
 			smd
 			rect
-			(at -1.4788 0 90)
+			(at -1.4788 0)
 			(size 1.207516 1.701013)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 7 "+5V_REG")
@@ -26211,7 +26215,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "B.Cu")
-		(at 47.6015 48.8351 90)
+		(at 72.1015 94.9951 90)
 		(descr "R1206 — RLM12FTCMR010 (R1206) (EasyEDA/LCSC C188070, faithful conversion)")
 		(tags "Current Sense Resistors/Shunt Resistors")
 		(attr smd)
@@ -26493,8 +26497,8 @@
 		(version 20260206)
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
-		(layer "F.Cu")
-		(at 42.7315 72.8449 90)
+		(layer "B.Cu")
+		(at 67.6277 101)
 		(descr "R1206 — RLM12FTCMR020 (R1206) (EasyEDA/LCSC C393094, faithful conversion)")
 		(tags "Current Sense Resistors/Shunt Resistors")
 		(attr smd)
@@ -26503,12 +26507,13 @@
 			"RS5004"
 			(hide yes)
 			(at 0 -2 0)
-			(layer "F.SilkS")
+			(layer "B.SilkS")
 			(effects
 				(font
 					(size 1 1)
 					(thickness 0.15)
 				)
+				(justify mirror)
 			)
 			(uuid "c6cc8025-1a68-5b61-9db8-45021f1696b0")
 		)
@@ -26516,12 +26521,13 @@
 			"Value"
 			"20mR"
 			(at 0 2 0)
-			(layer "F.Fab")
+			(layer "B.Fab")
 			(effects
 				(font
 					(size 1 1)
 					(thickness 0.15)
 				)
+				(justify mirror)
 			)
 			(uuid "ca573039-6d40-5efa-9f15-e20cefad5349")
 		)
@@ -26529,13 +26535,14 @@
 			"Datasheet"
 			"https://www.lcsc.com/datasheet/C393094.pdf"
 			(at 0 0 0)
-			(layer "F.Fab")
+			(layer "B.Fab")
 			(hide yes)
 			(effects
 				(font
 					(size 1 1)
 					(thickness 0.15)
 				)
+				(justify mirror)
 			)
 			(uuid "31a7c548-24ba-5035-aa13-f8008eb0b0d5")
 		)
@@ -26543,13 +26550,14 @@
 			"Description"
 			"RLM12FTCMR020 (R1206)"
 			(at 0 0 0)
-			(layer "F.Fab")
+			(layer "B.Fab")
 			(hide yes)
 			(effects
 				(font
 					(size 1 1)
 					(thickness 0.15)
 				)
+				(justify mirror)
 			)
 			(uuid "22eca850-3e0b-551f-aa00-3bf5523ce493")
 		)
@@ -26557,13 +26565,14 @@
 			"LCSC"
 			"C393094"
 			(at 0 0 0)
-			(layer "F.Fab")
+			(layer "B.Fab")
 			(hide yes)
 			(effects
 				(font
 					(size 1 1)
 					(thickness 0.15)
 				)
+				(justify mirror)
 			)
 			(uuid "48c78960-7baf-570c-9cfb-cf72ba1555df")
 		)
@@ -26571,12 +26580,13 @@
 			user
 			"${REFERENCE}"
 			(at 0 0 0)
-			(layer "F.Fab")
+			(layer "B.Fab")
 			(effects
 				(font
 					(size 1 1)
 					(thickness 0.15)
 				)
+				(justify mirror)
 			)
 			(uuid "56ca47cc-9e5f-5229-b34c-c9ff0e3a9062")
 		)
@@ -26588,7 +26598,7 @@
 				(type solid)
 			)
 			(fill none)
-			(layer "F.SilkS")
+			(layer "B.SilkS")
 			(uuid "20d9cfc3-e5cc-59f9-806d-c2c17327eedc")
 		)
 		(fp_line
@@ -26598,7 +26608,7 @@
 				(width 0.1)
 				(type solid)
 			)
-			(layer "F.Fab")
+			(layer "B.Fab")
 			(uuid "79babf0d-3dfd-5f29-a54b-e39590ee29e5")
 		)
 		(fp_line
@@ -26608,7 +26618,7 @@
 				(width 0.1)
 				(type solid)
 			)
-			(layer "F.Fab")
+			(layer "B.Fab")
 			(uuid "5dd05bda-5676-5adb-8d6f-9acc56f8fa35")
 		)
 		(fp_line
@@ -26618,7 +26628,7 @@
 				(width 0.1)
 				(type solid)
 			)
-			(layer "F.Fab")
+			(layer "B.Fab")
 			(uuid "9c1ed617-696d-5fa6-b9a6-11c0ada6b479")
 		)
 		(fp_line
@@ -26628,7 +26638,7 @@
 				(width 0.1)
 				(type solid)
 			)
-			(layer "F.Fab")
+			(layer "B.Fab")
 			(uuid "c7283d7f-cf5d-52ac-b3e3-f9e59fd7ad22")
 		)
 		(fp_line
@@ -26638,7 +26648,7 @@
 				(width 0.05)
 				(type solid)
 			)
-			(layer "F.CrtYd")
+			(layer "B.CrtYd")
 			(uuid "f9d011ed-5975-5b13-ba58-278f10b3f75e")
 		)
 		(fp_line
@@ -26648,7 +26658,7 @@
 				(width 0.05)
 				(type solid)
 			)
-			(layer "F.CrtYd")
+			(layer "B.CrtYd")
 			(uuid "a9d07ba8-0f55-5f33-a9e8-5ab3fc65a54f")
 		)
 		(fp_line
@@ -26658,7 +26668,7 @@
 				(width 0.05)
 				(type solid)
 			)
-			(layer "F.CrtYd")
+			(layer "B.CrtYd")
 			(uuid "c96f17fe-c596-5f48-84b0-b200c2fe0f67")
 		)
 		(fp_line
@@ -26668,7 +26678,7 @@
 				(width 0.05)
 				(type solid)
 			)
-			(layer "F.CrtYd")
+			(layer "B.CrtYd")
 			(uuid "b493941a-070d-53b7-801d-a4cea7d4a87b")
 		)
 		(fp_line
@@ -26678,7 +26688,7 @@
 				(width 0.1524)
 				(type solid)
 			)
-			(layer "F.SilkS")
+			(layer "B.SilkS")
 			(uuid "84ece7d4-c783-525c-bd95-0798f9ac2b55")
 		)
 		(fp_line
@@ -26688,7 +26698,7 @@
 				(width 0.1524)
 				(type solid)
 			)
-			(layer "F.SilkS")
+			(layer "B.SilkS")
 			(uuid "8882d157-77da-5a86-8cea-68a6acc23272")
 		)
 		(fp_line
@@ -26698,7 +26708,7 @@
 				(width 0.1524)
 				(type solid)
 			)
-			(layer "F.SilkS")
+			(layer "B.SilkS")
 			(uuid "70b232df-d3ae-558a-b027-0f422f3b60ae")
 		)
 		(fp_line
@@ -26708,7 +26718,7 @@
 				(width 0.1524)
 				(type solid)
 			)
-			(layer "F.SilkS")
+			(layer "B.SilkS")
 			(uuid "0d166ba9-1682-54fe-afd4-d6eb71c88d5f")
 		)
 		(fp_line
@@ -26718,7 +26728,7 @@
 				(width 0.1524)
 				(type solid)
 			)
-			(layer "F.SilkS")
+			(layer "B.SilkS")
 			(uuid "924a8d8b-8075-5e83-ad1e-c0cb601395c7")
 		)
 		(fp_line
@@ -26728,16 +26738,16 @@
 				(width 0.1524)
 				(type solid)
 			)
-			(layer "F.SilkS")
+			(layer "B.SilkS")
 			(uuid "04a2083f-9979-52d1-b021-3ffd98819052")
 		)
 		(pad
 			"2"
 			smd
 			rect
-			(at 1.4788 0 90)
+			(at 1.4788 0)
 			(size 1.207516 1.701013)
-			(layers "F.Cu" "F.Paste" "F.Mask")
+			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 1 "+1V8")
 			(uuid "fd6fd4e1-604e-5f63-ae87-ec7418b9ec59")
 		)
@@ -26745,9 +26755,9 @@
 			"1"
 			smd
 			rect
-			(at -1.4788 0 90)
+			(at -1.4788 0)
 			(size 1.207516 1.701013)
-			(layers "F.Cu" "F.Paste" "F.Mask")
+			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 2 "+1V8_REG")
 			(uuid "99b90b68-3f6f-5912-a9e6-2668b67e22b7")
 		)
@@ -26771,7 +26781,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 92.13 110.36 90)
+		(at 85.12 34.89 270)
 		(descr
 			"SW-SMD_8P-L6.7-W5.4-P1.27-LS8.4 — DSHP04TSGER_C3293144 (SW-SMD_8P-L6.7-W5.4-P1.27-LS8.4) (EasyEDA/LCSC C3293144, faithful conversion)"
 		)
@@ -27356,7 +27366,7 @@
 			"6"
 			smd
 			rect
-			(at 0.635 -3.81 90)
+			(at 0.635 -3.81 270)
 			(size 0.762 1.524)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 37 "GND")
@@ -27366,7 +27376,7 @@
 			"3"
 			smd
 			rect
-			(at 0.635 3.81 90)
+			(at 0.635 3.81 270)
 			(size 0.762 1.524)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 237 "STM32_GPIO8")
@@ -27376,7 +27386,7 @@
 			"2"
 			smd
 			rect
-			(at -0.635 3.81 90)
+			(at -0.635 3.81 270)
 			(size 0.762 1.524)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 236 "STM32_GPIO7")
@@ -27386,7 +27396,7 @@
 			"7"
 			smd
 			rect
-			(at -0.635 -3.81 90)
+			(at -0.635 -3.81 270)
 			(size 0.762 1.524)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 37 "GND")
@@ -27396,7 +27406,7 @@
 			"8"
 			smd
 			rect
-			(at -1.905 -3.81 90)
+			(at -1.905 -3.81 270)
 			(size 0.762 1.524)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 203 "Net-(R1003-Pad2)")
@@ -27406,7 +27416,7 @@
 			"1"
 			smd
 			rect
-			(at -1.905 3.81 90)
+			(at -1.905 3.81 270)
 			(size 0.762 1.524)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 229 "STM32_BOOT0")
@@ -27416,7 +27426,7 @@
 			"4"
 			smd
 			rect
-			(at 1.905 3.81 90)
+			(at 1.905 3.81 270)
 			(size 0.762 1.524)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 204 "Net-(R1006-Pad2)")
@@ -27426,7 +27436,7 @@
 			"5"
 			smd
 			rect
-			(at 1.905 -3.81 90)
+			(at 1.905 -3.81 270)
 			(size 0.762 1.524)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 37 "GND")
@@ -27452,7 +27462,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 47.71 101.4 180)
+		(at 75.46 36.4 180)
 		(descr
 			"SW-SMD_4P-L5.1-W5.1-P3.70-LS6.5-TL_H1.5 — TS-1187A-B-A-B (SW-SMD_4P-L5.1-W5.1-P3.70-LS6.5-TL_H1.5) (EasyEDA/LCSC C318884, faithful conversion)"
 		)
@@ -27902,7 +27912,7 @@
 		(generator "pcbnew")
 		(generator_version "10.0")
 		(layer "B.Cu")
-		(at 79 59)
+		(at 80.5 52.5 90)
 		(descr "SMD pad as test Point, diameter 1.5mm")
 		(tags "test point SMD pad")
 		(property
@@ -28008,7 +28018,7 @@
 			"1"
 			smd
 			circle
-			(at 0 0)
+			(at 0 0 90)
 			(size 1.5 1.5)
 			(layers "B.Cu" "B.Mask")
 			(net 223 "SDIO_CLK")
@@ -28023,7 +28033,7 @@
 		(generator "pcbnew")
 		(generator_version "10.0")
 		(layer "B.Cu")
-		(at 79.5 53)
+		(at 78 52.5 90)
 		(descr "SMD pad as test Point, diameter 1.5mm")
 		(tags "test point SMD pad")
 		(property
@@ -28129,7 +28139,7 @@
 			"1"
 			smd
 			circle
-			(at 0 0)
+			(at 0 0 90)
 			(size 1.5 1.5)
 			(layers "B.Cu" "B.Mask")
 			(net 224 "SDIO_CMD")
@@ -28144,7 +28154,7 @@
 		(generator "pcbnew")
 		(generator_version "10.0")
 		(layer "B.Cu")
-		(at 71 62.25)
+		(at 77 59)
 		(descr "SMD pad as test Point, diameter 1.5mm")
 		(tags "test point SMD pad")
 		(property
@@ -28265,7 +28275,7 @@
 		(generator "pcbnew")
 		(generator_version "10.0")
 		(layer "B.Cu")
-		(at 79.25 64)
+		(at 76.5 70.75 270)
 		(descr "SMD pad as test Point, diameter 1.5mm")
 		(tags "test point SMD pad")
 		(property
@@ -28371,7 +28381,7 @@
 			"1"
 			smd
 			circle
-			(at 0 0)
+			(at 0 0 270)
 			(size 1.5 1.5)
 			(layers "B.Cu" "B.Mask")
 			(net 261 "ZYNQ_PS_UART0_TXD")
@@ -28385,35 +28395,37 @@
 		(version 20260206)
 		(generator "pcbnew")
 		(generator_version "10.0")
-		(layer "F.Cu")
-		(at 102.25 68.5)
+		(layer "B.Cu")
+		(at 77.75 73)
 		(descr "SMD pad as test Point, diameter 1.5mm")
 		(tags "test point SMD pad")
 		(property
 			"Reference"
 			"TP11002"
 			(hide yes)
-			(at 0 -1.648 0)
-			(layer "F.SilkS")
+			(at 0 1.648 0)
+			(layer "B.SilkS")
 			(uuid "3dcd25ac-aa84-59fb-b691-e5f715ef296f")
 			(effects
 				(font
 					(size 1 1)
 					(thickness 0.15)
 				)
+				(justify mirror)
 			)
 		)
 		(property
 			"Value"
 			"ZYNQ_PS_UART0_RXD"
-			(at 0 1.75 0)
-			(layer "F.Fab")
+			(at 0 -1.75 0)
+			(layer "B.Fab")
 			(uuid "1d1cbb57-396c-5397-a874-16b719f116ed")
 			(effects
 				(font
 					(size 1 1)
 					(thickness 0.15)
 				)
+				(justify mirror)
 			)
 		)
 		(property
@@ -28421,7 +28433,7 @@
 			""
 			(at 0 0 0)
 			(unlocked yes)
-			(layer "F.Fab")
+			(layer "B.Fab")
 			(hide yes)
 			(uuid "06547128-b3f6-5dd9-a9ee-a92842c3fb9f")
 			(effects
@@ -28429,6 +28441,7 @@
 					(size 1.27 1.27)
 					(thickness 0.15)
 				)
+				(justify mirror)
 			)
 		)
 		(property
@@ -28436,7 +28449,7 @@
 			""
 			(at 0 0 0)
 			(unlocked yes)
-			(layer "F.Fab")
+			(layer "B.Fab")
 			(hide yes)
 			(uuid "deb3fc26-5032-527c-aaef-ed837e73d007")
 			(effects
@@ -28444,19 +28457,20 @@
 					(size 1.27 1.27)
 					(thickness 0.15)
 				)
+				(justify mirror)
 			)
 		)
 		(attr exclude_from_pos_files exclude_from_bom)
 		(duplicate_pad_numbers_are_jumpers no)
 		(fp_circle
 			(center 0 0)
-			(end 0 0.95)
+			(end 0 -0.95)
 			(stroke
 				(width 0.15)
 				(type solid)
 			)
 			(fill no)
-			(layer "F.SilkS")
+			(layer "B.SilkS")
 			(uuid "896b5e26-7ee5-5c31-b3cf-f7c8881172ea")
 		)
 		(fp_circle
@@ -28467,20 +28481,21 @@
 				(type solid)
 			)
 			(fill no)
-			(layer "F.CrtYd")
+			(layer "B.CrtYd")
 			(uuid "5ee42e3e-166d-5243-88b8-4dd16807c1c7")
 		)
 		(fp_text
 			user
 			"${REFERENCE}"
-			(at 0 -1.65 0)
-			(layer "F.Fab")
+			(at 0 1.65 0)
+			(layer "B.Fab")
 			(uuid "d06dad03-a19d-5c36-bbd9-4ab4465e02ae")
 			(effects
 				(font
 					(size 1 1)
 					(thickness 0.15)
 				)
+				(justify mirror)
 			)
 		)
 		(pad
@@ -28489,7 +28504,7 @@
 			circle
 			(at 0 0)
 			(size 1.5 1.5)
-			(layers "F.Cu" "F.Mask")
+			(layers "B.Cu" "B.Mask")
 			(net 260 "ZYNQ_PS_UART0_RXD")
 			(uuid "c762b48d-f7f9-5ab0-80ce-0899c968448a")
 		)
@@ -28502,7 +28517,7 @@
 		(generator "pcbnew")
 		(generator_version "10.0")
 		(layer "B.Cu")
-		(at 74 105.25)
+		(at 58.25 47.25)
 		(descr "SMD pad as test Point, diameter 1.5mm")
 		(tags "test point SMD pad")
 		(property
@@ -28623,7 +28638,7 @@
 		(generator "pcbnew")
 		(generator_version "10.0")
 		(layer "B.Cu")
-		(at 76.25 77.5)
+		(at 69.5 73 270)
 		(descr "SMD pad as test Point, diameter 1.5mm")
 		(tags "test point SMD pad")
 		(property
@@ -28729,7 +28744,7 @@
 			"1"
 			smd
 			circle
-			(at 0 0)
+			(at 0 0 270)
 			(size 1.5 1.5)
 			(layers "B.Cu" "B.Mask")
 			(net 10 "+VIN")
@@ -28744,7 +28759,7 @@
 		(generator "pcbnew")
 		(generator_version "10.0")
 		(layer "B.Cu")
-		(at 73.25 49)
+		(at 75.5 93.5 90)
 		(descr "SMD pad as test Point, diameter 1.5mm")
 		(tags "test point SMD pad")
 		(property
@@ -28850,7 +28865,7 @@
 			"1"
 			smd
 			circle
-			(at 0 0)
+			(at 0 0 90)
 			(size 1.5 1.5)
 			(layers "B.Cu" "B.Mask")
 			(net 6 "+5V")
@@ -28865,7 +28880,7 @@
 		(generator "pcbnew")
 		(generator_version "10.0")
 		(layer "B.Cu")
-		(at 71.25 73.5 90)
+		(at 80.25 73 180)
 		(descr "SMD pad as test Point, diameter 1.5mm")
 		(tags "test point SMD pad")
 		(property
@@ -28971,7 +28986,7 @@
 			"1"
 			smd
 			circle
-			(at 0 0 90)
+			(at 0 0 180)
 			(size 1.5 1.5)
 			(layers "B.Cu" "B.Mask")
 			(net 3 "+3V3")
@@ -28986,7 +29001,7 @@
 		(generator "pcbnew")
 		(generator_version "10.0")
 		(layer "B.Cu")
-		(at 60.75 78)
+		(at 72 73 270)
 		(descr "SMD pad as test Point, diameter 1.5mm")
 		(tags "test point SMD pad")
 		(property
@@ -29092,7 +29107,7 @@
 			"1"
 			smd
 			circle
-			(at 0 0)
+			(at 0 0 270)
 			(size 1.5 1.5)
 			(layers "B.Cu" "B.Mask")
 			(net 1 "+1V8")
@@ -29107,7 +29122,7 @@
 		(generator "pcbnew")
 		(generator_version "10.0")
 		(layer "B.Cu")
-		(at 73.84 73.55 180)
+		(at 74.08 47.6 180)
 		(descr "SMD pad as test Point, diameter 1.5mm")
 		(tags "test point SMD pad")
 		(property
@@ -29228,7 +29243,7 @@
 		(generator "pcbnew")
 		(generator_version "10.0")
 		(layer "F.Cu")
-		(at 101 49.25)
+		(at 61.75 99.5)
 		(descr "SMD pad as test Point, diameter 1.5mm")
 		(tags "test point SMD pad")
 		(property
@@ -29344,7 +29359,7 @@
 		(generator "pcbnew")
 		(generator_version "10.0")
 		(layer "F.Cu")
-		(at 67.25 46)
+		(at 88.3298 107 90)
 		(descr "SMD pad as test Point, diameter 1.5mm")
 		(tags "test point SMD pad")
 		(property
@@ -29445,7 +29460,7 @@
 			"1"
 			smd
 			circle
-			(at 0 0)
+			(at 0 0 90)
 			(size 1.5 1.5)
 			(layers "F.Cu" "F.Mask")
 			(net 25 "EN_3V3")
@@ -29460,7 +29475,7 @@
 		(generator "pcbnew")
 		(generator_version "10.0")
 		(layer "B.Cu")
-		(at 71.5 71)
+		(at 65.75 49.5)
 		(descr "SMD pad as test Point, diameter 1.5mm")
 		(tags "test point SMD pad")
 		(property
@@ -29581,7 +29596,7 @@
 		(generator "pcbnew")
 		(generator_version "10.0")
 		(layer "B.Cu")
-		(at 74 76.25 90)
+		(at 74 71.5 180)
 		(descr "SMD pad as test Point, diameter 1.5mm")
 		(tags "test point SMD pad")
 		(property
@@ -29687,7 +29702,7 @@
 			"1"
 			smd
 			circle
-			(at 0 0 90)
+			(at 0 0 180)
 			(size 1.5 1.5)
 			(layers "B.Cu" "B.Mask")
 			(net 5 "+3V3_SC")
@@ -29702,7 +29717,7 @@
 		(generator "pcbnew")
 		(generator_version "10.0")
 		(layer "B.Cu")
-		(at 74 71 270)
+		(at 74 77 180)
 		(descr "SMD pad as test Point, diameter 1.5mm")
 		(tags "test point SMD pad")
 		(property
@@ -29808,7 +29823,7 @@
 			"1"
 			smd
 			circle
-			(at 0 0 270)
+			(at 0 0 180)
 			(size 1.5 1.5)
 			(layers "B.Cu" "B.Mask")
 			(net 238 "STM32_I2C2_SCL")
@@ -29823,7 +29838,7 @@
 		(generator "pcbnew")
 		(generator_version "10.0")
 		(layer "B.Cu")
-		(at 67.25 66.5)
+		(at 74 74.5)
 		(descr "SMD pad as test Point, diameter 1.5mm")
 		(tags "test point SMD pad")
 		(property
@@ -29944,7 +29959,7 @@
 		(generator "pcbnew")
 		(generator_version "10.0")
 		(layer "F.Cu")
-		(at 97.5 102.77 180)
+		(at 89.8526 45.3974 90)
 		(descr "SMD pad as test Point, diameter 1.5mm")
 		(tags "test point SMD pad")
 		(property
@@ -30045,7 +30060,7 @@
 			"1"
 			smd
 			circle
-			(at 0 0 180)
+			(at 0 0 90)
 			(size 1.5 1.5)
 			(layers "F.Cu" "F.Mask")
 			(net 8 "+5V_SOM")
@@ -30060,7 +30075,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "B.Cu")
-		(at 102.0251 71.4499 180)
+		(at 79.2799 111.3301)
 		(descr
 			"QFN-24_L4.0-W4.0-P0.50-TL-EP2.6 — CP2102N-A02-GQFN24R (QFN-24_L4.0-W4.0-P0.50-TL-EP2.6) (EasyEDA/LCSC C969151, faithful conversion)"
 		)
@@ -30354,7 +30369,7 @@
 			"1"
 			smd
 			oval
-			(at -1.9999 1.2498 90)
+			(at -1.9999 1.2498 -90)
 			(size 0.28001 0.799998)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(uuid "417ea7d2-ba3e-543b-a58f-2d1d26c39565")
@@ -30363,7 +30378,7 @@
 			"2"
 			smd
 			oval
-			(at -1.9999 0.7499 90)
+			(at -1.9999 0.7499 -90)
 			(size 0.28001 0.799998)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 37 "GND")
@@ -30373,7 +30388,7 @@
 			"3"
 			smd
 			oval
-			(at -1.9999 0.2498 90)
+			(at -1.9999 0.2498 -90)
 			(size 0.28001 0.799998)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 249 "USB_UART_DP")
@@ -30383,7 +30398,7 @@
 			"4"
 			smd
 			oval
-			(at -1.9999 -0.2501 90)
+			(at -1.9999 -0.2501 -90)
 			(size 0.28001 0.799998)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 248 "USB_UART_DM")
@@ -30393,7 +30408,7 @@
 			"5"
 			smd
 			oval
-			(at -1.9999 -0.7502 90)
+			(at -1.9999 -0.7502 -90)
 			(size 0.28001 0.799998)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 3 "+3V3")
@@ -30403,7 +30418,7 @@
 			"6"
 			smd
 			oval
-			(at -1.9999 -1.2501 90)
+			(at -1.9999 -1.2501 -90)
 			(size 0.28001 0.799998)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 3 "+3V3")
@@ -30413,7 +30428,7 @@
 			"7"
 			smd
 			oval
-			(at -1.2498 -2.0001 180)
+			(at -1.2498 -2.0001)
 			(size 0.28001 0.799998)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 3 "+3V3")
@@ -30423,7 +30438,7 @@
 			"8"
 			smd
 			oval
-			(at -0.7499 -2.0001 180)
+			(at -0.7499 -2.0001)
 			(size 0.28001 0.799998)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 20 "/uart_bridge/CP2102N_VBUS_SNS")
@@ -30433,7 +30448,7 @@
 			"9"
 			smd
 			oval
-			(at -0.2498 -2.0001 180)
+			(at -0.2498 -2.0001)
 			(size 0.28001 0.799998)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 205 "Net-(U11001-RSTb)")
@@ -30443,7 +30458,7 @@
 			"10"
 			smd
 			oval
-			(at 0.2501 -2.0001 180)
+			(at 0.2501 -2.0001)
 			(size 0.28001 0.799998)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(uuid "88c2d22c-52ca-5ff0-b9f2-828255007d8f")
@@ -30452,7 +30467,7 @@
 			"11"
 			smd
 			oval
-			(at 0.7502 -2.0001 180)
+			(at 0.7502 -2.0001)
 			(size 0.28001 0.799998)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(uuid "f4ac9620-869c-5d9e-b31f-6213519ba1f1")
@@ -30461,7 +30476,7 @@
 			"12"
 			smd
 			oval
-			(at 1.2501 -2.0001 180)
+			(at 1.2501 -2.0001)
 			(size 0.28001 0.799998)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(uuid "18dd5d4d-91ea-5c79-81b6-cf48ae249936")
@@ -30470,7 +30485,7 @@
 			"13"
 			smd
 			oval
-			(at 2.0001 -1.2501 90)
+			(at 2.0001 -1.2501 -90)
 			(size 0.28001 0.799998)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(uuid "d90e0d51-3933-5505-979b-524dd5687463")
@@ -30479,7 +30494,7 @@
 			"14"
 			smd
 			oval
-			(at 2.0001 -0.7502 90)
+			(at 2.0001 -0.7502 -90)
 			(size 0.28001 0.799998)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(uuid "0bcb3180-8a31-5627-9a0b-5a6c972d1916")
@@ -30488,7 +30503,7 @@
 			"15"
 			smd
 			oval
-			(at 2.0001 -0.2501 90)
+			(at 2.0001 -0.2501 -90)
 			(size 0.28001 0.799998)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(uuid "dbbe852d-2763-5744-9f04-a216c6c1ea44")
@@ -30497,7 +30512,7 @@
 			"16"
 			smd
 			oval
-			(at 2.0001 0.2498 90)
+			(at 2.0001 0.2498 -90)
 			(size 0.28001 0.799998)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(uuid "f306f82f-bb26-56e9-84c4-b0bf317df4e8")
@@ -30506,7 +30521,7 @@
 			"17"
 			smd
 			oval
-			(at 2.0001 0.7499 90)
+			(at 2.0001 0.7499 -90)
 			(size 0.28001 0.799998)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(uuid "10e78e49-88c9-53fc-b9d8-9f0636df544b")
@@ -30515,7 +30530,7 @@
 			"18"
 			smd
 			oval
-			(at 2.0001 1.2419 90)
+			(at 2.0001 1.2419 -90)
 			(size 0.28001 0.799998)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 259 "ZYNQ_PS_UART0_RTS_N")
@@ -30525,7 +30540,7 @@
 			"19"
 			smd
 			oval
-			(at 1.2501 1.9999 180)
+			(at 1.2501 1.9999)
 			(size 0.28001 0.799998)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 258 "ZYNQ_PS_UART0_CTS_N")
@@ -30535,7 +30550,7 @@
 			"20"
 			smd
 			oval
-			(at 0.7502 1.9999 180)
+			(at 0.7502 1.9999)
 			(size 0.28001 0.799998)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 261 "ZYNQ_PS_UART0_TXD")
@@ -30545,7 +30560,7 @@
 			"21"
 			smd
 			oval
-			(at 0.2501 1.9999 180)
+			(at 0.2501 1.9999)
 			(size 0.28001 0.799998)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 260 "ZYNQ_PS_UART0_RXD")
@@ -30555,7 +30570,7 @@
 			"22"
 			smd
 			oval
-			(at -0.2498 1.9999 180)
+			(at -0.2498 1.9999)
 			(size 0.28001 0.799998)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(uuid "5ac5fddc-d9b5-5207-9f0b-705dc407e344")
@@ -30564,7 +30579,7 @@
 			"23"
 			smd
 			oval
-			(at -0.7499 1.9999 180)
+			(at -0.7499 1.9999)
 			(size 0.28001 0.799998)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(uuid "41d4df00-4fd5-56e5-b975-89f605c86f3d")
@@ -30573,7 +30588,7 @@
 			"24"
 			smd
 			oval
-			(at -1.2498 1.9999 180)
+			(at -1.2498 1.9999)
 			(size 0.28001 0.799998)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(uuid "f312108d-6be7-52f9-ba80-476753bdead2")
@@ -30582,7 +30597,7 @@
 			"25"
 			smd
 			rect
-			(at -0.0001 -0.0126 180)
+			(at -0.0001 -0.0126)
 			(size 2.699995 2.699995)
 			(layers "B.Cu" "B.Mask")
 			(net 37 "GND")
@@ -30592,7 +30607,7 @@
 			"25"
 			smd
 			rect
-			(at -0.6751 0.6624 180)
+			(at -0.6751 0.6624)
 			(size 1.0457 1.0457)
 			(layers "B.Paste")
 			(net 37 "GND")
@@ -30602,7 +30617,7 @@
 			"25"
 			smd
 			rect
-			(at -0.6751 -0.6876 180)
+			(at -0.6751 -0.6876)
 			(size 1.0457 1.0457)
 			(layers "B.Paste")
 			(net 37 "GND")
@@ -30612,7 +30627,7 @@
 			"25"
 			smd
 			rect
-			(at 0.6749 0.6624 180)
+			(at 0.6749 0.6624)
 			(size 1.0457 1.0457)
 			(layers "B.Paste")
 			(net 37 "GND")
@@ -30622,7 +30637,7 @@
 			"25"
 			smd
 			rect
-			(at 0.6749 -0.6876 180)
+			(at 0.6749 -0.6876)
 			(size 1.0457 1.0457)
 			(layers "B.Paste")
 			(net 37 "GND")
@@ -30648,7 +30663,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 105.0018 77.1274 90)
+		(at 100.7518 103.1274 90)
 		(descr
 			"SOT-23-6_L2.9-W1.6-P0.95-LS2.8-BL — USBLC6-2SC6 (EasyEDA/LCSC C7519, faithful conversion)"
 		)
@@ -30949,7 +30964,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 108.6451 88.2968)
+		(at 64.3299 33.2549 270)
 		(descr
 			"HTSSOP-20_L6.5-W4.4-P0.65-LS6.4-BL-EP — TPS26631PWPR (HTSSOP-20_L6.5-W4.4-P0.65-LS6.4-BL-EP) (EasyEDA/LCSC C2866319, faithful conversion)"
 		)
@@ -31205,7 +31220,7 @@
 			"1"
 			smd
 			oval
-			(at -2.9251 2.8732)
+			(at -2.9251 2.8732 270)
 			(size 0.343002 1.746504)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 9 "+VBUS_IN")
@@ -31215,7 +31230,7 @@
 			"2"
 			smd
 			oval
-			(at -2.2751 2.8732)
+			(at -2.2751 2.8732 270)
 			(size 0.343002 1.746504)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 9 "+VBUS_IN")
@@ -31225,7 +31240,7 @@
 			"3"
 			smd
 			oval
-			(at -1.6251 2.8732)
+			(at -1.6251 2.8732 270)
 			(size 0.343002 1.746504)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 9 "+VBUS_IN")
@@ -31235,7 +31250,7 @@
 			"4"
 			smd
 			oval
-			(at -0.9751 2.8732)
+			(at -0.9751 2.8732 270)
 			(size 0.343002 1.746504)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(uuid "1ff1e266-3d65-5754-9443-9bcb4ff44e48")
@@ -31244,7 +31259,7 @@
 			"5"
 			smd
 			oval
-			(at -0.3249 2.8732)
+			(at -0.3249 2.8732 270)
 			(size 0.343002 1.746504)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(uuid "74edc4a8-7d92-5cc8-a9f1-847e62684ce4")
@@ -31253,7 +31268,7 @@
 			"6"
 			smd
 			oval
-			(at 0.3251 2.8732)
+			(at 0.3251 2.8732 270)
 			(size 0.343002 1.746504)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 9 "+VBUS_IN")
@@ -31263,7 +31278,7 @@
 			"7"
 			smd
 			oval
-			(at 0.9751 2.8732)
+			(at 0.9751 2.8732 270)
 			(size 0.343002 1.746504)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 9 "+VBUS_IN")
@@ -31273,7 +31288,7 @@
 			"8"
 			smd
 			oval
-			(at 1.6251 2.8732)
+			(at 1.6251 2.8732 270)
 			(size 0.343002 1.746504)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 207 "Net-(U3001-OVP)")
@@ -31283,7 +31298,7 @@
 			"9"
 			smd
 			oval
-			(at 2.2751 2.8732)
+			(at 2.2751 2.8732 270)
 			(size 0.343002 1.746504)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 37 "GND")
@@ -31293,7 +31308,7 @@
 			"10"
 			smd
 			oval
-			(at 2.9251 2.8732)
+			(at 2.9251 2.8732 270)
 			(size 0.343002 1.746504)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 208 "Net-(U3001-dVdT)")
@@ -31303,7 +31318,7 @@
 			"20"
 			smd
 			oval
-			(at -2.9251 -2.8732)
+			(at -2.9251 -2.8732 270)
 			(size 0.343002 1.746504)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 10 "+VIN")
@@ -31313,7 +31328,7 @@
 			"19"
 			smd
 			oval
-			(at -2.2751 -2.8732)
+			(at -2.2751 -2.8732 270)
 			(size 0.343002 1.746504)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 10 "+VIN")
@@ -31323,7 +31338,7 @@
 			"18"
 			smd
 			oval
-			(at -1.6251 -2.8732)
+			(at -1.6251 -2.8732 270)
 			(size 0.343002 1.746504)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 10 "+VIN")
@@ -31333,7 +31348,7 @@
 			"17"
 			smd
 			oval
-			(at -0.9751 -2.8732)
+			(at -0.9751 -2.8732 270)
 			(size 0.343002 1.746504)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(uuid "51144e8e-7963-5b7e-b280-950ed0c58f80")
@@ -31342,7 +31357,7 @@
 			"16"
 			smd
 			oval
-			(at -0.3249 -2.8732)
+			(at -0.3249 -2.8732 270)
 			(size 0.343002 1.746504)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 37 "GND")
@@ -31352,7 +31367,7 @@
 			"15"
 			smd
 			oval
-			(at 0.3251 -2.8732)
+			(at 0.3251 -2.8732 270)
 			(size 0.343002 1.746504)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 221 "PD_FLT_N")
@@ -31362,7 +31377,7 @@
 			"14"
 			smd
 			oval
-			(at 0.9751 -2.8732)
+			(at 0.9751 -2.8732 270)
 			(size 0.343002 1.746504)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(uuid "dbc34488-696f-5621-a255-502952b312ef")
@@ -31371,7 +31386,7 @@
 			"13"
 			smd
 			oval
-			(at 1.6251 -2.8732)
+			(at 1.6251 -2.8732 270)
 			(size 0.343002 1.746504)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(uuid "f63f5c1b-f5bd-5988-968e-68b96728062b")
@@ -31380,7 +31395,7 @@
 			"12"
 			smd
 			oval
-			(at 2.2751 -2.8732)
+			(at 2.2751 -2.8732 270)
 			(size 0.343002 1.746504)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 37 "GND")
@@ -31390,7 +31405,7 @@
 			"11"
 			smd
 			oval
-			(at 2.9251 -2.8732)
+			(at 2.9251 -2.8732 270)
 			(size 0.343002 1.746504)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 206 "Net-(U3001-ILIM)")
@@ -31400,7 +31415,7 @@
 			"21"
 			smd
 			rect
-			(at 0 0)
+			(at 0 0 270)
 			(size 4.199992 2.999994)
 			(layers "F.Cu" "F.Mask")
 			(net 37 "GND")
@@ -31410,7 +31425,7 @@
 			"21"
 			smd
 			rect
-			(at -1.4 -0.75)
+			(at -1.4 -0.75 270)
 			(size 1.0844 1.1619)
 			(layers "F.Paste")
 			(net 37 "GND")
@@ -31420,7 +31435,7 @@
 			"21"
 			smd
 			rect
-			(at -1.4 0.75)
+			(at -1.4 0.75 270)
 			(size 1.0844 1.1619)
 			(layers "F.Paste")
 			(net 37 "GND")
@@ -31430,7 +31445,7 @@
 			"21"
 			smd
 			rect
-			(at 0 -0.75)
+			(at 0 -0.75 270)
 			(size 1.0844 1.1619)
 			(layers "F.Paste")
 			(net 37 "GND")
@@ -31440,7 +31455,7 @@
 			"21"
 			smd
 			rect
-			(at 0 0.75)
+			(at 0 0.75 270)
 			(size 1.0844 1.1619)
 			(layers "F.Paste")
 			(net 37 "GND")
@@ -31450,7 +31465,7 @@
 			"21"
 			smd
 			rect
-			(at 1.4 -0.75)
+			(at 1.4 -0.75 270)
 			(size 1.0844 1.1619)
 			(layers "F.Paste")
 			(net 37 "GND")
@@ -31460,7 +31475,7 @@
 			"21"
 			smd
 			rect
-			(at 1.4 0.75)
+			(at 1.4 0.75 270)
 			(size 1.0844 1.1619)
 			(layers "F.Paste")
 			(net 37 "GND")
@@ -31470,7 +31485,7 @@
 			""
 			thru_hole
 			circle
-			(at 0.5999 -0.5999)
+			(at 0.5999 -0.5999 270)
 			(size 0.6096 0.6096)
 			(drill 0.3048)
 			(layers "*.Cu" "*.Mask")
@@ -31481,7 +31496,7 @@
 			""
 			thru_hole
 			circle
-			(at -0.5999 -0.5999)
+			(at -0.5999 -0.5999 270)
 			(size 0.6096 0.6096)
 			(drill 0.3048)
 			(layers "*.Cu" "*.Mask")
@@ -31492,7 +31507,7 @@
 			""
 			thru_hole
 			circle
-			(at -0.5999 0.5999)
+			(at -0.5999 0.5999 270)
 			(size 0.6096 0.6096)
 			(drill 0.3048)
 			(layers "*.Cu" "*.Mask")
@@ -31503,7 +31518,7 @@
 			""
 			thru_hole
 			circle
-			(at 0.5999 0.5999)
+			(at 0.5999 0.5999 270)
 			(size 0.6096 0.6096)
 			(drill 0.3048)
 			(layers "*.Cu" "*.Mask")
@@ -31530,7 +31545,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 59.75 102.1009)
+		(at 58.6491 46.2731 270)
 		(descr
 			"SOT-23-6_L2.9-W1.6-P0.95-LS2.8-BL — USBLC6-2SC6 (EasyEDA/LCSC C7519, faithful conversion)"
 		)
@@ -31755,7 +31770,7 @@
 			"1"
 			smd
 			rect
-			(at -0.95 1.1491)
+			(at -0.95 1.1491 270)
 			(size 0.532003 1.072007)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 13 "/pd_input/PD_USB_DP_CONN")
@@ -31765,7 +31780,7 @@
 			"2"
 			smd
 			rect
-			(at 0 1.1491)
+			(at 0 1.1491 270)
 			(size 0.532003 1.072007)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 37 "GND")
@@ -31775,7 +31790,7 @@
 			"3"
 			smd
 			rect
-			(at 0.95 1.1491)
+			(at 0.95 1.1491 270)
 			(size 0.532003 1.072007)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 12 "/pd_input/PD_USB_DN_CONN")
@@ -31785,7 +31800,7 @@
 			"4"
 			smd
 			rect
-			(at 0.95 -1.1491)
+			(at 0.95 -1.1491 270)
 			(size 0.532003 1.072007)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 243 "STM32_USB_D_N")
@@ -31795,7 +31810,7 @@
 			"5"
 			smd
 			rect
-			(at 0 -1.1491)
+			(at 0 -1.1491 270)
 			(size 0.532003 1.072007)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 5 "+3V3_SC")
@@ -31805,7 +31820,7 @@
 			"6"
 			smd
 			rect
-			(at -0.95 -1.1491)
+			(at -0.95 -1.1491 270)
 			(size 0.532003 1.072007)
 			(layers "F.Cu" "F.Paste" "F.Mask")
 			(net 244 "STM32_USB_D_P")
@@ -31831,7 +31846,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "B.Cu")
-		(at 103.2803 51.1049 270)
+		(at 59.4197 99.6351 90)
 		(descr
 			"VQFN-HR-14_L4.0-W3.5-P0.50-TL_TI_RJR-1 — LM61460AANRJRR (VQFN-HR-14_L4.0-W3.5-P0.50-TL_TI_RJR-1) (EasyEDA/LCSC C2864505, faithful conversion)"
 		)
@@ -32112,7 +32127,7 @@
 			"1"
 			smd
 			rect
-			(at -1.8249 1.4501 270)
+			(at -1.8249 1.4501 90)
 			(size 0.699999 0.999998)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 15 "/power/BIAS_5V0")
@@ -32122,7 +32137,7 @@
 			"11"
 			smd
 			rect
-			(at 1.8251 1.4501 270)
+			(at 1.8251 1.4501 90)
 			(size 0.799998 0.999998)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 37 "GND")
@@ -32132,7 +32147,7 @@
 			"5"
 			smd
 			rect
-			(at -1.8249 -1.4498 270)
+			(at -1.8249 -1.4498 90)
 			(size 0.699999 0.999998)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(uuid "c1d42913-de75-5f66-8d9c-b5099d9b6145")
@@ -32141,7 +32156,7 @@
 			"9"
 			smd
 			rect
-			(at 1.8251 -1.4501 270)
+			(at 1.8251 -1.4501 90)
 			(size 0.799998 0.999998)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 37 "GND")
@@ -32151,7 +32166,7 @@
 			"14"
 			smd
 			rect
-			(at -1.1 1.5999 270)
+			(at -1.1 1.5999 90)
 			(size 0.249936 0.699999)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 209 "Net-(U4001-CBOOT)")
@@ -32161,7 +32176,7 @@
 			"13"
 			smd
 			rect
-			(at -0.6001 1.5999 270)
+			(at -0.6001 1.5999 90)
 			(size 0.249936 0.699999)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 209 "Net-(U4001-CBOOT)")
@@ -32171,7 +32186,7 @@
 			"7"
 			smd
 			rect
-			(at -0.6001 -1.5999 270)
+			(at -0.6001 -1.5999 90)
 			(size 0.249936 0.699999)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 26 "EN_5V0")
@@ -32181,7 +32196,7 @@
 			"6"
 			smd
 			rect
-			(at -1.1 -1.5999 270)
+			(at -1.1 -1.5999 90)
 			(size 0.249936 0.699999)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 17 "/power/RT_5V0")
@@ -32191,7 +32206,7 @@
 			"12"
 			smd
 			rect
-			(at 0.4751 1.4501 270)
+			(at 0.4751 1.4501 90)
 			(size 0.399999 0.999998)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 11 "+VIN_SYS")
@@ -32201,7 +32216,7 @@
 			"8"
 			smd
 			rect
-			(at 0.4751 -1.4501 270)
+			(at 0.4751 -1.4501 90)
 			(size 0.399999 0.999998)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 11 "+VIN_SYS")
@@ -32211,7 +32226,7 @@
 			"10"
 			smd
 			rect
-			(at 1.025 0 270)
+			(at 1.025 0 90)
 			(size 2.399995 0.399999)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 211 "Net-(U4001-SW)")
@@ -32221,7 +32236,7 @@
 			"3"
 			smd
 			rect
-			(at -1.8249 0 270)
+			(at -1.8249 0 90)
 			(size 0.699999 0.299999)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 37 "GND")
@@ -32231,7 +32246,7 @@
 			"2"
 			smd
 			rect
-			(at -1.8249 0.525 270)
+			(at -1.8249 0.525 90)
 			(size 0.699999 0.250012)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 212 "Net-(U4001-VCC)")
@@ -32241,7 +32256,7 @@
 			"4"
 			smd
 			rect
-			(at -1.8249 -0.525 270)
+			(at -1.8249 -0.525 90)
 			(size 0.699999 0.250012)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 210 "Net-(U4001-FB)")
@@ -32267,7 +32282,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "B.Cu")
-		(at 61.6601 45.6049 270)
+		(at 93.7899 107.1351 90)
 		(descr
 			"VQFN-HR-14_L4.0-W3.5-P0.50-TL_TI_RJR-1 — LM61460AANRJRR (VQFN-HR-14_L4.0-W3.5-P0.50-TL_TI_RJR-1) (EasyEDA/LCSC C2864505, faithful conversion)"
 		)
@@ -32548,7 +32563,7 @@
 			"1"
 			smd
 			rect
-			(at -1.8249 1.4501 270)
+			(at -1.8249 1.4501 90)
 			(size 0.699999 0.999998)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 14 "/power/BIAS_3V3")
@@ -32558,7 +32573,7 @@
 			"11"
 			smd
 			rect
-			(at 1.8251 1.4501 270)
+			(at 1.8251 1.4501 90)
 			(size 0.799998 0.999998)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 37 "GND")
@@ -32568,7 +32583,7 @@
 			"5"
 			smd
 			rect
-			(at -1.8249 -1.4498 270)
+			(at -1.8249 -1.4498 90)
 			(size 0.699999 0.999998)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(uuid "08ca7760-cf4f-50ea-92c7-c7b4622ed9c0")
@@ -32577,7 +32592,7 @@
 			"9"
 			smd
 			rect
-			(at 1.8251 -1.4501 270)
+			(at 1.8251 -1.4501 90)
 			(size 0.799998 0.999998)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 37 "GND")
@@ -32587,7 +32602,7 @@
 			"14"
 			smd
 			rect
-			(at -1.1 1.5999 270)
+			(at -1.1 1.5999 90)
 			(size 0.249936 0.699999)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 213 "Net-(U4002-CBOOT)")
@@ -32597,7 +32612,7 @@
 			"13"
 			smd
 			rect
-			(at -0.6001 1.5999 270)
+			(at -0.6001 1.5999 90)
 			(size 0.249936 0.699999)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 213 "Net-(U4002-CBOOT)")
@@ -32607,7 +32622,7 @@
 			"7"
 			smd
 			rect
-			(at -0.6001 -1.5999 270)
+			(at -0.6001 -1.5999 90)
 			(size 0.249936 0.699999)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 25 "EN_3V3")
@@ -32617,7 +32632,7 @@
 			"6"
 			smd
 			rect
-			(at -1.1 -1.5999 270)
+			(at -1.1 -1.5999 90)
 			(size 0.249936 0.699999)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 16 "/power/RT_3V3")
@@ -32627,7 +32642,7 @@
 			"12"
 			smd
 			rect
-			(at 0.4751 1.4501 270)
+			(at 0.4751 1.4501 90)
 			(size 0.399999 0.999998)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 6 "+5V")
@@ -32637,7 +32652,7 @@
 			"8"
 			smd
 			rect
-			(at 0.4751 -1.4501 270)
+			(at 0.4751 -1.4501 90)
 			(size 0.399999 0.999998)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 6 "+5V")
@@ -32647,7 +32662,7 @@
 			"10"
 			smd
 			rect
-			(at 1.025 0 270)
+			(at 1.025 0 90)
 			(size 2.399995 0.399999)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 215 "Net-(U4002-SW)")
@@ -32657,7 +32672,7 @@
 			"3"
 			smd
 			rect
-			(at -1.8249 0 270)
+			(at -1.8249 0 90)
 			(size 0.699999 0.299999)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 37 "GND")
@@ -32667,7 +32682,7 @@
 			"2"
 			smd
 			rect
-			(at -1.8249 0.525 270)
+			(at -1.8249 0.525 90)
 			(size 0.699999 0.250012)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 216 "Net-(U4002-VCC)")
@@ -32677,7 +32692,7 @@
 			"4"
 			smd
 			rect
-			(at -1.8249 -0.525 270)
+			(at -1.8249 -0.525 90)
 			(size 0.699999 0.250012)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 214 "Net-(U4002-FB)")
@@ -32702,7 +32717,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "B.Cu")
-		(at 68.25 73.38 270)
+		(at 65.885 44.195 90)
 		(descr
 			"SOT, 5 Pin (JEDEC MO-178 Var AA https://www.jedec.org/document_search?search_api_views_fulltext=MO-178)"
 		)
@@ -33031,7 +33046,7 @@
 			"1"
 			smd
 			roundrect
-			(at -1.1375 0.95 270)
+			(at -1.1375 0.95 90)
 			(size 1.325 0.6)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -33042,7 +33057,7 @@
 			"2"
 			smd
 			roundrect
-			(at -1.1375 0 270)
+			(at -1.1375 0 90)
 			(size 1.325 0.6)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -33053,7 +33068,7 @@
 			"3"
 			smd
 			roundrect
-			(at -1.1375 -0.95 270)
+			(at -1.1375 -0.95 90)
 			(size 1.325 0.6)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -33064,7 +33079,7 @@
 			"4"
 			smd
 			roundrect
-			(at 1.1375 -0.95 270)
+			(at 1.1375 -0.95 90)
 			(size 1.325 0.6)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -33074,7 +33089,7 @@
 			"5"
 			smd
 			roundrect
-			(at 1.1375 0.95 270)
+			(at 1.1375 0.95 90)
 			(size 1.325 0.6)
 			(layers "B.Cu" "B.Mask" "B.Paste")
 			(roundrect_rratio 0.25)
@@ -33102,7 +33117,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "F.Cu")
-		(at 54.07 47.66)
+		(at 78.07 98.82)
 		(descr
 			"QFN-16_L4.0-W4.0-P0.65-TL-EP2.2 — INA3221AIRGVR (QFN-16_L4.0-W4.0-P0.65-TL-EP2.2) (EasyEDA/LCSC C181255, faithful conversion)"
 		)
@@ -33610,7 +33625,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "B.Cu")
-		(at 44.45 73.32 180)
+		(at 71.16 106.225 270)
 		(descr
 			"QFN-16_L4.0-W4.0-P0.65-TL-EP2.2 — INA3221AIRGVR (QFN-16_L4.0-W4.0-P0.65-TL-EP2.2) (EasyEDA/LCSC C181255, faithful conversion)"
 		)
@@ -33901,7 +33916,7 @@
 			"1"
 			smd
 			oval
-			(at -1.9685 0.9751 270)
+			(at -1.9685 0.9751 0)
 			(size 0.364007 1.086993)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 37 "GND")
@@ -33911,7 +33926,7 @@
 			"2"
 			smd
 			oval
-			(at -1.9685 0.3249 270)
+			(at -1.9685 0.3249 0)
 			(size 0.364007 1.086993)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 37 "GND")
@@ -33921,7 +33936,7 @@
 			"3"
 			smd
 			oval
-			(at -1.9685 -0.3251 270)
+			(at -1.9685 -0.3251 0)
 			(size 0.364007 1.086993)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 37 "GND")
@@ -33931,7 +33946,7 @@
 			"4"
 			smd
 			oval
-			(at -1.9685 -0.9751 270)
+			(at -1.9685 -0.9751 0)
 			(size 0.364007 1.086993)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 5 "+3V3_SC")
@@ -33941,7 +33956,7 @@
 			"5"
 			smd
 			oval
-			(at -0.9751 -1.9685 270)
+			(at -0.9751 -1.9685 0)
 			(size 1.086993 0.364007)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 5 "+3V3_SC")
@@ -33951,7 +33966,7 @@
 			"6"
 			smd
 			oval
-			(at -0.3249 -1.9685 270)
+			(at -0.3249 -1.9685 0)
 			(size 1.086993 0.364007)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 238 "STM32_I2C2_SCL")
@@ -33961,7 +33976,7 @@
 			"7"
 			smd
 			oval
-			(at 0.3251 -1.9685 270)
+			(at 0.3251 -1.9685 0)
 			(size 1.086993 0.364007)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 239 "STM32_I2C2_SDA")
@@ -33971,7 +33986,7 @@
 			"8"
 			smd
 			oval
-			(at 0.9751 -1.9685 270)
+			(at 0.9751 -1.9685 0)
 			(size 1.086993 0.364007)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(uuid "944325dc-052f-56cb-a3bc-fa16e07b5ba2")
@@ -33980,7 +33995,7 @@
 			"9"
 			smd
 			oval
-			(at 1.9685 -0.9751 270)
+			(at 1.9685 -0.9751 0)
 			(size 0.364007 1.086993)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 222 "PMON_ALERT_N")
@@ -33990,7 +34005,7 @@
 			"10"
 			smd
 			oval
-			(at 1.9685 -0.3251 270)
+			(at 1.9685 -0.3251 0)
 			(size 0.364007 1.086993)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(uuid "cc293eb1-ddc7-5d61-aacf-e332089a8355")
@@ -33999,7 +34014,7 @@
 			"11"
 			smd
 			oval
-			(at 1.9685 0.3249 270)
+			(at 1.9685 0.3249 0)
 			(size 0.364007 1.086993)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 1 "+1V8")
@@ -34009,7 +34024,7 @@
 			"12"
 			smd
 			oval
-			(at 1.9685 0.9751 270)
+			(at 1.9685 0.9751 0)
 			(size 0.364007 1.086993)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 2 "+1V8_REG")
@@ -34019,7 +34034,7 @@
 			"13"
 			smd
 			oval
-			(at 0.9751 1.9685 270)
+			(at 0.9751 1.9685 0)
 			(size 1.086993 0.364007)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(uuid "d7b47501-46f5-5cab-b5eb-f29f6f7e391a")
@@ -34028,7 +34043,7 @@
 			"14"
 			smd
 			oval
-			(at 0.3251 1.9685 270)
+			(at 0.3251 1.9685 0)
 			(size 1.086993 0.364007)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 37 "GND")
@@ -34038,7 +34053,7 @@
 			"15"
 			smd
 			oval
-			(at -0.3249 1.9685 270)
+			(at -0.3249 1.9685 0)
 			(size 1.086993 0.364007)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 37 "GND")
@@ -34048,7 +34063,7 @@
 			"16"
 			smd
 			oval
-			(at -0.9751 1.9685 270)
+			(at -0.9751 1.9685 0)
 			(size 1.086993 0.364007)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 5 "+3V3_SC")
@@ -34058,7 +34073,7 @@
 			"17"
 			smd
 			rect
-			(at 0 0 180)
+			(at 0 0 270)
 			(size 2.159991 2.159991)
 			(layers "B.Cu" "B.Mask")
 			(net 37 "GND")
@@ -34068,7 +34083,7 @@
 			"17"
 			smd
 			rect
-			(at -0.54 0.54 180)
+			(at -0.54 0.54 270)
 			(size 0.8366 0.8366)
 			(layers "B.Paste")
 			(net 37 "GND")
@@ -34078,7 +34093,7 @@
 			"17"
 			smd
 			rect
-			(at -0.54 -0.54 180)
+			(at -0.54 -0.54 270)
 			(size 0.8366 0.8366)
 			(layers "B.Paste")
 			(net 37 "GND")
@@ -34088,7 +34103,7 @@
 			"17"
 			smd
 			rect
-			(at 0.54 0.54 180)
+			(at 0.54 0.54 270)
 			(size 0.8366 0.8366)
 			(layers "B.Paste")
 			(net 37 "GND")
@@ -34098,7 +34113,7 @@
 			"17"
 			smd
 			rect
-			(at 0.54 -0.54 180)
+			(at 0.54 -0.54 270)
 			(size 0.8366 0.8366)
 			(layers "B.Paste")
 			(net 37 "GND")
@@ -34124,7 +34139,7 @@
 		(generator "schgen_part_gen")
 		(generator_version "1.0")
 		(layer "B.Cu")
-		(at 93.38 101.76)
+		(at 90.8626 41.5274 270)
 		(descr
 			"VQFN-HR-14_L4.0-W3.5-P0.50-TL_TI_RJR-1 — LM61460AANRJRR (VQFN-HR-14_L4.0-W3.5-P0.50-TL_TI_RJR-1) (EasyEDA/LCSC C2864505, faithful conversion)"
 		)
@@ -34405,7 +34420,7 @@
 			"1"
 			smd
 			rect
-			(at -1.8249 1.4501)
+			(at -1.8249 1.4501 270)
 			(size 0.699999 0.999998)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 18 "/power_som/BIAS_5V_SOM")
@@ -34415,7 +34430,7 @@
 			"11"
 			smd
 			rect
-			(at 1.8251 1.4501)
+			(at 1.8251 1.4501 270)
 			(size 0.799998 0.999998)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 37 "GND")
@@ -34425,7 +34440,7 @@
 			"5"
 			smd
 			rect
-			(at -1.8249 -1.4498)
+			(at -1.8249 -1.4498 270)
 			(size 0.699999 0.999998)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(uuid "d5522896-dfa6-5699-ac32-36ac466b0043")
@@ -34434,7 +34449,7 @@
 			"9"
 			smd
 			rect
-			(at 1.8251 -1.4501)
+			(at 1.8251 -1.4501 270)
 			(size 0.799998 0.999998)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 37 "GND")
@@ -34444,7 +34459,7 @@
 			"14"
 			smd
 			rect
-			(at -1.1 1.5999)
+			(at -1.1 1.5999 270)
 			(size 0.249936 0.699999)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 217 "Net-(U6004-CBOOT)")
@@ -34454,7 +34469,7 @@
 			"13"
 			smd
 			rect
-			(at -0.6001 1.5999)
+			(at -0.6001 1.5999 270)
 			(size 0.249936 0.699999)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 217 "Net-(U6004-CBOOT)")
@@ -34464,7 +34479,7 @@
 			"7"
 			smd
 			rect
-			(at -0.6001 -1.5999)
+			(at -0.6001 -1.5999 270)
 			(size 0.249936 0.699999)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 11 "+VIN_SYS")
@@ -34474,7 +34489,7 @@
 			"6"
 			smd
 			rect
-			(at -1.1 -1.5999)
+			(at -1.1 -1.5999 270)
 			(size 0.249936 0.699999)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 19 "/power_som/RT_5V_SOM")
@@ -34484,7 +34499,7 @@
 			"12"
 			smd
 			rect
-			(at 0.4751 1.4501)
+			(at 0.4751 1.4501 270)
 			(size 0.399999 0.999998)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 11 "+VIN_SYS")
@@ -34494,7 +34509,7 @@
 			"8"
 			smd
 			rect
-			(at 0.4751 -1.4501)
+			(at 0.4751 -1.4501 270)
 			(size 0.399999 0.999998)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 11 "+VIN_SYS")
@@ -34504,7 +34519,7 @@
 			"10"
 			smd
 			rect
-			(at 1.025 0)
+			(at 1.025 0 270)
 			(size 2.399995 0.399999)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 219 "Net-(U6004-SW)")
@@ -34514,7 +34529,7 @@
 			"3"
 			smd
 			rect
-			(at -1.8249 0)
+			(at -1.8249 0 270)
 			(size 0.699999 0.299999)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 37 "GND")
@@ -34524,7 +34539,7 @@
 			"2"
 			smd
 			rect
-			(at -1.8249 0.525)
+			(at -1.8249 0.525 270)
 			(size 0.699999 0.250012)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 220 "Net-(U6004-VCC)")
@@ -34534,7 +34549,7 @@
 			"4"
 			smd
 			rect
-			(at -1.8249 -0.525)
+			(at -1.8249 -0.525 270)
 			(size 0.699999 0.250012)
 			(layers "B.Cu" "B.Paste" "B.Mask")
 			(net 218 "Net-(U6004-FB)")
@@ -34559,7 +34574,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 50 46.75)
+		(at 57 36.25)
 		(descr "Fiducial, circular marking, 1mm bare copper, 2mm soldermask opening (Level A)")
 		(tags "fiducial")
 		(property
@@ -34659,7 +34674,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 106.25 46.75)
+		(at 102 36.25)
 		(descr "Fiducial, circular marking, 1mm bare copper, 2mm soldermask opening (Level A)")
 		(tags "fiducial")
 		(property
@@ -34759,7 +34774,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 50 105.75)
+		(at 57 106)
 		(descr "Fiducial, circular marking, 1mm bare copper, 2mm soldermask opening (Level A)")
 		(tags "fiducial")
 		(property
@@ -34859,7 +34874,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 51 54.5)
+		(at 51 54)
 		(descr "Fiducial, circular marking, 1mm bare copper, 2mm soldermask opening (Level A)")
 		(tags "fiducial")
 		(property
@@ -34959,7 +34974,7 @@
 		(version 20260206)
 		(generator "kicad-footprint-generator")
 		(layer "F.Cu")
-		(at 97 92.5)
+		(at 97 92)
 		(descr "Fiducial, circular marking, 1mm bare copper, 2mm soldermask opening (Level A)")
 		(tags "fiducial")
 		(property
@@ -35055,7 +35070,7 @@
 		(uuid "ff0ff7f3-2db8-5de3-959c-af3191569d62")
 	)
 	(via
-		(at 100.78 52.655)
+		(at 61.92 98.085)
 		(size 0.6)
 		(drill 0.3)
 		(layers "F.Cu" "B.Cu")
@@ -35063,7 +35078,7 @@
 		(uuid "44822eae-b9b1-51a0-ac76-91857a29f212")
 	)
 	(via
-		(at 105.78 52.655)
+		(at 56.92 98.085)
 		(size 0.6)
 		(drill 0.3)
 		(layers "F.Cu" "B.Cu")
@@ -35071,7 +35086,7 @@
 		(uuid "3b0df422-3232-5a45-bf5d-c38228705893")
 	)
 	(via
-		(at 100.78 53.555)
+		(at 61.92 97.185)
 		(size 0.6)
 		(drill 0.3)
 		(layers "F.Cu" "B.Cu")
@@ -35079,7 +35094,7 @@
 		(uuid "f10abb5e-4282-5209-8f53-495890547b4e")
 	)
 	(via
-		(at 105.78 53.555)
+		(at 56.92 97.185)
 		(size 0.6)
 		(drill 0.3)
 		(layers "F.Cu" "B.Cu")
@@ -35087,7 +35102,7 @@
 		(uuid "be32da00-752f-50a7-b3e3-2e50fd3eaff6")
 	)
 	(via
-		(at 98.93 52.655)
+		(at 63.77 98.085)
 		(size 0.6)
 		(drill 0.3)
 		(layers "F.Cu" "B.Cu")
@@ -35095,7 +35110,7 @@
 		(uuid "3f239625-7e22-5d44-9ffb-a6e80b82239d")
 	)
 	(via
-		(at 107.63 52.655)
+		(at 55.07 98.085)
 		(size 0.6)
 		(drill 0.3)
 		(layers "F.Cu" "B.Cu")
@@ -35103,7 +35118,7 @@
 		(uuid "27bfea15-84e2-5b1d-b214-b57044dfbd1f")
 	)
 	(via
-		(at 98.93 53.555)
+		(at 63.77 97.185)
 		(size 0.6)
 		(drill 0.3)
 		(layers "F.Cu" "B.Cu")
@@ -35111,7 +35126,7 @@
 		(uuid "5dd126b1-4f95-54c9-971f-ac4fe5a3d3f6")
 	)
 	(via
-		(at 107.63 53.555)
+		(at 55.07 97.185)
 		(size 0.6)
 		(drill 0.3)
 		(layers "F.Cu" "B.Cu")
@@ -35119,7 +35134,7 @@
 		(uuid "72b8bfdb-4bb5-5151-9d25-c3687483410c")
 	)
 	(via
-		(at 59.16 47.155)
+		(at 96.29 105.585)
 		(size 0.6)
 		(drill 0.3)
 		(layers "F.Cu" "B.Cu")
@@ -35127,7 +35142,7 @@
 		(uuid "476459e5-6ab5-5b25-9b50-246d633cfd4e")
 	)
 	(via
-		(at 64.16 47.155)
+		(at 91.29 105.585)
 		(size 0.6)
 		(drill 0.3)
 		(layers "F.Cu" "B.Cu")
@@ -35135,7 +35150,7 @@
 		(uuid "66516105-6ce7-568e-9595-7f9d2e932cc5")
 	)
 	(via
-		(at 59.16 48.055)
+		(at 96.29 104.685)
 		(size 0.6)
 		(drill 0.3)
 		(layers "F.Cu" "B.Cu")
@@ -35143,7 +35158,7 @@
 		(uuid "d830e4da-6c56-564b-8052-0ccca1ec44fd")
 	)
 	(via
-		(at 64.16 48.055)
+		(at 91.29 104.685)
 		(size 0.6)
 		(drill 0.3)
 		(layers "F.Cu" "B.Cu")
@@ -35151,7 +35166,7 @@
 		(uuid "ff72d2f7-2db0-5a85-9324-d724052041b6")
 	)
 	(via
-		(at 57.31 47.155)
+		(at 98.14 105.585)
 		(size 0.6)
 		(drill 0.3)
 		(layers "F.Cu" "B.Cu")
@@ -35159,7 +35174,7 @@
 		(uuid "d738f278-d12c-52e3-a054-94cde5b1d5df")
 	)
 	(via
-		(at 66.01 47.155)
+		(at 89.44 105.585)
 		(size 0.6)
 		(drill 0.3)
 		(layers "F.Cu" "B.Cu")
@@ -35167,7 +35182,7 @@
 		(uuid "341bd0c0-b0ad-559c-ad97-10cdfe500267")
 	)
 	(via
-		(at 57.31 48.055)
+		(at 98.14 104.685)
 		(size 0.6)
 		(drill 0.3)
 		(layers "F.Cu" "B.Cu")
@@ -35175,7 +35190,7 @@
 		(uuid "0bbadfb2-bbfc-5fc8-a23f-16018fc1eac7")
 	)
 	(via
-		(at 66.01 48.055)
+		(at 89.44 104.685)
 		(size 0.6)
 		(drill 0.3)
 		(layers "F.Cu" "B.Cu")
@@ -35183,7 +35198,7 @@
 		(uuid "a830d678-5255-5a5c-93a8-37419791ace1")
 	)
 	(via
-		(at 94.93 104.26)
+		(at 88.363 43.077)
 		(size 0.6)
 		(drill 0.3)
 		(layers "F.Cu" "B.Cu")
@@ -35191,7 +35206,7 @@
 		(uuid "085aa722-c55c-534b-8a07-f32baa52066f")
 	)
 	(via
-		(at 94.93 99.26)
+		(at 93.363 43.077)
 		(size 0.6)
 		(drill 0.3)
 		(layers "F.Cu" "B.Cu")
@@ -35199,7 +35214,7 @@
 		(uuid "9687f4ed-c9ce-5b01-a1b1-628688127a7f")
 	)
 	(via
-		(at 95.83 104.26)
+		(at 88.363 43.977)
 		(size 0.6)
 		(drill 0.3)
 		(layers "F.Cu" "B.Cu")
@@ -35207,7 +35222,7 @@
 		(uuid "3efdeb5a-eab6-51e9-84ae-2311706eb2d7")
 	)
 	(via
-		(at 95.83 99.26)
+		(at 93.363 43.977)
 		(size 0.6)
 		(drill 0.3)
 		(layers "F.Cu" "B.Cu")
@@ -35215,7 +35230,7 @@
 		(uuid "3ca04561-d02a-56a8-b1a1-bac6ad7ebc8d")
 	)
 	(via
-		(at 94.93 106.11)
+		(at 86.513 43.077)
 		(size 0.6)
 		(drill 0.3)
 		(layers "F.Cu" "B.Cu")
@@ -35223,7 +35238,7 @@
 		(uuid "ebecb60a-5c9b-59cd-9e66-885d38098be9")
 	)
 	(via
-		(at 94.93 97.41)
+		(at 95.213 43.077)
 		(size 0.6)
 		(drill 0.3)
 		(layers "F.Cu" "B.Cu")
@@ -35231,7 +35246,7 @@
 		(uuid "8b4780ac-bec4-5ec5-af0e-23132ccdb5e3")
 	)
 	(via
-		(at 95.83 106.11)
+		(at 86.513 43.977)
 		(size 0.6)
 		(drill 0.3)
 		(layers "F.Cu" "B.Cu")
@@ -35239,7 +35254,7 @@
 		(uuid "962f93d4-6ba2-51ef-9d2e-80aaaa28bfd5")
 	)
 	(via
-		(at 95.83 97.41)
+		(at 95.213 43.977)
 		(size 0.6)
 		(drill 0.3)
 		(layers "F.Cu" "B.Cu")
@@ -35247,7 +35262,7 @@
 		(uuid "e244a464-866e-5499-a8a1-85930c77baa1")
 	)
 	(via
-		(at 85.8 56)
+		(at 85.8 55.5)
 		(size 0.45)
 		(drill 0.3)
 		(layers "F.Cu" "B.Cu")
@@ -35256,7 +35271,7 @@
 		(uuid "a96d6e94-bbc1-548e-b124-74b5008e20a2")
 	)
 	(via
-		(at 86.8 56)
+		(at 86.8 55.5)
 		(size 0.45)
 		(drill 0.3)
 		(layers "F.Cu" "B.Cu")
@@ -35265,7 +35280,7 @@
 		(uuid "6271fc4e-5ac1-550a-8b1a-415a458eaf31")
 	)
 	(via
-		(at 70.8 91)
+		(at 70.8 90.5)
 		(size 0.45)
 		(drill 0.3)
 		(layers "F.Cu" "B.Cu")
@@ -35274,7 +35289,7 @@
 		(uuid "a44999e7-7500-52ab-a077-ce1379e2efac")
 	)
 	(via
-		(at 74.8 91)
+		(at 74.8 90.5)
 		(size 0.45)
 		(drill 0.3)
 		(layers "F.Cu" "B.Cu")
@@ -35283,7 +35298,7 @@
 		(uuid "84625662-ab7b-53be-a650-afba752373a2")
 	)
 	(via
-		(at 77.2 91)
+		(at 77.2 90.5)
 		(size 0.45)
 		(drill 0.3)
 		(layers "F.Cu" "B.Cu")
@@ -35292,7 +35307,7 @@
 		(uuid "3573c47b-6b9f-5ae4-9e4c-946e3dbb5ee4")
 	)
 	(via
-		(at 80.8 91)
+		(at 80.8 90.5)
 		(size 0.45)
 		(drill 0.3)
 		(layers "F.Cu" "B.Cu")
@@ -35301,7 +35316,7 @@
 		(uuid "5eefa513-3c9d-5c81-a8bb-d0df8ed6108a")
 	)
 	(via
-		(at 83.2 91)
+		(at 83.2 90.5)
 		(size 0.45)
 		(drill 0.3)
 		(layers "F.Cu" "B.Cu")
@@ -35310,7 +35325,7 @@
 		(uuid "08c87011-7255-5611-8a63-27a85a8ccec3")
 	)
 	(via
-		(at 86 91)
+		(at 86 90.5)
 		(size 0.45)
 		(drill 0.3)
 		(layers "F.Cu" "B.Cu")
@@ -35319,8 +35334,8 @@
 		(uuid "1cf42f66-7894-5b3c-8ded-9506a5a50929")
 	)
 	(segment
-		(start 85.4 56)
-		(end 87 56)
+		(start 85.4 55.5)
+		(end 87 55.5)
 		(width 0.3)
 		(layer "F.Cu")
 		(locked yes)
@@ -35328,8 +35343,8 @@
 		(uuid "69c20f32-0d77-5367-90ea-ac32071e759a")
 	)
 	(segment
-		(start 85.4 54.645)
-		(end 85.4 56)
+		(start 85.4 54.145)
+		(end 85.4 55.5)
 		(width 0.23)
 		(layer "F.Cu")
 		(locked yes)
@@ -35337,8 +35352,8 @@
 		(uuid "14fbfd78-6865-52bb-94df-be8c068ed8b7")
 	)
 	(segment
-		(start 86.6 54.645)
-		(end 86.6 56)
+		(start 86.6 54.145)
+		(end 86.6 55.5)
 		(width 0.23)
 		(layer "F.Cu")
 		(locked yes)
@@ -35346,8 +35361,8 @@
 		(uuid "1a3e2d86-a735-548e-a8be-2bf46c892dbb")
 	)
 	(segment
-		(start 87 57.355)
-		(end 87 56)
+		(start 87 56.855)
+		(end 87 55.5)
 		(width 0.23)
 		(layer "F.Cu")
 		(locked yes)
@@ -35355,8 +35370,8 @@
 		(uuid "250b3a9e-c990-5c8c-8fd1-a94d5c07603d")
 	)
 	(segment
-		(start 69 91)
-		(end 87 91)
+		(start 69 90.5)
+		(end 87 90.5)
 		(width 0.3)
 		(layer "F.Cu")
 		(locked yes)
@@ -35364,8 +35379,8 @@
 		(uuid "26dee8f9-1018-521b-867c-189bce64f332")
 	)
 	(segment
-		(start 69 89.645)
-		(end 69 92.355)
+		(start 69 89.145)
+		(end 69 91.855)
 		(width 0.17)
 		(layer "F.Cu")
 		(locked yes)
@@ -35373,8 +35388,8 @@
 		(uuid "719a0327-15d4-5c98-89d2-824ec632199c")
 	)
 	(segment
-		(start 71 89.645)
-		(end 71 92.355)
+		(start 71 89.145)
+		(end 71 91.855)
 		(width 0.23)
 		(layer "F.Cu")
 		(locked yes)
@@ -35382,8 +35397,8 @@
 		(uuid "efb74e48-64a7-5135-aa48-27dcbe00c439")
 	)
 	(segment
-		(start 73 89.645)
-		(end 73 92.355)
+		(start 73 89.145)
+		(end 73 91.855)
 		(width 0.23)
 		(layer "F.Cu")
 		(locked yes)
@@ -35391,8 +35406,8 @@
 		(uuid "21c4609d-9fb0-5494-85d6-bfb290f42fac")
 	)
 	(segment
-		(start 75 89.645)
-		(end 75 92.355)
+		(start 75 89.145)
+		(end 75 91.855)
 		(width 0.23)
 		(layer "F.Cu")
 		(locked yes)
@@ -35400,8 +35415,8 @@
 		(uuid "a96d8368-4f11-5e58-8020-a90e2a1ac67d")
 	)
 	(segment
-		(start 77 89.645)
-		(end 77 92.355)
+		(start 77 89.145)
+		(end 77 91.855)
 		(width 0.23)
 		(layer "F.Cu")
 		(locked yes)
@@ -35409,8 +35424,8 @@
 		(uuid "26fafa66-11db-561d-a194-623abba32181")
 	)
 	(segment
-		(start 79 89.645)
-		(end 79 92.355)
+		(start 79 89.145)
+		(end 79 91.855)
 		(width 0.23)
 		(layer "F.Cu")
 		(locked yes)
@@ -35418,8 +35433,8 @@
 		(uuid "3e7b8840-8e89-5db4-a510-48ecb7186304")
 	)
 	(segment
-		(start 81 89.645)
-		(end 81 92.355)
+		(start 81 89.145)
+		(end 81 91.855)
 		(width 0.23)
 		(layer "F.Cu")
 		(locked yes)
@@ -35427,8 +35442,8 @@
 		(uuid "5faac3be-b684-59d1-a2a4-c951430ba3f5")
 	)
 	(segment
-		(start 83 89.645)
-		(end 83 92.355)
+		(start 83 89.145)
+		(end 83 91.855)
 		(width 0.23)
 		(layer "F.Cu")
 		(locked yes)
@@ -35436,8 +35451,8 @@
 		(uuid "35150676-2d04-543c-9d6e-27542cd26f30")
 	)
 	(segment
-		(start 85 89.645)
-		(end 85 92.355)
+		(start 85 89.145)
+		(end 85 91.855)
 		(width 0.23)
 		(layer "F.Cu")
 		(locked yes)
@@ -35445,8 +35460,8 @@
 		(uuid "cc3d29cf-835d-5e3a-9723-bf75179b0d7d")
 	)
 	(segment
-		(start 87 89.645)
-		(end 87 92.355)
+		(start 87 89.145)
+		(end 87 91.855)
 		(width 0.17)
 		(layer "F.Cu")
 		(locked yes)

@@ -544,11 +544,13 @@ LayReport lay_out(Kernel& kernel) {
             return a.by.x != b.by.x ? a.by.x < b.by.x : a.by.y < b.by.y;
         });
         const std::size_t limit = anywhere || tied ? tries.size() : std::min(tries.size(), static_cast<std::size_t>(constants::lay_tries.value));
-        for (std::size_t attempt = 0; attempt < limit; ++attempt) {
+        std::size_t refused = 0;
+        for (std::size_t attempt = 0; attempt < limit && refused < static_cast<std::size_t>(constants::lay_follow.value); ++attempt) {
             const std::vector<Move> moves = moves_of(block, options[tries[attempt].option], tries[attempt].by);
             if (!kernel.seat_together(moves)) continue;
             const bool clear = std::none_of(moves.begin(), moves.end(), [&](const Move& move) { return kernel.covers_via_sites(move.part); });
             if (clear && (!accept || accept())) return true;
+            if (clear) ++refused;
             for (const Move& move : moves) kernel.park(move.part);
         }
         return false;

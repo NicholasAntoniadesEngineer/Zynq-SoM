@@ -1,32 +1,33 @@
-FLOORPLAN COMPOSITION (T1): 1 hard / 2 soft terms; hard RED 0, soft RED 0 (advisory)
-  hard margins (mm): measured 1, unresolved 0, sum 40.0, min 40.0 (informational)
+FLOORPLAN COMPOSITION (T1): 1 hard / 2 soft terms; hard RED 0, soft RED 1 (advisory)
+  hard margins (mm): measured 1, unresolved 0, sum 25.98, min 25.98 (informational)
   hard margins (degrees): measured 0, unresolved 0, sum 0.0, min unavailable (informational)
   hard terms:
-    HARD near_max uart_bridge->usb_uart_connector: 0.00 vs 40.00 (margin +40.00) ok [judgment:10.0 (D11 edge-gap) — CP2102N's USB DP/DM pair terminates at the UART USB-C; measured 365mm of cross-board airwire (avg 122mm) with the block anchored mid-board and a STALE floorplan near-intent pointing at rj45_connector]
+    HARD near_max uart_bridge->usb_uart_connector: 14.02 vs 40.00 (margin +25.98) ok [judgment:10.0 (D11 edge-gap) — CP2102N's USB DP/DM pair terminates at the UART USB-C; measured 365mm of cross-board airwire (avg 122mm) with the block anchored mid-board and a STALE floorplan near-intent pointing at rj45_connector]
   soft terms (advisory ledger — repair triggers, never gates):
-    soft facing power->power_som: 44.94 vs 90.00 (margin +45.06) ok [ADVISORY centroid preference: Reviewed 2026-10-18: all-component centroid direction changes when unrelated test points move; it is a placement preference, not a hardware limit. SNVSBD5D Rev. D section 11.1 requires local loop/layout and power-path quality, not a 90-degree subsystem-centroid cutoff. See native/benchmarks/2026-10-18-facing-centroid-review.json; routing and parasitics remain unverified.] dot=+284.91
-    soft flow_hop power->power_som: 41.82 vs 93.72 (margin +51.91) ok [ADVISORY board-size-derived flow preference [placement/v2]]
+    soft facing power->power_som: 142.77 vs 90.00 (margin -52.77) RED [ADVISORY centroid preference: Reviewed 2026-10-18: all-component centroid direction changes when unrelated test points move; it is a placement preference, not a hardware limit. SNVSBD5D Rev. D section 11.1 requires local loop/layout and power-path quality, not a 90-degree subsystem-centroid cutoff. See native/benchmarks/2026-10-18-facing-centroid-review.json; routing and parasitics remain unverified.] dot=-77.32
+    soft flow_hop power->power_som: 47.53 vs 93.28 (margin +45.76) ok [ADVISORY board-size-derived flow preference [placement/v2]]
   n/a terms (endpoint subsystem not instantiated by this project — project-scoped resolution):
     n/a far_min power->ethernet.line_side [judgment:10.0 — buck switching node vs Ethernet MDI/magnetics analog line side; datasheet silent on inter-subsystem spacing (SNVSBD5D covers intra-stage only)]
     n/a flow_hop usb_pd->power [ADVISORY board-size-derived flow preference [placement/v2]]
-  T2 escape corridors (D13 never-close): 6 loaded, 17 UNMANAGED part intrusion(s), 0 T2-coexistence-managed
-    UNMANAGED INTRUSION C4005 (power) in escape:J3:N
-    UNMANAGED INTRUSION C7003 (som_decoupling) in escape:J1:S
-    UNMANAGED INTRUSION C7004 (som_decoupling) in escape:J1:N
-    UNMANAGED INTRUSION C7005 (som_decoupling) in escape:J1:S
-    UNMANAGED INTRUSION C7007 (som_decoupling) in escape:J2:S
-    UNMANAGED INTRUSION C7009 (som_decoupling) in escape:J3:S
-    UNMANAGED INTRUSION C7010 (som_decoupling) in escape:J3:N
+  T2 escape corridors (D13 never-close): 6 loaded, 17 UNMANAGED part intrusion(s), 1 T2-coexistence-managed
+    UNMANAGED INTRUSION C7004 (som_decoupling) in escape:J1:S
+    UNMANAGED INTRUSION C7006 (som_decoupling) in escape:J1:N
+    UNMANAGED INTRUSION C7007 (som_decoupling) in escape:J2:N
+    UNMANAGED INTRUSION C7009 (som_decoupling) in escape:J3:N
+    UNMANAGED INTRUSION C7010 (som_decoupling) in escape:J3:S
     UNMANAGED INTRUSION C7011 (som_decoupling) in escape:J2:N
     UNMANAGED INTRUSION C7012 (som_decoupling) in escape:J2:S
     UNMANAGED INTRUSION C7013 (som_decoupling) in escape:J1:S
     UNMANAGED INTRUSION C7015 (som_decoupling) in escape:J1:N
-    UNMANAGED INTRUSION C7016 (som_decoupling) in escape:J1:N
-    UNMANAGED INTRUSION C7018 (som_decoupling) in escape:J1:N
-    UNMANAGED INTRUSION R1007 (debug_boot) in escape:J1:S
-    UNMANAGED INTRUSION R11003 (uart_bridge) in escape:J3:N
-    UNMANAGED INTRUSION TP1001 (debug_boot) in escape:J1:S
+    UNMANAGED INTRUSION C7017 (som_decoupling) in escape:J1:N
+    UNMANAGED INTRUSION C7018 (som_decoupling) in escape:J1:S
+    UNMANAGED INTRUSION R1007 (debug_boot) in escape:J1:N
+    UNMANAGED INTRUSION R4003 (power) in escape:J1:N
+    UNMANAGED INTRUSION TP1001 (debug_boot) in escape:J1:N
     UNMANAGED INTRUSION TP1002 (debug_boot) in escape:J1:N
+    UNMANAGED INTRUSION TP1003 (debug_boot) in escape:J1:S
+    UNMANAGED INTRUSION TP4001 (power) in escape:J2:S
+    managed RS5003 (power_mon) in escape:J2:S [T2 STAY]
   D13 channel hotspots (>= 6 cross-airwires; corridor = 2 + 0.2/net mm):
-    power | power_mon: 13 airwires (249.7 mm) -> corridor >= 4.6 mm
-    uart_bridge | usb_uart_connector: 11 airwires (28.5 mm) -> corridor >= 4.2 mm
+    power | power_mon: 7 airwires (131.5 mm) -> corridor >= 3.4 mm
+    power | som_decoupling: 6 airwires (39.7 mm) -> corridor >= 3.2 mm

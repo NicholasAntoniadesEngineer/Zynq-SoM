@@ -11,14 +11,14 @@ axes searched: A1 edge assignment of derived edge sheets, A7 arrangement finalis
   constant axis_orders = 8: search axis A8, the base edge order the squeeze rotates and reverses
   constant plan_skips = 4: most arrangement finalists a seed skips: one per board side
 seed | reuses | edge choices | plan skip | order | reached | outline mm | correct | airwire mm | first finding
-0 | - | first | 0 | 0 | S3 | 120.5 x 88.5 | yes | 10059.671900 | -
-1 | - | esc_power#1,pd_input#1,usb_uart_connector#2 | 1 | 23 | S3 | 103.75 x 100 | yes | 10342.507400 | -
+0 | - | first | 0 | 0 | S3 | 107.75 x 102.25 | yes | 9547.855800 | -
+1 | - | esc_power#1,pd_input#1,usb_uart_connector#2 | 1 | 23 | S3 | 118 x 96.5 | yes | 9162.657800 | -
 2 | - | esc_power#3,usb_uart_connector#2 | 0 | 0 | S2 | - | no | - | -
-3 | - | microsd#1,usb_uart_connector#1 | 1 | 0 | S3 | 120 x 99.75 | yes | 9542.373800 | -
+3 | - | microsd#1,usb_uart_connector#1 | 1 | 0 | S3 | 109.75 x 107 | yes | 10042.090300 | -
 4 | - | esc_power#3,microsd#1,pd_input#3,usb_uart_connector#3 | 1 | 17 | S2 | - | no | - | -
 5 | - | microsd#3,usb_uart_connector#2 | 1 | 4 | S2 | - | no | - | -
 6 | - | esc_power#2,microsd#1,usb_uart_connector#3 | 2 | 22 | S2 | - | no | - | -
-7 | - | microsd#2,pd_input#3 | 3 | 22 | S3 | 104.25 x 104.25 | yes | 11210.121300 | -
-CHOSEN seed 1 by objective among the first batch laid out
-SWEEP: pass rate 4/4; area best 10375 median 10664.2 worst 11970 mm2; spread 0.0278795; HANDLED against pass rate 0.8 and spread 0.05 (integrator's decision 2026-11-21; revisit after the first sweeps on three boards)
+7 | - | microsd#2,pd_input#3 | 3 | 22 | S3 | 113.75 x 96 | yes | 9940.984900 | -
+CHOSEN seed 7 by objective among the first batch laid out
+SWEEP: pass rate 4/4; area best 10920 median 11017.4 worst 11743.2 mm2; spread 0.00892285; HANDLED against pass rate 0.8 and spread 0.05 (integrator's decision 2026-11-21; revisit after the first sweeps on three boards)
 

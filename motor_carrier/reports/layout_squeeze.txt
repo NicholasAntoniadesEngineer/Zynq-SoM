@@ -1,65 +1,70 @@
 SAME FACE: 110 parts held on the face of the pin they serve (regulator loops, timing parts); 0 could not be brought to that face
-PROTECTION ORDER: 6 of 8 protection parts are the first part on their net after the connector pin and are held so; 0 were moved nearer to become so, and 1 parts ahead of one were moved back
-TALL PARTS: 2 clusters moved to give parts taller than the module's underside 3 mm from the module
-CLUSTER ARRANGEMENT: 108 tied clusters; parts and module span 156.288 x 144.483 mm as placed; squeezes to 25181 mm2 without rearranging
-        keep north+south+west+east: span 156.05 x 144.483 mm, 0 clusters moved after opening 0 mm on the kept sides, 1 tightening moves, squeezes to 25181 mm2, 0 could not leave
-  span of the taken arrangement is held by: north C21014, south C6004, west J1001, east R11007
-  sides that cannot be cleared because a fixed or edge-bound cluster sits there: north, south, west, east
-  arranging took 0.0428543 s for 1 plans and 28.4353 s to squeeze the finalists
+PROTECTION ORDER: 7 of 8 protection parts are the first part on their net after the connector pin and are held so; 0 were moved nearer to become so, and 0 parts ahead of one were moved back
+TALL PARTS: 6 clusters moved to give parts taller than the module's underside 3 mm from the module
+BOARD PLAN: 47 of 47 clusters seated by plan, 0 left where they stood, 0 without a seat, in 2 passes; taken; airwire 11763.8 to 9524.33 mm, weighted by net kind 19267.9 to 15500.2
+CLUSTERS DRAWN TOGETHER: 37 moves of 108 clusters in 3 passes; airwire 9696.34 to 9515.3 mm, weighted by net kind 15760.5 to 15474.9
+CLUSTER ARRANGEMENT: 108 tied clusters; parts and module span 146.502 x 128.95 mm as placed; squeezes to 12516 mm2 without rearranging
+  TAKEN keep north+west+east: span 154.906 x 131.488 mm, 2 clusters moved after opening 10 mm on the kept sides, 12 tightening moves, squeezes to 11294.5 mm2, 5 could not leave: vbat_supply/C21003 (overlap against R10005), power/C11001 (overlap against U10001), power_som/C13014 (overlap against J4001), power_mon/C12001 (dispersion against the board)
+        keep north+south+west+east: span 146.502 x 122.45 mm, 0 clusters moved after opening 0 mm on the kept sides, 8 tightening moves, 0 could not leave
+  span of the taken arrangement is held by: north C6004, south C11002, west D10001, east C9002
+  sides that cannot be cleared because a fixed or edge-bound cluster sits there: north, west, east
+  arranging took 0.46472 s for 2 plans and 238.089 s to squeeze the finalists
 OWNERSHIP: 252 authored 49 released 1 shared; 0 off-sheet owners not found
-  parts within reach of the pin they serve: 122 to 246 of 253
-    RN5002 is 5.71144 mm from U5001 (reach 4 mm): RN5002 at 63.4,90.75 rear, U5001 at 68.79,97.8 top; 3604 seats within reach; 3106 crowds an escape on the other face; 308 module_core board; 108 overlap D5004; 66 fanout D5004; 12 fanout J14001; 4 overlap J14001
-    L13003 is 4.55501 mm from U13004 (reach 3 mm): L13003 at 100.45,72.95 rear, U13004 at 90.92,70.91 rear; 2116 seats within reach; 1826 overlap C13014; 148 crowds an escape on the other face; 142 overlap C13016
-    R13019 is 4.11893 mm from U13004 (reach 4 mm): R13019 at 96.4949,67.185 rear, U13004 at 90.92,70.91 rear; 3604 seats within reach; 712 overlap L13003; 582 overlap U13004; 522 overlap C13015; 376 overlap C13022; 308 overlap C13023; 292 overlap C13017; 288 overlap R13014; 224 overlap C13014
-    L21001 is 3.50036 mm from U21002 (reach 3 mm): L21001 at 147.995,61.6599 rear, U21002 at 140.495,67.6349 rear; 2116 seats within reach; 1980 overlap C21003; 84 overlap C21004; 50 overlap C21005; 2 crowds an escape on the other face
-    F6001 is 3.45 mm from Q6001 (reach 3 mm): F6001 at 142.101,136.898 rear, Q6001 at 144.163,121.72 top; 2008 seats within reach; 1356 crowds an escape on the other face; 620 overlap Q6001; 32 reserved thermal_pour_U11002_F
-    C13022 is 2.9 mm from U13004 (reach 2 mm): C13022 at 92.7449,74.635 rear, U13004 at 90.92,70.91 rear; 1012 seats within reach; 282 overlap R13014; 250 overlap U13004; 212 overlap C13023; 90 overlap C13017; 90 overlap L13003; 52 overlap C13025; 32 overlap C13015; 4 overlap C13019
-    C15018 is 2.16879 mm from J16001 (reach 2 mm): C15018 at 98.15,78.895 rear, J16001 at 103.5,82 top; 2024 seats within reach; 1012 module_core board; 838 reserved escape corridor of J16001; 154 overlap C15015; 20 overlap C15013
-OWNER HOLDS: 253 small parts held to the pin they serve; farthest 80.7945 mm before, 12.41 mm after
-OWNER ATTRACTION: 136 parts wanted a seat at the pin they serve, 125 seated (8 to the rear, 6 blockers moved aside, 1 seated together with the parts they are tied to, 5 took the nearest room beyond the first search); preferences met 116 to 238 of 253
-  routed airwire 13953.5 to 12455.7 mm
-FACE BALANCE: 47 of 54 movable clusters mirrored to the rear (114 parts); courtyard area top 5772.1 to 4122.6 mm2, rear 1512.96 to 3162.46 mm2
-  6 clusters took a rear seat away from their mirrored place, 0 changed faces together with the parts in their way, 21 parts came up to the top in exchange, 0 face-bound parts were released from a copper field that went to the rear
-  tried mirrored in place only: 29 clusters (71 parts down, 0 up), squeezes to 25181 mm2
-  tried with seats away from the mirrored place, exchanges and releases: 47 clusters (114 parts down, 21 up), squeezes to 25181 mm2
-  squeezed area with mirroring 25181 mm2, without 25181 mm2; kept the unmirrored board
-  on the squeezed board, with seats away from the mirrored place, exchanges and releases: 42 of 54 movable clusters mirrored to the rear (111 parts, 7 away from their mirrored place, 1 exchanged, 26 parts up, 0 released); squeezed again 25181 to 10581.4 mm2; kept
-  on the squeezed board, with seats away from the mirrored place, exchanges and releases: 13 of 17 movable clusters mirrored to the rear (29 parts, 7 away from their mirrored place, 0 exchanged, 3 parts up, 0 released); squeezed again 10581.4 to 10375 mm2; kept
-  on the squeezed board, with seats away from the mirrored place, exchanges and releases: 2 of 6 movable clusters mirrored to the rear (2 parts, 1 away from their mirrored place, 0 exchanged, 0 parts up, 0 released); squeezed again 10375 to 10375 mm2; discarded
-  on the squeezed board, mirrored in place only: 1 of 3 movable clusters mirrored to the rear (1 parts, 0 away from their mirrored place, 0 exchanged, 0 parts up, 0 released); squeezed again 10375 to 10375 mm2; discarded
+  parts within reach of the pin they serve: 118 to 245 of 253
+    F6001 is 12.9016 mm from Q6001 (reach 3 mm): F6001 at 75.6276,61.3076 rear, Q6001 at 87.45,56.496 top; 2008 seats within reach; 880 overlap C7003; 468 overlap C7005; 220 overlap J6002; 174 overlap J6001; 112 overlap C7004; 108 overlap Q6001; 38 overlap C7002; 8 overlap J1001
+    C21014 is 8.32675 mm from U21001 (reach 6 mm): C21014 at 81.8232,87.9349 rear, U21001 at 68.95,94.21 top; 7844 seats within reach; 7844 module_core board
+    L21001 is 7.60908 mm from U21002 (reach 3 mm): L21001 at 65.11,119.55 top, U21002 at 75.64,128.3 top; 2116 seats within reach; 1362 module_core board; 754 overlap C21003
+    RN5002 is 5.55819 mm from U5001 (reach 4 mm): RN5002 at 131.75,97.1 rear, U5001 at 134.3,91.46 top; 3604 seats within reach; 1760 crowds an escape on the other face; 700 overlap SW1001; 426 module_core board; 260 overlap D5004; 192 fanout D5004; 174 fanout SW1001; 88 overlap U5001; 4 fanout U5001
+    L13003 is 4.55501 mm from U13004 (reach 3 mm): L13003 at 108.55,131.25 top, U13004 at 118.08,129.21 top; 2116 seats within reach; 1058 module_core board; 490 overlap C13014; 452 overlap C11027; 114 overlap C11024; 2 off_board board
+    R13019 is 4.11893 mm from U13004 (reach 4 mm): R13019 at 111.755,126.235 top, U13004 at 118.08,129.21 top; 3604 seats within reach; 714 overlap L13003; 538 overlap U13004; 522 overlap C13015; 388 overlap C13023; 376 overlap C13022; 366 overlap C13017; 288 overlap R13014; 224 overlap C13014
+    C13022 is 2.9 mm from U13004 (reach 2 mm): C13022 at 116.255,132.935 top, U13004 at 118.08,129.21 top; 1012 seats within reach; 302 overlap U13004; 282 overlap R13014; 216 overlap C13023; 90 overlap C13017; 90 overlap L13003; 32 overlap C13015
+    C13025 is 2.075 mm from U13004 (reach 2 mm): C13025 at 121.305,128.51 top, U13004 at 118.08,129.21 top; 1012 seats within reach; 568 overlap U13004; 316 overlap C13017; 60 overlap C13016; 44 overlap C13023; 24 overlap R13014
+OWNER HOLDS: 253 small parts held to the pin they serve; farthest 45.9445 mm before, 14.6601 mm after
+OWNER ATTRACTION: 140 parts wanted a seat at the pin they serve, 130 seated (10 to the rear, 11 blockers moved aside, 0 seated together with the parts they are tied to, 5 took the nearest room beyond the first search); preferences met 112 to 240 of 253
+  routed airwire 13451.3 to 11698 mm
+FACE BALANCE: 29 of 43 movable clusters mirrored to the rear (102 parts); courtyard area top 5450.42 to 4212.36 mm2, rear 1834.64 to 3072.7 mm2
+  10 clusters took a rear seat away from their mirrored place, 0 changed faces together with the parts in their way, 16 parts came up to the top in exchange, 0 face-bound parts were released from a copper field that went to the rear
+  tried mirrored in place only: 15 clusters (41 parts down, 0 up), squeezes to 28620 mm2
+  tried with seats away from the mirrored place, exchanges and releases: 29 clusters (102 parts down, 16 up), squeezes to 24143.9 mm2
+  squeezed area with mirroring 24143.9 mm2, without 11294.5 mm2; kept the unmirrored board
+  on the squeezed board, with seats away from the mirrored place, exchanges and releases: 17 of 31 movable clusters mirrored to the rear (59 parts, 10 away from their mirrored place, 0 exchanged, 9 parts up, 0 released); squeezed again 11294.5 to 11294.5 mm2; discarded
+  on the squeezed board, mirrored in place only: 6 of 17 movable clusters mirrored to the rear (22 parts, 0 away from their mirrored place, 0 exchanged, 0 parts up, 0 released); squeezed again 11294.5 to 10920 mm2; kept
+  on the squeezed board, with seats away from the mirrored place, exchanges and releases: 11 of 24 movable clusters mirrored to the rear (52 parts, 9 away from their mirrored place, 0 exchanged, 9 parts up, 0 released); squeezed again 10920 to 10920 mm2; discarded
+  on the squeezed board, mirrored in place only: 2 of 10 movable clusters mirrored to the rear (4 parts, 0 away from their mirrored place, 0 exchanged, 0 parts up, 0 released); squeezed again 10920 to 10920 mm2; discarded
   rear-capable courtyard left on top when last examined, largest clusters:
-    246.68 mm2 C6004: the rear would hold more than the top
-    141.884 mm2 C6001: no mirrored seat within reach; 24 overlap Q6001/C11030 on the rear; 21 crowds an escape on the other face; 20 fanout Q6001/C11005 on the rear; 3 fanout Q6001/C11029 on the rear; 1 reserved Q6001/board; no rear seat in any turn within 12 mm; changing faces with what is under it: Q6001 meets reserved against the board
+    345.145 mm2 C7001: no mirrored seat within reach; 441 crowds an escape on the other face; C7001 with the parts its contracts tie to it: no mirrored seat within reach; 441 crowds an escape on the other face; no rear seat in any turn within 12 mm
+    176.613 mm2 C13014: no mirrored seat within reach; 207 crowds an escape on the other face; 40 overlap C13016/R3002 on the rear; 7 overlap C13017/R13017 on the rear; 1 overlap C13023/R13017 on the rear; C13014 with the parts its contracts tie to it: no mirrored seat within reach; 207 crowds an escape on the other face; 40 overlap C13016/R3002 on the rear; 5 overlap L13003/C11002 on the rear; 3 off_board C13018/board; no rear seat in any turn within 12 mm; changing faces with what is under it: R3001 meets module_core against the board
+    146.206 mm2 Q6002: no mirrored seat within reach; 428 crowds an escape on the other face; 13 overlap Q6002/D6001 on the rear; no rear seat in any turn within 12 mm; changing faces with what is under it: J6001 is in the way and its cluster cannot change face
+    141.884 mm2 C6001: no mirrored seat within reach; 208 crowds an escape on the other face; 26 overlap Q6001/C6003 on the rear; 22 overlap Q6001/D6001 on the rear; no rear seat in any turn within 12 mm; changing faces with what is under it: J6001 is in the way and its cluster cannot change face
     74.766 mm2 C9001 and 10 more: held on top by top-only J9001; tied through microsd/proximity#0 (C9001 to U9001), then microsd/proximity#5 (U9001 to J9001)
-    51.6784 mm2 C5001: no mirrored seat within reach; 185 crowds an escape on the other face; 30 module_core C5001/board; 12 overlap U5001/R5010 on the rear; 6 fanout U5001/C1002 on the rear; no rear seat in any turn within 12 mm
+    66.9432 mm2 C5004: no mirrored seat within reach; 25 fanout U5004/C11011 on the rear; 20 reserved U5004/board; 2 fanout U5004/C11010 on the rear; 1 overlap U5004/C11011 on the rear; no rear seat in any turn within 12 mm; changing faces with what is under it: J9001 is in the way and its cluster cannot change face
+    66.9432 mm2 C5005: no mirrored seat within reach; 433 crowds an escape on the other face; 5 overlap U5005/R5007 on the rear; 3 overlap U5005/C5007 on the rear; no rear seat in any turn within 12 mm
+    63.7384 mm2 C1001: no mirrored seat within reach; 421 crowds an escape on the other face; 10 fanout C1001/J14001 on top; 7 fanout C1001/U12002 on top; 3 overlap U1001/R1001 on the rear; no rear seat in any turn within 12 mm; changing faces with what is under it: J14001 is in the way and its cluster cannot change face
+    51.6784 mm2 C5001: no mirrored seat within reach; 240 crowds an escape on the other face; 37 fanout U5001/R11007 on the rear; 11 overlap U5001/R11007 on the rear; no rear seat in any turn within 12 mm
     46.1972 mm2 D10001 and 1 more: held on top by top-only J10001; tied through pd_input/proximity#6 (D10001 to J10001)
     40.6496 mm2 C10001 and 6 more: held on top by top-only U10001; tied through pd_input/proximity#0 (C10001 to U10001)
-    28.6544 mm2 C20001 and 3 more: held on top by top-only J20001; tied through usb_uart_connector/proximity#3 (C20001 to J20001)
-    27.88 mm2 D5001 and 1 more: held on top by top-only J5001; tied through face of owner of D5001 (D5001 to J5001)
-    16.1952 mm2 C6006: no mirrored seat within reach; 73 crowds an escape on the other face; 28 overlap U6002/C6009 on the rear; 20 overlap U6002/C6008 on the rear; no rear seat in any turn within 12 mm; changing faces with what is under it: FID3 is in the way and its cluster cannot change face
-    13.94 mm2 D5003: held on top by top-only J5002; tied through face of owner of D5003 (D5003 to J5002)
-    12.784 mm2 D3001: held on top by top-only J3001; tied through face of owner of D3001 (D3001 to J3001)
-LAYOUT SQUEEZE: 169 x 149 mm to 103.75 x 100 mm, area 25181 to 10375 mm2 (-58.7983%)
-  routed airwire 12967.5 to 10342.5 mm
-  83 of 306 edge steps kept, 859 relocations, 246 pushes, 11 parts sunk to the rear, 41 jams freed (10 by moving neighbours aside in a chain, 5 by re-seating the cluster elsewhere on the board)
-  east stopped by L21001 off_board L21001; of 1792 nearby positions for L21001 (cluster of 20), 590 off_board against the board, 146 overlap against U3001, 134 overlap against J21001, 131 overlap against J4001
-  height stopped by C15016 overlap L13003; of 1792 nearby positions for C15016 (cluster of 1), 617 contract against J16001, 274 reserved against the board, 97 overlap against T7001, 95 overlap against L13003
-  north stopped by C15016 overlap L13003; of 1792 nearby positions for C15016 (cluster of 1), 617 contract against J16001, 274 reserved against the board, 97 overlap against T7001, 95 overlap against L13003
-  south stopped by F6001 off_board F6001; of 1792 nearby positions for F6001 (cluster of 5), 596 off_board against the board, 264 reserved against the board, 88 overlap against C11005, 76 overlap against H8003
-  west stopped by C15016 overlap C15018; of 1792 nearby positions for C15016 (cluster of 1), 596 contract against J16001, 295 reserved against the board, 134 overlap against T7001, 88 overlap against L13003
-  width stopped by L21001 off_board L21001; of 1792 nearby positions for L21001 (cluster of 20), 590 off_board against the board, 146 overlap against U3001, 134 overlap against J21001, 131 overlap against J4001
-  15659 cluster steps taken toward the module before the edges moved
-  best of 2 edge orders, areas mm2: 25181 25181
-RESEAT AFTER SQUEEZE: 25 parts had drifted from the pin they serve, 18 reseated (0 to the rear, 0 to the nearest room beyond the first search); preferences met 228 to 246
-FACES: top 208 to 87, rear 155 to 276
-EDGE north: 103.75 mm long, connector bodies 17.72 mm (17.0795%): J9001
-EDGE south: 103.75 mm long, connector bodies 43.86 mm (42.2747%): J20001 J6001 J6002
-EDGE west: 100 mm long, connector bodies 0 mm (0%):
-EDGE east: 100 mm long, connector bodies 10.86 mm (10.86%): J10001
-TOP FACE courtyard area by reason (rear holds 3419.95 mm2):
+    31.8568 mm2 C3001: no mirrored seat within reach; 208 crowds an escape on the other face; 22 overlap U3001/R3001 on the rear; 11 overlap C3002/SW3001 on top; 10 overlap U3001/TP3001 on the rear; 3 overlap C3001/L13003 on top; 2 overlap U3001/R3002 on the rear; C3001 with the parts its contracts tie to it: no mirrored seat within reach; 208 crowds an escape on the other face; 39 overlap U3001/TP3001 on the rear; 9 overlap C3001/L13003 on top; no rear seat in any turn within 12 mm; changing faces with what is under it: R3001 meets module_core against the board
+LAYOUT SQUEEZE: 180 x 159 mm to 113.75 x 96 mm, area 28620 to 10920 mm2 (-61.8449%)
+  routed airwire 9825.47 to 9940.98 mm
+  94 of 252 edge steps kept, 949 relocations, 457 pushes, 12 parts sunk to the rear, 56 jams freed (7 by moving neighbours aside in a chain, 9 by re-seating the cluster elsewhere on the board)
+  east stopped by U5001 fanout U5005; of 1792 nearby positions for U5001 (cluster of 16), 241 reserved against the board, 240 module_core against the board, 87 overlap against J9001, 83 overlap against RS6001
+  height stopped by J9001 fanout U5005; of 1792 nearby positions for J9001 (cluster of 13), 412 module_core against the board, 282 off_board against the board, 182 reserved against the board, 112 overlap against U5005
+  north stopped by J9001 fanout U5005; of 1792 nearby positions for J9001 (cluster of 13), 412 module_core against the board, 282 off_board against the board, 182 reserved against the board, 112 overlap against U5005
+  south stopped by C13018 off_board C13018; of 1792 nearby positions for C13018 (cluster of 18), 808 off_board against the board, 446 module_core against the board, 151 reserved against the board, 68 overlap against L11001
+  west stopped by J20001 overlap H8001; of 1792 nearby positions for J20001 (cluster of 5), 938 off_board against the board, 252 overlap against J4001, 139 overlap against J6001, 129 overlap against Q6002
+  width stopped by U5001 fanout U5005; of 1792 nearby positions for U5001 (cluster of 16), 241 reserved against the board, 240 module_core against the board, 87 overlap against J9001, 83 overlap against RS6001
+  7784 cluster steps taken toward the module before the edges moved
+  best of 2 edge orders, areas mm2: 11294.5 11593.5
+RESEAT AFTER SQUEEZE: 22 parts had drifted from the pin they serve, 15 reseated (0 to the rear, 2 to the nearest room beyond the first search); preferences met 231 to 245
+FACES: top 208 to 159, rear 155 to 204
+EDGE north: 113.75 mm long, connector bodies 43.86 mm (38.5582%): J20001 J6001 J6002
+EDGE south: 113.75 mm long, connector bodies 0 mm (0%):
+EDGE west: 96 mm long, connector bodies 10.86 mm (11.3125%): J10001
+EDGE east: 96 mm long, connector bodies 17.72 mm (18.4583%): J9001
+TOP FACE courtyard area by reason (rear holds 2178.52 mm2):
     1124.32 mm2 edge connectors
     477.342 mm2 fixed parts
-    532.247 mm2 parts free to go to the rear
+    1773.67 mm2 parts free to go to the rear
     244.871 mm2 parts tied to the face of a top-bound part
     38.8944 mm2 top-only LEDs
     973.614 mm2 top-only connectors and headers
@@ -68,112 +73,135 @@ TOP FACE courtyard area by reason (rear holds 3419.95 mm2):
 PLACEMENT INTEGRITY GATE: PASS
   mechanical/module-mating: checked 300, findings 0 [GATE]
   mechanical/land-spacing: checked 19319, findings 0 [GATE]
-  mechanical/module-clearance: checked 75, findings 0 [GATE]
-  mechanical/module-escape-corridor: checked 873, findings 0 [GATE]
-  mechanical/tall-part-beside-module: checked 84, findings 0 [MEASURED]
+  mechanical/module-clearance: checked 147, findings 0 [GATE]
+  mechanical/module-escape-corridor: checked 657, findings 0 [GATE]
+  mechanical/tall-part-beside-module: checked 156, findings 0 [MEASURED]
   high_speed/controlled-net-needs-ground: checked 6, findings 0 [GATE]
   high_speed/termination-distance-report: checked 20, findings 1 [MEASURED]
   power/regulator-loop-one-face: checked 4, findings 0 [GATE]
   power/regulator-over-ground: checked 8, findings 0 [GATE]
-  power/input-capacitor-nearest: checked 8, findings 0 [MEASURED]
+  power/input-capacitor-nearest: checked 8, findings 1 [MEASURED]
   power/nothing-sensitive-under-inductor: checked 144, findings 0 [GATE]
   protection/protect-first-after-connector: checked 8, findings 0 [GATE]
   decoupling/bypass-on-pin-face-or-under: checked 58, findings 0 [GATE]
   sensing/sense-distance-report: checked 16, findings 0 [MEASURED]
   timing/timing-parts-on-crystal-face: checked 0, findings 0 [GATE]
-    FOUND termination-distance-report: RN5002 (esc_io) is 5.71144 mm from U5001.13; the reach of a series part is 4 mm
+    FOUND termination-distance-report: RN5002 (esc_io) is 5.55819 mm from U5001.13; the reach of a series part is 4 mm
+    FOUND input-capacitor-nearest: U13004 (power_som) input pin VIN2 (pad 12): the nearest authored part is C13017 (power_som) at 1.4248 mm, nearer than its input capacitor C13025 at 2.075 mm
     NOTE module-mating: J16001 mates module J1: worst pad error 8.15239e-15 mm over 100 pins, mate-to-receptacle row inset 0.185 mm (the module's own land patterns; self-alignment 0.33 mm)
     NOTE module-mating: J17002 mates module J2: worst pad error 1.58882e-14 mm over 100 pins, mate-to-receptacle row inset 0.185 mm (the module's own land patterns; self-alignment 0.33 mm)
     NOTE module-mating: J18003 mates module J3: worst pad error 1.58882e-14 mm over 100 pins, mate-to-receptacle row inset 0.185 mm (the module's own land patterns; self-alignment 0.33 mm)
     NOTE land-spacing: J16001 (DF40C-100DP-0.4V_51): land gap 0.17 mm below its net-class clearance 0.2 mm; fabricator minimum 0.09 mm; B2 15-30 V (voltage unknown, highest board voltage used); required 0.1 mm; PASS: Hirose DF40 catalogue (2013.11) p.10, DF40C-xxDP header recommended PCB layout: pad 0.23+-0.02 on pitch 0.4+-0.02, end pads 0.35+-0.02
     NOTE land-spacing: J17002 (DF40C-100DP-0.4V_51): land gap 0.17 mm below its net-class clearance 0.2 mm; fabricator minimum 0.09 mm; B2 15-30 V (voltage unknown, highest board voltage used); required 0.1 mm; PASS: Hirose DF40 catalogue (2013.11) p.10, DF40C-xxDP header recommended PCB layout: pad 0.23+-0.02 on pitch 0.4+-0.02, end pads 0.35+-0.02
     NOTE land-spacing: J18003 (DF40C-100DP-0.4V_51): land gap 0.17 mm below its net-class clearance 0.2 mm; fabricator minimum 0.09 mm; B2 15-30 V (voltage unknown, highest board voltage used); required 0.1 mm; PASS: Hirose DF40 catalogue (2013.11) p.10, DF40C-xxDP header recommended PCB layout: pad 0.23+-0.02 on pitch 0.4+-0.02, end pads 0.35+-0.02
-    NOTE tall-part-beside-module: J1001 (board_control) ZX-SH1.0-4PLT is 4.42011 mm tall, 2.92011 mm above the module underside at 1.5 mm, and 3.03 mm from the module body (connector; highest point of the 3D model ${KIPRJMOD}/../parts/ZX-SH1.0-4PLT/ZX-SH1.0-4PLT.wrl)
-    NOTE tall-part-beside-module: SW4002 (debug_boot) RESET is 1.54991 mm tall, 0.049908 mm above the module underside at 1.5 mm, and 3.05 mm from the module body (switch; highest point of the 3D model ${KIPRJMOD}/../parts/TS-1187A-B-A-B/TS-1187A-B-A-B.wrl)
-    NOTE tall-part-beside-module: J14001 (rj45_connector) KH-5224-8P8C-D is 16.3001 mm tall, 14.8001 mm above the module underside at 1.5 mm, and 3.14 mm from the module body (connector; highest point of the 3D model ${KIPRJMOD}/../parts/KH-5224-8P8C-D/KH-5224-8P8C-D.wrl)
-    NOTE tall-part-beside-module: SW1002 (board_control) USER is 1.54991 mm tall, 0.049908 mm above the module underside at 1.5 mm, and 3.2 mm from the module body (switch; highest point of the 3D model ${KIPRJMOD}/../parts/TS-1187A-B-A-B/TS-1187A-B-A-B.wrl)
-    NOTE tall-part-beside-module: J3002 (can_bus) ZX-SH1.0-4PLT is 4.42011 mm tall, 2.92011 mm above the module underside at 1.5 mm, and 3.24 mm from the module body (connector; highest point of the 3D model ${KIPRJMOD}/../parts/ZX-SH1.0-4PLT/ZX-SH1.0-4PLT.wrl)
-    NOTE tall-part-beside-module: SW4001 (debug_boot) DIP-4 is 2.35001 mm tall, 0.850008 mm above the module underside at 1.5 mm, and 5.3 mm from the module body (switch; highest point of the 3D model ${KIPRJMOD}/../parts/DSHP04TSGER/DSHP04TSGER.wrl)
-    NOTE tall-part-beside-module: U20001 (usb_uart_connector) USBLC6-2SC6 is 1.64897 mm tall, 0.148968 mm above the module underside at 1.5 mm, and 9.17307 mm from the module body (diode; highest point of the 3D model ${KIPRJMOD}/../parts/USBLC6-2SC6/USBLC6-2SC6.wrl)
-    NOTE tall-part-beside-module: C6004 (esc_power) 470u is 13.511 mm tall, 12.011 mm above the module underside at 1.5 mm, and 9.35 mm from the module body (capacitor; highest point of the 3D model ${KIPRJMOD}/../parts/RVT1H471M1213/RVT1H471M1213.wrl)
-    NOTE tall-part-beside-module: SW5001 (esc_io) DIP-4 is 2.35001 mm tall, 0.850008 mm above the module underside at 1.5 mm, and 9.76 mm from the module body (switch; highest point of the 3D model ${KIPRJMOD}/../parts/DSHP04TSGER/DSHP04TSGER.wrl)
-    NOTE tall-part-beside-module: D5003 (esc_io) SRV05-4 is 1.55 mm tall, 0.05 mm above the module underside at 1.5 mm, and 10.38 mm from the module body (diode; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Package_TO_SOT_SMD.3dshapes/SOT-23-6.step)
-    NOTE tall-part-beside-module: SW1001 (board_control) DIP-4 is 2.35001 mm tall, 0.850008 mm above the module underside at 1.5 mm, and 10.76 mm from the module body (switch; highest point of the 3D model ${KIPRJMOD}/../parts/DSHP04TSGER/DSHP04TSGER.wrl)
-    NOTE tall-part-beside-module: SW3001 (can_bus) DIP-4 is 2.35001 mm tall, 0.850008 mm above the module underside at 1.5 mm, and 11.54 mm from the module body (switch; highest point of the 3D model ${KIPRJMOD}/../parts/DSHP04TSGER/DSHP04TSGER.wrl)
-    NOTE tall-part-beside-module: Q6001 (esc_power) IPT007N06N is 2.30988 mm tall, 0.809876 mm above the module underside at 1.5 mm, and 11.5426 mm from the module body (transistor; highest point of the 3D model ${KIPRJMOD}/../parts/IPT007N06N/IPT007N06N.wrl)
-    NOTE tall-part-beside-module: J4002 (debug_boot) HX_JN1.27-2x5 is 5.19989 mm tall, 3.69989 mm above the module underside at 1.5 mm, and 12.05 mm from the module body (header; highest point of the 3D model ${KIPRJMOD}/../parts/HX_JN1.27-2x5_TP_H4.9/HX_JN1.27-2x5_TP_H4.9.wrl)
-    NOTE tall-part-beside-module: U10002 (pd_input) USBLC6-2SC6 is 1.64897 mm tall, 0.148968 mm above the module underside at 1.5 mm, and 13.6609 mm from the module body (diode; highest point of the 3D model ${KIPRJMOD}/../parts/USBLC6-2SC6/USBLC6-2SC6.wrl)
-    NOTE tall-part-beside-module: J6001 (esc_power) XT60PW-M is 8.10005 mm tall, 6.60005 mm above the module underside at 1.5 mm, and 13.89 mm from the module body (connector; highest point of the 3D model ${KIPRJMOD}/../parts/XT60PW-M/XT60PW-M.wrl)
-    NOTE tall-part-beside-module: J6002 (esc_power) XT60PW-M is 8.10005 mm tall, 6.60005 mm above the module underside at 1.5 mm, and 13.89 mm from the module body (connector; highest point of the 3D model ${KIPRJMOD}/../parts/XT60PW-M/XT60PW-M.wrl)
-    NOTE tall-part-beside-module: D5001 (esc_io) SRV05-4 is 1.55 mm tall, 0.05 mm above the module underside at 1.5 mm, and 14.73 mm from the module body (diode; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Package_TO_SOT_SMD.3dshapes/SOT-23-6.step)
-    NOTE tall-part-beside-module: D10001 (pd_input) SMBJ22A is 2.15 mm tall, 0.65 mm above the module underside at 1.5 mm, and 15.5018 mm from the module body (diode; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Diode_SMD.3dshapes/D_SMB.step)
-    NOTE tall-part-beside-module: J5002 (esc_io) ZX-SH1.0-4PLT is 4.42011 mm tall, 2.92011 mm above the module underside at 1.5 mm, and 15.53 mm from the module body (connector; highest point of the 3D model ${KIPRJMOD}/../parts/ZX-SH1.0-4PLT/ZX-SH1.0-4PLT.wrl)
-    NOTE tall-part-beside-module: J20001 (usb_uart_connector) TYPE-C-31-M-12 is 3.25108 mm tall, 1.75108 mm above the module underside at 1.5 mm, and 16.5959 mm from the module body (connector; highest point of the 3D model ${KIPRJMOD}/../parts/TYPE-C-31-M-12/TYPE-C-31-M-12.wrl)
-    NOTE tall-part-beside-module: C10002 (pd_input) 10u is 2.5 mm tall, 1 mm above the module underside at 1.5 mm, and 16.6043 mm from the module body (capacitor; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_1210_3225Metric.step)
-    NOTE tall-part-beside-module: J3001 (can_bus) ZX-SH1.0-4PLT is 4.42011 mm tall, 2.92011 mm above the module underside at 1.5 mm, and 16.99 mm from the module body (connector; highest point of the 3D model ${KIPRJMOD}/../parts/ZX-SH1.0-4PLT/ZX-SH1.0-4PLT.wrl)
-    NOTE tall-part-beside-module: D5002 (esc_io) SRV05-4 is 1.55 mm tall, 0.05 mm above the module underside at 1.5 mm, and 17.7251 mm from the module body (diode; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Package_TO_SOT_SMD.3dshapes/SOT-23-6.step)
-    NOTE tall-part-beside-module: J9001 (microsd) TF-01A is 1.94991 mm tall, 0.449906 mm above the module underside at 1.5 mm, and 18.8939 mm from the module body (connector; highest point of the 3D model ${KIPRJMOD}/../parts/TF-01A/TF-01A.wrl)
-    NOTE tall-part-beside-module: J21001 (vbat_supply) A2541WV-2x3P is 8.54 mm tall, 7.04 mm above the module underside at 1.5 mm, and 19.99 mm from the module body (header; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Connector_PinHeader_2.54mm.3dshapes/PinHeader_2x03_P2.54mm_Vertical.step)
-    NOTE tall-part-beside-module: J10001 (pd_input) TYPE-C-31-M-12 is 3.25108 mm tall, 1.75108 mm above the module underside at 1.5 mm, and 20.8459 mm from the module body (connector; highest point of the 3D model ${KIPRJMOD}/../parts/TYPE-C-31-M-12/TYPE-C-31-M-12.wrl)
-    NOTE tall-part-beside-module: J4001 (debug_boot) 878311420 is 5.89991 mm tall, 4.39991 mm above the module underside at 1.5 mm, and 20.88 mm from the module body (header; highest point of the 3D model ${KIPRJMOD}/../parts/878311420/878311420.wrl)
-    NOTE tall-part-beside-module: J5001 (esc_io) HX PZ2.54-3x8P ZZ is 8.54 mm tall, 7.04 mm above the module underside at 1.5 mm, and 22.76 mm from the module body (header; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Connector_PinHeader_2.54mm.3dshapes/PinHeader_1x08_P2.54mm_Vertical.step)
-    NOTE termination-distance-report: RN5002 (esc_io) is 5.71144 mm from U5001.13; the reach of a series part is 4 mm
-    NOTE termination-distance-report: C7001 (ethernet) is 2.88 mm from T7001.24; the reach of a terminate part is 3 mm
-    NOTE termination-distance-report: C7002 (ethernet) is 2.26184 mm from T7001.21; the reach of a terminate part is 3 mm
-    NOTE termination-distance-report: R7001 (ethernet) is 2.12097 mm from T7001.24; the reach of a terminate part is 3 mm
-    NOTE termination-distance-report: D6003 (esc_power) is 1.85237 mm from U6002.22; the reach of a series part is 4 mm
-    NOTE termination-distance-report: R3002 (can_bus) is 1.7951 mm from U3001.7; the reach of a terminate part is 3 mm
-    NOTE termination-distance-report: C7004 (ethernet) is 1.70284 mm from T7001.15; the reach of a terminate part is 3 mm
-    NOTE termination-distance-report: R6009 (esc_power) is 1.39999 mm from U6002.10; the reach of a series part is 4 mm
-    NOTE termination-distance-report: R6014 (esc_power) is 1.375 mm from R6012.2; the reach of a series part is 4 mm
-    NOTE termination-distance-report: R7003 (ethernet) is 1.26037 mm from T7001.18; the reach of a terminate part is 3 mm
-    NOTE termination-distance-report: D21002 (vbat_supply) is 0.955876 mm from U21001.2; the reach of a series part is 4 mm
+    NOTE tall-part-beside-module: SW1001 (board_control) DIP-4 is 2.35001 mm tall, 0.850008 mm above the module underside at 1.5 mm, and 3.01 mm from the module body (switch; highest point of the 3D model ${KIPRJMOD}/../parts/DSHP04TSGER/DSHP04TSGER.wrl)
+    NOTE tall-part-beside-module: J5002 (esc_io) ZX-SH1.0-4PLT is 4.42011 mm tall, 2.92011 mm above the module underside at 1.5 mm, and 3.01 mm from the module body (connector; highest point of the 3D model ${KIPRJMOD}/../parts/ZX-SH1.0-4PLT/ZX-SH1.0-4PLT.wrl)
+    NOTE tall-part-beside-module: U3001 (can_bus) TCAN1042HGVDR is 1.70002 mm tall, 0.200022 mm above the module underside at 1.5 mm, and 3.04 mm from the module body (integrated_circuit; highest point of the 3D model ${KIPRJMOD}/../parts/TCAN1042HGVDR/TCAN1042HGVDR.wrl)
+    NOTE tall-part-beside-module: J1001 (board_control) ZX-SH1.0-4PLT is 4.42011 mm tall, 2.92011 mm above the module underside at 1.5 mm, and 3.05 mm from the module body (connector; highest point of the 3D model ${KIPRJMOD}/../parts/ZX-SH1.0-4PLT/ZX-SH1.0-4PLT.wrl)
+    NOTE tall-part-beside-module: SW3001 (can_bus) DIP-4 is 2.35001 mm tall, 0.850008 mm above the module underside at 1.5 mm, and 3.05 mm from the module body (switch; highest point of the 3D model ${KIPRJMOD}/../parts/DSHP04TSGER/DSHP04TSGER.wrl)
+    NOTE tall-part-beside-module: U2001 (bringup_en) SN74LVC1G08 is 1.55 mm tall, 0.05 mm above the module underside at 1.5 mm, and 3.05 mm from the module body (integrated_circuit; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Package_TO_SOT_SMD.3dshapes/SOT-23-5.step)
+    NOTE tall-part-beside-module: C7001 (ethernet) 1n is 1.6 mm tall, 0.1 mm above the module underside at 1.5 mm, and 3.055 mm from the module body (capacitor; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_1206_3216Metric.step)
+    NOTE tall-part-beside-module: C13016 (power_som) 10u is 1.6 mm tall, 0.1 mm above the module underside at 1.5 mm, and 3.1099 mm from the module body (capacitor; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_1206_3216Metric.step)
+    NOTE tall-part-beside-module: SW4002 (debug_boot) RESET is 1.54991 mm tall, 0.049908 mm above the module underside at 1.5 mm, and 3.2 mm from the module body (switch; highest point of the 3D model ${KIPRJMOD}/../parts/TS-1187A-B-A-B/TS-1187A-B-A-B.wrl)
+    NOTE tall-part-beside-module: J21001 (vbat_supply) A2541WV-2x3P is 8.54 mm tall, 7.04 mm above the module underside at 1.5 mm, and 3.24 mm from the module body (header; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Connector_PinHeader_2.54mm.3dshapes/PinHeader_2x03_P2.54mm_Vertical.step)
+    NOTE tall-part-beside-module: U11003 (power) AP2112K-1.8 is 1.55 mm tall, 0.05 mm above the module underside at 1.5 mm, and 3.6799 mm from the module body (integrated_circuit; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Package_TO_SOT_SMD.3dshapes/SOT-23-5.step)
+    NOTE tall-part-beside-module: L21001 (vbat_supply) 10uH is 4.21005 mm tall, 2.71005 mm above the module underside at 1.5 mm, and 3.84 mm from the module body (inductor; highest point of the 3D model ${KIPRJMOD}/../parts/SWPA8040S100MT/SWPA8040S100MT.wrl)
+    NOTE tall-part-beside-module: D5003 (esc_io) SRV05-4 is 1.55 mm tall, 0.05 mm above the module underside at 1.5 mm, and 4.26 mm from the module body (diode; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Package_TO_SOT_SMD.3dshapes/SOT-23-6.step)
+    NOTE tall-part-beside-module: C11003 (power) 10u is 1.6 mm tall, 0.1 mm above the module underside at 1.5 mm, and 4.5499 mm from the module body (capacitor; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_1206_3216Metric.step)
+    NOTE tall-part-beside-module: C10002 (pd_input) 10u is 2.5 mm tall, 1 mm above the module underside at 1.5 mm, and 5.1798 mm from the module body (capacitor; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_1210_3225Metric.step)
+    NOTE tall-part-beside-module: L13003 (power_som) 10uH is 4.21005 mm tall, 2.71005 mm above the module underside at 1.5 mm, and 5.5 mm from the module body (inductor; highest point of the 3D model ${KIPRJMOD}/../parts/SWPA8040S100MT/SWPA8040S100MT.wrl)
+    NOTE tall-part-beside-module: J3001 (can_bus) ZX-SH1.0-4PLT is 4.42011 mm tall, 2.92011 mm above the module underside at 1.5 mm, and 6.36266 mm from the module body (connector; highest point of the 3D model ${KIPRJMOD}/../parts/ZX-SH1.0-4PLT/ZX-SH1.0-4PLT.wrl)
+    NOTE tall-part-beside-module: C21004 (vbat_supply) 4u7/100V is 2.5 mm tall, 1 mm above the module underside at 1.5 mm, and 6.7999 mm from the module body (capacitor; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_1210_3225Metric.step)
+    NOTE tall-part-beside-module: T7001 (ethernet) HX5008NLT is 6.37997 mm tall, 4.87997 mm above the module underside at 1.5 mm, and 8.2 mm from the module body (transformer; highest point of the 3D model ${KIPRJMOD}/../parts/HX5008NLT/HX5008NLT.wrl)
+    NOTE tall-part-beside-module: J4002 (debug_boot) HX_JN1.27-2x5 is 5.19989 mm tall, 3.69989 mm above the module underside at 1.5 mm, and 8.47106 mm from the module body (header; highest point of the 3D model ${KIPRJMOD}/../parts/HX_JN1.27-2x5_TP_H4.9/HX_JN1.27-2x5_TP_H4.9.wrl)
+    NOTE tall-part-beside-module: C7002 (ethernet) 1n is 1.6 mm tall, 0.1 mm above the module underside at 1.5 mm, and 8.925 mm from the module body (capacitor; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_1206_3216Metric.step)
+    NOTE tall-part-beside-module: L11001 (power) 10uH is 4.21005 mm tall, 2.71005 mm above the module underside at 1.5 mm, and 9.09832 mm from the module body (inductor; highest point of the 3D model ${KIPRJMOD}/../parts/SWPA8040S100MT/SWPA8040S100MT.wrl)
+    NOTE tall-part-beside-module: J3002 (can_bus) ZX-SH1.0-4PLT is 4.42011 mm tall, 2.92011 mm above the module underside at 1.5 mm, and 9.35 mm from the module body (connector; highest point of the 3D model ${KIPRJMOD}/../parts/ZX-SH1.0-4PLT/ZX-SH1.0-4PLT.wrl)
+    NOTE tall-part-beside-module: C21003 (vbat_supply) 4u7/100V is 2.5 mm tall, 1 mm above the module underside at 1.5 mm, and 9.4501 mm from the module body (capacitor; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_1210_3225Metric.step)
+    NOTE tall-part-beside-module: C13015 (power_som) 10u is 1.6 mm tall, 0.1 mm above the module underside at 1.5 mm, and 10.1101 mm from the module body (capacitor; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_1206_3216Metric.step)
+    NOTE tall-part-beside-module: Q6002 (esc_power) IPT007N06N is 2.30988 mm tall, 0.809876 mm above the module underside at 1.5 mm, and 10.6 mm from the module body (transistor; highest point of the 3D model ${KIPRJMOD}/../parts/IPT007N06N/IPT007N06N.wrl)
+    NOTE tall-part-beside-module: D10001 (pd_input) SMBJ22A is 2.15 mm tall, 0.65 mm above the module underside at 1.5 mm, and 11.1018 mm from the module body (diode; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Diode_SMD.3dshapes/D_SMB.step)
+    NOTE tall-part-beside-module: C7005 (ethernet) 1n is 1.6 mm tall, 0.1 mm above the module underside at 1.5 mm, and 11.395 mm from the module body (capacitor; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_1206_3216Metric.step)
+    NOTE tall-part-beside-module: C21013 (vbat_supply) 4u7/100V is 2.5 mm tall, 1 mm above the module underside at 1.5 mm, and 12.1501 mm from the module body (capacitor; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_1210_3225Metric.step)
+    NOTE tall-part-beside-module: C11002 (power) 10u is 1.6 mm tall, 0.1 mm above the module underside at 1.5 mm, and 12.2657 mm from the module body (capacitor; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_1206_3216Metric.step)
+    NOTE tall-part-beside-module: J4001 (debug_boot) 878311420 is 5.89991 mm tall, 4.39991 mm above the module underside at 1.5 mm, and 12.7537 mm from the module body (header; highest point of the 3D model ${KIPRJMOD}/../parts/878311420/878311420.wrl)
+    NOTE tall-part-beside-module: SW4001 (debug_boot) DIP-4 is 2.35001 mm tall, 0.850008 mm above the module underside at 1.5 mm, and 12.8 mm from the module body (switch; highest point of the 3D model ${KIPRJMOD}/../parts/DSHP04TSGER/DSHP04TSGER.wrl)
+    NOTE tall-part-beside-module: U5005 (esc_io) SN74LVC125ADR is 1.99949 mm tall, 0.499488 mm above the module underside at 1.5 mm, and 13.79 mm from the module body (integrated_circuit; highest point of the 3D model ${KIPRJMOD}/../parts/SN74LVC125ADR/SN74LVC125ADR.wrl)
+    NOTE tall-part-beside-module: Q6001 (esc_power) IPT007N06N is 2.30988 mm tall, 0.809876 mm above the module underside at 1.5 mm, and 13.884 mm from the module body (transistor; highest point of the 3D model ${KIPRJMOD}/../parts/IPT007N06N/IPT007N06N.wrl)
+    NOTE tall-part-beside-module: U10002 (pd_input) USBLC6-2SC6 is 1.64897 mm tall, 0.148968 mm above the module underside at 1.5 mm, and 14.4109 mm from the module body (diode; highest point of the 3D model ${KIPRJMOD}/../parts/USBLC6-2SC6/USBLC6-2SC6.wrl)
+    NOTE tall-part-beside-module: C7003 (ethernet) 1n is 1.6 mm tall, 0.1 mm above the module underside at 1.5 mm, and 15.895 mm from the module body (capacitor; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_1206_3216Metric.step)
+    NOTE tall-part-beside-module: J14001 (rj45_connector) KH-5224-8P8C-D is 16.3001 mm tall, 14.8001 mm above the module underside at 1.5 mm, and 17.3927 mm from the module body (connector; highest point of the 3D model ${KIPRJMOD}/../parts/KH-5224-8P8C-D/KH-5224-8P8C-D.wrl)
+    NOTE tall-part-beside-module: U5007 (esc_io) SN74LVC1G08 is 1.55 mm tall, 0.05 mm above the module underside at 1.5 mm, and 18.1609 mm from the module body (integrated_circuit; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Package_TO_SOT_SMD.3dshapes/SOT-23-5.step)
+    NOTE tall-part-beside-module: D5002 (esc_io) SRV05-4 is 1.55 mm tall, 0.05 mm above the module underside at 1.5 mm, and 19.1689 mm from the module body (diode; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Package_TO_SOT_SMD.3dshapes/SOT-23-6.step)
+    NOTE tall-part-beside-module: J9001 (microsd) TF-01A is 1.94991 mm tall, 0.449906 mm above the module underside at 1.5 mm, and 19.6439 mm from the module body (connector; highest point of the 3D model ${KIPRJMOD}/../parts/TF-01A/TF-01A.wrl)
+    NOTE tall-part-beside-module: C7004 (ethernet) 1n is 1.6 mm tall, 0.1 mm above the module underside at 1.5 mm, and 21.1151 mm from the module body (capacitor; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Capacitor_SMD.3dshapes/C_1206_3216Metric.step)
+    NOTE tall-part-beside-module: J10001 (pd_input) TYPE-C-31-M-12 is 3.25108 mm tall, 1.75108 mm above the module underside at 1.5 mm, and 21.5959 mm from the module body (connector; highest point of the 3D model ${KIPRJMOD}/../parts/TYPE-C-31-M-12/TYPE-C-31-M-12.wrl)
+    NOTE tall-part-beside-module: U5004 (esc_io) SN74LVC125ADR is 1.99949 mm tall, 0.499488 mm above the module underside at 1.5 mm, and 22.04 mm from the module body (integrated_circuit; highest point of the 3D model ${KIPRJMOD}/../parts/SN74LVC125ADR/SN74LVC125ADR.wrl)
+    NOTE tall-part-beside-module: SW1002 (board_control) USER is 1.54991 mm tall, 0.049908 mm above the module underside at 1.5 mm, and 22.1 mm from the module body (switch; highest point of the 3D model ${KIPRJMOD}/../parts/TS-1187A-B-A-B/TS-1187A-B-A-B.wrl)
+    NOTE tall-part-beside-module: U20001 (usb_uart_connector) USBLC6-2SC6 is 1.64897 mm tall, 0.148968 mm above the module underside at 1.5 mm, and 22.2038 mm from the module body (diode; highest point of the 3D model ${KIPRJMOD}/../parts/USBLC6-2SC6/USBLC6-2SC6.wrl)
+    NOTE tall-part-beside-module: SW5001 (esc_io) DIP-4 is 2.35001 mm tall, 0.850008 mm above the module underside at 1.5 mm, and 23.05 mm from the module body (switch; highest point of the 3D model ${KIPRJMOD}/../parts/DSHP04TSGER/DSHP04TSGER.wrl)
+    NOTE tall-part-beside-module: D5001 (esc_io) SRV05-4 is 1.55 mm tall, 0.05 mm above the module underside at 1.5 mm, and 23.08 mm from the module body (diode; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Package_TO_SOT_SMD.3dshapes/SOT-23-6.step)
+    NOTE tall-part-beside-module: J5001 (esc_io) HX PZ2.54-3x8P ZZ is 8.54 mm tall, 7.04 mm above the module underside at 1.5 mm, and 23.51 mm from the module body (header; highest point of the 3D model ${KICAD10_3DMODEL_DIR}/Connector_PinHeader_2.54mm.3dshapes/PinHeader_1x08_P2.54mm_Vertical.step)
+    NOTE tall-part-beside-module: J6001 (esc_power) XT60PW-M is 8.10005 mm tall, 6.60005 mm above the module underside at 1.5 mm, and 25.39 mm from the module body (connector; highest point of the 3D model ${KIPRJMOD}/../parts/XT60PW-M/XT60PW-M.wrl)
+    NOTE tall-part-beside-module: J6002 (esc_power) XT60PW-M is 8.10005 mm tall, 6.60005 mm above the module underside at 1.5 mm, and 25.39 mm from the module body (connector; highest point of the 3D model ${KIPRJMOD}/../parts/XT60PW-M/XT60PW-M.wrl)
+    NOTE tall-part-beside-module: J20001 (usb_uart_connector) TYPE-C-31-M-12 is 3.25108 mm tall, 1.75108 mm above the module underside at 1.5 mm, and 29.504 mm from the module body (connector; highest point of the 3D model ${KIPRJMOD}/../parts/TYPE-C-31-M-12/TYPE-C-31-M-12.wrl)
+    NOTE termination-distance-report: RN5002 (esc_io) is 5.55819 mm from U5001.13; the reach of a series part is 4 mm
+    NOTE termination-distance-report: D6003 (esc_power) is 3.64778 mm from U6002.22; the reach of a series part is 4 mm
+    NOTE termination-distance-report: R11007 (power) is 2.83959 mm from Q11001.1; the reach of a series part is 4 mm
+    NOTE termination-distance-report: C7004 (ethernet) is 2.63811 mm from T7001.15; the reach of a terminate part is 3 mm
+    NOTE termination-distance-report: C7001 (ethernet) is 1.88 mm from T7001.24; the reach of a terminate part is 3 mm
+    NOTE termination-distance-report: C7002 (ethernet) is 1.48228 mm from T7001.21; the reach of a terminate part is 3 mm
+    NOTE termination-distance-report: R7001 (ethernet) is 1.33408 mm from T7001.24; the reach of a terminate part is 3 mm
+    NOTE termination-distance-report: D21002 (vbat_supply) is 1.3285 mm from U21001.2; the reach of a series part is 4 mm
+    NOTE termination-distance-report: RN5001 (esc_io) is 1.179 mm from U5001.17; the reach of a series part is 4 mm
+    NOTE termination-distance-report: R3002 (can_bus) is 1.0451 mm from U3001.7; the reach of a terminate part is 3 mm
+    NOTE termination-distance-report: R6009 (esc_power) is 0.899994 mm from U6002.10; the reach of a series part is 4 mm
     NOTE termination-distance-report: R6004 (esc_power) is 0.850007 mm from U6002.14; the reach of a series part is 4 mm
-    NOTE termination-distance-report: C7006 (ethernet) is 0.8225 mm from T7001.1; the reach of a terminate part is 3 mm
-    NOTE termination-distance-report: R7002 (ethernet) is 0.8225 mm from T7001.21; the reach of a terminate part is 3 mm
-    NOTE termination-distance-report: R7004 (ethernet) is 0.8225 mm from T7001.15; the reach of a terminate part is 3 mm
-    NOTE termination-distance-report: C7003 (ethernet) is 0.7475 mm from T7001.18; the reach of a terminate part is 3 mm
-    NOTE termination-distance-report: R11007 (power) is 0.725 mm from Q11001.1; the reach of a series part is 4 mm
-    NOTE termination-distance-report: C7005 (ethernet) is 0.665676 mm from R7003.2; the reach of a terminate part is 3 mm
-    NOTE termination-distance-report: RN5001 (esc_io) is 0.617997 mm from U5001.17; the reach of a series part is 4 mm
+    NOTE termination-distance-report: C7005 (ethernet) is 0.832541 mm from R7003.2; the reach of a terminate part is 3 mm
+    NOTE termination-distance-report: C7003 (ethernet) is 0.79822 mm from T7001.18; the reach of a terminate part is 3 mm
+    NOTE termination-distance-report: R6014 (esc_power) is 0.614919 mm from R6012.2; the reach of a series part is 4 mm
+    NOTE termination-distance-report: R7003 (ethernet) is 0.608096 mm from T7001.18; the reach of a terminate part is 3 mm
+    NOTE termination-distance-report: R7004 (ethernet) is 0.608096 mm from T7001.15; the reach of a terminate part is 3 mm
+    NOTE termination-distance-report: R7002 (ethernet) is 0.5725 mm from T7001.21; the reach of a terminate part is 3 mm
     NOTE termination-distance-report: R5015 (esc_io) is 0.342996 mm from U5001.19; the reach of a series part is 4 mm
+    NOTE termination-distance-report: C7006 (ethernet) is 0 mm from T7001.1; the reach of a terminate part is 3 mm
     NOTE input-capacitor-nearest: U11001 (power) VIN2 (pad 12): input capacitor C11025 at 0.955001 mm
     NOTE input-capacitor-nearest: U11001 (power) VIN1 (pad 8): input capacitor C11001 at 0.955001 mm
     NOTE input-capacitor-nearest: U11002 (power) VIN2 (pad 12): input capacitor C11029 at 0.955001 mm
     NOTE input-capacitor-nearest: U11002 (power) VIN1 (pad 8): input capacitor C11007 at 0.955001 mm
-    NOTE input-capacitor-nearest: U13004 (power_som) VIN2 (pad 12): input capacitor C13025 at 0.525001 mm
+    NOTE input-capacitor-nearest: U13004 (power_som) VIN2 (pad 12): input capacitor C13025 at 2.075 mm
     NOTE input-capacitor-nearest: U13004 (power_som) VIN1 (pad 8): input capacitor C13015 at 0.700001 mm
     NOTE input-capacitor-nearest: U21002 (vbat_supply) VIN2 (pad 12): input capacitor C21006 at 0.525001 mm
     NOTE input-capacitor-nearest: U21002 (vbat_supply) VIN1 (pad 8): input capacitor C21005 at 0.525001 mm
-    NOTE nothing-sensitive-under-inductor: inductor L11001 (power): nearest sense or timing part is R19002 (uart_bridge), 10.4542 mm centre to centre
-    NOTE nothing-sensitive-under-inductor: inductor L11002 (power): nearest sense or timing part is R19003 (uart_bridge), 25.2523 mm centre to centre
-    NOTE nothing-sensitive-under-inductor: inductor L13003 (power_som): nearest sense or timing part is R21002 (vbat_supply), 19.217 mm centre to centre
-    NOTE nothing-sensitive-under-inductor: inductor L21001 (vbat_supply): nearest sense or timing part is R10003 (pd_input), 16.3317 mm centre to centre
-    NOTE protect-first-after-connector: D3001 (can_bus) is 3.68043 mm from J3001.2 on net /can_bus/CAN_H
-    NOTE protect-first-after-connector: D5001 (esc_io) is 7.463 mm from J5001.2 on net /esc_io/ESC_OUT1
-    NOTE protect-first-after-connector: D5002 (esc_io) is 4.963 mm from J5001.6 on net /esc_io/ESC_OUT5
-    NOTE protect-first-after-connector: D5003 (esc_io) is 5.26 mm from J5002.2 on net /esc_io/TLM_CONN
+    NOTE nothing-sensitive-under-inductor: inductor L11001 (power): nearest sense or timing part is RS12002 (power_mon), 17.1105 mm centre to centre
+    NOTE nothing-sensitive-under-inductor: inductor L11002 (power): nearest sense or timing part is RS12002 (power_mon), 19.0971 mm centre to centre
+    NOTE nothing-sensitive-under-inductor: inductor L13003 (power_som): nearest sense or timing part is RS12003 (power_mon), 18.3506 mm centre to centre
+    NOTE nothing-sensitive-under-inductor: inductor L21001 (vbat_supply): nearest sense or timing part is R21003 (vbat_supply), 23.017 mm centre to centre
+    NOTE protect-first-after-connector: D3001 (can_bus) is 3.70245 mm from J3001.2 on net /can_bus/CAN_H
+    NOTE protect-first-after-connector: D5001 (esc_io) is 7.713 mm from J5001.2 on net /esc_io/ESC_OUT1
+    NOTE protect-first-after-connector: D5002 (esc_io) is 5.81416 mm from J5001.6 on net /esc_io/ESC_OUT5
+    NOTE protect-first-after-connector: D5003 (esc_io) is 5.01 mm from J5002.2 on net /esc_io/TLM_CONN
     NOTE protect-first-after-connector: D6001 (esc_power) protects F6001.2, which is not a connector pin; its order is not judged
     NOTE protect-first-after-connector: D6002 (esc_power) protects D6001.2, which is not a connector pin; its order is not judged
     NOTE protect-first-after-connector: U9002 (microsd) is 5.64808 mm from J9001.5 on net /microsd/SD_CARD_CLK
-    NOTE protect-first-after-connector: D10001 (pd_input) is 4.31335 mm from J10001.A4B9 on net +VBUS_IN
-    NOTE protect-first-after-connector: U10002 (pd_input) is 4.92767 mm from J10001.A6 on net /pd_input/PD_USB_DP_CONN
-    NOTE protect-first-after-connector: U20001 (usb_uart_connector) is 4.5658 mm from J20001.A6 on net /usb_uart_connector/USB_UART_DP_CONN
-    NOTE bypass-on-pin-face-or-under: bypass distance to the served pin over 58 capacitors: least 0 mm, median 0.775001 mm, greatest 2.89999 mm; 2 beyond the 2 mm bypass reach; 29 on the pin's face, 29 directly under
-    NOTE sense-distance-report: RS12003 (power_mon) is 4.37013 mm from U12001.2 (same face)
-    NOTE sense-distance-report: R19002 (uart_bridge) is 3.9936 mm from U19001.8 (same face)
-    NOTE sense-distance-report: R19003 (uart_bridge) is 3.635 mm from U19001.8 (same face)
-    NOTE sense-distance-report: R6013 (esc_power) is 3.26 mm from R6012.2 (same face)
-    NOTE sense-distance-report: RS12001 (power_mon) is 2.68522 mm from U12001.12 (same face)
-    NOTE sense-distance-report: R10003 (pd_input) is 2.14152 mm from U10001.8 (same face)
-    NOTE sense-distance-report: RS12002 (power_mon) is 2.0475 mm from U12001.15 (same face)
-    NOTE sense-distance-report: R10004 (pd_input) is 1.96475 mm from U10001.8 (same face)
-    NOTE sense-distance-report: RS12004 (power_mon) is 1.72545 mm from U12002.12 (same face)
-    NOTE sense-distance-report: RS6001 (esc_power) is 1.56877 mm from U6001.10 (same face)
+    NOTE protect-first-after-connector: D10001 (pd_input) is 4.55 mm from J10001.A4B9 on net +VBUS_IN
+    NOTE protect-first-after-connector: U10002 (pd_input) is 4.29487 mm from J10001.A6 on net /pd_input/PD_USB_DP_CONN
+    NOTE protect-first-after-connector: U20001 (usb_uart_connector) is 6.86709 mm from J20001.A6 on net /usb_uart_connector/USB_UART_DP_CONN
+    NOTE bypass-on-pin-face-or-under: bypass distance to the served pin over 58 capacitors: least 0 mm, median 0.875001 mm, greatest 2.89999 mm; 2 beyond the 2 mm bypass reach; 27 on the pin's face, 31 directly under
+    NOTE sense-distance-report: RS12001 (power_mon) is 5.18811 mm from U12001.12 (same face)
+    NOTE sense-distance-report: RS12003 (power_mon) is 4.71484 mm from U12001.2 (same face)
+    NOTE sense-distance-report: RS12004 (power_mon) is 4.60996 mm from U12002.12 (opposite face)
+    NOTE sense-distance-report: R19003 (uart_bridge) is 3.90305 mm from U19001.8 (same face)
+    NOTE sense-distance-report: R6013 (esc_power) is 3.76671 mm from R6012.2 (same face)
+    NOTE sense-distance-report: R19002 (uart_bridge) is 3.3777 mm from U19001.8 (same face)
+    NOTE sense-distance-report: R6012 (esc_power) is 3.375 mm from J6002.2 (opposite face)
+    NOTE sense-distance-report: RS6001 (esc_power) is 2.81401 mm from U6001.10 (opposite face)
+    NOTE sense-distance-report: R10003 (pd_input) is 2.3535 mm from U10001.8 (same face)
+    NOTE sense-distance-report: R10004 (pd_input) is 2.3535 mm from U10001.8 (same face)
+    NOTE sense-distance-report: RS12002 (power_mon) is 2.106 mm from U12001.15 (same face)
+    NOTE sense-distance-report: R6005 (esc_power) is 1.90262 mm from U6002.20 (opposite face)
+    NOTE sense-distance-report: R21003 (vbat_supply) is 1.40175 mm from U21001.8 (opposite face)
     NOTE sense-distance-report: R21002 (vbat_supply) is 0.853499 mm from U21001.7 (opposite face)
-    NOTE sense-distance-report: R21003 (vbat_supply) is 0.401748 mm from U21001.8 (opposite face)
-    NOTE sense-distance-report: R6005 (esc_power) is 0.399994 mm from U6002.20 (opposite face)
-    NOTE sense-distance-report: R6012 (esc_power) is 0.375004 mm from J6002.2 (opposite face)
-    NOTE sense-distance-report: RT6001 (esc_power) is 0.314008 mm from J6001.1 (opposite face)
+    NOTE sense-distance-report: RT6001 (esc_power) is 0.696771 mm from J6001.1 (opposite face)
     NOTE sense-distance-report: R21001 (vbat_supply) is 0 mm from U21001.7 (opposite face)
 

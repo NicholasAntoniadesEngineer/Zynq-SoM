@@ -119,7 +119,7 @@ STEP   floorplan.sizing
   CALC   side_census                    = 20            blocks     <- n_blocks=20 n_two_face=0 n_chose_bottom=0 n_single_face=20  ::  n_blocks = n_two_face + n_single_face
   CALC   sizing_winner                  = 180x165       mm         <- board_w=180 board_h=165 area=29700 est_cross=19785 budget=17061.4 headroom=-2723.7 plan=conservative  ::  headroom = budget - est_cross
 STEP   gates
-  CALC   law5_airwire_measured          = 13942         mm         <- cross_mm=13942 budget_mm=11948.4 headroom_mm=-1993.6 n_cross=502 n_subsystems=32 board_w=151.5 board_h=102.25  ::  budget_mm = cross_k * (board_w * board_h) ** 0.5 * n_subsystems
+  CALC   law5_airwire_measured          = 13465.8       mm         <- cross_mm=13465.8 budget_mm=11952.7 headroom_mm=-1513.1 n_cross=538 n_subsystems=32 board_w=141.25 board_h=109.75  ::  budget_mm = cross_k * (board_w * board_h) ** 0.5 * n_subsystems
   CALC   fanout_d13_gate                = 100           subjects   <- n_subjects=100 n_starved=0 baseline=0  ::  starved = clearance < intelligent_need(pins) - touch_eps
 STEP   census
   CALC   quantize_engagement[breathe_anchor_grid] = 74            calls      <- klass=re-validated value=round(round(v / 1.27) * 1.27, 4)  ::  count of calls that ran this registered transform
@@ -231,7 +231,7 @@ STEP   census
   CALC   quantize_engagement[seat_slide] = 28            calls      <- klass=pre-proof value=1.2  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[seat_upper_index] = 7             calls      <- klass=pre-proof value=long(floor(value))  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[seat_vertical_extent] = 7             calls      <- klass=pre-proof value=int(value)  ::  count of calls that ran this registered transform
-  CALC   quantize_engagement[silk_cell_floor] = 11608         calls      <- klass=pre-proof value=int(floor(value / cell))  ::  count of calls that ran this registered transform
+  CALC   quantize_engagement[silk_cell_floor] = 11744         calls      <- klass=pre-proof value=int(floor(value / cell))  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[snap_erosion_bound] = 235           calls      <- klass=proof-preserving value=bound - 0.75 if bound >= 5.0 else bound  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[snap_erosion_pad] = 3             calls      <- klass=proof-preserving value=mm + (0.75 if mm >= 5.0 else 0.0)  ::  count of calls that ran this registered transform
   CALC   quantize_engagement[som_pose_half_mm] = 4842          calls      <- klass=pre-proof value=round(round(v * 2) / 2, 1)  ::  count of calls that ran this registered transform

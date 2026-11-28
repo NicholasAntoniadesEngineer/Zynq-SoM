@@ -1,0 +1,90 @@
+BOARD PLAN
+  airwire between blocks: 4134.3 of 7950.7 mm (52.0%); weighted by net kind 7117.0 of 12397.3 (57.4%)
+  block links: 63; pairs of links that cross between block centres: 144
+  blocks, most spread first (parts, own area mm2, hull mm2, hull over own area; edge parts, fixed parts and test points left out of the areas):
+    power: 51, 448, 2939, 6.6
+    board_control: 33, 323, 2058, 6.4
+    power_mon: 10, 123, 777, 6.3
+    bringup_en: 15, 81, 474, 5.9
+    esc_io: 41, 709, 3667, 5.2
+    power_som: 20, 198, 864, 4.4
+    esc_power: 48, 1197, 5207, 4.3
+    pd_input: 14, 147, 469, 3.2
+    can_bus: 11, 217, 677, 3.1
+    debug_boot: 11, 373, 1140, 3.1
+    microsd: 15, 81, 229, 2.8
+    vbat_supply: 35, 631, 1660, 2.6
+    usb_uart_connector: 5, 29, 54, 1.9
+    uart_bridge: 10, 61, 114, 1.9
+    ethernet: 11, 349, 575, 1.6
+    rj45_connector: 3, 351, 435, 1.2
+    mechanical: 9, 0, 0, 0.0
+    som_decoupling: 18, 0, 0, 0.0
+    som_j1 (module): 1, 0, 0, 0.0
+    som_j2 (module): 1, 0, 0, 0.0
+    som_j3 (module): 1, 0, 0, 0.0
+  links, heaviest first (weighted mm, mm, nets):
+    ethernet - rj45_connector: 1283.5, 347.8, 9
+    microsd - som_j1: 717.2, 179.3, 6
+    ethernet - som_j1: 665.3, 166.3, 8
+    esc_io - som_j2: 622.3, 622.3, 15
+    pd_input - som_j1: 462.0, 194.1, 4
+    som_j1 - debug_boot: 460.4, 460.4, 11
+    power - power_mon: 176.0, 88.0, 4
+    uart_bridge - usb_uart_connector: 155.1, 57.1, 3
+    board_control - power_mon: 137.4, 108.0, 4
+    board_control - esc_power: 128.0, 121.1, 5
+    power - esc_io: 116.0, 58.0, 2
+    uart_bridge - som_j2: 104.5, 104.5, 2
+    esc_power - som_j1: 99.6, 99.6, 2
+    vbat_supply - esc_power: 97.2, 48.6, 1
+    esc_io - som_j3: 93.4, 93.4, 4
+    mechanical - rj45_connector: 92.5, 92.5, 1
+    power_mon - vbat_supply: 85.0, 42.5, 1
+    board_control - som_j2: 83.8, 83.8, 2
+    power_som - som_decoupling: 72.6, 36.3, 1
+    board_control - esc_io: 72.0, 62.4, 4
+    bringup_en - som_j1: 67.4, 67.4, 3
+    board_control - vbat_supply: 66.4, 66.4, 1
+    pd_input - board_control: 66.3, 66.3, 1
+    board_control - bringup_en: 64.8, 52.5, 4
+    pd_input - som_decoupling: 57.6, 28.8, 1
+    esc_power - som_j2: 56.4, 56.4, 1
+    power - bringup_en: 56.2, 56.2, 3
+    power - can_bus: 50.1, 25.0, 1
+    power_mon - som_j1: 49.4, 49.4, 2
+    pd_input - usb_uart_connector: 48.0, 48.0, 1
+    microsd - som_j2: 47.7, 47.7, 1
+    power - som_decoupling: 43.9, 21.9, 1
+    esc_io - esc_power: 43.1, 43.1, 2
+    esc_io - rj45_connector: 42.4, 21.2, 1
+    board_control - som_j1: 39.4, 39.4, 3
+    usb_uart_connector - ethernet: 38.1, 38.1, 1
+    som_decoupling - som_j1: 37.3, 18.7, 2
+    power - microsd: 34.1, 17.0, 2
+    can_bus - esc_power: 32.9, 32.9, 1
+    som_decoupling - can_bus: 32.0, 16.0, 1
+    pd_input - mechanical: 29.5, 29.5, 1
+    board_control - uart_bridge: 29.0, 14.5, 1
+    pd_input - esc_power: 26.7, 13.3, 1
+    can_bus - som_j2: 24.7, 24.7, 2
+    power_mon - power_som: 23.4, 11.7, 1
+    esc_io - microsd: 23.2, 11.6, 1
+    board_control - som_decoupling: 22.9, 11.4, 1
+    som_decoupling - bringup_en: 21.9, 10.9, 1
+    uart_bridge - debug_boot: 21.4, 10.7, 1
+    power_mon - esc_io: 21.4, 10.7, 1
+    som_decoupling - som_j2: 18.9, 9.5, 1
+    uart_bridge - som_j1: 18.3, 18.3, 2
+    pd_input - vbat_supply: 17.8, 8.9, 2
+    esc_power - debug_boot: 16.9, 8.4, 1
+    power_mon - som_j3: 14.8, 7.4, 1
+    power - power_som: 13.9, 6.9, 1
+    board_control - som_j3: 13.8, 13.8, 1
+    power_mon - bringup_en: 12.8, 6.4, 1
+    som_decoupling - esc_io: 12.1, 6.0, 1
+    vbat_supply - debug_boot: 11.5, 5.7, 1
+    som_decoupling - som_j3: 10.7, 5.4, 1
+    power_mon - som_j2: 8.2, 4.1, 1
+    usb_uart_connector - mechanical: 5.7, 5.7, 1
+

@@ -1,62 +1,62 @@
 TEST POINT GATE: PASS
   a test point sits within its limit of another pad of its net, or adds no more than its limit to the path between two of them, on either face;
   beside a module connector pin the limit counts from the edge of the area kept clear for that connector (the module on top, its escape corridor on the rear)
-  test points on routed nets: 57 (0 over their limit, 56 on the rear face); test points on plane nets connect by a via and are not listed
-    OK   TP1001 (rear) on +3V3_AUX: stub 2.8978 mm to R1006, detour 0.103858 mm, limit 3 mm
-    OK   TP1002 (rear) on AUX_I2C_SCL: stub 2.33446 mm to U3001, detour 0.00967258 mm, limit 3 mm
-    OK   TP1003 (rear) on AUX_I2C_SDA: stub 2.46 mm to U3001, detour 0.287753 mm, limit 3 mm
-    OK   TP11001 (rear) on +2V5_VADJ: stub 5.61742 mm to J26003, detour 13.3949 mm, limit 3 mm plus 2.65 mm to leave the module connector's keep-out
-    OK   TP14001 (rear) on +5V_HDMI_TX: stub 30.6447 mm to D6009, detour 2.07198 mm, limit 3 mm
-    OK   TP14002 (rear) on ZYNQ_HDMI_TX_SCL: stub 0.565 mm to J25002, detour 0.689827 mm, limit 3 mm plus 2.65 mm to leave the module connector's keep-out
-    OK   TP14003 (rear) on ZYNQ_HDMI_TX_SDA: stub 13.0124 mm to J25002, detour 1.34309 mm, limit 3 mm plus 2.65 mm to leave the module connector's keep-out
-    OK   TP15001 (rear) on +5V_LCD: stub 16.1199 mm to L15001, detour 2.964 mm, limit 3 mm
-    OK   TP15002 (rear) on LCD_CTP_SDA: stub 0.565 mm to J25002, detour 2.22266 mm, limit 3 mm plus 2.65 mm to leave the module connector's keep-out
-    OK   TP15003 (rear) on LCD_CTP_SCL: stub 3.775 mm to J25002, detour 4.90121 mm, limit 3 mm plus 2.65 mm to leave the module connector's keep-out
-    OK   TP16001 (rear) on SDIO_CMD: stub 3.6469 mm to J24001, detour 6.29499 mm, limit 1 mm plus 2.65 mm to leave the module connector's keep-out
-    OK   TP16002 (rear) on SDIO_CLK: stub 18.1497 mm to J24001, detour 0.973141 mm, limit 1 mm plus 2.65 mm to leave the module connector's keep-out
-    OK   TP17001 (rear) on +VBUS_IN: stub 12.5723 mm to C30003, detour 2.95763 mm, limit 3 mm
-    OK   TP17002 (rear) on +VIN: stub 44.4058 mm to C17002, detour 1.93604 mm, limit 3 mm
-    OK   TP19001 (rear) on +3V3_PMODX: stub 2.57787 mm to D19001, detour 2.33694 mm, limit 3 mm
-    OK   TP20001 (rear) on +5V: stub 20.533 mm to U36003, detour 0.106786 mm, limit 3 mm
-    OK   TP20002 (rear) on +3V3: stub 8.88609 mm to C35010, detour 7.00777e-07 mm, limit 3 mm
-    OK   TP20003 (rear) on +1V8: stub 7.3899 mm to RS21004, detour 2.91338 mm, limit 3 mm
-    OK   TP22001 (rear) on +5V_SOM: stub 2.93353 mm to C35002, detour 3.81362 mm, limit 3 mm
-    OK   TP27001 (rear) on ZYNQ_PS_UART0_TXD: stub 2.3899 mm to U27001, detour 0.143703 mm, limit 3 mm
-    OK   TP27002 (rear) on ZYNQ_PS_UART0_RXD: stub 4.66232 mm to U27001, detour 0.00702558 mm, limit 3 mm
-    OK   TP28001 (rear) on +3V3_DBG: stub 15.8872 mm to R28001, detour 2.94538 mm, limit 3 mm
-    OK   TP28002 (rear) on DBG_UART_TXD: stub 21.6357 mm to J25002, detour 1.21782 mm, limit 3 mm plus 2.65 mm to leave the module connector's keep-out
-    OK   TP28003 (rear) on DBG_UART_RXD: stub 28.8729 mm to J25002, detour 0.00527698 mm, limit 3 mm plus 2.65 mm to leave the module connector's keep-out
-    OK   TP29001 (rear) on +5V_DBG: stub 12.9664 mm to U28004, detour 0.436656 mm, limit 3 mm
-    OK   TP32001 (rear) on VBUS_OUT_EN: stub 17.5731 mm to J24001, detour 0.370414 mm, limit 3 mm plus 2.65 mm to leave the module connector's keep-out
-    OK   TP36001 (rear) on +5V_MOTOR_IO: stub 0.632487 mm to C36003, detour 1.44495 mm, limit 3 mm
-    OK   TP4001 (rear) on EN_5V0: stub 38.6344 mm to U4001, detour 0.991242 mm, limit 3 mm
-    OK   TP4002 (rear) on EN_3V3: stub 29.5293 mm to U20002, detour 0.60575 mm, limit 3 mm
-    OK   TP4003 (rear) on EN_1V8: stub 4.39105 mm to U20003, detour 1.0167 mm, limit 3 mm
-    OK   TP5001 (rear) on EN_HDMI_TX: stub 4.83994 mm to U5001, detour 0.532841 mm, limit 3 mm
-    OK   TP5002 (rear) on EN_HDMI_RX: stub 2.33271 mm to U5002, detour 5.03541 mm, limit 3 mm
-    OK   TP5003 (rear) on EN_LCD: stub 5.15388 mm to U5003, detour 2.90918 mm, limit 3 mm
-    OK   TP5004 (rear) on EN_CAM: stub 6.90765 mm to U5004, detour 2.98868 mm, limit 3 mm
-    OK   TP5005 (rear) on EN_SD: stub 8.70919 mm to U5005, detour 0.227489 mm, limit 3 mm
-    OK   TP5006 (rear) on EN_USB: stub 2.99 mm to U5006, detour 8.21742 mm, limit 3 mm
-    OK   TP5007 (rear) on EN_PMOD: stub 5.89369 mm to U5007, detour 2.7072 mm, limit 3 mm
-    OK   TP5008 (rear) on EN_USER_LED: stub 5.18097 mm to U5008, detour 2.78754 mm, limit 3 mm
-    OK   TP5009 (top) on EN_LCD_BL: stub 2.86 mm to U5009, limit 3 mm
-    OK   TP5010 (rear) on EN_HDMI_TX_5V: stub 6.43001 mm to U5010, detour 2.97823 mm, limit 3 mm
-    OK   TP5011 (rear) on EN_LCD_5V: stub 14.9609 mm to U5011, detour 2.86477 mm, limit 3 mm
-    OK   TP6001 (rear) on +3V3_HDMI_TX: stub 3.95798 mm to D6001, detour 0.311983 mm, limit 3 mm
-    OK   TP6002 (rear) on +3V3_HDMI_RX: stub 7.77595 mm to D6002, detour 7.85278e-05 mm, limit 3 mm
-    OK   TP6003 (rear) on +3V3_LCD: stub 7.44812 mm to D6003, detour 1.10273e-05 mm, limit 3 mm
-    OK   TP6004 (rear) on +3V3_CAM: stub 9.59 mm to D6004, detour 0.665198 mm, limit 3 mm
-    OK   TP6005 (rear) on +3V3_SD: stub 9.995 mm to D6005, detour 0.185323 mm, limit 3 mm
-    OK   TP6006 (rear) on +5V_USB: stub 22.856 mm to D6006, detour 0.0367982 mm, limit 3 mm
-    OK   TP6007 (rear) on +3V3_PMOD: stub 6.26832 mm to D6007, detour 2.94805 mm, limit 3 mm
-    OK   TP6008 (rear) on +3V3_USER_LED: stub 2.995 mm to D33003, detour 7.15154 mm, limit 3 mm
-    OK   TP6009 (rear) on +5V_HDMI_TX: stub 29.2958 mm to D6009, detour 2.98287 mm, limit 3 mm
-    OK   TP6010 (rear) on +5V_LCD: stub 25.3759 mm to D6010, detour 2.44737 mm, limit 3 mm
-    OK   TP7001 (rear) on +3V3_SC: stub 5.28815 mm to C4002, detour 0.000109134 mm, limit 3 mm
-    OK   TP7002 (rear) on STM32_I2C2_SDA: stub 18.0157 mm to J24001, detour 0.00325078 mm, limit 3 mm plus 2.65 mm to leave the module connector's keep-out
-    OK   TP7003 (rear) on STM32_I2C2_SCL: stub 18.973 mm to J24001, detour 0.0395184 mm, limit 3 mm plus 2.65 mm to leave the module connector's keep-out
-    OK   TP8001 (rear) on CAM_SCL: stub 5.6438 mm to J26003, detour 3.12069 mm, limit 3 mm plus 2.65 mm to leave the module connector's keep-out
-    OK   TP8002 (rear) on CAM_SDA: stub 5.46429 mm to J26003, detour 10.27 mm, limit 3 mm plus 2.65 mm to leave the module connector's keep-out
-    OK   TP8003 (rear) on CAM_EN: stub 2.45101 mm to J26003, detour 0.0873396 mm, limit 3 mm plus 2.65 mm to leave the module connector's keep-out
+  test points on routed nets: 57 (0 over their limit, 57 on the rear face); test points on plane nets connect by a via and are not listed
+    OK   TP1001 (rear) on +3V3_AUX: stub 2.475 mm to R1005, detour 5.35049 mm, limit 3 mm
+    OK   TP1002 (rear) on AUX_I2C_SCL: stub 5.59209 mm to U1002, detour 0.410188 mm, limit 3 mm
+    OK   TP1003 (rear) on AUX_I2C_SDA: stub 2.09184 mm to U1002, detour 0.0247605 mm, limit 3 mm
+    OK   TP11001 (rear) on +2V5_VADJ: stub 5.56241 mm to J26003, detour 12.6963 mm, limit 3 mm plus 2.65 mm to leave the module connector's keep-out
+    OK   TP14001 (rear) on +5V_HDMI_TX: stub 19.8516 mm to D6009, detour 2.96633 mm, limit 3 mm
+    OK   TP14002 (rear) on ZYNQ_HDMI_TX_SCL: stub 4.07596 mm to J25002, detour 5.42309 mm, limit 3 mm plus 2.65 mm to leave the module connector's keep-out
+    OK   TP14003 (rear) on ZYNQ_HDMI_TX_SDA: stub 6.4165 mm to J25002, detour 0.205934 mm, limit 3 mm plus 2.65 mm to leave the module connector's keep-out
+    OK   TP15001 (rear) on +5V_LCD: stub 12.9585 mm to C15001, detour 0.0146417 mm, limit 3 mm
+    OK   TP15002 (rear) on LCD_CTP_SDA: stub 5.60356 mm to J25002, detour 4.01999 mm, limit 3 mm plus 2.65 mm to leave the module connector's keep-out
+    OK   TP15003 (rear) on LCD_CTP_SCL: stub 5.53 mm to J25002, detour 7.07067 mm, limit 3 mm plus 2.65 mm to leave the module connector's keep-out
+    OK   TP16001 (rear) on SDIO_CMD: stub 3.57559 mm to J24001, detour 5.38003 mm, limit 1 mm plus 2.65 mm to leave the module connector's keep-out
+    OK   TP16002 (rear) on SDIO_CLK: stub 4.94478 mm to J24001, detour 0.947429 mm, limit 1 mm plus 2.65 mm to leave the module connector's keep-out
+    OK   TP17001 (rear) on +VBUS_IN: stub 6.39117 mm to C17001, detour 1.22045 mm, limit 3 mm
+    OK   TP17002 (rear) on +VIN: stub 36.7564 mm to U17001, detour 0.00280156 mm, limit 3 mm
+    OK   TP19001 (rear) on +3V3_PMODX: stub 17.4061 mm to D19001, detour 2.95702 mm, limit 3 mm
+    OK   TP20001 (rear) on +5V: stub 17.8184 mm to C6017, detour 0.15729 mm, limit 3 mm
+    OK   TP20002 (rear) on +3V3: stub 11.9282 mm to C35011, detour 9.4474e-06 mm, limit 3 mm
+    OK   TP20003 (rear) on +1V8: stub 5.61949 mm to U16001, detour 0.805226 mm, limit 3 mm
+    OK   TP22001 (rear) on +5V_SOM: stub 4.39104 mm to C35003, detour 7.39139 mm, limit 3 mm
+    OK   TP27001 (rear) on ZYNQ_PS_UART0_TXD: stub 13.9883 mm to U27001, detour 0.209055 mm, limit 3 mm
+    OK   TP27002 (rear) on ZYNQ_PS_UART0_RXD: stub 16.0752 mm to U27001, detour 0.64502 mm, limit 3 mm
+    OK   TP28001 (rear) on +3V3_DBG: stub 1.70049 mm to C28003, detour 0.13713 mm, limit 3 mm
+    OK   TP28002 (rear) on DBG_UART_TXD: stub 19.6966 mm to J25002, detour 2.96918 mm, limit 3 mm plus 2.65 mm to leave the module connector's keep-out
+    OK   TP28003 (rear) on DBG_UART_RXD: stub 20.9384 mm to U28001, detour 2.94661 mm, limit 3 mm
+    OK   TP29001 (rear) on +5V_DBG: stub 2.863 mm to C28001, detour 3.33295 mm, limit 3 mm
+    OK   TP32001 (rear) on VBUS_OUT_EN: stub 19.7265 mm to J24001, detour 0.711675 mm, limit 3 mm plus 2.65 mm to leave the module connector's keep-out
+    OK   TP36001 (rear) on +5V_MOTOR_IO: stub 26.3145 mm to C36003, detour 0.00280442 mm, limit 3 mm
+    OK   TP4001 (rear) on EN_5V0: stub 3.125 mm to U4001, detour 2.8779 mm, limit 3 mm
+    OK   TP4002 (rear) on EN_3V3: stub 10.6176 mm to U20002, detour 2.74358 mm, limit 3 mm
+    OK   TP4003 (rear) on EN_1V8: stub 18.1116 mm to U4003, detour 1.83853 mm, limit 3 mm
+    OK   TP5001 (rear) on EN_HDMI_TX: stub 28.6746 mm to U6001, detour 2.89011 mm, limit 3 mm
+    OK   TP5002 (rear) on EN_HDMI_RX: stub 39.4767 mm to U6002, detour 0.024184 mm, limit 3 mm
+    OK   TP5003 (rear) on EN_LCD: stub 40.5941 mm to U5003, detour 0.0200914 mm, limit 3 mm
+    OK   TP5004 (rear) on EN_CAM: stub 27.7349 mm to U6004, detour 1.59347 mm, limit 3 mm
+    OK   TP5005 (rear) on EN_SD: stub 11.293 mm to U6005, detour 2.92656 mm, limit 3 mm
+    OK   TP5006 (rear) on EN_USB: stub 8.08115 mm to U6006, detour 0.281567 mm, limit 3 mm
+    OK   TP5007 (rear) on EN_PMOD: stub 17.9008 mm to U6007, detour 2.26437 mm, limit 3 mm
+    OK   TP5008 (rear) on EN_USER_LED: stub 20.8573 mm to U5008, detour 2.96867 mm, limit 3 mm
+    OK   TP5009 (rear) on EN_LCD_BL: stub 2.76219 mm to U5009, limit 3 mm
+    OK   TP5010 (rear) on EN_HDMI_TX_5V: stub 14.731 mm to U6009, detour 1.96679 mm, limit 3 mm
+    OK   TP5011 (rear) on EN_LCD_5V: stub 15.321 mm to U6010, detour 2.17934 mm, limit 3 mm
+    OK   TP6001 (rear) on +3V3_HDMI_TX: stub 3.60503 mm to D6001, detour 0.0533599 mm, limit 3 mm
+    OK   TP6002 (rear) on +3V3_HDMI_RX: stub 2.42854 mm to D6002, detour 1.27798e-05 mm, limit 3 mm
+    OK   TP6003 (rear) on +3V3_LCD: stub 42.0479 mm to D6003, detour 0.029594 mm, limit 3 mm
+    OK   TP6004 (rear) on +3V3_CAM: stub 2.28755 mm to C6008, detour 0.0859585 mm, limit 3 mm
+    OK   TP6005 (rear) on +3V3_SD: stub 5.94318 mm to R16004, detour 0.0713377 mm, limit 3 mm
+    OK   TP6006 (rear) on +5V_USB: stub 0.708837 mm to D6006, detour 3.74031e-07 mm, limit 3 mm
+    OK   TP6007 (rear) on +3V3_PMOD: stub 11.7869 mm to D6007, detour 1.41257 mm, limit 3 mm
+    OK   TP6008 (rear) on +3V3_USER_LED: stub 16.8662 mm to D33003, detour 2.95878 mm, limit 3 mm
+    OK   TP6009 (rear) on +5V_HDMI_TX: stub 22.2089 mm to D6009, detour 2.93128 mm, limit 3 mm
+    OK   TP6010 (rear) on +5V_LCD: stub 10.5689 mm to C15001, detour 0.00455021 mm, limit 3 mm
+    OK   TP7001 (rear) on +3V3_SC: stub 11.472 mm to C35013, detour 3.1072e-07 mm, limit 3 mm
+    OK   TP7002 (rear) on STM32_I2C2_SDA: stub 17.7803 mm to J24001, detour 0.0455481 mm, limit 3 mm plus 2.65 mm to leave the module connector's keep-out
+    OK   TP7003 (rear) on STM32_I2C2_SCL: stub 20.0287 mm to J24001, detour 0.176575 mm, limit 3 mm plus 2.65 mm to leave the module connector's keep-out
+    OK   TP8001 (rear) on CAM_SCL: stub 7.63528 mm to J26003, detour 2.82204 mm, limit 3 mm plus 2.65 mm to leave the module connector's keep-out
+    OK   TP8002 (rear) on CAM_SDA: stub 5.60356 mm to J26003, detour 12.332 mm, limit 3 mm plus 2.65 mm to leave the module connector's keep-out
+    OK   TP8003 (rear) on CAM_EN: stub 22.8238 mm to J26003, detour 1.77406 mm, limit 3 mm plus 2.65 mm to leave the module connector's keep-out
 

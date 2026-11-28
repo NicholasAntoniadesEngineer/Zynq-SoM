@@ -39,7 +39,9 @@ inline constexpr NamedConstant lay_rounds{"lay_rounds", 6, "passes", "policy",
     "times the whole board is laid out again with the clusters that found no seat placed first; a pass that fails only clusters already placed first ends the search"};
 inline constexpr NamedConstant lay_gather{"lay_gather", 0.5, "ratio", "policy",
     "share of a cluster's wanted place given to the middle of the clusters of its own sheet already seated, the rest to the pins it connects to; a sheet must stay one block for its cohesion rules and its return currents"};
-inline constexpr std::array arrange_registry{arrange_pitch, arrange_gap, room_factor, rehome_pitch, rehome_tries, tighten_rounds, arrange_tries, arrange_choices, draw_rounds, draw_slack, draw_tries, lay_tries, lay_rounds, lay_gather,
+inline constexpr NamedConstant lay_follow{"lay_follow", 16, "positions", "policy",
+    "seats of a group tried in turn while the groups tied to it find no seat beside it; past this the group is taken to have no seat that suits them, since a search inside a search over every seat of the board does not end"};
+inline constexpr std::array arrange_registry{arrange_pitch, arrange_gap, room_factor, rehome_pitch, rehome_tries, tighten_rounds, arrange_tries, arrange_choices, draw_rounds, draw_slack, draw_tries, lay_tries, lay_rounds, lay_gather, lay_follow,
                                              arrange_finalists};
 }
 
